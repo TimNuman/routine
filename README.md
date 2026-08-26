@@ -7,32 +7,42 @@ afvinkbare stappen, één per kind, gedeeld tussen alle telefoons in huis.
 
 ## Hoe het werkt
 
-- Bovenin schakel je tussen **Ochtend** en **Avond**; de pagina opent zelf op het
-  ritme dat bij de klok hoort.
-- Elke stap heeft een rond knopje per persoon. Tik het aan en het staat binnen een
-  seconde ook op de andere telefoon.
-- Ernaast (op een telefoon erboven) staat wat er die dag op het programma staat.
-  's Avonds zie je wat er vanavond nog gebeurt én wat er morgen komt.
-- Elke dag begint vanzelf leeg.
+Onderin zweeft een menubalk met drie plekken:
+
+- **Ritme** — de stappen van vandaag, per groep. Bovenin schakel je tussen
+  **Ochtend** en **Avond**; de app opent zelf op het ritme dat bij de klok hoort
+  en kleurt 's avonds donker. Elke stap heeft een rond gezichtje per kind: tik het
+  aan en het staat binnen een seconde ook op de andere telefoon. Daarboven staat
+  per kind hoever het is. Elke dag begint vanzelf leeg.
+- **Overzicht** — wat er die dag verder is: school, BSO, sport. Bovenin kies je
+  een dag van de week; op vandaag zie je ook *Vanavond* en *Morgen*.
+- **Instellingen** — hier bewerk je alles wat in de app staat.
 
 ## Bewerken
 
-Alles wat in de app staat, pas je in de app zelf aan. Tik op het **potlood**
-rechtsboven:
+Alles wat in de app staat, pas je in de app zelf aan, onder **Instellingen**:
 
-- **Ochtend** en **Avond** — groepen en stappen: hernoemen, van volgorde
-  wisselen, toevoegen, weghalen. Per stap kun je met het kalenderknopje instellen
-  op welke dagen hij meedoet; kies je geen dag, dan hoort hij bij elke dag.
-- **Mensen** — wie er meedoet, met een emoji als gezicht en een eigen kleur.
-  Iedereen in die lijst krijgt een rondje bij elke stap. Namen wijzigen mag: de
-  vinkjes blijven bij de juiste persoon, want die hangen aan een vast id.
-- **Dagen** — het overzicht naast de stappen: per dag van de week wat er die dag
-  is, met een emoji, een tijd als die er is, en voor wie het geldt. Kies je
-  niemand, dan geldt het voor iedereen. Zet **'s avonds** aan voor wat pas na het
-  avondeten speelt: dat komt bij *Vanavond* te staan in plaats van bij de dag
-  zelf. Een dag zonder regels verdwijnt vanzelf uit de database.
+- **Kinderen** — wie er meedoet, met een emoji als gezicht en een eigen kleur.
+  Namen wijzigen mag: de vinkjes blijven bij de juiste persoon, want die hangen
+  aan een vast id.
+- **Ochtendritme** en **Avondritme** — groepen en stappen. Rood rondje weg,
+  groen rondje erbij, en met de greep rechts versleep je een stap naar een andere
+  plek. Tik een stap aan en eronder verschijnt voor wie hij is en op welke dagen.
+- **Dagoverzicht** — per dag van de week wat er die dag is, met een tijd als die
+  er is. Zet **'s avonds** aan voor wat pas na het avondeten speelt: dat komt bij
+  *Vanavond* te staan in plaats van bij de dag zelf. Een dag zonder regels
+  verdwijnt vanzelf uit de database.
+- **Naam en tijden** — hoe de app heet en vanaf welk uur hij op de avond opent.
 
-**Bewaar** schrijft alles naar de database, en de andere telefoons zien het
+Iconen typ je niet; overal waar er één staat opent een **kiezer** met emoji per
+onderwerp — dagritme, eten, spelen, huis, dieren, mensen, dingen.
+
+Een taak is standaard voor iedereen. Wil je er één kind aan hangen, kies dan
+onder **Wie doet mee** wie het betreft; alleen die kinderen krijgen dan een
+rondje bij die stap, en hun teller telt hem mee. Hetzelfde geldt voor een regel
+in het dagoverzicht — daar verschijnt de naam als gekleurd label.
+
+**Gereed** schrijft alles naar de database, en de andere telefoons zien het
 meteen. Lukt dat niet, dan blijft het scherm open staan met de reden — er wordt
 nooit stilletjes iets half opgeslagen.
 
@@ -121,6 +131,7 @@ GitHub Actions (`.github/workflows/deploy.yml`) naar GitHub Pages.
 
 ## Ontwerpen
 
-De schermontwerpen voor een mogelijke native iOS-versie staan als canvas op
+De schermontwerpen staan als canvas op
 [claude.ai](https://claude.ai/code/artifact/60939a36-177b-4690-ad4f-2b847ddff646).
-De web-versie volgt diezelfde vormtaal.
+De web-versie volgt die vormtaal: melkglazen kaarten, een zwevende menubalk en
+een verlopend behang dat 's avonds donker wordt.

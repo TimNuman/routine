@@ -1,53 +1,61 @@
 <!doctype html>
 <html lang="nl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#F2994A">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ons dagritme</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="apple-touch-icon" href="icon-180.png">
-<meta name="apple-mobile-web-app-title" content="Dagritme">
+<meta name="theme-color" content="#FFF6E9">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>Ons Dagritme</title>
+<meta name="apple-mobile-web-app-title" content="Dagritme">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-32.png" sizes="32x32">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800&display=swap">
 <style>
   :root{
-    --sun: #FFB84D;
-    --sun-deep: #F2994A;
-    --night: #232752;
-    --night-deep: #14163A;
-    --cream: #FFF9EF;
-    --ink: #2B2D42;
-    --ink-soft: #5B5D7A;
-    --done: #34C759;
     --baloo: 'Baloo 2', ui-rounded, system-ui, sans-serif;
     --nunito: 'Nunito', ui-rounded, -apple-system, system-ui, sans-serif;
+    --inkt: #2B2D42;
+    --inkt-zacht: #5B5D7A;
+    --oranje: #F2994A;
+    --oranje-diep: #E07B2C;
+    --groen: #34C759;
+    --rood: #E5484D;
+    --scheiding: rgba(43,45,66,.08);
+    --tegel: rgba(255,255,255,.72);
+    --tegelrand: rgba(255,255,255,.9);
+    --veld: rgba(255,255,255,.85);
+    --veldrand: rgba(43,45,66,.14);
   }
-  *{ box-sizing:border-box; }
+  *{ box-sizing: border-box; }
   html, body{ margin:0; padding:0; }
   body{
     font-family: var(--nunito);
+    color: var(--inkt);
     -webkit-font-smoothing: antialiased;
-    color: var(--ink);
+    -webkit-tap-highlight-color: transparent;
     min-height:100vh;
-    /* Het behang geeft het glas iets om te breken; zonder kleur eronder is
-       doorschijnend gewoon grijs. */
     background:
       radial-gradient(1100px 640px at 10% -10%, #FFD7A0 0%, rgba(255,215,160,0) 60%),
       radial-gradient(820px 560px at 98% 4%, #FFC6E2 0%, rgba(255,198,226,0) 56%),
       radial-gradient(900px 760px at 62% 106%, #B7DEFF 0%, rgba(183,222,255,0) 58%),
       #FFF6E9;
     background-attachment: fixed;
-    transition: background-color 0.6s ease;
+    transition: background .4s ease, color .4s ease;
   }
-  body.night-mode{
-    color: var(--cream);
+  body.nacht{
+    color:#F4F1FF;
+    --inkt: #F4F1FF;
+    --inkt-zacht: #A6A8D4;
+    --scheiding: rgba(255,255,255,.10);
+    --tegel: rgba(255,255,255,.10);
+    --tegelrand: rgba(255,255,255,.16);
+    --veld: rgba(255,255,255,.10);
+    --veldrand: rgba(255,255,255,.16);
     background:
       radial-gradient(880px 560px at 86% -8%, #45408F 0%, rgba(69,64,143,0) 58%),
       radial-gradient(760px 660px at 4% 26%, #1D4C7C 0%, rgba(29,76,124,0) 56%),
@@ -55,405 +63,479 @@
       #10122F;
     background-attachment: fixed;
   }
+  button{ font-family: inherit; color: inherit; }
 
-  .app{ max-width: 980px; margin: 0 auto; padding: 26px 22px 40px; }
-
-  /* Glas komt in twee dichtheden: rustig voor inhoud, dichter voor bediening
-     die over de lijst heen ligt. */
+  /* Het glas uit de ontwerpen: melkwit, sterk vervaagd, met een lichtrandje
+     aan de bovenkant. Waar backdrop-filter niet werkt houdt de vulling het
+     beeld nog steeds leesbaar. */
   .glas{
     background: rgba(255,255,255,.62);
     backdrop-filter: blur(44px) saturate(200%);
     -webkit-backdrop-filter: blur(44px) saturate(200%);
-    border: 1px solid rgba(255,255,255,.75);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.9), inset 0 -1px 0 rgba(255,255,255,.4),
-                0 16px 38px rgba(126,84,42,.16);
-  }
-  .night-mode .glas{
-    background: rgba(52,56,112,.72);
-    border-color: rgba(255,255,255,.14);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.22), inset 0 -1px 0 rgba(255,255,255,.06),
-                0 16px 38px rgba(4,6,26,.46);
+    border:1px solid rgba(255,255,255,.75);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.9),
+      inset 0 -1px 0 rgba(255,255,255,.4),
+      0 16px 38px rgba(126,84,42,.16);
   }
   .glas-zwevend{ background: rgba(255,255,255,.82); }
-  .night-mode .glas-zwevend{ background: rgba(40,43,92,.86); }
-
-  .topbar{ display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
-  h1{
-    font-family: var(--baloo);
-    font-weight:800;
-    font-size: clamp(28px, 6vw, 36px);
-    line-height:1.06;
-    letter-spacing:-.5px;
-    margin:0;
-    color: var(--ink);
+  body.nacht .glas{
+    background: rgba(255,255,255,.09);
+    border-color: rgba(255,255,255,.14);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.22),
+      inset 0 -1px 0 rgba(255,255,255,.06),
+      0 16px 38px rgba(4,6,26,.46);
   }
-  .night-mode h1{ color: var(--cream); }
-  .kids{ font-weight:700; font-size:15px; color: var(--ink-soft); margin-top:3px; }
-  .night-mode .kids{ color:#9EA1D4; }
-
-  .icoonknop{
-    flex:none;
-    width:46px; height:46px;
-    border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-    cursor:pointer;
-    font-size:19px;
-    color: var(--sun-deep);
-    border:1px solid rgba(255,255,255,.75);
+  body.nacht .glas-zwevend{ background: rgba(255,255,255,.13); }
+  /* Kan de browser niet vervagen, dan is doorschijnend glas onleesbaar; dek de
+     achtergrond dan gewoon af. */
+  @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))){
+    .glas{ background: rgba(255,255,255,.88); }
+    .glas-zwevend{ background: rgba(255,255,255,.96); }
+    body.nacht .glas{ background: rgba(40,42,92,.90); }
+    body.nacht .glas-zwevend{ background: rgba(40,42,92,.97); }
   }
-  .night-mode .icoonknop{ border-color: rgba(255,255,255,.14); }
 
-  .schakel{ display:flex; gap:4px; padding:4px; border-radius:19px; margin-top:18px; }
-  .schakel button{
-    flex:1;
-    border:1px solid transparent;
-    background:transparent;
-    font-family: var(--baloo);
-    font-weight:800;
-    font-size:15px;
-    padding:9px 0;
-    border-radius:15px;
-    cursor:pointer;
-    color: var(--ink-soft);
-    display:flex; align-items:center; justify-content:center; gap:6px;
-    transition: background 0.25s ease, color 0.25s ease;
+  /* ------------------------------------------------------------- kader --- */
+  .app{
+    max-width:520px; margin:0 auto;
+    padding: calc(env(safe-area-inset-top) + 42px) 22px 132px;
   }
-  .night-mode .schakel button{ color:#9EA1D4; }
-  .schakel button.active{
+  .kop h1{
+    font-family: var(--baloo); font-weight:800;
+    font-size:36px; line-height:1.06; letter-spacing:-.5px; margin:0;
+  }
+  .kopdatum{ font-weight:700; font-size:15px; color: var(--inkt-zacht); margin-top:3px; }
+  .pagina[hidden]{ display:none; }
+
+  /* --------------------------------------------------------- schakelaar --- */
+  .segment{
+    display:flex; gap:4px; padding:4px; border-radius:19px; margin-top:16px;
+  }
+  .segment button{
+    flex:1; padding:9px 0; border-radius:15px; border:1px solid transparent;
+    background:none; cursor:pointer;
+    font-family: var(--baloo); font-weight:800; font-size:15px; color: var(--inkt-zacht);
+  }
+  .segment button.aan{
     background: rgba(255,255,255,.86);
     border-color: rgba(255,255,255,.95);
     box-shadow: 0 3px 10px rgba(0,0,0,.10);
-    color: var(--ink);
+    color: var(--inkt);
   }
-  .night-mode .schakel button.active{
-    background: rgba(255,255,255,.20);
-    border-color: rgba(255,255,255,.22);
-    color: var(--cream);
+  body.nacht .segment button.aan{
+    background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.20);
   }
 
-  .voortgang{ border-radius:26px; margin-top:14px; display:flex; }
+  /* ---------------------------------------------------------- voortgang --- */
+  .voortgang{ border-radius:26px; margin-top:14px; overflow:hidden; display:flex; }
   .voortgang[hidden]{ display:none; }
-  .pvak{ flex:1; display:flex; align-items:center; gap:11px; padding:13px 14px; min-width:0; }
-  .pvak + .pvak{ border-left:1px solid rgba(43,45,66,.08); }
-  .night-mode .pvak + .pvak{ border-left-color: rgba(255,255,255,.10); }
-  .pgezicht{
+  .vperson{ flex:1; display:flex; align-items:center; gap:11px; padding:13px 14px; min-width:0; }
+  .vperson + .vperson{ border-left:1px solid var(--scheiding); }
+  .vbol{
     width:46px; height:46px; border-radius:50%; flex:none;
-    display:flex; align-items:center; justify-content:center;
-    font-size:26px; line-height:1;
+    display:flex; align-items:center; justify-content:center; font-size:26px; line-height:1;
   }
-  .pnaam{ display:flex; align-items:baseline; justify-content:space-between; gap:6px; }
-  .pnaam b{ font-family: var(--baloo); font-weight:800; font-size:16px; }
-  .pnaam span{ font-weight:800; font-size:12.5px; color: var(--ink-soft); }
-  .night-mode .pnaam span{ color:#9EA1D4; }
-  .balk{ height:7px; border-radius:99px; background: rgba(43,45,66,.10); overflow:hidden; margin-top:6px; }
-  .night-mode .balk{ background: rgba(255,255,255,.16); }
-  .balk i{ display:block; height:100%; border-radius:99px; transition: width 0.3s ease; }
+  .vtekst{ flex:1; min-width:0; }
+  .vregel{ display:flex; align-items:baseline; justify-content:space-between; gap:6px; }
+  .vnaam{ font-family: var(--baloo); font-weight:800; font-size:16px; }
+  .vtelling{ font-weight:800; font-size:12.5px; color: var(--inkt-zacht); }
+  .vbalk{ height:7px; border-radius:99px; background: rgba(43,45,66,.10); overflow:hidden; margin-top:6px; }
+  body.nacht .vbalk{ background: rgba(255,255,255,.14); }
+  .vbalk span{ display:block; height:100%; border-radius:99px; transition: width .3s ease; }
 
-  .content{ display:flex; align-items:stretch; margin-top:24px; }
-  .path{ flex:1; min-width:0; display:flex; flex-direction:column; gap:22px; }
-  .agenda{ flex: 0 0 210px; padding-left:22px; margin-left:22px; border-left:1px dashed rgba(43,45,66,.16); }
-  .night-mode .agenda{ border-left-color: rgba(255,255,255,.14); }
-  .agenda[hidden]{ display:none; }
-
-  .groepkop{ display:flex; align-items:baseline; justify-content:space-between; padding:0 8px 8px; }
+  /* ------------------------------------------------------------ groepen --- */
+  .groepkop{
+    display:flex; align-items:baseline; justify-content:space-between;
+    padding:0 8px 8px; margin-top:22px;
+  }
   .groepnaam{ font-family: var(--baloo); font-weight:800; font-size:17px; }
-  .groeptijd{ font-weight:700; font-size:13px; color: var(--ink-soft); }
-  .night-mode .groeptijd{ color:#9EA1D4; }
+  .groeptijd{ font-weight:700; font-size:13px; color: var(--inkt-zacht); }
+  .kaart{ border-radius:26px; overflow:hidden; }
+  .streep{ height:1px; background: var(--scheiding); margin-left:70px; }
 
-  .stapkaart{ border-radius:26px; overflow:hidden; }
-  .stap{ display:flex; align-items:center; gap:12px; padding:8px 10px 8px 12px; min-height:64px; }
-  .stap + .stap{ border-top:1px solid rgba(43,45,66,.08); }
-  .night-mode .stap + .stap{ border-top-color: rgba(255,255,255,.10); }
+  .taak{
+    display:flex; align-items:center; gap:12px;
+    padding:8px 10px 8px 12px; min-height:64px;
+  }
   .tegel{
     width:46px; height:46px; border-radius:15px; flex:none;
-    background: rgba(255,255,255,.72);
-    border:1px solid rgba(255,255,255,.9);
-    display:flex; align-items:center; justify-content:center;
-    font-size:24px; line-height:1;
+    background: var(--tegel); border:1px solid var(--tegelrand);
+    display:flex; align-items:center; justify-content:center; font-size:24px;
   }
-  .night-mode .tegel{ background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.16); }
-  .staplabel{ flex:1; min-width:0; font-family: var(--baloo); font-weight:700; font-size:16.5px; line-height:1.2; }
-  .knoppen{ display:flex; gap:2px; flex:none; }
-
-  /* Eén rond tikvlak per persoon: hun eigen gezicht, aan of uit. */
-  .pknop{
-    width:44px; height:44px; flex:none;
+  .taaknaam{
+    flex:1; min-width:0;
+    font-family: var(--baloo); font-weight:700; font-size:16.5px; line-height:1.2;
+  }
+  .rondjes{ display:flex; gap:2px; flex:none; }
+  .rondje{
+    width:44px; height:44px; flex:none; position:relative; cursor:pointer;
     display:flex; align-items:center; justify-content:center;
-    position:relative; cursor:pointer;
     background:none; border:none; padding:0;
-    -webkit-tap-highlight-color: transparent;
   }
-  .pknop .rond{
+  .rondje .ring{ border-radius:50%; box-shadow: inset 0 0 0 1.5px rgba(43,45,66,.14); }
+  body.nacht .rondje .ring{ box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.18); }
+  .rondje .gezicht{
     width:40px; height:40px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
     font-size:22px; line-height:1;
-    transition: box-shadow 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
-    box-shadow: inset 0 0 0 1.5px rgba(43,45,66,.14);
-    filter: grayscale(1);
-    opacity:.40;
+    filter: grayscale(1); opacity:.40;
+    transition: filter .2s ease, opacity .2s ease;
   }
-  .night-mode .pknop .rond{ box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.20); }
-  .pknop[aria-pressed="true"] .rond{
-    filter:none;
-    opacity:1;
-    box-shadow: 0 0 0 2.5px var(--done), 0 4px 10px rgba(0,0,0,.16);
+  .rondje[aria-pressed="true"] .ring{
+    box-shadow: 0 0 0 2.5px var(--groen), 0 4px 10px rgba(0,0,0,.16);
   }
-  .pknop .vink{
-    position:absolute; right:1px; bottom:1px;
-    width:18px; height:18px; border-radius:50%;
-    background: var(--done);
-    border:2px solid #fff;
-    display:flex; align-items:center; justify-content:center;
-    color:#fff; font-size:10px; font-weight:800;
-    opacity:0; transform: scale(.5);
-    transition: opacity 0.2s ease, transform 0.2s ease;
+  .rondje[aria-pressed="true"] .gezicht{ filter:none; opacity:1; }
+  .vink{
+    position:absolute; right:0; bottom:0; width:18px; height:18px; border-radius:50%;
+    background: var(--groen); border:2px solid #fff;
+    display:none; align-items:center; justify-content:center;
   }
-  .night-mode .pknop .vink{ border-color:#2E3163; }
-  .pknop[aria-pressed="true"] .vink{ opacity:1; transform: scale(1); }
+  body.nacht .vink{ border-color:#181A3A; }
+  .rondje[aria-pressed="true"] .vink{ display:flex; }
 
-  .agendablok + .agendablok{ margin-top:22px; padding-top:20px; border-top:1px dashed rgba(43,45,66,.16); }
-  .night-mode .agendablok + .agendablok{ border-top-color: rgba(255,255,255,.14); }
-  .agendakop{ font-family: var(--baloo); font-weight:800; font-size:15px; color: var(--ink-soft); }
-  .night-mode .agendakop{ color:#9EA1D4; }
-  .agendadag{ font-weight:700; font-size:12px; color: var(--ink-soft); opacity:.75; margin-top:3px; }
-  .night-mode .agendadag{ color:#9EA1D4; }
-  .agendalijst{
-    display:flex; flex-direction:column; gap:14px;
-    margin-top:16px; padding-top:14px;
-    border-top:1px dashed rgba(43,45,66,.16);
+  .leegkaart{
+    border-radius:26px; padding:28px 20px; text-align:center;
+    font-weight:700; color: var(--inkt-zacht);
   }
-  .night-mode .agendalijst{ border-top-color: rgba(255,255,255,.14); }
-  .agendaitem{ display:flex; align-items:flex-start; gap:10px; }
-  .agendaicoon{ font-size:22px; line-height:1.1; flex:none; }
-  .agendatekst{ font-family: var(--baloo); font-weight:600; font-size:14px; line-height:1.2; }
-  .agendatijd{ font-weight:700; font-size:12px; opacity:.7; margin-top:2px; }
+  .opnieuw{
+    display:block; margin:22px auto 0; padding:10px 18px; border-radius:999px;
+    background:none; border:1px solid var(--veldrand); cursor:pointer;
+    font-weight:800; font-size:13px; color: var(--inkt-zacht);
+  }
+
+  /* ---------------------------------------------------------- overzicht --- */
+  .weekstrip{ display:flex; border-radius:24px; padding:10px 6px; margin-top:16px; }
+  .weekstrip button{
+    flex:1; background:none; border:none; cursor:pointer; padding:0;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+  }
+  .wletter{ font-family: var(--baloo); font-weight:800; font-size:12px; color: var(--inkt-zacht); }
+  .wdag{
+    width:38px; height:38px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family: var(--baloo); font-weight:800; font-size:17px;
+  }
+  .weekstrip button.aan .wdag{ background: var(--oranje); color:#fff; }
+  .weekstrip button.vandaag:not(.aan) .wdag{ box-shadow: inset 0 0 0 2px rgba(242,153,74,.5); }
+
+  .blokkop{ font-family: var(--baloo); font-weight:800; font-size:17px; padding:0 8px 8px; margin-top:22px; }
+  .agendarij{ display:flex; align-items:center; gap:12px; padding:12px 14px; min-height:58px; }
+  .agendaicoon{ font-size:26px; flex:none; width:34px; text-align:center; }
+  .agendatekst{ flex:1; min-width:0; font-family: var(--baloo); font-weight:700; font-size:16.5px; }
+  .agendatijd{ font-weight:800; font-size:13.5px; color: var(--inkt-zacht); flex:none; }
+  .merken{ display:flex; gap:4px; flex:none; }
   .merk{
-    display:inline-block; margin-right:6px; padding:1px 8px;
-    border-radius:999px; color:#fff;
-    font-family: var(--nunito); font-weight:800; font-size:11px;
-    vertical-align:1px;
+    display:flex; align-items:center; gap:4px;
+    padding:4px 10px 4px 4px; border-radius:999px; color:#fff;
+    font-family: var(--baloo); font-weight:800; font-size:12.5px;
+  }
+  .merk i{
+    width:20px; height:20px; border-radius:50%; background: rgba(255,255,255,.28);
+    display:flex; align-items:center; justify-content:center; font-size:12px; font-style:normal;
   }
 
-  .footer{ text-align:center; padding-top:26px; }
-  .reset{
-    font-family: var(--nunito); font-weight:700; font-size:13px;
-    color: var(--ink-soft); background:none; border:none; cursor:pointer; text-decoration:underline;
+  /* ------------------------------------------------------- instellingen --- */
+  .lijst{ border-radius:26px; overflow:hidden; margin-top:16px; }
+  .lijstrij{
+    display:flex; align-items:center; gap:12px; width:100%;
+    padding:14px; min-height:62px; background:none; border:none; cursor:pointer; text-align:left;
   }
-  .night-mode .reset{ color:#9EA1D4; }
+  .lijstrij + .lijstrij{ border-top:1px solid var(--scheiding); }
+  .lijstrij .tegel{ font-size:22px; }
+  .lijsttekst{ flex:1; min-width:0; }
+  .lijsttitel{ font-family: var(--baloo); font-weight:800; font-size:16px; }
+  .lijstuitleg{ font-weight:700; font-size:12.5px; color: var(--inkt-zacht); margin-top:1px; }
+  .pijl{ flex:none; color: var(--inkt-zacht); opacity:.6; }
+  .gezichten{ display:flex; flex:none; }
+  .gezichten span{
+    width:34px; height:34px; border-radius:50%; margin-left:-8px;
+    display:flex; align-items:center; justify-content:center; font-size:19px;
+    box-shadow: 0 0 0 2px rgba(255,255,255,.85);
+  }
+  body.nacht .gezichten span{ box-shadow: 0 0 0 2px rgba(24,26,58,.9); }
+  .gezichten span:first-child{ margin-left:0; }
+  .voetnoot{ text-align:center; font-weight:700; font-size:12px; color: var(--inkt-zacht); margin-top:20px; opacity:.75; }
 
-  .trek{
-    position:fixed; top:0; left:50%; z-index:50;
-    width:42px; height:42px; margin-left:-21px;
-    border-radius:50%; background:#fff;
-    box-shadow:0 6px 16px rgba(35,39,82,.20);
-    display:flex; align-items:center; justify-content:center;
-    font-size:21px; color: var(--sun-deep);
-    opacity:0; transform: translateY(-52px); pointer-events:none;
+  /* -------------------------------------------------------- zwevend menu --- */
+  .tabbalk{
+    position:fixed; left:14px; right:14px; bottom: calc(env(safe-area-inset-bottom) + 18px);
+    max-width:492px; margin:0 auto;
+    border-radius:34px; padding:5px; display:flex; gap:4px; z-index:40;
   }
-  .trek.terug{ transition: transform 0.25s ease, opacity 0.25s ease; }
-  .trek.bezig .trek-icoon{ animation: draai 0.8s linear infinite; }
-  @keyframes draai{ to{ transform: rotate(360deg); } }
+  .tabbalk button{
+    flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
+    padding:7px 0 6px; border-radius:20px; border:none; background:none; cursor:pointer;
+    font-size:10.5px; font-weight:800; color: rgba(43,45,66,.52);
+  }
+  body.nacht .tabbalk button{ color: rgba(255,255,255,.55); }
+  .tabbalk button.aan{
+    background: rgba(242,153,74,.16); box-shadow: inset 0 0 0 1px rgba(242,153,74,.28);
+    color: var(--oranje);
+  }
+  .tabbalk svg{ width:23px; height:23px; }
 
-  /* ---------------------------------------------------------- bewerken --- */
-  .scrim{ position:fixed; inset:0; background: rgba(22,15,6,.30); z-index:60; }
-  .scrim[hidden], .blad[hidden]{ display:none; }
-  .blad{
-    position:fixed; left:0; right:0; bottom:0; top:38px; z-index:61;
-    border-radius:30px 30px 0 0;
-    display:flex; flex-direction:column;
-    max-width:980px; margin:0 auto;
+  /* ------------------------------------------------------------ bewerken --- */
+  .scrim{ position:fixed; inset:0; background: rgba(22,15,6,.34); z-index:60; }
+  /* De emojikiezer komt over het bewerkblad heen, dus zijn waas ook. */
+  #kiesScrim{ z-index:70; }
+  .scrim[hidden], .vel[hidden], .kiezer[hidden]{ display:none; }
+  .vel{
+    position:fixed; inset:0; z-index:61; overflow-y:auto;
+    padding: calc(env(safe-area-inset-top) + 18px) 0 calc(env(safe-area-inset-bottom) + 30px);
+    background:
+      radial-gradient(1100px 640px at 10% -10%, #FFD7A0 0%, rgba(255,215,160,0) 60%),
+      radial-gradient(820px 560px at 98% 4%, #FFC6E2 0%, rgba(255,198,226,0) 56%),
+      radial-gradient(900px 760px at 62% 106%, #B7DEFF 0%, rgba(183,222,255,0) 58%),
+      #FFF6E9;
   }
-  .bladkop{
+  body.nacht .vel{
+    background:
+      radial-gradient(880px 560px at 86% -8%, #45408F 0%, rgba(69,64,143,0) 58%),
+      radial-gradient(760px 660px at 4% 26%, #1D4C7C 0%, rgba(29,76,124,0) 56%),
+      radial-gradient(880px 680px at 48% 108%, #5A3272 0%, rgba(90,50,114,0) 60%),
+      #10122F;
+  }
+  .velkop{
+    position:sticky; top:0; z-index:2;
+    max-width:496px; margin:0 auto 18px; border-radius:28px;
     display:flex; align-items:center; justify-content:space-between; gap:10px;
-    padding:16px 20px 12px;
-    border-bottom:1px solid rgba(43,45,66,.08);
+    padding:14px 18px;
   }
-  .night-mode .bladkop{ border-bottom-color: rgba(255,255,255,.10); }
-  .bladkop h2{ font-family: var(--baloo); font-weight:800; font-size:18px; margin:0; }
+  .velkop h2{ font-family: var(--baloo); font-weight:800; font-size:18px; margin:0; }
   .tekstknop{
-    background:none; border:none; cursor:pointer;
-    font-family: var(--nunito); font-weight:800; font-size:16px; color: var(--sun-deep);
-    padding:6px 2px;
+    background:none; border:none; cursor:pointer; padding:4px 2px;
+    font-weight:800; font-size:16px; color: var(--oranje);
   }
-  .tabs{ display:flex; gap:4px; padding:12px 16px 0; }
-  .tabs button{
-    flex:1; padding:9px 0; border-radius:14px; border:1px solid transparent;
-    background: rgba(43,45,66,.05);
-    font-family: var(--baloo); font-weight:800; font-size:14px; color: var(--ink-soft);
-    cursor:pointer;
-  }
-  .night-mode .tabs button{ background: rgba(255,255,255,.08); color:#9EA1D4; }
-  .tabs button.active{ background: var(--sun-deep); color:#fff; }
-  .bladinhoud{ flex:1; overflow-y:auto; padding:16px 16px 30px; }
-
-  .bewerkgroep{
-    border-radius:22px; padding:12px;
-    background: rgba(255,255,255,.55);
-    border:1px solid rgba(255,255,255,.8);
-    margin-bottom:14px;
-  }
-  .night-mode .bewerkgroep{ background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.12); }
-  /* Zes bedieningen naast elkaar knijpt de tekstvelden dicht op een telefoon;
-     laat de knoppen daarom naar een tweede regel zakken. */
-  .groepregel, .bewerkrij{
-    display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:6px 0;
-  }
-  .groepregel{ margin-bottom:4px; padding-top:0; }
-  .rijknoppen{ display:flex; gap:8px; margin-left:auto; }
-  .bewerkrij + .bewerkrij{ border-top:1px solid rgba(43,45,66,.07); }
-  .night-mode .bewerkrij + .bewerkrij{ border-top-color: rgba(255,255,255,.08); }
-  input.veld{
-    flex:1 1 150px; min-width:0;
-    font-family: var(--nunito); font-weight:700; font-size:15px;
-    color: var(--ink);
-    padding:10px 12px; border-radius:12px;
-    border:1px solid rgba(43,45,66,.14);
-    background: rgba(255,255,255,.85);
-  }
-  .night-mode input.veld{ background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.16); color: var(--cream); }
-  input.veld.smal{ flex:none; width:56px; text-align:center; font-size:20px; padding:8px 4px; }
-  input.veld.tijd{ flex:0 0 112px; width:112px; font-size:13px; }
-  .rijknop{
-    flex:none; width:34px; height:34px; border-radius:50%;
-    border:1px solid rgba(43,45,66,.12);
-    background: rgba(255,255,255,.7);
-    cursor:pointer; font-size:14px; color: var(--ink-soft);
-    display:flex; align-items:center; justify-content:center;
-  }
-  .night-mode .rijknop{ background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.16); color:#C9CBEA; }
-  .rijknop.weg{ color:#E5484D; }
-  .dagen{ display:flex; gap:4px; padding:8px 0 2px; }
-  .dagen button{
-    flex:1; padding:7px 0; border-radius:10px; cursor:pointer;
-    border:1px solid rgba(43,45,66,.12);
-    background: rgba(255,255,255,.7);
-    font-family: var(--baloo); font-weight:800; font-size:12px; color: var(--ink-soft);
-  }
-  .night-mode .dagen button{ background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.14); color:#9EA1D4; }
-  .dagen button.aan{ background: var(--sun-deep); border-color: var(--sun-deep); color:#fff; }
-  .toevoeg{
-    width:100%; padding:12px; border-radius:16px; cursor:pointer;
-    border:1px dashed rgba(43,45,66,.24);
-    background: rgba(255,255,255,.4);
-    font-family: var(--baloo); font-weight:800; font-size:14px; color: var(--ink-soft);
-    margin-top:6px;
-  }
-  .night-mode .toevoeg{ background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.20); color:#9EA1D4; }
-  .dagkop{
-    font-family: var(--baloo); font-weight:800; font-size:15px; color: var(--ink);
-    padding:2px 2px 6px;
-  }
-  .night-mode .dagkop{ color: var(--cream); }
-  .leeg{ font-size:13px; font-weight:700; color: var(--ink-soft); padding:2px 2px 6px; }
-  .night-mode .leeg{ color:#9EA1D4; }
-  /* Tweede regel onder een dagitem: tijd, voor wie, en of het 's avonds is. */
-  .wierij{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; padding:0 0 6px; }
-  .wierij + .wierij{ padding-bottom:10px; }
-  .chips{ display:flex; gap:6px; flex-wrap:wrap; }
-  .chip{
-    padding:6px 11px; border-radius:999px; cursor:pointer;
-    border:1px solid rgba(43,45,66,.14);
-    background: rgba(255,255,255,.7);
-    font-family: var(--baloo); font-weight:800; font-size:12px; color: var(--ink-soft);
-  }
-  .night-mode .chip{ background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.14); color:#9EA1D4; }
-  .chip.aan{ background: var(--ink); border-color: var(--ink); color:#fff; }
-  .night-mode .chip.aan{ background: var(--cream); border-color: var(--cream); color: var(--ink); }
-  .kleuren{ display:flex; gap:6px; flex:none; }
-  .kleuren button{
-    width:24px; height:24px; border-radius:50%; cursor:pointer; border:2px solid transparent;
-  }
-  .kleuren button.aan{ border-color: var(--ink); }
-  .night-mode .kleuren button.aan{ border-color:#fff; }
+  .velinhoud{ max-width:520px; margin:0 auto; padding:0 22px; }
   .melding{
-    margin:0 16px 12px; padding:11px 14px; border-radius:14px;
-    background: rgba(229,72,77,.12); border:1px solid rgba(229,72,77,.3);
+    max-width:496px; margin:0 auto 14px; padding:11px 14px; border-radius:16px;
+    background: rgba(229,72,77,.14); border:1px solid rgba(229,72,77,.32);
     font-weight:700; font-size:13px; color:#B0272C;
   }
+  body.nacht .melding{ color:#FFB3B5; }
   .melding[hidden]{ display:none; }
-  .night-mode .melding{ color:#FFB3B5; }
 
-  @media (max-width:600px){
-    .app{ padding: 20px 14px 34px; }
-    .content{ flex-direction:column; margin-top:20px; }
-    /* De kolom laat zich weg; de blokken erin worden zelf rijen, zodat 'Morgen'
-       los onder de stappen gezet kan worden. */
-    .agenda{ display: contents; }
-    .agendablok,
-    .agendablok + .agendablok{
-      order:-1; margin:0 0 18px; padding:0 0 18px;
-      border-top:none; border-bottom:1px dashed rgba(43,45,66,.16);
-    }
-    .night-mode .agendablok{ border-bottom-color: rgba(255,255,255,.14); }
-    .agendablok.later{
-      order:1; margin:20px 0 0; padding:20px 0 0;
-      border-bottom:none; border-top:1px dashed rgba(43,45,66,.16);
-    }
-    .night-mode .agendablok.later{ border-top-color: rgba(255,255,255,.14); }
-    .agendalijst{ flex-direction:row; flex-wrap:wrap; gap:10px 20px; }
-    .voortgang{ flex-direction:column; }
-    .pvak + .pvak{ border-left:none; border-top:1px solid rgba(43,45,66,.08); }
-    .night-mode .pvak + .pvak{ border-top-color: rgba(255,255,255,.10); }
-    .blad{ top:24px; }
+  .bewerkkaart{ border-radius:26px; overflow:hidden; margin-top:18px; }
+  .groepregel{ display:flex; align-items:center; gap:8px; padding:10px 12px; border-bottom:1px solid var(--scheiding); }
+  .bewerkrij{
+    display:flex; align-items:center; gap:10px; padding:8px 12px; min-height:58px;
+    background: transparent; transition: background .2s ease;
+  }
+  .bewerkrij.gekozen{ background: rgba(242,153,74,.16); }
+  .bewerkrij + .bewerkrij{ border-top:1px solid var(--scheiding); }
+  .bewerkrij.sleept{ position:relative; z-index:3; box-shadow: 0 12px 26px rgba(0,0,0,.16); background: rgba(255,255,255,.7); }
+  body.nacht .bewerkrij.sleept{ background: rgba(60,62,110,.9); }
+
+  .minknop, .plusknop{
+    width:28px; height:28px; border-radius:50%; flex:none; cursor:pointer;
+    border:none; color:#fff; font-size:19px; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .minknop{ background: var(--rood); }
+  .plusknop{ background:#34C759; }
+  .emojiknop{
+    width:42px; height:42px; border-radius:14px; flex:none; cursor:pointer;
+    background: var(--tegel); border:1px solid var(--tegelrand);
+    display:flex; align-items:center; justify-content:center; font-size:23px;
+  }
+  .greep{
+    width:34px; height:38px; flex:none; cursor:grab; touch-action:none;
+    display:flex; align-items:center; justify-content:center;
+    background:none; border:none; color: var(--inkt-zacht); opacity:.5;
+  }
+  input.veld{
+    flex:1 1 90px; min-width:0;
+    font-family: var(--baloo); font-weight:700; font-size:16px; color: var(--inkt);
+    padding:9px 12px; border-radius:13px;
+    border:1px solid var(--veldrand); background: var(--veld);
+  }
+  input.veld::placeholder{ color: var(--inkt-zacht); opacity:.7; }
+  input.veld.tijd{ flex:0 0 126px; padding:9px 6px; font-size:13px; text-align:center; font-family: var(--nunito); font-weight:800; }
+  input.veld.getal{ flex:0 0 84px; text-align:center; }
+  .toevoegrij{
+    display:flex; align-items:center; gap:10px; padding:11px 12px; width:100%;
+    background:none; border:none; border-top:1px solid var(--scheiding); cursor:pointer;
+    font-family: var(--baloo); font-weight:800; font-size:15.5px; color: var(--inkt-zacht);
+  }
+  .kaartknop{
+    display:flex; align-items:center; gap:10px; width:100%; margin-top:14px;
+    padding:15px 16px; border-radius:22px; border:none; cursor:pointer;
+    font-family: var(--baloo); font-weight:800; font-size:15.5px; color: var(--inkt-zacht);
+  }
+  .details{ padding:14px 4px 4px; }
+  .detailkop{
+    font-weight:800; font-size:11.5px; letter-spacing:.6px; text-transform:uppercase;
+    color: var(--inkt-zacht); padding:0 6px 8px;
+  }
+  .chips{ display:flex; gap:6px; flex-wrap:wrap; border-radius:22px; padding:8px; }
+  /* Zeven dagen naast elkaar: even breed en zonder eigen binnenruimte, anders
+     valt zondag op een telefoon naar de volgende regel. */
+  .chips.dagen .chip{ flex:1 1 0; min-width:0; padding:9px 2px; }
+  .notitie{
+    font-weight:700; font-size:12.5px; color: var(--inkt-zacht);
+    padding:10px 8px 0; line-height:1.35;
+  }
+  .chip{
+    padding:9px 14px; border-radius:15px; cursor:pointer; flex:1 1 auto; text-align:center;
+    border:1px solid rgba(255,255,255,.7); background: rgba(255,255,255,.55);
+    font-family: var(--baloo); font-weight:800; font-size:14px; color: var(--inkt-zacht);
+  }
+  body.nacht .chip{ background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.14); }
+  .chip.aan{ background: var(--oranje); border-color: var(--oranje); color:#fff; }
+  .chip.persoon.aan{ color:#fff; }
+  .kleuren{ display:flex; gap:8px; flex:none; }
+  /* De kleuren zakken naar een tweede regel binnen dezelfde rij, zodat elk kind
+     één regel blijft en de greep dus één ding verplaatst. */
+  .bewerkrij{ flex-wrap:wrap; }
+  .kleurenrij{ flex:1 0 100%; padding:2px 0 4px; }
+  .kleuren button{ width:22px; height:22px; border-radius:50%; cursor:pointer; border:2px solid transparent; }
+  .kleuren button.aan{ border-color: var(--inkt); }
+
+  /* --------------------------------------------------------- emojikiezer --- */
+  .kiezer{
+    position:fixed; left:0; right:0; bottom:0; z-index:71;
+    max-width:520px; margin:0 auto;
+    border-radius:30px 30px 0 0; padding:10px 18px calc(env(safe-area-inset-bottom) + 18px);
+    display:flex; flex-direction:column; max-height:78vh;
+  }
+  .greepje{ width:44px; height:5px; border-radius:99px; background: rgba(43,45,66,.22); margin:0 auto 10px; }
+  body.nacht .greepje{ background: rgba(255,255,255,.3); }
+  .kiezerkop{ text-align:center; font-family: var(--baloo); font-weight:800; font-size:18px; }
+  .kiezervoorbeeld{
+    width:78px; height:78px; border-radius:50%; margin:12px auto 14px;
+    background: var(--tegel); border:1px solid var(--tegelrand);
+    display:flex; align-items:center; justify-content:center; font-size:40px;
+  }
+  .kiezertabs{ display:flex; gap:6px; overflow-x:auto; padding-bottom:12px; scrollbar-width:none; }
+  .kiezertabs::-webkit-scrollbar{ display:none; }
+  .kiezertabs .chip{ flex:none; }
+  .kiezerraster{
+    flex:1; overflow-y:auto; display:grid; gap:8px;
+    grid-template-columns: repeat(6, 1fr);
+  }
+  .kiezerraster button{
+    aspect-ratio:1; border-radius:50%; cursor:pointer; font-size:25px;
+    border:1px solid var(--tegelrand); background: var(--tegel);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .kiezerraster button.aan{ box-shadow: 0 0 0 2.5px var(--oranje); }
+  .grootknop{
+    width:100%; margin-top:14px; padding:15px 0; border-radius:20px; border:none; cursor:pointer;
+    background: var(--oranje); color:#fff;
+    font-family: var(--baloo); font-weight:800; font-size:17px;
+  }
+
+  /* ------------------------------------------------------------ verversen --- */
+  .trek{
+    position:fixed; top:calc(env(safe-area-inset-top) + 6px); left:50%; margin-left:-18px;
+    width:36px; height:36px; border-radius:50%; z-index:50;
+    background: rgba(255,255,255,.85); box-shadow:0 6px 18px rgba(0,0,0,.14);
+    display:flex; align-items:center; justify-content:center;
+    color: var(--oranje-diep); font-size:19px; opacity:0; pointer-events:none;
+  }
+  .trek.terug{ transition: transform .28s ease, opacity .28s ease; }
+  .trek.bezig .trekicoon{ animation: draai .8s linear infinite; }
+  @keyframes draai{ to{ transform: rotate(360deg); } }
+
+  @media (max-width:380px){
+    .app{ padding-left:16px; padding-right:16px; }
+    .rondje{ width:40px; height:40px; }
+    .rondje .gezicht{ width:36px; height:36px; font-size:20px; }
   }
 </style>
 </head>
 <body>
   <div class="app">
-    <div class="topbar">
-      <div>
-        <h1 id="titel">Ons dagritme</h1>
-        <div class="kids" id="kids"></div>
+    <header class="kop">
+      <h1 id="paginatitel">Ochtend</h1>
+      <div class="kopdatum" id="paginadatum"></div>
+    </header>
+
+    <section class="pagina" id="pg-ritme">
+      <div class="segment glas" id="segment">
+        <button type="button" data-ritme="dag">Ochtend</button>
+        <button type="button" data-ritme="nacht">Avond</button>
       </div>
-      <button class="icoonknop glas" id="bewerkKnop" title="Bewerken" aria-label="Bewerken">✎</button>
-    </div>
+      <div class="voortgang glas" id="voortgang" hidden></div>
+      <div id="groepen"></div>
+      <button class="opnieuw" id="opnieuwKnop" type="button">opnieuw beginnen</button>
+    </section>
 
-    <div class="schakel glas glas-zwevend" id="schakel">
-      <button class="active" id="btnDag">☀️ Ochtend</button>
-      <button id="btnNacht">🌙 Avond</button>
-    </div>
+    <section class="pagina" id="pg-overzicht" hidden>
+      <div class="weekstrip glas" id="weekstrip"></div>
+      <div id="agenda"></div>
+    </section>
 
-    <div class="voortgang glas" id="voortgang" hidden></div>
-
-    <div class="content">
-      <div class="path" id="path"></div>
-      <aside class="agenda" id="agenda" hidden></aside>
-    </div>
-
-    <div class="footer">
-      <button class="reset" id="resetBtn">opnieuw beginnen</button>
-    </div>
+    <section class="pagina" id="pg-instellingen" hidden>
+      <div class="lijst glas" id="instellijst"></div>
+      <div class="voetnoot" id="voetnoot"></div>
+    </section>
   </div>
+
+  <nav class="tabbalk glas glas-zwevend" id="tabbalk">
+    <button type="button" data-pagina="ritme" class="aan">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h2.5M4 12h2.5M4 18h2.5"/><path d="M10.5 6H20M10.5 12H20M10.5 18H20"/></svg>
+      <span>Ritme</span>
+    </button>
+    <button type="button" data-pagina="overzicht">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="4"/><path d="M3.5 10h17M8.5 3.2v3.4M15.5 3.2v3.4"/></svg>
+      <span>Overzicht</span>
+    </button>
+    <button type="button" data-pagina="instellingen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3.2v2.2M12 18.6V20.8M20.8 12h-2.2M5.4 12H3.2M17.3 6.7l-1.5 1.5M8.2 15.8l-1.5 1.5M17.3 17.3l-1.5-1.5M8.2 8.2 6.7 6.7"/></svg>
+      <span>Instellingen</span>
+    </button>
+  </nav>
 
   <div class="scrim" id="scrim" hidden></div>
-  <div class="blad glas glas-zwevend" id="blad" hidden>
-    <div class="bladkop">
-      <button class="tekstknop" id="bewerkAf">Annuleer</button>
-      <h2>Bewerken</h2>
-      <button class="tekstknop" id="bewerkBewaar"><b>Bewaar</b></button>
-    </div>
-    <div class="tabs" id="tabs">
-      <button data-tab="dag" class="active">Ochtend</button>
-      <button data-tab="nacht">Avond</button>
-      <button data-tab="mensen">Mensen</button>
-      <button data-tab="overzicht">Dagen</button>
+  <section class="vel" id="vel" hidden>
+    <div class="velkop glas glas-zwevend">
+      <button class="tekstknop" id="velAf" type="button">Annuleer</button>
+      <h2 id="veltitel">Bewerken</h2>
+      <button class="tekstknop" id="velGereed" type="button"><b>Gereed</b></button>
     </div>
     <div class="melding" id="melding" hidden></div>
-    <div class="bladinhoud" id="bladinhoud"></div>
-  </div>
+    <div class="velinhoud" id="velinhoud"></div>
+  </section>
 
-  <div class="trek" id="trek" aria-hidden="true"><span class="trek-icoon">↻</span></div>
+  <div class="scrim" id="kiesScrim" hidden></div>
+  <section class="kiezer glas glas-zwevend" id="kiezer" hidden>
+    <div class="greepje"></div>
+    <div class="kiezerkop" id="kiezerkop">Kies een icoon</div>
+    <div class="kiezervoorbeeld" id="kiezervoorbeeld">🙂</div>
+    <div class="kiezertabs" id="kiezertabs"></div>
+    <div class="kiezerraster" id="kiezerraster"></div>
+    <button class="grootknop" id="kiezerGereed" type="button">Gereed</button>
+  </section>
+
+  <div class="trek" id="trek" aria-hidden="true"><span class="trekicoon">↻</span></div>
 
 <script>
-// De inhoud van de app — ritmes, mensen, overzicht — staat in de database en is
-// in de app zelf te bewerken. routine.json is nog maar het zaadje: het vult de
-// database de eerste keer, en dient daarna als terugval.
-const VERSIE = '__VERSIE__';
+'use strict';
+// Ons dagritme — een enkele pagina, met de inhoud in een Firebase Realtime
+// Database. routine.json is alleen het zaadje voor een lege database; daarna
+// bewerk je alles in de app zelf, onder Instellingen.
+const VERSIE = '__VERSIE__';                     // gestempeld door de workflow
 
-const KLEUREN = ['#2FA37C', '#7C6BD6', '#D9724F', '#3B82C4', '#C2417E', '#E0A33E'];
+const KLEUREN = ['#2FA37C','#7C6BD6','#D9724F','#3B82C4','#C2417E','#E0A33E'];
 const DAGEN = ['zo','ma','di','wo','do','vr','za'];
 const DAGNAMEN = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
-const WERKDAGEN = ['ma','di','wo','do','vr','za','zo'];
+const WEEKDAGEN = ['ma','di','wo','do','vr','za','zo'];
+const DAGLETTERS = { ma:'M', di:'D', wo:'W', do:'D', vr:'V', za:'Z', zo:'Z' };
+const MAANDEN = ['januari','februari','maart','april','mei','juni','juli',
+                 'augustus','september','oktober','november','december'];
+
+const EMOJI = {
+  'Dagritme': ['🛏️','⏰','🌅','🪥','🚿','🛁','🧼','🧴','🪮','💇','🚽','🧻','👕','👖','🧦','👟','🧥','🧢','🎒','🚪','🚗','🚲','🛴','🌙','😴','📖','🤗','🧸','🎧','🪟'],
+  'Eten': ['🍽️','🥣','🍞','🥐','🧀','🥚','🍎','🍌','🍓','🥕','🥪','🍕','🍝','🥗','🧃','🥛','🍪','🍫','🍇','🥦','🍚','🍲','🥞','🧁'],
+  'Spelen': ['🧸','⚽','🏀','🎾','🏊','🚴','🤸','🎨','🖍️','🧩','🎲','🎮','🎹','🎸','🪁','🛝','🏐','🥋','⛸️','🏓','🎯','🪀','🤾','🩰'],
+  'Huis': ['🧹','🧺','🪣','🧽','🛋️','🪴','🗑️','🍳','🧊','📦','🔑','💡','🧷','🪥','🔌','🧴'],
+  'Dieren': ['🦄','🦖','🐶','🐱','🦊','🐼','🐸','🐙','🦋','🐝','🦉','🐢','🐳','🦁','🐰','🐥','🦔','🐧','🐨','🐷','🐮','🐒','🐴','🐬'],
+  'Mensen': ['😀','😊','🥳','🤗','🧒','👦','👧','👶','👩','👨','👩🏻','👨🏻','🧑','👵','👴','🦸','🧚','🧜','🤖','👻','🧑‍🤝‍🧑','👨‍👩‍👧‍👦','🏋️','🧘'],
+  'Dingen': ['⭐','❤️','📅','🏫','🏠','🎁','🎈','🎉','📷','🎵','☀️','🌈','❄️','🌸','🔔','⏳','📌','✅','🏆','💧','🔥','🌟','🚌','✏️'],
+};
 
 const STANDAARD = {
   titel: 'Ons dagritme',
@@ -477,7 +559,7 @@ const STANDAARD = {
       { icoon:'🎒', label:'Tas & jas' },
       { icoon:'⚽', label:'Voetbaltas', dagen:['wo'] },
       { icoon:'👟', label:'Schoenen aan' },
-      { icoon:'🐱', label:'Knuffel' },
+      { icoon:'🐈', label:'Kat knuffelen' },
       { icoon:'🚪', label:'Naar school!' },
     ]},
   ],
@@ -522,6 +604,9 @@ function uurOf(waarde, terugval){
   return Number.isFinite(n) && n >= 0 && n <= 23 ? Math.floor(n) : terugval;
 }
 
+// De sleutel waaronder een vinkje in de database staat. Hangt aan de tekst van
+// de stap, niet aan het volgnummer, zodat er een stap tussen kan zonder dat de
+// vinkjes verschuiven.
 function stapSleutel(step){
   return String((step && step.label) || '')
     .toLowerCase()
@@ -532,8 +617,20 @@ function stapSleutel(step){
 
 function nieuwId(){ return 'p' + Math.random().toString(36).slice(2, 8); }
 
-// Een routine is óf een platte lijst stappen, óf een lijst groepen. Beide vormen
-// worden hier naar dezelfde structuur getrokken.
+function dagenVan(waarde){
+  return lijstVan(waarde).map(d => String(d).trim().slice(0, 2).toLowerCase())
+    .filter(d => DAGEN.includes(d));
+}
+
+// 'wie' is de lijst kinderen waar iets voor geldt. Leeg betekent: iedereen.
+// Oudere gegevens gebruikten één 'persoon'; die wordt hier meegelezen.
+function wieVan(item){
+  const uit = lijstVan(item && item.wie).map(x => String(x));
+  const enkel = tekst(item && item.persoon);
+  if(!uit.length && enkel) uit.push(enkel);
+  return uit;
+}
+
 function maakGroepen(waarde){
   const lijst = lijstVan(waarde);
   if(!lijst.length) return [];
@@ -543,10 +640,10 @@ function maakGroepen(waarde){
     groep: tekst(item && item.groep),
     tijd: tekst(item && item.tijd),
     stappen: lijstVan(item && item.stappen).map(s => ({
-      icoon: tekst(s && s.icoon, '•'),
+      icoon: tekst(s && s.icoon, '⭐'),
       label: tekst(s && s.label),
-      dagen: lijstVan(s && s.dagen).map(d => String(d).trim().slice(0, 2).toLowerCase())
-                                   .filter(d => DAGEN.includes(d)),
+      dagen: dagenVan(s && s.dagen),
+      wie: wieVan(s),
     })),
   }));
 }
@@ -566,10 +663,10 @@ function overzichtPerDag(waarde){
     const dag = String(k).trim().slice(0, 2).toLowerCase();
     if(!DAGEN.includes(dag)) return;
     uit[dag] = lijstVan(v).map(item => ({
-      icoon: tekst(item && item.icoon, '•'),
+      icoon: tekst(item && item.icoon, '📅'),
       tekst: tekst(item && item.tekst),
       tijd: tekst(item && item.tijd),
-      persoon: tekst(item && (item.persoon || item.kind)),
+      wie: wieVan(item),
       avond: Boolean(item && item.avond),
     }));
   });
@@ -584,7 +681,7 @@ function normaliseer(ruw){
     emoji: tekst(p && p.emoji, '🙂'),
     kleur: tekst(p && p.kleur, KLEUREN[i % KLEUREN.length]),
   }));
-  return {
+  const uit = {
     titel: tekst(bron.titel, STANDAARD.titel),
     avondVanaf: uurOf(bron.avondVanaf, STANDAARD.avondVanaf),
     mensen: mensen.length ? mensen : STANDAARD.mensen.map(p => ({ ...p })),
@@ -592,35 +689,62 @@ function normaliseer(ruw){
     nacht: routine(bron.nacht, STANDAARD.nacht),
     overzicht: overzichtPerDag(bron.overzicht),
   };
+  // Een verwijzing naar een kind dat er niet meer is telt niet mee; blijft er
+  // niemand over, dan geldt het weer voor iedereen.
+  const bestaat = new Set(uit.mensen.map(p => p.id));
+  const schoon = w => w.filter(id => bestaat.has(id));
+  ['dag','nacht'].forEach(r => uit[r].forEach(g => g.stappen.forEach(s => { s.wie = schoon(s.wie); })));
+  Object.values(uit.overzicht).forEach(items => items.forEach(i => { i.wie = schoon(i.wie); }));
+  return uit;
 }
 
 let config = normaliseer(STANDAARD);
 let instelling = null;          // { url, gezin } uit routine.json
-let mode = 'dag';
+let ritme = 'dag';              // 'dag' of 'nacht'
+let pagina = 'ritme';           // 'ritme' | 'overzicht' | 'instellingen'
+let gekozenDag = null;          // dagsleutel in het overzicht; null = vandaag
 // done[ritme] is een kaart van stapsleutel naar de verzameling mensen die klaar zijn.
 let done = { dag: new Map(), nacht: new Map() };
 
-const titelEl = document.getElementById('titel');
-const kidsEl = document.getElementById('kids');
-const pathEl = document.getElementById('path');
-const agendaEl = document.getElementById('agenda');
-const voortgangEl = document.getElementById('voortgang');
-const schakelEl = document.getElementById('schakel');
-const btnDag = document.getElementById('btnDag');
-const btnNacht = document.getElementById('btnNacht');
-const resetBtn = document.getElementById('resetBtn');
+const $ = id => document.getElementById(id);
+const paginatitelEl = $('paginatitel');
+const paginadatumEl = $('paginadatum');
+const segmentEl = $('segment');
+const voortgangEl = $('voortgang');
+const groepenEl = $('groepen');
+const weekstripEl = $('weekstrip');
+const agendaEl = $('agenda');
+const instellijstEl = $('instellijst');
+const voetnootEl = $('voetnoot');
+const tabbalkEl = $('tabbalk');
+const scrimEl = $('scrim');
+const velEl = $('vel');
+const veltitelEl = $('veltitel');
+const velinhoudEl = $('velinhoud');
+const meldingEl = $('melding');
 
 function persoonById(id){ return config.mensen.find(p => p.id === id) || null; }
-function heeftVink(ritme, stap, persoon){
-  const set = done[ritme].get(stap);
+
+// Voor wie geldt deze stap? Leeg betekent iedereen.
+function wieDoetMee(item){
+  const gekozen = lijstVan(item && item.wie).map(id => persoonById(id)).filter(Boolean);
+  return gekozen.length ? gekozen : config.mensen;
+}
+
+function heeftVink(r, stap, persoon){
+  const set = done[r].get(stap);
   return Boolean(set && set.has(persoon));
 }
-function zetVink(ritme, stap, persoon, aan){
-  const kaart = done[ritme];
+function zetVink(r, stap, persoon, aan){
+  const kaart = done[r];
   if(!kaart.has(stap)) kaart.set(stap, new Set());
   const set = kaart.get(stap);
   if(aan) set.add(persoon); else set.delete(persoon);
   if(!set.size) kaart.delete(stap);
+}
+
+function datumTekst(d){
+  return `${DAGNAMEN[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]}`;
 }
 
 // ---------------------------------------------------------------- opslag ---
@@ -636,9 +760,9 @@ function datumVan(d){
 function vandaag(){ return datumVan(new Date()); }
 
 function padConfig(){ return `${opslag.basis}/config.json`; }
-function padVink(ritme, stap, persoon){
+function padVink(r, stap, persoon){
   const delen = [opslag.basis, opslag.datum];
-  if(ritme) delen.push(ritme);
+  if(r) delen.push(r);
   if(stap) delen.push(stap);
   if(persoon) delen.push(persoon);
   return delen.join('/') + '.json';
@@ -659,13 +783,13 @@ function laadLokaal(){
   try{
     const r = JSON.parse(localStorage.getItem('dagritme-vinkjes') || 'null');
     if(!r || r.datum !== opslag.datum) return;
-    ['dag','nacht'].forEach(ritme => {
+    ['dag','nacht'].forEach(naam => {
       const kaart = new Map();
-      Object.entries(r[ritme] || {}).forEach(([stap, personen]) => {
+      Object.entries(r[naam] || {}).forEach(([stap, personen]) => {
         const set = new Set(lijstVan(personen));
         if(set.size) kaart.set(stap, set);
       });
-      done[ritme] = kaart;
+      done[naam] = kaart;
     });
   }catch(err){ /* onleesbaar: begin leeg */ }
 }
@@ -678,20 +802,20 @@ function laadLokaalConfig(){
   catch(err){ return null; }
 }
 
-async function schrijfVink(ritme, stap, persoon, aan){
+async function schrijfVink(r, stap, persoon, aan){
   bewaarLokaal();
   if(!opslag.basis) return;
   try{
-    await fetch(padVink(ritme, stap, persoon), aan
+    await fetch(padVink(r, stap, persoon), aan
       ? { method:'PUT', body:'true' }
       : { method:'DELETE' });
   }catch(err){ console.warn('opslaan mislukt:', err); }
 }
 
-async function wisRitme(ritme){
+async function wisRitme(r){
   bewaarLokaal();
   if(!opslag.basis) return;
-  try{ await fetch(padVink(ritme), { method:'DELETE' }); }
+  try{ await fetch(padVink(r), { method:'DELETE' }); }
   catch(err){ console.warn('wissen mislukt:', err); }
 }
 
@@ -700,13 +824,13 @@ async function bewaarConfigOpAfstand(ruw){
   if(!res.ok) throw new Error('HTTP ' + res.status);
 }
 
-function vulRitme(ritme, obj){
+function vulRitme(r, obj){
   const kaart = new Map();
   Object.entries(obj || {}).forEach(([stap, personen]) => {
     const set = new Set(Object.keys(personen || {}).filter(p => personen[p]));
     if(set.size) kaart.set(stap, set);
   });
-  done[ritme] = kaart;
+  done[r] = kaart;
 }
 
 // Firebase stuurt bij het openen de hele tak, en daarna per wijziging het pad
@@ -718,14 +842,14 @@ function verwerkDatum(padTekst, data){
   }else if(delen.length === 1){
     if(done[delen[0]]) vulRitme(delen[0], data);
   }else if(delen.length === 2){
-    const [ritme, stap] = delen;
-    if(!done[ritme]) return;
+    const [r, stap] = delen;
+    if(!done[r]) return;
     const set = new Set(Object.keys(data || {}).filter(p => data[p]));
-    if(set.size) done[ritme].set(stap, set); else done[ritme].delete(stap);
+    if(set.size) done[r].set(stap, set); else done[r].delete(stap);
   }else{
-    const [ritme, stap, persoon] = delen;
-    if(!done[ritme]) return;
-    zetVink(ritme, stap, persoon, Boolean(data));
+    const [r, stap, persoon] = delen;
+    if(!done[r]) return;
+    zetVink(r, stap, persoon, Boolean(data));
   }
   bewaarLokaal();
   render();
@@ -770,7 +894,7 @@ function luisterConfig(){
     // Alleen de hele tak is meteen bruikbaar; bij een deelwijziging even
     // helemaal ophalen — bewerken gebeurt zelden genoeg.
     if(pad === '/') pasConfigToe(data);
-    else haalConfig();
+    else haalConfig().then(ruw => { if(ruw) pasConfigToe(ruw); });
   });
 }
 
@@ -805,7 +929,7 @@ function bewaakDatum(){
     opslag.datum = vandaag();
     done = { dag: new Map(), nacht: new Map() };
     bewaarLokaal();
-    render();
+    toepassen();
     luisterDatum();
     ruimOp();
   }, 30000);
@@ -825,7 +949,7 @@ async function startOpslag(){
   if(ruw) pasConfigToe(ruw);
   else {
     // Nog niets in de database: het huidige ritme wordt het zaadje.
-    try{ await bewaarConfigOpAfstand(alsRuweConfig()); }
+    try{ await bewaarConfigOpAfstand(opgeschoond(alsRuweConfig())); }
     catch(err){ console.warn('kon de inhoud niet in de database zetten:', err); }
   }
   luisterConfig();
@@ -835,273 +959,475 @@ async function startOpslag(){
 }
 
 function alsRuweConfig(){
-  return {
+  return JSON.parse(JSON.stringify({
     titel: config.titel,
     avondVanaf: config.avondVanaf,
-    mensen: config.mensen.map(p => ({ ...p })),
-    dag: config.dag.map(g => ({ ...g, stappen: g.stappen.map(s => ({ ...s })) })),
-    nacht: config.nacht.map(g => ({ ...g, stappen: g.stappen.map(s => ({ ...s })) })),
-    overzicht: JSON.parse(JSON.stringify(config.overzicht)),
-  };
+    mensen: config.mensen,
+    dag: config.dag,
+    nacht: config.nacht,
+    overzicht: config.overzicht,
+  }));
 }
 
-// ------------------------------------------------------------- weergeven ---
-function opVandaag(step){
-  if(!step.dagen || !step.dagen.length) return true;
-  return step.dagen.includes(DAGEN[new Date().getDay()]);
+// ------------------------------------------------------------- bouwstenen ---
+function el(tag, klasse, inhoud){
+  const d = document.createElement(tag);
+  if(klasse) d.className = klasse;
+  if(inhoud !== undefined) d.textContent = inhoud;
+  return d;
+}
+
+function knop(klasse, inhoud){
+  const b = el('button', klasse, inhoud);
+  b.type = 'button';
+  return b;
+}
+
+function svgPijl(){
+  const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  s.setAttribute('width', '9'); s.setAttribute('height', '15'); s.setAttribute('viewBox', '0 0 9 15');
+  s.setAttribute('fill', 'none'); s.setAttribute('stroke', 'currentColor');
+  s.setAttribute('stroke-width', '2'); s.setAttribute('stroke-linecap', 'round');
+  s.setAttribute('stroke-linejoin', 'round');
+  const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  p.setAttribute('d', 'M1.5 1.5 7 7.5l-5.5 6');
+  s.appendChild(p);
+  return s;
+}
+
+function svgVink(){
+  const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  s.setAttribute('width', '10'); s.setAttribute('height', '10'); s.setAttribute('viewBox', '0 0 12 12');
+  const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  p.setAttribute('d', 'M2 6.4 4.6 9 10 3.4');
+  p.setAttribute('fill', 'none'); p.setAttribute('stroke', '#fff');
+  p.setAttribute('stroke-width', '2.5'); p.setAttribute('stroke-linecap', 'round');
+  p.setAttribute('stroke-linejoin', 'round');
+  s.appendChild(p);
+  return s;
+}
+
+function svgGreep(){
+  const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  s.setAttribute('width', '18'); s.setAttribute('height', '18'); s.setAttribute('viewBox', '0 0 18 18');
+  s.setAttribute('fill', 'none'); s.setAttribute('stroke', 'currentColor');
+  s.setAttribute('stroke-width', '1.8'); s.setAttribute('stroke-linecap', 'round');
+  const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  p.setAttribute('d', 'M3 6h12M3 9.5h12M3 13h12');
+  s.appendChild(p);
+  return s;
+}
+
+// Een kleur als 'rgba(r,g,b,a)' — voor de zachte vulling achter een gezicht.
+function zacht(hex, alpha){
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+  if(!m) return `rgba(43,45,66,${alpha})`;
+  const n = parseInt(m[1], 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
+}
+
+// ---------------------------------------------------------------- ritme ----
+function opDeze(item, d){
+  if(!item.dagen || !item.dagen.length) return true;
+  return item.dagen.includes(DAGEN[d.getDay()]);
 }
 
 function zichtbareGroepen(){
-  return config[mode]
-    .map(g => ({ groep:g.groep, tijd:g.tijd, stappen:g.stappen.filter(s => s.label && opVandaag(s)) }))
+  const nu = new Date();
+  return config[ritme]
+    .map(g => ({ groep:g.groep, tijd:g.tijd, stappen: g.stappen.filter(s => s.label && opDeze(s, nu)) }))
     .filter(g => g.stappen.length);
 }
 
-function namenZin(){
-  const namen = config.mensen.map(p => p.naam);
-  if(!namen.length) return '';
-  if(namen.length === 1) return 'voor ' + namen[0];
-  return 'voor ' + namen.slice(0, -1).join(', ') + ' & ' + namen[namen.length - 1];
+function maakRondje(stap, persoon){
+  const sleutel = stapSleutel(stap);
+  const b = knop('rondje');
+  b.setAttribute('aria-label', `${stap.label} — ${persoon.naam}`);
+  const aan = heeftVink(ritme, sleutel, persoon.id);
+  b.setAttribute('aria-pressed', aan ? 'true' : 'false');
+
+  const ring = el('div', 'ring');
+  const gezicht = el('div', 'gezicht', persoon.emoji);
+  gezicht.style.background = zacht(persoon.kleur, .16);
+  ring.appendChild(gezicht);
+
+  const vink = el('div', 'vink');
+  vink.appendChild(svgVink());
+
+  b.append(ring, vink);
+  b.addEventListener('click', () => {
+    const nieuw = b.getAttribute('aria-pressed') !== 'true';
+    zetVink(ritme, sleutel, persoon.id, nieuw);
+    render();
+    schrijfVink(ritme, sleutel, persoon.id, nieuw);
+  });
+  return b;
 }
 
-function tint(kleur, alpha){
-  const m = /^#([0-9a-f]{6})$/i.exec(kleur || '');
-  if(!m) return 'rgba(43,45,66,.12)';
-  const n = parseInt(m[1], 16);
-  return `rgba(${n >> 16 & 255}, ${n >> 8 & 255}, ${n & 255}, ${alpha})`;
-}
-
-function renderVoortgang(){
-  const groepen = zichtbareGroepen();
-  const totaal = groepen.reduce((n, g) => n + g.stappen.length, 0);
+function tekenVoortgang(groepen){
   voortgangEl.innerHTML = '';
-  voortgangEl.hidden = !totaal;
-  if(!totaal) return;
+  const stappen = groepen.flatMap(g => g.stappen);
+  if(!stappen.length || !config.mensen.length){ voortgangEl.hidden = true; return; }
+  voortgangEl.hidden = false;
 
-  config.mensen.forEach(p => {
-    const af = groepen.reduce((n, g) =>
-      n + g.stappen.filter(s => heeftVink(mode, stapSleutel(s), p.id)).length, 0);
+  config.mensen.forEach(persoon => {
+    const van = stappen.filter(s => wieDoetMee(s).some(p => p.id === persoon.id));
+    const klaar = van.filter(s => heeftVink(ritme, stapSleutel(s), persoon.id)).length;
 
-    const vak = document.createElement('div');
-    vak.className = 'pvak';
+    const vak = el('div', 'vperson');
+    const bol = el('div', 'vbol', persoon.emoji);
+    bol.style.background = zacht(persoon.kleur, .16);
 
-    const gezicht = document.createElement('div');
-    gezicht.className = 'pgezicht';
-    gezicht.style.background = tint(p.kleur, 0.18);
-    gezicht.textContent = p.emoji;
+    const tekstvak = el('div', 'vtekst');
+    const regel = el('div', 'vregel');
+    regel.append(el('span', 'vnaam', persoon.naam),
+                 el('span', 'vtelling', `${klaar}/${van.length}`));
+    const balk = el('div', 'vbalk');
+    const vul = el('span');
+    vul.style.width = van.length ? Math.round(klaar / van.length * 100) + '%' : '0%';
+    vul.style.background = persoon.kleur;
+    balk.appendChild(vul);
+    tekstvak.append(regel, balk);
 
-    const rechts = document.createElement('div');
-    rechts.style.flex = '1';
-    rechts.style.minWidth = '0';
-
-    const regel = document.createElement('div');
-    regel.className = 'pnaam';
-    const naam = document.createElement('b');
-    naam.textContent = p.naam;
-    const telling = document.createElement('span');
-    telling.textContent = af + '/' + totaal;
-    regel.append(naam, telling);
-
-    const balk = document.createElement('div');
-    balk.className = 'balk';
-    const vulling = document.createElement('i');
-    vulling.style.width = Math.round(af / totaal * 100) + '%';
-    vulling.style.background = p.kleur;
-    balk.appendChild(vulling);
-
-    rechts.append(regel, balk);
-    vak.append(gezicht, rechts);
+    vak.append(bol, tekstvak);
     voortgangEl.appendChild(vak);
   });
 }
 
-function maakKnop(step, persoon){
-  const sleutel = stapSleutel(step);
-  const af = heeftVink(mode, sleutel, persoon.id);
+function tekenRitme(){
+  const groepen = zichtbareGroepen();
+  tekenVoortgang(groepen);
+  groepenEl.innerHTML = '';
 
-  const knop = document.createElement('button');
-  knop.className = 'pknop';
-  knop.type = 'button';
-  knop.setAttribute('aria-pressed', af ? 'true' : 'false');
-  knop.setAttribute('aria-label', `${step.label} — ${persoon.naam}`);
+  if(!groepen.length){
+    const leeg = el('div', 'leegkaart glas', 'Nog geen stappen. Voeg ze toe bij Instellingen.');
+    groepenEl.appendChild(leeg);
+    return;
+  }
 
-  const rond = document.createElement('span');
-  rond.className = 'rond';
-  rond.textContent = persoon.emoji;
-  if(af) rond.style.background = tint(persoon.kleur, 0.18);
-
-  const vink = document.createElement('span');
-  vink.className = 'vink';
-  vink.textContent = '✓';
-
-  knop.append(rond, vink);
-  knop.addEventListener('click', () => {
-    const aan = !heeftVink(mode, sleutel, persoon.id);
-    zetVink(mode, sleutel, persoon.id, aan);
-    render();
-    schrijfVink(mode, sleutel, persoon.id, aan);
+  groepen.forEach(groep => {
+    if(groep.groep || groep.tijd){
+      const kop = el('div', 'groepkop');
+      kop.append(el('div', 'groepnaam', groep.groep), el('div', 'groeptijd', groep.tijd));
+      groepenEl.appendChild(kop);
+    }
+    const kaart = el('div', 'kaart glas');
+    groep.stappen.forEach((stap, i) => {
+      if(i) kaart.appendChild(el('div', 'streep'));
+      const rij = el('div', 'taak');
+      rij.append(el('div', 'tegel', stap.icoon), el('div', 'taaknaam', stap.label));
+      const rondjes = el('div', 'rondjes');
+      wieDoetMee(stap).forEach(p => rondjes.appendChild(maakRondje(stap, p)));
+      rij.appendChild(rondjes);
+      kaart.appendChild(rij);
+    });
+    groepenEl.appendChild(kaart);
   });
-  return knop;
 }
 
-function maakStap(step){
-  const rij = document.createElement('div');
-  rij.className = 'stap';
+// ------------------------------------------------------------- overzicht ---
+function weekVan(d){
+  const begin = new Date(d);
+  const verschuiving = (begin.getDay() + 6) % 7;      // maandag als eerste dag
+  begin.setDate(begin.getDate() - verschuiving);
+  begin.setHours(0, 0, 0, 0);
+  return Array.from({ length: 7 }, (_, i) => {
+    const dag = new Date(begin);
+    dag.setDate(begin.getDate() + i);
+    return dag;
+  });
+}
 
-  const tegel = document.createElement('div');
-  tegel.className = 'tegel';
-  tegel.textContent = step.icoon || '•';
+function overzichtDatum(){
+  const nu = new Date();
+  if(!gekozenDag) return nu;
+  const gevonden = weekVan(nu).find(d => DAGEN[d.getDay()] === gekozenDag);
+  return gevonden || nu;
+}
 
-  const label = document.createElement('div');
-  label.className = 'staplabel';
-  label.textContent = step.label;
+function tekenWeekstrip(){
+  const nu = new Date();
+  const gekozen = overzichtDatum();
+  weekstripEl.innerHTML = '';
+  weekVan(nu).forEach(d => {
+    const sleutel = DAGEN[d.getDay()];
+    const b = knop('');
+    if(datumVan(d) === datumVan(nu)) b.classList.add('vandaag');
+    if(datumVan(d) === datumVan(gekozen)) b.classList.add('aan');
+    b.append(el('span', 'wletter', DAGLETTERS[sleutel]),
+             el('span', 'wdag', String(d.getDate())));
+    b.setAttribute('aria-label', datumTekst(d));
+    b.addEventListener('click', () => { gekozenDag = sleutel; render(); });
+    weekstripEl.appendChild(b);
+  });
+}
 
-  const knoppen = document.createElement('div');
-  knoppen.className = 'knoppen';
-  config.mensen.forEach(p => knoppen.appendChild(maakKnop(step, p)));
+function itemsVan(d){ return (config.overzicht || {})[DAGEN[d.getDay()]] || []; }
 
-  rij.append(tegel, label, knoppen);
+function agendaBlokken(){
+  const nu = new Date();
+  const gekozen = overzichtDatum();
+  const isVandaag = datumVan(gekozen) === datumVan(nu);
+  const blokken = [
+    { kop:'Overdag', items: itemsVan(gekozen).filter(i => !i.avond) },
+    { kop: isVandaag ? 'Vanavond' : "'s Avonds", items: itemsVan(gekozen).filter(i => i.avond) },
+  ];
+  if(isVandaag){
+    const morgen = new Date(nu);
+    morgen.setDate(morgen.getDate() + 1);
+    blokken.push({ kop:'Morgen', items: itemsVan(morgen).filter(i => !i.avond) });
+  }
+  return blokken.filter(b => b.items.length);
+}
+
+function maakAgendaRij(item){
+  const rij = el('div', 'agendarij');
+  rij.append(el('div', 'agendaicoon', item.icoon), el('div', 'agendatekst', item.tekst));
+
+  const gekozen = lijstVan(item.wie).map(id => persoonById(id)).filter(Boolean);
+  if(gekozen.length && gekozen.length < config.mensen.length){
+    const merken = el('div', 'merken');
+    gekozen.forEach(p => {
+      const merk = el('span', 'merk');
+      merk.style.background = p.kleur;
+      merk.append(el('i', '', p.emoji), document.createTextNode(p.naam));
+      merken.appendChild(merk);
+    });
+    rij.appendChild(merken);
+  }
+  if(item.tijd) rij.appendChild(el('div', 'agendatijd', item.tijd));
   return rij;
 }
 
-function render(){
-  renderAgenda();
-  renderVoortgang();
-  pathEl.innerHTML = '';
-
-  zichtbareGroepen().forEach(groep => {
-    const blok = document.createElement('div');
-
-    if(groep.groep || groep.tijd){
-      const kop = document.createElement('div');
-      kop.className = 'groepkop';
-      const naam = document.createElement('div');
-      naam.className = 'groepnaam';
-      naam.textContent = groep.groep;
-      const tijd = document.createElement('div');
-      tijd.className = 'groeptijd';
-      tijd.textContent = groep.tijd;
-      kop.append(naam, tijd);
-      blok.appendChild(kop);
-    }
-
-    const kaart = document.createElement('div');
-    kaart.className = 'stapkaart glas';
-    groep.stappen.forEach(s => kaart.appendChild(maakStap(s)));
-    blok.appendChild(kaart);
-    pathEl.appendChild(blok);
-  });
-}
-
-// 's Ochtends kijk je naar wat er vandaag overdag speelt; 's avonds naar wat er
-// vanavond nog gebeurt én naar morgen.
-function agendaBlokken(){
-  const nu = new Date();
-  const morgen = new Date();
-  morgen.setDate(morgen.getDate() + 1);
-  const van = d => (config.overzicht || {})[DAGEN[d.getDay()]] || [];
-  if(mode !== 'nacht'){
-    return [{ kop:'Vandaag', datum:nu, items: van(nu).filter(i => !i.avond) }];
-  }
-  return [
-    { kop:'Vanavond', datum:nu, items: van(nu).filter(i => i.avond) },
-    { kop:'Morgen', datum:morgen, items: van(morgen).filter(i => !i.avond), later:true },
-  ];
-}
-
-function maakAgendaBlok(blok){
-  const vak = document.createElement('section');
-  vak.className = 'agendablok' + (blok.later ? ' later' : '');
-
-  const kop = document.createElement('div');
-  kop.className = 'agendakop';
-  kop.textContent = blok.kop;
-
-  const dagnaam = document.createElement('div');
-  dagnaam.className = 'agendadag';
-  dagnaam.textContent = DAGNAMEN[blok.datum.getDay()];
-
-  const lijst = document.createElement('div');
-  lijst.className = 'agendalijst';
-  blok.items.forEach(item => {
-    const rij = document.createElement('div');
-    rij.className = 'agendaitem';
-
-    const icoon = document.createElement('div');
-    icoon.className = 'agendaicoon';
-    icoon.textContent = item.icoon;
-
-    const inhoud = document.createElement('div');
-    const regel = document.createElement('div');
-    regel.className = 'agendatekst';
-    const wie = item.persoon ? persoonById(item.persoon) : null;
-    if(wie){
-      const merk = document.createElement('span');
-      merk.className = 'merk';
-      merk.style.background = wie.kleur;
-      merk.textContent = wie.naam;
-      regel.appendChild(merk);
-    }
-    regel.appendChild(document.createTextNode(item.tekst));
-    inhoud.appendChild(regel);
-
-    if(item.tijd){
-      const tijd = document.createElement('div');
-      tijd.className = 'agendatijd';
-      tijd.textContent = item.tijd;
-      inhoud.appendChild(tijd);
-    }
-
-    rij.append(icoon, inhoud);
-    lijst.appendChild(rij);
-  });
-
-  vak.append(kop, dagnaam, lijst);
-  return vak;
-}
-
-function renderAgenda(){
-  const blokken = agendaBlokken().filter(b => b.items.length);
+function tekenOverzicht(){
+  tekenWeekstrip();
   agendaEl.innerHTML = '';
-  agendaEl.hidden = !blokken.length;
-  blokken.forEach(b => agendaEl.appendChild(maakAgendaBlok(b)));
+  const blokken = agendaBlokken();
+  if(!blokken.length){
+    agendaEl.appendChild(el('div', 'blokkop', 'Niks bijzonders'));
+    agendaEl.appendChild(el('div', 'leegkaart glas', 'Deze dag staat er niets in de agenda.'));
+    return;
+  }
+  blokken.forEach(blok => {
+    agendaEl.appendChild(el('div', 'blokkop', blok.kop));
+    const kaart = el('div', 'kaart glas');
+    blok.items.forEach((item, i) => {
+      if(i) kaart.appendChild(el('div', 'streep'));
+      kaart.appendChild(maakAgendaRij(item));
+    });
+    agendaEl.appendChild(kaart);
+  });
+}
+
+// ----------------------------------------------------------- instellingen ---
+function instelrij(icoon, titel, uitleg, opKlik, extra){
+  const b = knop('lijstrij');
+  b.append(el('div', 'tegel', icoon));
+  const tekstvak = el('div', 'lijsttekst');
+  tekstvak.append(el('div', 'lijsttitel', titel), el('div', 'lijstuitleg', uitleg));
+  b.appendChild(tekstvak);
+  if(extra) b.appendChild(extra);
+  const pijl = el('div', 'pijl');
+  pijl.appendChild(svgPijl());
+  b.appendChild(pijl);
+  b.addEventListener('click', opKlik);
+  return b;
+}
+
+function tekenInstellingen(){
+  instellijstEl.innerHTML = '';
+
+  const gezichten = el('div', 'gezichten');
+  config.mensen.slice(0, 4).forEach(p => {
+    const s = el('span', '', p.emoji);
+    s.style.background = zacht(p.kleur, .18);
+    gezichten.appendChild(s);
+  });
+  instellijstEl.append(
+    instelrij('🧒', 'Kinderen', config.mensen.map(p => p.naam).join(', ') || 'nog niemand',
+      () => openVel('kinderen'), gezichten),
+    instelrij('☀️', 'Ochtendritme', aantalStappen(config.dag) + ' stappen',
+      () => openVel('dag')),
+    instelrij('🌙', 'Avondritme', aantalStappen(config.nacht) + ' stappen',
+      () => openVel('nacht')),
+    instelrij('📅', 'Dagoverzicht', 'school, sport en wat er verder is',
+      () => openVel('overzicht')),
+    instelrij('⚙️', 'Naam en tijden', `${config.titel} · avond vanaf ${config.avondVanaf}:00`,
+      () => openVel('algemeen')),
+  );
+  voetnootEl.textContent = VERSIE.startsWith('__') ? 'testversie' : 'versie ' + VERSIE.slice(0, 7);
+}
+
+// ---------------------------------------------------------------- tekenen ---
+function render(){
+  if(pagina === 'ritme') tekenRitme();
+  else if(pagina === 'overzicht') tekenOverzicht();
+  else tekenInstellingen();
 }
 
 function toepassen(){
   document.title = config.titel;
-  titelEl.textContent = config.titel;
-  kidsEl.textContent = namenZin();
+  const isNacht = ritme === 'nacht';
+  document.body.classList.toggle('nacht', isNacht && pagina === 'ritme');
+  document.querySelector('meta[name="theme-color"]')
+    .setAttribute('content', isNacht && pagina === 'ritme' ? '#10122F' : '#FFF6E9');
+
+  if(pagina === 'ritme'){
+    paginatitelEl.textContent = isNacht ? 'Avond' : 'Ochtend';
+    paginadatumEl.textContent = datumTekst(new Date());
+  }else if(pagina === 'overzicht'){
+    paginatitelEl.textContent = 'Overzicht';
+    paginadatumEl.textContent = datumTekst(overzichtDatum());
+  }else{
+    paginatitelEl.textContent = 'Instellingen';
+    paginadatumEl.textContent = config.titel;
+  }
+
+  $('pg-ritme').hidden = pagina !== 'ritme';
+  $('pg-overzicht').hidden = pagina !== 'overzicht';
+  $('pg-instellingen').hidden = pagina !== 'instellingen';
+  segmentEl.querySelectorAll('button').forEach(b =>
+    b.classList.toggle('aan', b.dataset.ritme === ritme));
+  tabbalkEl.querySelectorAll('button').forEach(b =>
+    b.classList.toggle('aan', b.dataset.pagina === pagina));
   render();
 }
 
-function setMode(nieuw){
-  mode = nieuw;
-  const isNacht = mode === 'nacht';
-  document.body.classList.toggle('night-mode', isNacht);
-  btnDag.classList.toggle('active', !isNacht);
-  btnNacht.classList.toggle('active', isNacht);
-  document.querySelector('meta[name="theme-color"]').setAttribute('content', isNacht ? '#10122F' : '#F2994A');
-  render();
+function zetRitme(nieuw){ ritme = nieuw; toepassen(); }
+function zetPagina(nieuw){
+  pagina = nieuw;
+  if(nieuw === 'overzicht') gekozenDag = null;
+  window.scrollTo(0, 0);
+  toepassen();
 }
 
 function beginRitme(){
   return new Date().getHours() >= config.avondVanaf ? 'nacht' : 'dag';
 }
 
-// -------------------------------------------------------------- bewerken ---
-const bladEl = document.getElementById('blad');
-const scrimEl = document.getElementById('scrim');
-const bladinhoud = document.getElementById('bladinhoud');
-const meldingEl = document.getElementById('melding');
-let concept = null;
-let bewerkTab = 'dag';
-const openDagen = new Set();
+// ----------------------------------------------------------- emoji kiezen ---
+const kiezerEl = $('kiezer');
+const kiesScrimEl = $('kiesScrim');
+const kiezerkopEl = $('kiezerkop');
+const kiezervoorbeeldEl = $('kiezervoorbeeld');
+const kiezertabsEl = $('kiezertabs');
+const kiezerrasterEl = $('kiezerraster');
+let kiezerWaarde = '';
+let kiezerGroep = 'Dagritme';
+let kiezerKlaar = null;
 
-function el(tag, klasse){
-  const d = document.createElement(tag);
-  if(klasse) d.className = klasse;
-  return d;
+function tekenKiezer(){
+  kiezervoorbeeldEl.textContent = kiezerWaarde;
+  kiezertabsEl.innerHTML = '';
+  Object.keys(EMOJI).forEach(naam => {
+    const b = knop('chip' + (naam === kiezerGroep ? ' aan' : ''), naam);
+    b.addEventListener('click', () => { kiezerGroep = naam; tekenKiezer(); });
+    kiezertabsEl.appendChild(b);
+  });
+  kiezerrasterEl.innerHTML = '';
+  (EMOJI[kiezerGroep] || []).forEach(teken => {
+    const b = knop(teken === kiezerWaarde ? 'aan' : '', teken);
+    b.setAttribute('aria-label', teken);
+    b.addEventListener('click', () => { kiezerWaarde = teken; tekenKiezer(); });
+    kiezerrasterEl.appendChild(b);
+  });
 }
+
+// Zoek de categorie waar dit teken in staat, zodat de kiezer opent op de plek
+// waar je het al ziet staan.
+function groepVan(teken){
+  const gevonden = Object.keys(EMOJI).find(naam => EMOJI[naam].includes(teken));
+  return gevonden || 'Dagritme';
+}
+
+function kiesEmoji(huidig, titel, klaar){
+  kiezerWaarde = huidig || '⭐';
+  kiezerGroep = groepVan(kiezerWaarde);
+  kiezerKlaar = klaar;
+  kiezerkopEl.textContent = titel;
+  kiesScrimEl.hidden = false;
+  kiezerEl.hidden = false;
+  tekenKiezer();
+}
+
+function sluitKiezer(bewaar){
+  kiesScrimEl.hidden = true;
+  kiezerEl.hidden = true;
+  const klaar = kiezerKlaar;
+  kiezerKlaar = null;
+  if(bewaar && klaar) klaar(kiezerWaarde);
+}
+
+// ------------------------------------------------------------- verslepen ---
+// De greep verplaatst een regel binnen zijn eigen kaart. Tijdens het slepen
+// schuiven de andere regels mee, zodat je ziet waar hij terechtkomt.
+function maakSleepbaar(vak, lijst, klaar){
+  vak.querySelectorAll('.greep').forEach(greep => {
+    greep.addEventListener('pointerdown', e => {
+      const rij = greep.closest('.bewerkrij');
+      const rijen = [...vak.querySelectorAll('.bewerkrij')];
+      const van = rijen.indexOf(rij);
+      if(van < 0) return;
+      e.preventDefault();
+      const hoogtes = rijen.map(r => r.offsetHeight);
+      const startY = e.clientY;
+      let naar = van;
+      rij.classList.add('sleept');
+
+      const beweeg = ev => {
+        const dy = ev.clientY - startY;
+        rij.style.transform = `translateY(${dy}px)`;
+        let n = van;
+        if(dy > 0){
+          let op = 0;
+          for(let i = van + 1; i < rijen.length; i++){
+            op += hoogtes[i];
+            if(dy > op - hoogtes[i] / 2) n = i;
+          }
+        }else{
+          let op = 0;
+          for(let i = van - 1; i >= 0; i--){
+            op += hoogtes[i];
+            if(-dy > op - hoogtes[i] / 2) n = i;
+          }
+        }
+        if(n === naar) return;
+        naar = n;
+        rijen.forEach((r, i) => {
+          if(i === van) return;
+          let ver = 0;
+          if(naar > van && i > van && i <= naar) ver = -hoogtes[van];
+          if(naar < van && i >= naar && i < van) ver = hoogtes[van];
+          r.style.transform = ver ? `translateY(${ver}px)` : '';
+        });
+      };
+      const stop = () => {
+        document.removeEventListener('pointermove', beweeg);
+        document.removeEventListener('pointerup', stop);
+        document.removeEventListener('pointercancel', stop);
+        rijen.forEach(r => { r.style.transform = ''; r.classList.remove('sleept'); });
+        if(naar !== van) lijst.splice(naar, 0, lijst.splice(van, 1)[0]);
+        klaar();
+      };
+      document.addEventListener('pointermove', beweeg);
+      document.addEventListener('pointerup', stop);
+      document.addEventListener('pointercancel', stop);
+    });
+  });
+}
+
+// -------------------------------------------------------------- bewerken ---
+let concept = null;
+let velSoort = 'dag';
+let gekozenRij = null;      // welke regel zijn details laat zien
+
+const VELTITELS = {
+  kinderen: 'Kinderen',
+  dag: 'Ochtendritme',
+  nacht: 'Avondritme',
+  overzicht: 'Dagoverzicht',
+  algemeen: 'Naam en tijden',
+};
 
 function veld(waarde, plaatshouder, klasse, opWijzig){
   const i = document.createElement('input');
@@ -1114,35 +1440,36 @@ function veld(waarde, plaatshouder, klasse, opWijzig){
   return i;
 }
 
-function rijknop(teken, titel, opKlik, klasse){
-  const b = el('button', 'rijknop' + (klasse ? ' ' + klasse : ''));
-  b.type = 'button';
-  b.textContent = teken;
-  b.title = titel;
+function emojiKnop(waarde, titel, opWijzig){
+  const b = knop('emojiknop', waarde);
   b.setAttribute('aria-label', titel);
-  b.addEventListener('click', opKlik);
+  b.addEventListener('click', () => kiesEmoji(waarde, titel, gekozen => {
+    opWijzig(gekozen);
+    tekenVel();
+  }));
   return b;
 }
 
-function chip(tekst, aan, opKlik, kleur){
-  const b = el('button', 'chip' + (aan ? ' aan' : ''));
-  b.type = 'button';
-  b.textContent = tekst;
-  if(aan && kleur){ b.style.background = kleur; b.style.borderColor = kleur; b.style.color = '#fff'; }
-  b.addEventListener('click', opKlik);
+function minKnop(titel, opKlik){
+  const b = knop('minknop', '−');
+  b.setAttribute('aria-label', titel);
+  b.title = titel;
+  b.addEventListener('click', e => { e.stopPropagation(); opKlik(); });
   return b;
 }
 
-function knopgroep(...kinderen){
-  const g = el('div', 'rijknoppen');
-  kinderen.forEach(k => g.appendChild(k));
-  return g;
+function greepKnop(){
+  const b = knop('greep');
+  b.setAttribute('aria-label', 'Verslepen');
+  b.appendChild(svgGreep());
+  return b;
 }
 
-function verplaats(lijst, i, richting){
-  const j = i + richting;
-  if(j < 0 || j >= lijst.length) return;
-  lijst.splice(j, 0, lijst.splice(i, 1)[0]);
+function toevoegRij(tekstje, opKlik){
+  const b = knop('toevoegrij');
+  b.append(el('span', 'plusknop', '+'), document.createTextNode(tekstje));
+  b.addEventListener('click', opKlik);
+  return b;
 }
 
 function toonMelding(bericht){
@@ -1150,259 +1477,316 @@ function toonMelding(bericht){
   meldingEl.hidden = !bericht;
 }
 
-function tekenDagen(stap){
-  const rij = el('div', 'dagen');
-  WERKDAGEN.forEach(dag => {
-    const b = el('button');
-    b.type = 'button';
-    b.textContent = dag;
-    if(stap.dagen && stap.dagen.includes(dag)) b.classList.add('aan');
-    b.addEventListener('click', () => {
-      stap.dagen = stap.dagen || [];
-      const i = stap.dagen.indexOf(dag);
-      if(i >= 0) stap.dagen.splice(i, 1); else stap.dagen.push(dag);
-      tekenBlad();
-    });
-    rij.appendChild(b);
-  });
-  return rij;
+function chipsVak(...kinderen){
+  const v = el('div', 'chips glas');
+  kinderen.forEach(k => v.appendChild(k));
+  return v;
 }
 
-function tekenRitme(ritme){
+function chip(label, aan, opKlik, kleur){
+  const b = knop('chip' + (aan ? ' aan' : ''), label);
+  if(aan && kleur){ b.style.background = kleur; b.style.borderColor = kleur; b.style.color = '#fff'; }
+  b.addEventListener('click', opKlik);
+  return b;
+}
+
+// De kinderenkiezer onder een regel: niets gekozen betekent iedereen.
+function wieDetail(item){
+  const vak = document.createDocumentFragment();
+  const kop = el('div', 'detailkop', 'Wie doet mee');
+  kop.style.paddingTop = '16px';
+  vak.appendChild(kop);
+  const rij = el('div', 'chips glas');
+  item.wie = lijstVan(item.wie);
+  rij.appendChild(chip('iedereen', !item.wie.length, () => { item.wie = []; tekenVel(); }));
+  concept.mensen.forEach(persoon => {
+    const aan = item.wie.includes(persoon.id);
+    rij.appendChild(chip(persoon.emoji + ' ' + (persoon.naam || 'kind'), aan, () => {
+      const i = item.wie.indexOf(persoon.id);
+      if(i >= 0) item.wie.splice(i, 1); else item.wie.push(persoon.id);
+      tekenVel();
+    }, persoon.kleur));
+  });
+  vak.appendChild(rij);
+  return vak;
+}
+
+function dagenDetail(stap){
+  const vak = document.createDocumentFragment();
+  vak.appendChild(el('div', 'detailkop', (stap.label || 'Deze stap') + ' — alleen op'));
+  const rij = el('div', 'chips dagen glas');
+  stap.dagen = lijstVan(stap.dagen);
+  WEEKDAGEN.forEach(dag => {
+    rij.appendChild(chip(dag, stap.dagen.includes(dag), () => {
+      const i = stap.dagen.indexOf(dag);
+      if(i >= 0) stap.dagen.splice(i, 1); else stap.dagen.push(dag);
+      tekenVel();
+    }));
+  });
+  vak.appendChild(rij);
+  vak.appendChild(el('div', 'notitie', stap.dagen.length
+    ? 'Alleen op deze dagen.' : 'Geen dag gekozen betekent: elke dag.'));
+  return vak;
+}
+
+// De details verschijnen zodra je een regel aanraakt of in het tekstveld gaat
+// staan. Omdat het blad daarna opnieuw getekend wordt, moet de cursor terug
+// naar hetzelfde veld — anders klapt het toetsenbord meteen weer dicht.
+function kiesRij(sleutel, metFocus){
+  if(gekozenRij === sleutel) return;
+  gekozenRij = sleutel;
+  tekenVel();
+  if(!metFocus) return;
+  const inp = velinhoudEl.querySelector('.bewerkrij.gekozen input.veld');
+  if(!inp) return;
+  inp.focus();
+  const n = inp.value.length;
+  try{ inp.setSelectionRange(n, n); }catch(err){}
+}
+
+function selecteerbaar(rij, sleutel){
+  rij.classList.toggle('gekozen', gekozenRij === sleutel);
+  rij.querySelectorAll('input.veld').forEach(i =>
+    i.addEventListener('focus', () => kiesRij(sleutel, true)));
+  rij.addEventListener('click', e => {
+    if(e.target.closest('input, button')) return;
+    gekozenRij = gekozenRij === sleutel ? null : sleutel;
+    tekenVel();
+  });
+}
+
+function velRitme(soort){
   const stuk = document.createDocumentFragment();
 
-  concept[ritme].forEach((groep, gi) => {
-    const vak = el('div', 'bewerkgroep');
+  const segment = el('div', 'segment glas');
+  segment.style.marginTop = '0';
+  [['dag','Ochtend'], ['nacht','Avond']].forEach(([waarde, label]) => {
+    const b = knop(waarde === soort ? 'aan' : '', label);
+    b.addEventListener('click', () => { velSoort = waarde; gekozenRij = null; tekenVel(); });
+    segment.appendChild(b);
+  });
+  stuk.appendChild(segment);
 
+  concept[soort].forEach((groep, gi) => {
+    const kaart = el('div', 'bewerkkaart glas');
     const regel = el('div', 'groepregel');
     regel.append(
+      minKnop('Groep verwijderen', () => { concept[soort].splice(gi, 1); gekozenRij = null; tekenVel(); }),
       veld(groep.groep, 'Groep', '', v => { groep.groep = v; }),
       veld(groep.tijd, 'tijd', 'tijd', v => { groep.tijd = v; }),
-      knopgroep(
-        rijknop('↑', 'Groep omhoog', () => { verplaats(concept[ritme], gi, -1); tekenBlad(); }),
-        rijknop('↓', 'Groep omlaag', () => { verplaats(concept[ritme], gi, 1); tekenBlad(); }),
-        rijknop('✕', 'Groep verwijderen', () => { concept[ritme].splice(gi, 1); tekenBlad(); }, 'weg'),
-      ),
     );
-    vak.appendChild(regel);
+    kaart.appendChild(regel);
 
+    const rijenvak = el('div');
     groep.stappen.forEach((stap, si) => {
-      const sleutel = ritme + ':' + gi + ':' + si;
+      const sleutel = `${soort}:${gi}:${si}`;
       const rij = el('div', 'bewerkrij');
-
-      const dagKnop = rijknop('', 'Op welke dagen', () => {
-        if(openDagen.has(sleutel)) openDagen.delete(sleutel); else openDagen.add(sleutel);
-        tekenBlad();
-      });
-      const beperkt = Boolean(stap.dagen && stap.dagen.length);
-      dagKnop.innerHTML = '<svg width="16" height="16" viewBox="0 0 20 20" fill="none" '
-        + 'stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'
-        + '<rect x="3" y="4.5" width="14" height="13" rx="3"/><path d="M3 8.5h14M7 2.5v3M13 2.5v3"/></svg>';
-      if(beperkt){
-        dagKnop.style.background = 'var(--sun-deep)';
-        dagKnop.style.borderColor = 'var(--sun-deep)';
-        dagKnop.style.color = '#fff';
-      }
-
       rij.append(
-        veld(stap.icoon, '🙂', 'smal', v => { stap.icoon = v; }),
+        minKnop('Stap verwijderen', () => {
+          groep.stappen.splice(si, 1); gekozenRij = null; tekenVel();
+        }),
+        emojiKnop(stap.icoon, 'Icoon voor ' + (stap.label || 'deze stap'), v => { stap.icoon = v; }),
         veld(stap.label, 'Wat moet er gebeuren', '', v => { stap.label = v; }),
-        knopgroep(
-          dagKnop,
-          rijknop('↑', 'Stap omhoog', () => { verplaats(groep.stappen, si, -1); tekenBlad(); }),
-          rijknop('↓', 'Stap omlaag', () => { verplaats(groep.stappen, si, 1); tekenBlad(); }),
-          rijknop('✕', 'Stap verwijderen', () => { groep.stappen.splice(si, 1); tekenBlad(); }, 'weg'),
-        ),
+        greepKnop(),
       );
-      vak.appendChild(rij);
-
-      if(openDagen.has(sleutel)){
-        vak.appendChild(tekenDagen(stap));
-        const uitleg = el('div', 'agendatijd');
-        uitleg.style.padding = '2px 2px 6px';
-        uitleg.textContent = (stap.dagen && stap.dagen.length)
-          ? 'Alleen op deze dagen.' : 'Geen dag gekozen betekent: elke dag.';
-        vak.appendChild(uitleg);
-      }
+      selecteerbaar(rij, sleutel);
+      rijenvak.appendChild(rij);
     });
+    kaart.appendChild(rijenvak);
+    maakSleepbaar(rijenvak, groep.stappen, tekenVel);
 
-    const stapErbij = el('button', 'toevoeg');
-    stapErbij.type = 'button';
-    stapErbij.textContent = '+ Stap toevoegen';
-    stapErbij.addEventListener('click', () => {
-      groep.stappen.push({ icoon:'⭐', label:'', dagen:[] });
-      tekenBlad();
-    });
-    vak.appendChild(stapErbij);
-    stuk.appendChild(vak);
+    kaart.appendChild(toevoegRij('Stap toevoegen', () => {
+      groep.stappen.push({ icoon:'⭐', label:'', dagen:[], wie:[] });
+      gekozenRij = `${soort}:${gi}:${groep.stappen.length - 1}`;
+      tekenVel();
+    }));
+    stuk.appendChild(kaart);
+
+    // De details van de gekozen stap staan onder de kaart, zoals in het ontwerp.
+    const gekozen = groep.stappen.findIndex((_, si) => gekozenRij === `${soort}:${gi}:${si}`);
+    if(gekozen >= 0){
+      const details = el('div', 'details');
+      details.append(dagenDetail(groep.stappen[gekozen]), wieDetail(groep.stappen[gekozen]));
+      stuk.appendChild(details);
+    }
   });
 
-  const groepErbij = el('button', 'toevoeg');
-  groepErbij.type = 'button';
-  groepErbij.textContent = '+ Groep toevoegen';
-  groepErbij.addEventListener('click', () => {
-    concept[ritme].push({ groep:'Nieuwe groep', tijd:'', stappen:[] });
-    tekenBlad();
+  const erbij = knop('kaartknop glas');
+  erbij.append(el('span', 'plusknop', '+'), document.createTextNode('Groep toevoegen'));
+  erbij.addEventListener('click', () => {
+    concept[soort].push({ groep:'Nieuwe groep', tijd:'', stappen:[] });
+    tekenVel();
   });
-  stuk.appendChild(groepErbij);
+  stuk.appendChild(erbij);
   return stuk;
 }
 
-function tekenMensen(){
+function velKinderen(){
   const stuk = document.createDocumentFragment();
-  const vak = el('div', 'bewerkgroep');
+  const kaart = el('div', 'bewerkkaart glas');
+  const rijenvak = el('div');
 
   concept.mensen.forEach((persoon, i) => {
     const rij = el('div', 'bewerkrij');
-
-    const kleuren = el('div', 'kleuren');
+    const kleuren = el('div', 'kleuren kleurenrij');
     KLEUREN.forEach(kleur => {
-      const k = el('button');
-      k.type = 'button';
+      const k = knop(persoon.kleur === kleur ? 'aan' : '');
       k.style.background = kleur;
-      k.title = 'Kleur';
       k.setAttribute('aria-label', 'Kleur');
-      if(persoon.kleur === kleur) k.classList.add('aan');
-      k.addEventListener('click', () => { persoon.kleur = kleur; tekenBlad(); });
+      k.addEventListener('click', () => { persoon.kleur = kleur; tekenVel(); });
       kleuren.appendChild(k);
     });
 
-    const weg = rijknop('✕', 'Persoon verwijderen', () => {
-      if(concept.mensen.length <= 1) return toonMelding('Er moet minstens één persoon overblijven.');
-      // Anders wijst een dagitem naar iemand die er niet meer is.
-      Object.values(concept.overzicht || {}).forEach(items =>
-        lijstVan(items).forEach(item => { if(item.persoon === persoon.id) item.persoon = ''; }));
-      concept.mensen.splice(i, 1);
-      toonMelding('');
-      tekenBlad();
-    }, 'weg');
-    if(concept.mensen.length <= 1) weg.style.opacity = '.4';
-
     rij.append(
-      veld(persoon.emoji, '🙂', 'smal', v => { persoon.emoji = v; }),
+      minKnop('Kind verwijderen', () => {
+        if(concept.mensen.length <= 1) return toonMelding('Er moet minstens één kind overblijven.');
+        // Anders wijst een stap naar iemand die er niet meer is.
+        losmaken(persoon.id);
+        concept.mensen.splice(i, 1);
+        toonMelding('');
+        tekenVel();
+      }),
+      emojiKnop(persoon.emoji, (persoon.naam || 'Dit kind') + "'s gezicht", v => { persoon.emoji = v; }),
       veld(persoon.naam, 'Naam', '', v => { persoon.naam = v; }),
-      knopgroep(kleuren, weg),
+      greepKnop(),
+      kleuren,
     );
-    vak.appendChild(rij);
+    rijenvak.appendChild(rij);
   });
 
-  stuk.appendChild(vak);
-
-  const erbij = el('button', 'toevoeg');
-  erbij.type = 'button';
-  erbij.textContent = '+ Persoon toevoegen';
-  erbij.addEventListener('click', () => {
+  kaart.appendChild(rijenvak);
+  maakSleepbaar(rijenvak, concept.mensen, tekenVel);
+  kaart.appendChild(toevoegRij('Kind toevoegen', () => {
     concept.mensen.push({
       id: nieuwId(), naam:'', emoji:'🙂',
       kleur: KLEUREN[concept.mensen.length % KLEUREN.length],
     });
-    tekenBlad();
-  });
-  stuk.appendChild(erbij);
+    tekenVel();
+  }));
+  stuk.appendChild(kaart);
 
-  const uitleg = el('div', 'agendatijd');
-  uitleg.style.padding = '12px 4px 0';
-  uitleg.textContent = 'Iedereen hier krijgt een eigen rondje bij elke stap. '
-    + 'Namen wijzigen mag: de vinkjes blijven bij de juiste persoon.';
-  stuk.appendChild(uitleg);
+  stuk.appendChild(el('div', 'notitie',
+    'Iedereen hier krijgt een eigen rondje bij elke stap. Namen wijzigen mag: '
+    + 'de vinkjes blijven bij de juiste persoon.'));
   return stuk;
 }
 
-// Het dagoverzicht: per dag van de week een lijstje met wat er die dag speelt.
-// 's Ochtends toont de app de dag zelf, 's avonds de avonditems van vandaag en
-// de gewone items van morgen.
-function tekenOverzicht(){
+function losmaken(id){
+  ['dag','nacht'].forEach(r => (concept[r] || []).forEach(g =>
+    lijstVan(g.stappen).forEach(s => {
+      s.wie = lijstVan(s.wie).filter(x => x !== id);
+    })));
+  Object.values(concept.overzicht || {}).forEach(items =>
+    lijstVan(items).forEach(item => { item.wie = lijstVan(item.wie).filter(x => x !== id); }));
+}
+
+function velOverzicht(){
   const stuk = document.createDocumentFragment();
   if(!concept.overzicht) concept.overzicht = {};
 
-  WERKDAGEN.forEach(dag => {
+  WEEKDAGEN.forEach(dag => {
     const items = concept.overzicht[dag] = lijstVan(concept.overzicht[dag]);
-    const vak = el('div', 'bewerkgroep');
+    const kop = el('div', 'groepkop');
+    kop.style.marginTop = '20px';
+    kop.append(el('div', 'groepnaam', DAGNAMEN[DAGEN.indexOf(dag)]));
+    stuk.appendChild(kop);
 
-    const kop = el('div', 'dagkop');
-    kop.textContent = DAGNAMEN[DAGEN.indexOf(dag)];
-    vak.appendChild(kop);
-
-    if(!items.length){
-      const leeg = el('div', 'leeg');
-      leeg.textContent = 'Niks bijzonders.';
-      vak.appendChild(leeg);
-    }
-
+    const kaart = el('div', 'bewerkkaart glas');
+    const rijenvak = el('div');
     items.forEach((item, i) => {
+      const sleutel = `ov:${dag}:${i}`;
       const rij = el('div', 'bewerkrij');
       rij.append(
-        veld(item.icoon, '📅', 'smal', v => { item.icoon = v; }),
+        minKnop('Verwijderen', () => { items.splice(i, 1); gekozenRij = null; tekenVel(); }),
+        emojiKnop(item.icoon, 'Icoon voor ' + (item.tekst || 'dit item'), v => { item.icoon = v; }),
         veld(item.tekst, 'Wat er die dag is', '', v => { item.tekst = v; }),
-        knopgroep(
-          rijknop('↑', 'Omhoog', () => { verplaats(items, i, -1); tekenBlad(); }),
-          rijknop('↓', 'Omlaag', () => { verplaats(items, i, 1); tekenBlad(); }),
-          rijknop('✕', 'Verwijderen', () => { items.splice(i, 1); tekenBlad(); }, 'weg'),
-        ),
+        greepKnop(),
       );
-      vak.appendChild(rij);
-
-      // Wanneer op de ene regel, voor wie op de volgende: op een telefoon past
-      // dat niet naast elkaar en willekeurig afbreken leest rommelig.
-      const wanneer = el('div', 'wierij');
-      wanneer.appendChild(veld(item.tijd, 'tijd', 'tijd', v => { item.tijd = v; }));
-      wanneer.appendChild(chip('🌙 \'s avonds', Boolean(item.avond),
-        () => { item.avond = !item.avond; tekenBlad(); }));
-      vak.appendChild(wanneer);
-
-      const wie = el('div', 'wierij');
-      wie.appendChild(chip('iedereen', !item.persoon, () => { item.persoon = ''; tekenBlad(); }));
-      concept.mensen.forEach(persoon => {
-        wie.appendChild(chip(persoon.naam || 'naamloos', item.persoon === persoon.id,
-          () => { item.persoon = persoon.id; tekenBlad(); }, persoon.kleur));
-      });
-      vak.appendChild(wie);
+      selecteerbaar(rij, sleutel);
+      rijenvak.appendChild(rij);
     });
+    kaart.appendChild(rijenvak);
+    maakSleepbaar(rijenvak, items, tekenVel);
 
-    const erbij = el('button', 'toevoeg');
-    erbij.type = 'button';
-    erbij.textContent = '+ Iets op ' + DAGNAMEN[DAGEN.indexOf(dag)];
-    erbij.addEventListener('click', () => {
-      items.push({ icoon:'📅', tekst:'', tijd:'', persoon:'', avond:false });
-      tekenBlad();
-    });
-    vak.appendChild(erbij);
-    stuk.appendChild(vak);
+    kaart.appendChild(toevoegRij('Iets op ' + DAGNAMEN[DAGEN.indexOf(dag)], () => {
+      items.push({ icoon:'📅', tekst:'', tijd:'', wie:[], avond:false });
+      gekozenRij = `ov:${dag}:${items.length - 1}`;
+      tekenVel();
+    }));
+    stuk.appendChild(kaart);
+
+    const gekozen = items.findIndex((_, i) => gekozenRij === `ov:${dag}:${i}`);
+    if(gekozen >= 0){
+      const item = items[gekozen];
+      const details = el('div', 'details');
+      details.appendChild(el('div', 'detailkop', 'Wanneer'));
+      const rij = el('div', 'chips glas');
+      rij.appendChild(veld(item.tijd, 'tijd', 'tijd', v => { item.tijd = v; }));
+      rij.appendChild(chip("🌙 's avonds", Boolean(item.avond), () => {
+        item.avond = !item.avond; tekenVel();
+      }));
+      details.appendChild(rij);
+      details.appendChild(wieDetail(item));
+      stuk.appendChild(details);
+    }
   });
 
-  const uitleg = el('div', 'agendatijd');
-  uitleg.style.padding = '0 4px 10px';
-  uitleg.textContent = 'Zonder naam geldt het voor iedereen. Zet \'s avonds aan voor '
-    + 'wat pas na het avondeten speelt — dat komt bij "Vanavond" te staan in plaats van bij de dag zelf.';
-  stuk.appendChild(uitleg);
+  stuk.appendChild(el('div', 'notitie',
+    "Zet 's avonds aan voor wat pas na het avondeten speelt; dat komt bij Vanavond te staan."));
   return stuk;
 }
 
-function tekenBlad(){
-  const hoogte = bladinhoud.scrollTop;
-  bladinhoud.innerHTML = '';
-  if(bewerkTab === 'mensen') bladinhoud.appendChild(tekenMensen());
-  else if(bewerkTab === 'overzicht') bladinhoud.appendChild(tekenOverzicht());
-  else bladinhoud.appendChild(tekenRitme(bewerkTab));
-  bladinhoud.scrollTop = hoogte;
-  document.querySelectorAll('#tabs button').forEach(b =>
-    b.classList.toggle('active', b.dataset.tab === bewerkTab));
+function velAlgemeen(){
+  const stuk = document.createDocumentFragment();
+  const kaart = el('div', 'bewerkkaart glas');
+
+  const rij1 = el('div', 'bewerkrij');
+  rij1.append(el('div', 'tegel', '🏡'), veld(concept.titel, 'Naam van de app', '', v => { concept.titel = v; }));
+  kaart.appendChild(rij1);
+
+  const rij2 = el('div', 'bewerkrij');
+  const uur = veld(String(concept.avondVanaf), '15', 'getal', v => { concept.avondVanaf = v; });
+  uur.type = 'number'; uur.min = '0'; uur.max = '23';
+  rij2.append(el('div', 'tegel', '🌙'), el('div', 'taaknaam', 'Avond begint om'), uur);
+  kaart.appendChild(rij2);
+
+  stuk.appendChild(kaart);
+  stuk.appendChild(el('div', 'notitie',
+    'Open je de app na dit uur, dan staat het avondritme meteen klaar.'));
+  return stuk;
 }
 
-function openBewerken(){
+function tekenVel(){
+  const hoogte = velEl.scrollTop;
+  veltitelEl.textContent = VELTITELS[velSoort] || 'Bewerken';
+  velinhoudEl.innerHTML = '';
+  if(velSoort === 'kinderen') velinhoudEl.appendChild(velKinderen());
+  else if(velSoort === 'overzicht') velinhoudEl.appendChild(velOverzicht());
+  else if(velSoort === 'algemeen') velinhoudEl.appendChild(velAlgemeen());
+  else velinhoudEl.appendChild(velRitme(velSoort));
+  velEl.scrollTop = hoogte;
+}
+
+function openVel(soort){
   concept = alsRuweConfig();
-  bewerkTab = mode;
-  openDagen.clear();
+  ['dag','nacht'].forEach(r => concept[r].forEach(g => g.stappen.forEach(s => {
+    s.dagen = lijstVan(s.dagen); s.wie = lijstVan(s.wie);
+  })));
+  Object.values(concept.overzicht || {}).forEach(items =>
+    lijstVan(items).forEach(i => { i.wie = lijstVan(i.wie); }));
+  velSoort = soort;
+  gekozenRij = null;
   toonMelding('');
   scrimEl.hidden = false;
-  bladEl.hidden = false;
+  velEl.hidden = false;
   document.body.style.overflow = 'hidden';
-  tekenBlad();
+  tekenVel();
+  velEl.scrollTop = 0;
 }
 
-function sluitBewerken(){
+function sluitVel(){
   scrimEl.hidden = true;
-  bladEl.hidden = true;
+  velEl.hidden = true;
   document.body.style.overflow = '';
   concept = null;
 }
@@ -1412,8 +1796,11 @@ function schoneGroepen(lijst){
     groep: tekst(g.groep),
     tijd: tekst(g.tijd),
     stappen: lijstVan(g.stappen).filter(s => tekst(s.label)).map(s => {
-      const uit = { icoon: tekst(s.icoon, '•'), label: tekst(s.label) };
-      if(s.dagen && s.dagen.length) uit.dagen = s.dagen.slice();
+      const uit = { icoon: tekst(s.icoon, '⭐'), label: tekst(s.label) };
+      const dagen = dagenVan(s.dagen);
+      if(dagen.length) uit.dagen = dagen;
+      const wie = lijstVan(s.wie);
+      if(wie.length) uit.wie = wie;
       return uit;
     }),
   })).filter(g => g.stappen.length || tekst(g.groep));
@@ -1423,13 +1810,14 @@ function schoneGroepen(lijst){
 // database — anders blijft er een leeg lijstje achter na het laatste item.
 function schoonOverzicht(bron){
   const uit = {};
-  WERKDAGEN.forEach(dag => {
+  WEEKDAGEN.forEach(dag => {
     const items = lijstVan(bron && bron[dag])
       .filter(item => tekst(item && item.tekst))
       .map(item => {
-        const rij = { icoon: tekst(item.icoon, '•'), tekst: tekst(item.tekst) };
+        const rij = { icoon: tekst(item.icoon, '📅'), tekst: tekst(item.tekst) };
         if(tekst(item.tijd)) rij.tijd = tekst(item.tijd);
-        if(tekst(item.persoon)) rij.persoon = tekst(item.persoon);
+        const wie = lijstVan(item.wie);
+        if(wie.length) rij.wie = wie;
         if(item.avond) rij.avond = true;
         return rij;
       });
@@ -1454,9 +1842,9 @@ function opgeschoond(c){
   };
 }
 
-async function bewaarBewerking(){
+async function bewaarVel(){
   const nieuw = opgeschoond(concept);
-  if(!nieuw.mensen.length) return toonMelding('Er moet minstens één persoon zijn.');
+  if(!nieuw.mensen.length) return toonMelding('Er moet minstens één kind zijn.');
   if(!aantalStappen(maakGroepen(nieuw.dag)) && !aantalStappen(maakGroepen(nieuw.nacht))){
     return toonMelding('Er moet minstens één stap overblijven.');
   }
@@ -1470,11 +1858,11 @@ async function bewaarBewerking(){
   }
   config = normaliseer(nieuw);
   bewaarLokaalConfig(nieuw);
+  sluitVel();
   toepassen();
-  sluitBewerken();
 }
 
-// ----------------------------------------------------------- bijwerken ----
+// ------------------------------------------------------------- bijwerken ---
 // iOS bewaart index.html hardnekkig zodra de pagina op het beginscherm staat;
 // een gewone herlaad krijgt dan opnieuw dezelfde bewaarde versie. Daarom draagt
 // elke uitgave zijn commit-nummer bij zich en staat datzelfde nummer in
@@ -1496,7 +1884,7 @@ async function nieuwerBeschikbaar(){
 }
 
 async function haalNieuwsteBinnen(){
-  if(!bladEl.hidden) return;          // niet herladen terwijl iemand zit te bewerken
+  if(!velEl.hidden) return;          // niet herladen terwijl iemand zit te bewerken
   const nieuw = await nieuwerBeschikbaar();
   if(!nieuw) return;
   try{
@@ -1517,7 +1905,7 @@ const alsApp = window.navigator.standalone === true ||
   window.matchMedia('(display-mode: standalone)').matches;
 
 if(alsApp){
-  const trekEl = document.getElementById('trek');
+  const trekEl = $('trek');
   const DREMPEL = 70;
   let begin = null, afstand = 0, bezig = false;
 
@@ -1533,7 +1921,7 @@ if(alsApp){
   };
 
   document.addEventListener('touchstart', e => {
-    begin = (!bezig && bladEl.hidden && window.scrollY <= 0 && e.touches.length === 1)
+    begin = (!bezig && velEl.hidden && kiezerEl.hidden && window.scrollY <= 0 && e.touches.length === 1)
       ? e.touches[0].clientY : null;
     afstand = 0;
   }, { passive:true });
@@ -1555,26 +1943,27 @@ if(alsApp){
   }, { passive:true });
 }
 
-// ------------------------------------------------------------- aansluiten --
-btnDag.addEventListener('click', () => setMode('dag'));
-btnNacht.addEventListener('click', () => setMode('nacht'));
+// ------------------------------------------------------------- aansluiten ---
+segmentEl.addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if(b) zetRitme(b.dataset.ritme);
+});
 
-resetBtn.addEventListener('click', () => {
-  done[mode] = new Map();
+tabbalkEl.addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if(b) zetPagina(b.dataset.pagina);
+});
+
+$('opnieuwKnop').addEventListener('click', () => {
+  done[ritme] = new Map();
   render();
-  wisRitme(mode);
+  wisRitme(ritme);
 });
 
-document.getElementById('bewerkKnop').addEventListener('click', openBewerken);
-document.getElementById('bewerkAf').addEventListener('click', sluitBewerken);
-document.getElementById('bewerkBewaar').addEventListener('click', bewaarBewerking);
-scrimEl.addEventListener('click', sluitBewerken);
-document.getElementById('tabs').addEventListener('click', e => {
-  const knop = e.target.closest('button');
-  if(!knop) return;
-  bewerkTab = knop.dataset.tab;
-  tekenBlad();
-});
+$('velAf').addEventListener('click', sluitVel);
+$('velGereed').addEventListener('click', bewaarVel);
+$('kiezerGereed').addEventListener('click', () => sluitKiezer(true));
+kiesScrimEl.addEventListener('click', () => sluitKiezer(false));
 
 async function laden(){
   let ruw = null;
@@ -1588,10 +1977,10 @@ async function laden(){
   config = normaliseer(laadLokaalConfig() || ruw || STANDAARD);
 }
 
-setMode(beginRitme());
+ritme = beginRitme();
 toepassen();
 laden().then(() => {
-  setMode(beginRitme());
+  ritme = beginRitme();
   toepassen();
   return startOpslag();
 }).then(haalNieuwsteBinnen);

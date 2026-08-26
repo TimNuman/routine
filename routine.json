@@ -186,7 +186,9 @@
         "icoon": "⚽",
         "tekst": "Voetbal",
         "tijd": "15:45 – 16:45",
-        "persoon": "mads"
+        "wie": [
+          "mads"
+        ]
       },
       {
         "icoon": "🏋️",
@@ -220,13 +222,17 @@
         "icoon": "🤸",
         "tekst": "Turnen",
         "tijd": "10:00",
-        "persoon": "emma"
+        "wie": [
+          "emma"
+        ]
       },
       {
         "icoon": "⚽",
         "tekst": "Voetbal",
         "tijd": "11:00",
-        "persoon": "mads"
+        "wie": [
+          "mads"
+        ]
       }
     ],
     "zo": [
