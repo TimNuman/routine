@@ -79,6 +79,16 @@ Sla het bestand op, push naar `main`, en de pagina is bijgewerkt.
 Gaat er iets mis in `routine.json` (typefout, komma vergeten), dan valt de pagina terug
 op het ingebouwde standaardritme in `index.html` — je krijgt dus nooit een lege pagina.
 
+## Op je telefoon zetten
+
+Open de pagina en kies *Deel → Zet op beginscherm* (iOS) of *Toevoegen aan startscherm*
+(Android). Hij verschijnt dan als **Dagritme** met een eigen icoon — een zon boven een
+bed — en opent zonder browserbalk, dus als een losse app.
+
+Het icoon is `icon.svg`; de PNG's ernaast zijn daaruit gerenderd (32, 180, 192 en 512px,
+plus een ruimer opgezette `maskable`-versie voor Android, dat er een cirkel uit snijdt).
+Pas je `icon.svg` aan, render de PNG's dan opnieuw in dezelfde maten.
+
 ## Publiceren
 
 Eén statisch bestand, geen build. Elke push naar `main` publiceert via
