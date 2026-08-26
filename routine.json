@@ -19,6 +19,12 @@
       {
         "icoon": "🏊",
         "tekst": "Zwemmen"
+      },
+      {
+        "icoon": "🏋️",
+        "tekst": "Papa sporten",
+        "tijd": "20:00",
+        "avond": true
       }
     ],
     "di": [
@@ -45,6 +51,12 @@
         "tekst": "Voetbal",
         "tijd": "15:45 – 16:45",
         "kind": "Mads"
+      },
+      {
+        "icoon": "🏋️",
+        "tekst": "Papa sporten",
+        "tijd": "20:00",
+        "avond": true
       }
     ],
     "do": [

@@ -284,6 +284,12 @@
     color: var(--ink-soft);
   }
   .night-mode .agenda-dag{ color:#9294c4; }
+  .agenda-blok + .agenda-blok{
+    margin-top: 22px;
+    padding-top: 20px;
+    border-top: 2px dashed rgba(43,45,66,0.10);
+  }
+  .night-mode .agenda-blok + .agenda-blok{ border-top-color: rgba(255,255,255,0.10); }
   .agenda-lijst{
     display:flex;
     flex-direction:column;
@@ -378,15 +384,26 @@
     .toggle button{ flex:1; justify-content:center; }
 
     .content{ flex-direction:column; }
-    /* Boven de stappen: het vertelt in één oogopslag wat voor dag het is. */
-    .agenda{
+    /* De kolom valt weg als kader; de blokken erin worden zelf rijen, zodat ze
+       los van elkaar boven of onder de stappen gezet kunnen worden. */
+    .agenda{ display: contents; }
+    .agenda-blok,
+    .agenda-blok + .agenda-blok{
       order: -1;
-      flex:none;
-      border-left:none;
-      border-bottom: 2px dashed rgba(43,45,66,0.10);
+      margin-top: 0;
       padding: 18px 20px;
+      border-top: none;
+      border-bottom: 2px dashed rgba(43,45,66,0.10);
     }
-    .night-mode .agenda{ border-bottom-color: rgba(255,255,255,0.10); }
+    .night-mode .agenda-blok{ border-bottom-color: rgba(255,255,255,0.10); }
+    /* 'Morgen' is vooruitkijken en hoort na het naar bed gaan, niet ervoor. */
+    .agenda-blok.later{
+      order: 1;
+      padding-top: 20px;
+      border-bottom: none;
+      border-top: 2px dashed rgba(43,45,66,0.10);
+    }
+    .night-mode .agenda-blok.later{ border-top-color: rgba(255,255,255,0.10); }
     .agenda-lijst{
       flex-direction:row;
       flex-wrap:wrap;
@@ -505,6 +522,7 @@ const STANDAARD = {
       {icoon:"🏫", tekst:"School"},
       {icoon:"👨", tekst:"Papadag"},
       {icoon:"🏊", tekst:"Zwemmen"},
+      {icoon:"🏋️", tekst:"Papa sporten", tijd:"20:00", avond:true},
     ],
     di: [
       {icoon:"🏫", tekst:"School"},
@@ -514,6 +532,7 @@ const STANDAARD = {
       {icoon:"🏫", tekst:"Kort school"},
       {icoon:"🧑‍🤝‍🧑", tekst:"Lang BSO"},
       {icoon:"⚽", tekst:"Voetbal", tijd:"15:45 – 16:45", kind:"Mads"},
+      {icoon:"🏋️", tekst:"Papa sporten", tijd:"20:00", avond:true},
     ],
     do: [
       {icoon:"🏫", tekst:"School"},
@@ -785,32 +804,39 @@ function kindKleuren(overzicht){
   return Object.fromEntries(namen.map((n, i) => [n, KINDKLEUREN[i % KINDKLEUREN.length]]));
 }
 
-// 's Ochtends kijk je naar vandaag, 's avonds naar wat er morgen op het
-// programma staat.
-function overzichtDatum(){
-  const d = new Date();
-  if(mode === 'nacht') d.setDate(d.getDate() + 1);
-  return d;
+// 's Ochtends kijk je naar wat er vandaag overdag speelt. 's Avonds naar twee
+// dingen: wat er vanavond nog gebeurt, en wat er morgen op het programma staat.
+// Items met 'avond' horen bij dat eerste en blijven overdag dus buiten beeld.
+function agendaBlokken(){
+  const vandaag = new Date();
+  const morgen = new Date();
+  morgen.setDate(morgen.getDate() + 1);
+  const van = d => (config.overzicht || {})[DAGEN[d.getDay()]] || [];
+
+  if(mode !== 'nacht'){
+    return [{ kop:'Vandaag', datum: vandaag, items: van(vandaag).filter(i => !i.avond) }];
+  }
+  return [
+    { kop:'Vanavond', datum: vandaag, items: van(vandaag).filter(i => i.avond) },
+    { kop:'Morgen', datum: morgen, items: van(morgen).filter(i => !i.avond), later:true },
+  ];
 }
 
-function renderAgenda(){
-  const datum = overzichtDatum();
-  const items = (config.overzicht || {})[DAGEN[datum.getDay()]] || [];
-  agendaEl.innerHTML = '';
-  agendaEl.hidden = !items.length;
-  if(!items.length) return;
+function maakBlok(blok){
+  const vak = document.createElement('section');
+  vak.className = 'agenda-blok' + (blok.later ? ' later' : '');
 
   const kop = document.createElement('div');
   kop.className = 'agenda-kop';
-  kop.textContent = mode === 'nacht' ? 'Morgen' : 'Vandaag';
+  kop.textContent = blok.kop;
 
   const dagnaam = document.createElement('div');
   dagnaam.className = 'agenda-dag';
-  dagnaam.textContent = DAGNAMEN[datum.getDay()];
+  dagnaam.textContent = DAGNAMEN[blok.datum.getDay()];
 
   const lijst = document.createElement('div');
   lijst.className = 'agenda-lijst';
-  items.forEach(item => {
+  blok.items.forEach(item => {
     const rij = document.createElement('div');
     rij.className = 'agenda-item';
 
@@ -843,7 +869,15 @@ function renderAgenda(){
     lijst.appendChild(rij);
   });
 
-  agendaEl.append(kop, dagnaam, lijst);
+  vak.append(kop, dagnaam, lijst);
+  return vak;
+}
+
+function renderAgenda(){
+  const blokken = agendaBlokken().filter(b => b.items.length);
+  agendaEl.innerHTML = '';
+  agendaEl.hidden = !blokken.length;
+  blokken.forEach(blok => agendaEl.appendChild(maakBlok(blok)));
 }
 
 function maakStap(step, i){

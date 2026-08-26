@@ -82,9 +82,13 @@ op het ingebouwde standaardritme in `index.html` — je krijgt dus nooit een leg
 
 ## Dagoverzicht
 
-Naast de stappen staat een kolom met wat er die dag op het programma staat. In de
-ochtend gaat het over vandaag, in de avond over morgen — zodat je 's avonds al ziet
-of de zwemtas mee moet. Op een telefoon staat de kolom boven de stappen.
+Naast de stappen staat een kolom met wat er op het programma staat. In de ochtend
+gaat het over vandaag; in de avond over wat er vanavond nog gebeurt én over morgen,
+zodat je alvast ziet of de zwemtas mee moet.
+
+Op een telefoon valt die kolom weg en worden het rijen: *Vandaag* en *Vanavond*
+komen boven de stappen, *Morgen* eronder — vooruitkijken hoort na het naar bed
+brengen, niet ervoor.
 
 Dat komt uit `overzicht` in `routine.json`, per weekdag:
 
@@ -105,6 +109,9 @@ Dat komt uit `overzicht` in `routine.json`, per weekdag:
 - `kind` — optioneel; laat je het weg, dan geldt het voor allebei de kinderen en
   staat er geen naam bij. Vul je een naam in, dan verschijnt die als gekleurd
   labeltje. Elk kind krijgt een eigen kleur, op volgorde van voorkomen in de week.
+- `avond` — zet je hem op `true`, dan blijft het item overdag buiten beeld en
+  verschijnt het 's avonds onder *Vanavond*. Voor dingen die pas na het naar bed
+  gaan spelen, zoals `{ "icoon": "🏋️", "tekst": "Papa sporten", "tijd": "20:00", "avond": true }`.
 
 Net als bij de stappen mag je `ma` of `maandag` schrijven. Staat er voor een dag
 niets, dan verdwijnt de kolom en krijgen de stappen de volle breedte.
