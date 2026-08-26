@@ -450,9 +450,175 @@ function opVandaag(step){
   return step.dagen.some(d => String(d).trim().slice(0,2).toLowerCase() === nu);
 }
 
+// ---------------------------------------------------------------------------
+// Afvinkstatus delen tussen telefoons
+//
+// De status staat in een Firebase Realtime Database, per dag en per ritme:
+//
+//   <gezin>/<jjjj-mm-dd>/<dag|nacht>/<stap> = true
+//
+// Per dag een eigen tak, zodat het ritme 's ochtends vanzelf weer leeg is en er
+// niets gewist hoeft te worden. Aan- en afvinken schrijft precies één stap, niet
+// de hele lijst — twee telefoons die tegelijk iets aantikken overschrijven
+// elkaar dan niet.
+//
+// Zonder ingevulde url werkt alles gewoon lokaal verder.
+// ---------------------------------------------------------------------------
+const sync = { basis: '', datum: '', stroom: null };
+
+function datumVan(d){
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
+function vandaag(){ return datumVan(new Date()); }
+
+// Labels worden tot een eenvoudige sleutel teruggebracht, zodat spaties en
+// leestekens geen rol spelen in het pad naar de database.
+function stapSleutel(step){
+  return String((step && step.label) || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'stap';
+}
+
+function pad(ritme, sleutel){
+  const delen = [sync.basis, sync.datum];
+  if(ritme) delen.push(ritme);
+  if(sleutel) delen.push(sleutel);
+  return delen.join('/') + '.json';
+}
+
+function bewaarLokaal(){
+  try{
+    localStorage.setItem('dagritme', JSON.stringify({
+      datum: sync.datum, dag: [...done.dag], nacht: [...done.nacht],
+    }));
+  }catch(err){ /* privémodus of vol: niet erg, dan alleen deze sessie */ }
+}
+
+function laadLokaal(){
+  try{
+    const opgeslagen = JSON.parse(localStorage.getItem('dagritme') || 'null');
+    if(!opgeslagen || opgeslagen.datum !== sync.datum) return;
+    done.dag = new Set(opgeslagen.dag || []);
+    done.nacht = new Set(opgeslagen.nacht || []);
+  }catch(err){ /* onleesbaar: begin gewoon leeg */ }
+}
+
+async function schrijf(ritme, sleutel, aan){
+  bewaarLokaal();
+  if(!sync.basis) return;
+  try{
+    await fetch(pad(ritme, sleutel), aan
+      ? { method: 'PUT', body: 'true' }
+      : { method: 'DELETE' });
+  }catch(err){ console.warn('opslaan mislukt:', err); }
+}
+
+async function wis(ritme){
+  bewaarLokaal();
+  if(!sync.basis) return;
+  try{
+    await fetch(pad(ritme), { method: 'DELETE' });
+  }catch(err){ console.warn('wissen mislukt:', err); }
+}
+
+function vulRitme(ritme, waarden){
+  if(!done[ritme]) return;
+  done[ritme] = new Set(Object.keys(waarden || {}).filter(k => waarden[k]));
+}
+
+// Firebase stuurt bij het openen de hele tak, en daarna per wijziging het pad
+// dat veranderd is. Beide vormen komen hier binnen.
+function verwerk(padTekst, data){
+  const delen = String(padTekst || '/').split('/').filter(Boolean);
+  if(delen.length === 0){
+    ['dag', 'nacht'].forEach(r => vulRitme(r, (data || {})[r]));
+  }else if(delen.length === 1){
+    vulRitme(delen[0], data);
+  }else{
+    const [ritme, sleutel] = delen;
+    if(!done[ritme]) return;
+    if(data) done[ritme].add(sleutel);
+    else done[ritme].delete(sleutel);
+  }
+  bewaarLokaal();
+  render();
+}
+
+function luister(){
+  if(!sync.basis || typeof EventSource === 'undefined') return;
+  if(sync.stroom) sync.stroom.close();
+  try{
+    sync.stroom = new EventSource(pad());
+    const lees = e => {
+      try{
+        const bericht = JSON.parse(e.data);
+        if(bericht && bericht.path !== undefined) verwerk(bericht.path, bericht.data);
+      }catch(err){ /* keep-alive-regels bevatten geen json */ }
+    };
+    sync.stroom.addEventListener('put', lees);
+    sync.stroom.addEventListener('patch', e => {
+      try{
+        const { path, data } = JSON.parse(e.data);
+        Object.entries(data || {}).forEach(([k, v]) =>
+          verwerk((path === '/' ? '' : path) + '/' + k, v));
+      }catch(err){ /* zie boven */ }
+    });
+    // EventSource verbindt zelf opnieuw; hier alleen laten weten dat het hapert.
+    sync.stroom.onerror = () => console.warn('verbinding met de opslag hapert');
+  }catch(err){ console.warn('luisteren mislukt:', err); }
+}
+
+// Oude dagen blijven anders voor altijd staan. Alles ouder dan een week weg.
+async function ruimOp(){
+  if(!sync.basis) return;
+  try{
+    const grens = new Date();
+    grens.setDate(grens.getDate() - 7);
+    const oudste = datumVan(grens);
+    const res = await fetch(`${sync.basis}.json?shallow=true`);
+    if(!res.ok) return;
+    Object.keys(await res.json() || {})
+      .filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d) && d < oudste)
+      .forEach(d => fetch(`${sync.basis}/${d}.json`, { method: 'DELETE' }).catch(() => {}));
+  }catch(err){ /* opruimen is nooit belangrijk genoeg om iets te laten mislukken */ }
+}
+
+// Blijft de pagina 's nachts openstaan, dan moet hij om middernacht naar de tak
+// van de nieuwe dag; anders staan 's ochtends de vinkjes van gisteren er nog.
+function bewaakDatum(){
+  setInterval(() => {
+    if(vandaag() === sync.datum) return;
+    sync.datum = vandaag();
+    done = { dag: new Set(), nacht: new Set() };
+    bewaarLokaal();
+    render();
+    luister();
+    ruimOp();
+  }, 30000);
+}
+
+function startOpslag(instelling){
+  sync.datum = vandaag();
+  const url = String((instelling && instelling.url) || '').trim().replace(/\/+$/, '');
+  const gezin = String((instelling && instelling.gezin) || 'gezin').trim();
+  if(url) sync.basis = `${url}/${encodeURIComponent(gezin)}`;
+  laadLokaal();
+  render();
+  luister();
+  ruimOp();
+  bewaakDatum();
+}
+
 function maakStap(step, i){
+  // Op de sleutel van de stap, niet op het volgnummer: schuift er een stap
+  // tussen, dan blijft het vinkje bij de juiste stap staan.
+  const sleutel = stapSleutel(step);
   const el = document.createElement('div');
-  el.className = 'step' + (done[mode].has(i) ? ' done' : '');
+  el.className = 'step' + (done[mode].has(sleutel) ? ' done' : '');
 
   const num = document.createElement('div');
   num.className = 'num';
@@ -473,9 +639,11 @@ function maakStap(step, i){
 
   el.append(num, stone, label);
   el.addEventListener('click', ()=>{
-    if(done[mode].has(i)) done[mode].delete(i);
-    else done[mode].add(i);
+    const aan = !done[mode].has(sleutel);
+    if(aan) done[mode].add(sleutel);
+    else done[mode].delete(sleutel);
     render();
+    schrijf(mode, sleutel, aan);
   });
   return el;
 }
@@ -546,6 +714,7 @@ function overnemen(data){
     kinderen: data.kinderen || STANDAARD.kinderen,
     dag: routine(data.dag, STANDAARD.dag),
     nacht: routine(data.nacht, STANDAARD.nacht),
+    opslag: data.opslag || null,
   };
 }
 
@@ -566,12 +735,13 @@ btnNacht.addEventListener('click', ()=> setMode('nacht'));
 resetBtn.addEventListener('click', ()=>{
   done[mode].clear();
   render();
+  wis(mode);
 });
 
 renderStars();
 overnemen(STANDAARD);
 toepassen();
-laden();
+laden().then(() => startOpslag(config.opslag));
 </script>
 </body>
 </html>

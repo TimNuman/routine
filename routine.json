@@ -1,6 +1,10 @@
 {
   "titel": "Ons dagritme",
   "kinderen": "voor Emma & Mads",
+  "opslag": {
+    "url": "",
+    "gezin": "numan"
+  },
   "dag": [
     {
       "groep": "Boven",
