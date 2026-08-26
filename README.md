@@ -1,145 +1,72 @@
 # Ons dagritme
 
-Een visueel dagritme voor kinderen: een dag- en een avondroutine met afvinkbare
-stappen, in een dag/nacht-thema dat meeschakelt.
+Een visueel dagritme voor kinderen: een ochtend- en een avondroutine met
+afvinkbare stappen, één per kind, gedeeld tussen alle telefoons in huis.
 
 **Live:** https://timnuman.github.io/routine/
 
 ## Hoe het werkt
 
-- Schakel bovenin tussen **Dag** en **Avond**; achtergrond, zon/maan en sterren volgen mee.
-- Tik een stap aan om hem af te vinken, nog eens om hem terug te zetten.
-- *Opnieuw beginnen* wist de vinkjes van de zichtbare routine.
+- Bovenin schakel je tussen **Ochtend** en **Avond**; de pagina opent zelf op het
+  ritme dat bij de klok hoort.
+- Elke stap heeft een rond knopje per persoon. Tik het aan en het staat binnen een
+  seconde ook op de andere telefoon.
+- Ernaast (op een telefoon erboven) staat wat er die dag op het programma staat.
+  's Avonds zie je wat er vanavond nog gebeurt én wat er morgen komt.
+- Elke dag begint vanzelf leeg.
 
-## Aanpassen
+## Bewerken
 
-Alles wat je wilt wijzigen staat in **`routine.json`** — je hoeft de HTML niet aan te raken.
+Alles wat in de app staat, pas je in de app zelf aan. Tik op het **potlood**
+rechtsboven:
 
-- `titel` — de kop van de pagina (en de browsertab)
-- `kinderen` — het regeltje eronder
-- `avondVanaf` — vanaf welk uur de pagina op de avondroutine opent (standaard 15)
-- `dag` / `nacht` — de stappen, in volgorde; elke stap heeft een `icoon` (een emoji) en een `label`
-- `groep` / `tijd` — per rij een kopje en de tijd eronder; laat `tijd` weg als je die niet wilt
+- **Ochtend** en **Avond** — groepen en stappen: hernoemen, van volgorde
+  wisselen, toevoegen, weghalen. Per stap kun je met het kalenderknopje instellen
+  op welke dagen hij meedoet; kies je geen dag, dan hoort hij bij elke dag.
+- **Mensen** — wie er meedoet, met een emoji als gezicht en een eigen kleur.
+  Iedereen in die lijst krijgt een rondje bij elke stap. Namen wijzigen mag: de
+  vinkjes blijven bij de juiste persoon, want die hangen aan een vast id.
 
-Een routine mag op twee manieren opgeschreven worden. Als **platte lijst**, die als
-één rij verschijnt:
+**Bewaar** schrijft alles naar de database, en de andere telefoons zien het
+meteen. Lukt dat niet, dan blijft het scherm open staan met de reden — er wordt
+nooit stilletjes iets half opgeslagen.
 
-```json
-"nacht": [
-  { "icoon": "🍽️", "label": "Avondeten" },
-  { "icoon": "🌙", "label": "Licht uit" }
-]
+`routine.json` in deze repo is alleen nog het **zaadje**: de eerste keer dat de
+app een lege database vindt, zet hij die inhoud erin. Daarna is de database de
+baas en hoef je dit bestand niet meer aan te raken.
+
+## Opslag
+
+Alles staat in een Firebase Realtime Database, onder één tak per gezin:
+
+```
+<gezin>/config                              de inhoud die je in de app bewerkt
+<gezin>/<jjjj-mm-dd>/<dag|nacht>/<stap>/<persoon> = true
 ```
 
-Of opgedeeld in **groepen**, die elk een eigen rij met een kopje ervoor krijgen:
+Een eigen tak per dag betekent dat het ritme 's ochtends vanzelf leeg is; takken
+ouder dan een week ruimt de app bij het laden op. Aan- en afvinken schrijft
+precies één persoon bij één stap, dus twee telefoons die tegelijk iets aantikken
+overschrijven elkaar niet.
 
-```json
-"dag": [
-  {
-    "groep": "Boven",
-    "tijd": "6:00 – 6:30",
-    "stappen": [
-      { "icoon": "🛏️", "label": "Wakker worden" },
-      { "icoon": "🪥", "label": "Tanden poetsen" }
-    ]
-  },
-  {
-    "groep": "Weggaan",
-    "tijd": "8:00 – 8:15",
-    "stappen": [
-      { "icoon": "🚪", "label": "Naar school!" }
-    ]
-  }
-]
-```
+### Eenmalig opzetten
 
-Beide vormen mogen naast elkaar gebruikt worden — de ochtend in groepen, de avond
-als platte lijst, of andersom. Lijsten mogen zo lang of kort zijn als je wilt, en de
-stapnummers lopen gewoon door over de groepen heen.
-
-### Stappen op bepaalde dagen
-
-Een stap kan een `dagen`-lijst krijgen. Staat die er, dan verschijnt de stap
-alleen op die dagen; zonder `dagen` hoort een stap bij elke dag.
-
-```json
-{ "icoon": "⚽", "label": "Voetbaltas", "dagen": ["wo"] }
-```
-
-Gebruik `ma di wo do vr za zo`, of de dagen voluit (`woensdag`) — beide worden
-herkend. Meerdere dagen mag: `["di", "do"]`.
-
-De stapnummers tellen alleen wat er die dag te zien is, en valt een hele groep
-weg, dan verdwijnt zijn kopje mee.
-
-Let op: er wordt naar de dag van *vandaag* gekeken. Moet de voetbaltas dinsdagavond
-al klaargezet worden, zet die stap dan in de avondroutine op `["di"]`.
-
-Sla het bestand op, push naar `main`, en de pagina is bijgewerkt.
-
-Gaat er iets mis in `routine.json` (typefout, komma vergeten), dan valt de pagina terug
-op het ingebouwde standaardritme in `index.html` — je krijgt dus nooit een lege pagina.
-
-## Dagoverzicht
-
-Naast de stappen staat een kolom met wat er op het programma staat. In de ochtend
-gaat het over vandaag; in de avond over wat er vanavond nog gebeurt én over morgen,
-zodat je alvast ziet of de zwemtas mee moet.
-
-Op een telefoon valt die kolom weg en worden het rijen: *Vandaag* en *Vanavond*
-komen boven de stappen, *Morgen* eronder — vooruitkijken hoort na het naar bed
-brengen, niet ervoor.
-
-Dat komt uit `overzicht` in `routine.json`, per weekdag:
-
-```json
-"overzicht": {
-  "ma": [
-    { "icoon": "🏫", "tekst": "School" },
-    { "icoon": "🏊", "tekst": "Zwemmen" }
-  ],
-  "wo": [
-    { "icoon": "⚽", "tekst": "Voetbal", "tijd": "15:45 – 16:45", "kind": "Mads" }
-  ]
-}
-```
-
-- `icoon` en `tekst` — wat er staat
-- `tijd` — optioneel, komt als kleinere regel eronder
-- `kind` — optioneel; laat je het weg, dan geldt het voor allebei de kinderen en
-  staat er geen naam bij. Vul je een naam in, dan verschijnt die als gekleurd
-  labeltje. Elk kind krijgt een eigen kleur, op volgorde van voorkomen in de week.
-- `avond` — zet je hem op `true`, dan blijft het item overdag buiten beeld en
-  verschijnt het 's avonds onder *Vanavond*. Voor dingen die pas na het naar bed
-  gaan spelen, zoals `{ "icoon": "🏋️", "tekst": "Papa sporten", "tijd": "20:00", "avond": true }`.
-
-Net als bij de stappen mag je `ma` of `maandag` schrijven. Staat er voor een dag
-niets, dan verdwijnt de kolom en krijgen de stappen de volle breedte.
-
-## Afvinken delen tussen telefoons
-
-Zonder instellingen worden de vinkjes per toestel bewaard (in de browser), en
-elke dag begint leeg. Vul je `opslag.url` in `routine.json` in, dan delen alle
-toestellen dezelfde vinkjes en verschijnt een vinkje van de één binnen een
-seconde bij de ander — zonder verversen.
-
-Eenmalig opzetten, gratis:
-
-1. Ga naar [console.firebase.google.com](https://console.firebase.google.com),
-   maak een project (Analytics mag uit).
-2. **Build → Realtime Database → Create Database**, regio `europe-west1`,
-   en kies **Start in locked mode**.
-3. Tabblad **Rules**, plak dit en publiceer:
+1. Maak op [console.firebase.google.com](https://console.firebase.google.com) een
+   project en daarin een **Realtime Database** (regio `europe-west1`).
+2. Zet bij **Rules** deze regels neer en publiceer ze:
 
    ```json
    {
      "rules": {
        "$gezin": {
          ".read": true,
+         "config": { ".write": true },
          "$datum": {
            ".write": "$datum.matches(/^\\d{4}-\\d{2}-\\d{2}$/)",
            "$ritme": {
-             "$stap": { ".validate": "newData.isBoolean()" }
+             "$stap": {
+               "$persoon": { ".validate": "newData.isBoolean()" }
+             }
            }
          }
        }
@@ -147,8 +74,7 @@ Eenmalig opzetten, gratis:
    }
    ```
 
-4. Kopieer de database-url (`https://…-default-rtdb.europe-west1.firebasedatabase.app`)
-   en zet hem in `routine.json`:
+3. Zet de database-url in `routine.json`:
 
    ```json
    "opslag": {
@@ -157,46 +83,39 @@ Eenmalig opzetten, gratis:
    }
    ```
 
-Hoe het werkt: de status staat per dag en per ritme onder
-`<gezin>/<jjjj-mm-dd>/<dag|nacht>/<stap>`. Een eigen tak per dag betekent dat het
-ritme 's ochtends vanzelf weer leeg is; takken ouder dan een week worden bij het
-laden opgeruimd. Aan- en afvinken schrijft precies één stap, dus twee telefoons
-die tegelijk iets aantikken overschrijven elkaar niet.
-
-Blijft de pagina 's nachts openstaan, dan springt hij om middernacht zelf naar de
-nieuwe dag.
-
 **Let op:** met deze regels kan iedereen die de url kent meelezen en meeschrijven.
-Voor een afvinklijstje thuis is dat prima, maar zet er geen gevoelige dingen in.
-Kies voor `gezin` liever een woord dat niet te raden is dan je achternaam.
+Voor een afvinklijstje thuis is dat prima, maar zet er geen gevoelige dingen in,
+en kies voor `gezin` liever een woord dat niet te raden is.
 
-Werkt de database even niet, dan blijft de pagina gewoon werken; de vinkjes staan
-dan alleen op dat ene toestel.
+Werkt de database even niet, dan blijft de pagina gewoon werken: de laatst bekende
+inhoud en de vinkjes van vandaag staan ook in de browser zelf.
 
 ## Op je telefoon zetten
 
-Open de pagina en kies *Deel → Zet op beginscherm* (iOS) of *Toevoegen aan startscherm*
-(Android). Hij verschijnt dan als **Dagritme** met een eigen icoon — een zon boven een
-bed — en opent zonder browserbalk, dus als een losse app.
+Open de pagina en kies *Deel → Zet op beginscherm* (iOS) of *Toevoegen aan
+startscherm* (Android). Hij verschijnt als **Dagritme** met een eigen icoon — een
+zon boven een bed — en opent zonder browserbalk.
 
 Omdat de app-weergave geen browserbalk heeft, is er ook geen ingebouwd
 trek-om-te-verversen. Die beweging zit daarom zelf in de pagina: sleep vanaf
-bovenaan naar beneden tot het rondje verschijnt en laat los. In een gewoon
-tabblad wordt hij niet aangehaakt — daar doet de browser het al.
+bovenaan naar beneden tot het rondje verschijnt en laat los.
 
-Maar iOS bewaart `index.html` hardnekkig zodra de pagina op het beginscherm
-staat, en een gewone herlaad krijgt dan opnieuw dezelfde bewaarde versie. Daarom
-stempelt de workflow bij elke deploy het commit-nummer in de pagina én in
-`versie.txt` ernaast. De pagina haalt dat bestandje op bij het openen en telkens
-als je terugkomt in de app; verschilt het, dan herlaadt hij zichzelf met een
-verse url zodat de cache gepasseerd wordt. Je hoeft er dus meestal niets voor te
-doen — de app werkt zichzelf bij.
+Verder werkt de app zichzelf bij: de deploy stempelt het commit-nummer in de
+pagina én in `versie.txt` ernaast, en bij elke terugkeer in de app wordt dat
+vergeleken. Verschilt het, dan herlaadt de pagina met een verse url zodat de
+bewaarde versie gepasseerd wordt.
 
-Het icoon is `icon.svg`; de PNG's ernaast zijn daaruit gerenderd (32, 180, 192 en 512px,
-plus een ruimer opgezette `maskable`-versie voor Android, dat er een cirkel uit snijdt).
-Pas je `icon.svg` aan, render de PNG's dan opnieuw in dezelfde maten.
+Het icoon is `icon.svg`; de PNG's ernaast zijn daaruit gerenderd (32, 180, 192 en
+512px, plus een ruimer opgezette `maskable`-versie voor Android, dat er een cirkel
+uit snijdt).
 
 ## Publiceren
 
-Eén statisch bestand, geen build. Elke push naar `main` publiceert via
+Eén statische pagina, geen build. Elke push naar `main` publiceert via
 GitHub Actions (`.github/workflows/deploy.yml`) naar GitHub Pages.
+
+## Ontwerpen
+
+De schermontwerpen voor een mogelijke native iOS-versie staan als canvas op
+[claude.ai](https://claude.ai/code/artifact/60939a36-177b-4690-ad4f-2b847ddff646).
+De web-versie volgt diezelfde vormtaal.

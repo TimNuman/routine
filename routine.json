@@ -1,105 +1,24 @@
 {
   "titel": "Ons dagritme",
-  "kinderen": "voor Emma & Mads",
   "avondVanaf": 15,
   "opslag": {
     "url": "https://routine-35aaa-default-rtdb.europe-west1.firebasedatabase.app",
     "gezin": "huis-9f3k2a"
   },
-  "overzicht": {
-    "ma": [
-      {
-        "icoon": "🏫",
-        "tekst": "School"
-      },
-      {
-        "icoon": "👨",
-        "tekst": "Papadag"
-      },
-      {
-        "icoon": "🏊",
-        "tekst": "Zwemmen"
-      },
-      {
-        "icoon": "🏋️",
-        "tekst": "Papa sporten",
-        "tijd": "20:00",
-        "avond": true
-      }
-    ],
-    "di": [
-      {
-        "icoon": "🏫",
-        "tekst": "School"
-      },
-      {
-        "icoon": "🧑‍🤝‍🧑",
-        "tekst": "BSO"
-      }
-    ],
-    "wo": [
-      {
-        "icoon": "🏫",
-        "tekst": "Kort school"
-      },
-      {
-        "icoon": "🧑‍🤝‍🧑",
-        "tekst": "Lang BSO"
-      },
-      {
-        "icoon": "⚽",
-        "tekst": "Voetbal",
-        "tijd": "15:45 – 16:45",
-        "kind": "Mads"
-      },
-      {
-        "icoon": "🏋️",
-        "tekst": "Papa sporten",
-        "tijd": "20:00",
-        "avond": true
-      }
-    ],
-    "do": [
-      {
-        "icoon": "🏫",
-        "tekst": "School"
-      },
-      {
-        "icoon": "👩🏻",
-        "tekst": "Mamadag"
-      }
-    ],
-    "vr": [
-      {
-        "icoon": "🏫",
-        "tekst": "School"
-      },
-      {
-        "icoon": "🧑‍🤝‍🧑",
-        "tekst": "BSO"
-      }
-    ],
-    "za": [
-      {
-        "icoon": "🤸",
-        "tekst": "Turnen",
-        "tijd": "10:00",
-        "kind": "Emma"
-      },
-      {
-        "icoon": "⚽",
-        "tekst": "Voetbal",
-        "tijd": "11:00",
-        "kind": "Mads"
-      }
-    ],
-    "zo": [
-      {
-        "icoon": "🏡",
-        "tekst": "Niks"
-      }
-    ]
-  },
+  "mensen": [
+    {
+      "id": "emma",
+      "naam": "Emma",
+      "emoji": "🦄",
+      "kleur": "#2FA37C"
+    },
+    {
+      "id": "mads",
+      "naam": "Mads",
+      "emoji": "🦖",
+      "kleur": "#7C6BD6"
+    }
+  ],
   "dag": [
     {
       "groep": "Boven",
@@ -222,5 +141,99 @@
         }
       ]
     }
-  ]
+  ],
+  "overzicht": {
+    "ma": [
+      {
+        "icoon": "🏫",
+        "tekst": "School"
+      },
+      {
+        "icoon": "👨",
+        "tekst": "Papadag"
+      },
+      {
+        "icoon": "🏊",
+        "tekst": "Zwemmen"
+      },
+      {
+        "icoon": "🏋️",
+        "tekst": "Papa sporten",
+        "tijd": "20:00",
+        "avond": true
+      }
+    ],
+    "di": [
+      {
+        "icoon": "🏫",
+        "tekst": "School"
+      },
+      {
+        "icoon": "🧑‍🤝‍🧑",
+        "tekst": "BSO"
+      }
+    ],
+    "wo": [
+      {
+        "icoon": "🏫",
+        "tekst": "Kort school"
+      },
+      {
+        "icoon": "🧑‍🤝‍🧑",
+        "tekst": "Lang BSO"
+      },
+      {
+        "icoon": "⚽",
+        "tekst": "Voetbal",
+        "tijd": "15:45 – 16:45",
+        "persoon": "mads"
+      },
+      {
+        "icoon": "🏋️",
+        "tekst": "Papa sporten",
+        "tijd": "20:00",
+        "avond": true
+      }
+    ],
+    "do": [
+      {
+        "icoon": "🏫",
+        "tekst": "School"
+      },
+      {
+        "icoon": "👩🏻",
+        "tekst": "Mamadag"
+      }
+    ],
+    "vr": [
+      {
+        "icoon": "🏫",
+        "tekst": "School"
+      },
+      {
+        "icoon": "🧑‍🤝‍🧑",
+        "tekst": "BSO"
+      }
+    ],
+    "za": [
+      {
+        "icoon": "🤸",
+        "tekst": "Turnen",
+        "tijd": "10:00",
+        "persoon": "emma"
+      },
+      {
+        "icoon": "⚽",
+        "tekst": "Voetbal",
+        "tijd": "11:00",
+        "persoon": "mads"
+      }
+    ],
+    "zo": [
+      {
+        "icoon": "🏡",
+        "tekst": "Niks"
+      }
+    ]
+  }
 }

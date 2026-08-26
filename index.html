@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="nl">
 <head>
 <meta charset="UTF-8">
@@ -14,450 +14,386 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Ons Dagritme</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
     --sun: #FFB84D;
     --sun-deep: #F2994A;
-    --sky: #8FD3F4;
-    --sky-deep: #5CB8E0;
     --night: #232752;
     --night-deep: #14163A;
-    --star: #FFD966;
     --cream: #FFF9EF;
     --ink: #2B2D42;
     --ink-soft: #5B5D7A;
-    --done: #6FCF97;
+    --done: #34C759;
+    --baloo: 'Baloo 2', ui-rounded, system-ui, sans-serif;
+    --nunito: 'Nunito', ui-rounded, -apple-system, system-ui, sans-serif;
   }
-  *{box-sizing:border-box;}
+  *{ box-sizing:border-box; }
+  html, body{ margin:0; padding:0; }
   body{
-    margin:0;
-    font-family:'Nunito', sans-serif;
-    background: var(--cream);
+    font-family: var(--nunito);
+    -webkit-font-smoothing: antialiased;
     color: var(--ink);
     min-height:100vh;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    padding: 24px 12px;
+    /* Het behang geeft het glas iets om te breken; zonder kleur eronder is
+       doorschijnend gewoon grijs. */
+    background:
+      radial-gradient(1100px 640px at 10% -10%, #FFD7A0 0%, rgba(255,215,160,0) 60%),
+      radial-gradient(820px 560px at 98% 4%, #FFC6E2 0%, rgba(255,198,226,0) 56%),
+      radial-gradient(900px 760px at 62% 106%, #B7DEFF 0%, rgba(183,222,255,0) 58%),
+      #FFF6E9;
+    background-attachment: fixed;
+    transition: background-color 0.6s ease;
   }
-  .card{
-    width:100%;
-    max-width: 960px;
-    border-radius: 32px;
-    overflow:hidden;
-    box-shadow: 0 20px 50px rgba(35,39,82,0.15);
-    background: var(--cream);
-    transition: background 0.6s ease;
+  body.night-mode{
+    color: var(--cream);
+    background:
+      radial-gradient(880px 560px at 86% -8%, #45408F 0%, rgba(69,64,143,0) 58%),
+      radial-gradient(760px 660px at 4% 26%, #1D4C7C 0%, rgba(29,76,124,0) 56%),
+      radial-gradient(880px 680px at 48% 108%, #5A3272 0%, rgba(90,50,114,0) 60%),
+      #10122F;
+    background-attachment: fixed;
   }
-  .card.night-mode{
-    background: var(--night-deep);
+
+  .app{ max-width: 980px; margin: 0 auto; padding: 26px 22px 40px; }
+
+  /* Glas komt in twee dichtheden: rustig voor inhoud, dichter voor bediening
+     die over de lijst heen ligt. */
+  .glas{
+    background: rgba(255,255,255,.62);
+    backdrop-filter: blur(44px) saturate(200%);
+    -webkit-backdrop-filter: blur(44px) saturate(200%);
+    border: 1px solid rgba(255,255,255,.75);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.9), inset 0 -1px 0 rgba(255,255,255,.4),
+                0 16px 38px rgba(126,84,42,.16);
   }
-  .topbar{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding: 22px 28px 10px;
+  .night-mode .glas{
+    background: rgba(52,56,112,.72);
+    border-color: rgba(255,255,255,.14);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.22), inset 0 -1px 0 rgba(255,255,255,.06),
+                0 16px 38px rgba(4,6,26,.46);
   }
+  .glas-zwevend{ background: rgba(255,255,255,.82); }
+  .night-mode .glas-zwevend{ background: rgba(40,43,92,.86); }
+
+  .topbar{ display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
   h1{
-    font-family:'Baloo 2', sans-serif;
-    font-size: clamp(22px, 4vw, 30px);
+    font-family: var(--baloo);
+    font-weight:800;
+    font-size: clamp(28px, 6vw, 36px);
+    line-height:1.06;
+    letter-spacing:-.5px;
     margin:0;
     color: var(--ink);
-    transition: color 0.6s ease;
   }
   .night-mode h1{ color: var(--cream); }
-  .kids{
-    font-weight:700;
-    font-size: 14px;
-    color: var(--ink-soft);
-    margin-top:2px;
-  }
-  .night-mode .kids{ color: #B7BAE0; }
+  .kids{ font-weight:700; font-size:15px; color: var(--ink-soft); margin-top:3px; }
+  .night-mode .kids{ color:#9EA1D4; }
 
-  .toggle{
-    display:flex;
-    background: rgba(0,0,0,0.06);
-    border-radius: 999px;
-    padding: 4px;
-    position:relative;
-    cursor:pointer;
-    user-select:none;
-    flex-shrink:0;
-  }
-  .night-mode .toggle{ background: rgba(255,255,255,0.08); }
-  .toggle button{
-    border:none;
-    background:transparent;
-    font-family:'Baloo 2', sans-serif;
-    font-weight:700;
-    font-size: 16px;
-    padding: 10px 18px;
-    border-radius: 999px;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-    gap:6px;
-    color: var(--ink-soft);
-    position:relative;
-    z-index:2;
-    transition: color 0.3s ease;
-  }
-  .night-mode .toggle button{ color:#9294c4; }
-  .toggle button.active{ color: #fff; }
-  .toggle .thumb{
-    position:absolute;
-    top:4px; bottom:4px; left:4px;
-    width: calc(50% - 4px);
-    border-radius: 999px;
-    background: linear-gradient(135deg, var(--sun), var(--sun-deep));
-    transition: transform 0.35s cubic-bezier(.4,1.6,.4,1), background 0.35s ease;
-    z-index:1;
-  }
-  .night-mode .thumb{
-    background: linear-gradient(135deg, #4A4E8C, var(--night));
-  }
-  .toggle.is-night .thumb{ transform: translateX(100%); }
-
-  .scene{
-    position:relative;
-    height: 90px;
-    overflow:hidden;
-  }
-  .scene .sky{
-    position:absolute; inset:0;
-    background: linear-gradient(180deg, var(--sky), var(--sky-deep));
-    transition: opacity 0.6s ease;
-  }
-  .night-mode .scene .sky{
-    background: linear-gradient(180deg, var(--night-deep), var(--night));
-  }
-  .sun-moon{
-    position:absolute;
-    top: 18px; left: 40px;
-    font-size: 38px;
-    transition: transform 0.6s ease, left 0.6s ease;
-    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
-  }
-  .night-mode .sun-moon{ left: calc(100% - 78px); }
-  .stars{ position:absolute; inset:0; opacity:0; transition:opacity 0.6s ease; }
-  .night-mode .stars{ opacity:1; }
-  .stars span{
-    position:absolute; color:var(--star); font-size:12px;
-  }
-
-  .path{
-    padding: 20px 28px 32px;
-    display:flex;
-    flex-direction:column;
-    gap: 18px;
-  }
-  .group{
-    display:flex;
-    align-items:center;
-    gap: 16px;
-  }
-  .group + .group{
-    border-top: 2px dashed rgba(43,45,66,0.10);
-    padding-top: 18px;
-  }
-  .night-mode .group + .group{ border-top-color: rgba(255,255,255,0.10); }
-  .group-label{
-    flex: 0 0 104px;
-    text-align:left;
-    color: var(--ink-soft);
-  }
-  .night-mode .group-label{ color:#9294c4; }
-  .group-name{
-    font-family:'Baloo 2', sans-serif;
-    font-weight:800;
-    font-size: 15px;
-    line-height:1.15;
-  }
-  .group-time{
-    font-family:'Nunito', sans-serif;
-    font-weight:700;
-    font-size: 12px;
-    line-height:1.2;
-    margin-top: 3px;
-    opacity: 0.75;
-    white-space: nowrap;
-  }
-  /* Vast raster van vijf: de stappen staan dan in elke rij onder elkaar, en een
-     groep van vijf past op één regel in plaats van te wrappen. */
-  .group-steps{
-    flex:1;
-    display:grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 14px;
-  }
-  .step{
-    text-align:center;
-    cursor:pointer;
-    user-select:none;
-  }
-  .stone{
-    width: 100%;
-    max-width: 76px;
-    aspect-ratio: 1 / 1;
-    margin: 0 auto 8px;
-    border-radius: 24px;
-    background: #fff;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size: 34px;
-    box-shadow: 0 6px 14px rgba(35,39,82,0.12);
-    border: 3px solid transparent;
-    position:relative;
-    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
-  }
-  .night-mode .stone{ background: #2E3163; }
-  .step:hover .stone{ transform: translateY(-3px); }
-  .step.done .stone{
-    border-color: var(--done);
-    background: #EAFBF1;
-  }
-  .night-mode .step.done .stone{ background: #1E4A38; }
-  .checkmark{
-    position:absolute;
-    top:-8px; right:-8px;
-    width:26px; height:26px;
+  .icoonknop{
+    flex:none;
+    width:46px; height:46px;
     border-radius:50%;
-    background: var(--done);
-    color:#fff;
-    font-size:15px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    opacity:0;
-    transform: scale(0.5);
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    font-weight:800;
-  }
-  .step.done .checkmark{ opacity:1; transform: scale(1); }
-  .num{
-    font-family:'Baloo 2', sans-serif;
-    font-size:12px;
-    font-weight:700;
-    color: var(--ink-soft);
-    margin-bottom:2px;
-  }
-  .night-mode .num{ color:#8386bd; }
-  .label{
-    font-family:'Baloo 2', sans-serif;
-    font-size: 14px;
-    font-weight:600;
-    color: var(--ink);
-    line-height:1.15;
-  }
-  .night-mode .label{ color: var(--cream); }
-
-  .content{
-    display:flex;
-    align-items:stretch;
-  }
-  .path{ flex:1; min-width:0; }
-  .agenda{
-    flex: 0 0 210px;
-    padding: 22px 26px 32px;
-    border-left: 2px dashed rgba(43,45,66,0.10);
-    color: var(--ink);
-  }
-  .night-mode .agenda{ border-left-color: rgba(255,255,255,0.10); color: var(--cream); }
-  .agenda[hidden]{ display:none; }
-  .agenda-kop{
-    font-family:'Baloo 2', sans-serif;
-    font-weight:800;
-    font-size: 15px;
-    line-height:1.15;
-    color: var(--ink-soft);
-  }
-  .night-mode .agenda-kop{ color:#9294c4; }
-  .agenda-dag{
-    font-family:'Nunito', sans-serif;
-    font-weight:700;
-    font-size: 12px;
-    line-height:1.2;
-    margin-top: 3px;
-    opacity: 0.75;
-    color: var(--ink-soft);
-  }
-  .night-mode .agenda-dag{ color:#9294c4; }
-  .agenda-blok + .agenda-blok{
-    margin-top: 22px;
-    padding-top: 20px;
-    border-top: 2px dashed rgba(43,45,66,0.10);
-  }
-  .night-mode .agenda-blok + .agenda-blok{ border-top-color: rgba(255,255,255,0.10); }
-  .agenda-lijst{
-    display:flex;
-    flex-direction:column;
-    gap: 14px;
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 2px dashed rgba(43,45,66,0.10);
-  }
-  .night-mode .agenda-lijst{ border-top-color: rgba(255,255,255,0.10); }
-  .agenda-item{
-    display:flex;
-    align-items:flex-start;
-    gap: 10px;
-  }
-  .agenda-icoon{ font-size: 22px; line-height:1.1; flex:none; }
-  .agenda-tekst{
-    font-family:'Baloo 2', sans-serif;
-    font-weight:600;
-    font-size: 14px;
-    line-height:1.2;
-  }
-  .agenda-tijd{
-    font-family:'Nunito', sans-serif;
-    font-weight:700;
-    font-size: 12px;
-    opacity: 0.7;
-    margin-top: 2px;
-  }
-  .kind{
-    display:inline-block;
-    margin-right: 6px;
-    padding: 1px 8px;
-    border-radius: 999px;
-    background: var(--ink-soft);
-    color: #fff;
-    font-family:'Nunito', sans-serif;
-    font-weight:800;
-    font-size: 11px;
-    vertical-align: 1px;
-  }
-
-  .footer{
-    padding: 6px 28px 26px;
-    text-align:center;
-  }
-  .reset{
-    font-family:'Nunito', sans-serif;
-    font-weight:700;
-    font-size: 13px;
-    color: var(--ink-soft);
-    background: none;
-    border: none;
+    display:flex; align-items:center; justify-content:center;
     cursor:pointer;
-    text-decoration: underline;
+    font-size:19px;
+    color: var(--sun-deep);
+    border:1px solid rgba(255,255,255,.75);
   }
-  .night-mode .reset{ color:#9294c4; }
+  .night-mode .icoonknop{ border-color: rgba(255,255,255,.14); }
+
+  .schakel{ display:flex; gap:4px; padding:4px; border-radius:19px; margin-top:18px; }
+  .schakel button{
+    flex:1;
+    border:1px solid transparent;
+    background:transparent;
+    font-family: var(--baloo);
+    font-weight:800;
+    font-size:15px;
+    padding:9px 0;
+    border-radius:15px;
+    cursor:pointer;
+    color: var(--ink-soft);
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    transition: background 0.25s ease, color 0.25s ease;
+  }
+  .night-mode .schakel button{ color:#9EA1D4; }
+  .schakel button.active{
+    background: rgba(255,255,255,.86);
+    border-color: rgba(255,255,255,.95);
+    box-shadow: 0 3px 10px rgba(0,0,0,.10);
+    color: var(--ink);
+  }
+  .night-mode .schakel button.active{
+    background: rgba(255,255,255,.20);
+    border-color: rgba(255,255,255,.22);
+    color: var(--cream);
+  }
+
+  .voortgang{ border-radius:26px; margin-top:14px; display:flex; }
+  .voortgang[hidden]{ display:none; }
+  .pvak{ flex:1; display:flex; align-items:center; gap:11px; padding:13px 14px; min-width:0; }
+  .pvak + .pvak{ border-left:1px solid rgba(43,45,66,.08); }
+  .night-mode .pvak + .pvak{ border-left-color: rgba(255,255,255,.10); }
+  .pgezicht{
+    width:46px; height:46px; border-radius:50%; flex:none;
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px; line-height:1;
+  }
+  .pnaam{ display:flex; align-items:baseline; justify-content:space-between; gap:6px; }
+  .pnaam b{ font-family: var(--baloo); font-weight:800; font-size:16px; }
+  .pnaam span{ font-weight:800; font-size:12.5px; color: var(--ink-soft); }
+  .night-mode .pnaam span{ color:#9EA1D4; }
+  .balk{ height:7px; border-radius:99px; background: rgba(43,45,66,.10); overflow:hidden; margin-top:6px; }
+  .night-mode .balk{ background: rgba(255,255,255,.16); }
+  .balk i{ display:block; height:100%; border-radius:99px; transition: width 0.3s ease; }
+
+  .content{ display:flex; align-items:stretch; margin-top:24px; }
+  .path{ flex:1; min-width:0; display:flex; flex-direction:column; gap:22px; }
+  .agenda{ flex: 0 0 210px; padding-left:22px; margin-left:22px; border-left:1px dashed rgba(43,45,66,.16); }
+  .night-mode .agenda{ border-left-color: rgba(255,255,255,.14); }
+  .agenda[hidden]{ display:none; }
+
+  .groepkop{ display:flex; align-items:baseline; justify-content:space-between; padding:0 8px 8px; }
+  .groepnaam{ font-family: var(--baloo); font-weight:800; font-size:17px; }
+  .groeptijd{ font-weight:700; font-size:13px; color: var(--ink-soft); }
+  .night-mode .groeptijd{ color:#9EA1D4; }
+
+  .stapkaart{ border-radius:26px; overflow:hidden; }
+  .stap{ display:flex; align-items:center; gap:12px; padding:8px 10px 8px 12px; min-height:64px; }
+  .stap + .stap{ border-top:1px solid rgba(43,45,66,.08); }
+  .night-mode .stap + .stap{ border-top-color: rgba(255,255,255,.10); }
+  .tegel{
+    width:46px; height:46px; border-radius:15px; flex:none;
+    background: rgba(255,255,255,.72);
+    border:1px solid rgba(255,255,255,.9);
+    display:flex; align-items:center; justify-content:center;
+    font-size:24px; line-height:1;
+  }
+  .night-mode .tegel{ background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.16); }
+  .staplabel{ flex:1; min-width:0; font-family: var(--baloo); font-weight:700; font-size:16.5px; line-height:1.2; }
+  .knoppen{ display:flex; gap:2px; flex:none; }
+
+  /* Eén rond tikvlak per persoon: hun eigen gezicht, aan of uit. */
+  .pknop{
+    width:44px; height:44px; flex:none;
+    display:flex; align-items:center; justify-content:center;
+    position:relative; cursor:pointer;
+    background:none; border:none; padding:0;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .pknop .rond{
+    width:40px; height:40px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px; line-height:1;
+    transition: box-shadow 0.2s ease, filter 0.2s ease, opacity 0.2s ease;
+    box-shadow: inset 0 0 0 1.5px rgba(43,45,66,.14);
+    filter: grayscale(1);
+    opacity:.40;
+  }
+  .night-mode .pknop .rond{ box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.20); }
+  .pknop[aria-pressed="true"] .rond{
+    filter:none;
+    opacity:1;
+    box-shadow: 0 0 0 2.5px var(--done), 0 4px 10px rgba(0,0,0,.16);
+  }
+  .pknop .vink{
+    position:absolute; right:1px; bottom:1px;
+    width:18px; height:18px; border-radius:50%;
+    background: var(--done);
+    border:2px solid #fff;
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-size:10px; font-weight:800;
+    opacity:0; transform: scale(.5);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .night-mode .pknop .vink{ border-color:#2E3163; }
+  .pknop[aria-pressed="true"] .vink{ opacity:1; transform: scale(1); }
+
+  .agendablok + .agendablok{ margin-top:22px; padding-top:20px; border-top:1px dashed rgba(43,45,66,.16); }
+  .night-mode .agendablok + .agendablok{ border-top-color: rgba(255,255,255,.14); }
+  .agendakop{ font-family: var(--baloo); font-weight:800; font-size:15px; color: var(--ink-soft); }
+  .night-mode .agendakop{ color:#9EA1D4; }
+  .agendadag{ font-weight:700; font-size:12px; color: var(--ink-soft); opacity:.75; margin-top:3px; }
+  .night-mode .agendadag{ color:#9EA1D4; }
+  .agendalijst{
+    display:flex; flex-direction:column; gap:14px;
+    margin-top:16px; padding-top:14px;
+    border-top:1px dashed rgba(43,45,66,.16);
+  }
+  .night-mode .agendalijst{ border-top-color: rgba(255,255,255,.14); }
+  .agendaitem{ display:flex; align-items:flex-start; gap:10px; }
+  .agendaicoon{ font-size:22px; line-height:1.1; flex:none; }
+  .agendatekst{ font-family: var(--baloo); font-weight:600; font-size:14px; line-height:1.2; }
+  .agendatijd{ font-weight:700; font-size:12px; opacity:.7; margin-top:2px; }
+  .merk{
+    display:inline-block; margin-right:6px; padding:1px 8px;
+    border-radius:999px; color:#fff;
+    font-family: var(--nunito); font-weight:800; font-size:11px;
+    vertical-align:1px;
+  }
+
+  .footer{ text-align:center; padding-top:26px; }
+  .reset{
+    font-family: var(--nunito); font-weight:700; font-size:13px;
+    color: var(--ink-soft); background:none; border:none; cursor:pointer; text-decoration:underline;
+  }
+  .night-mode .reset{ color:#9EA1D4; }
 
   .trek{
-    position: fixed;
-    top: 0; left: 50%;
-    z-index: 50;
-    width: 42px; height: 42px;
-    margin-left: -21px;
-    border-radius: 50%;
-    background: #fff;
-    box-shadow: 0 6px 16px rgba(35,39,82,0.20);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size: 21px;
-    color: var(--sun-deep);
-    opacity: 0;
-    transform: translateY(-52px);
-    pointer-events:none;
+    position:fixed; top:0; left:50%; z-index:50;
+    width:42px; height:42px; margin-left:-21px;
+    border-radius:50%; background:#fff;
+    box-shadow:0 6px 16px rgba(35,39,82,.20);
+    display:flex; align-items:center; justify-content:center;
+    font-size:21px; color: var(--sun-deep);
+    opacity:0; transform: translateY(-52px); pointer-events:none;
   }
   .trek.terug{ transition: transform 0.25s ease, opacity 0.25s ease; }
   .trek.bezig .trek-icoon{ animation: draai 0.8s linear infinite; }
   @keyframes draai{ to{ transform: rotate(360deg); } }
 
+  /* ---------------------------------------------------------- bewerken --- */
+  .scrim{ position:fixed; inset:0; background: rgba(22,15,6,.30); z-index:60; }
+  .scrim[hidden], .blad[hidden]{ display:none; }
+  .blad{
+    position:fixed; left:0; right:0; bottom:0; top:38px; z-index:61;
+    border-radius:30px 30px 0 0;
+    display:flex; flex-direction:column;
+    max-width:980px; margin:0 auto;
+  }
+  .bladkop{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:16px 20px 12px;
+    border-bottom:1px solid rgba(43,45,66,.08);
+  }
+  .night-mode .bladkop{ border-bottom-color: rgba(255,255,255,.10); }
+  .bladkop h2{ font-family: var(--baloo); font-weight:800; font-size:18px; margin:0; }
+  .tekstknop{
+    background:none; border:none; cursor:pointer;
+    font-family: var(--nunito); font-weight:800; font-size:16px; color: var(--sun-deep);
+    padding:6px 2px;
+  }
+  .tabs{ display:flex; gap:4px; padding:12px 16px 0; }
+  .tabs button{
+    flex:1; padding:9px 0; border-radius:14px; border:1px solid transparent;
+    background: rgba(43,45,66,.05);
+    font-family: var(--baloo); font-weight:800; font-size:14px; color: var(--ink-soft);
+    cursor:pointer;
+  }
+  .night-mode .tabs button{ background: rgba(255,255,255,.08); color:#9EA1D4; }
+  .tabs button.active{ background: var(--sun-deep); color:#fff; }
+  .bladinhoud{ flex:1; overflow-y:auto; padding:16px 16px 30px; }
+
+  .bewerkgroep{
+    border-radius:22px; padding:12px;
+    background: rgba(255,255,255,.55);
+    border:1px solid rgba(255,255,255,.8);
+    margin-bottom:14px;
+  }
+  .night-mode .bewerkgroep{ background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.12); }
+  /* Zes bedieningen naast elkaar knijpt de tekstvelden dicht op een telefoon;
+     laat de knoppen daarom naar een tweede regel zakken. */
+  .groepregel, .bewerkrij{
+    display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:6px 0;
+  }
+  .groepregel{ margin-bottom:4px; padding-top:0; }
+  .rijknoppen{ display:flex; gap:8px; margin-left:auto; }
+  .bewerkrij + .bewerkrij{ border-top:1px solid rgba(43,45,66,.07); }
+  .night-mode .bewerkrij + .bewerkrij{ border-top-color: rgba(255,255,255,.08); }
+  input.veld{
+    flex:1 1 150px; min-width:0;
+    font-family: var(--nunito); font-weight:700; font-size:15px;
+    color: var(--ink);
+    padding:10px 12px; border-radius:12px;
+    border:1px solid rgba(43,45,66,.14);
+    background: rgba(255,255,255,.85);
+  }
+  .night-mode input.veld{ background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.16); color: var(--cream); }
+  input.veld.smal{ flex:none; width:56px; text-align:center; font-size:20px; padding:8px 4px; }
+  input.veld.tijd{ flex:0 0 112px; width:112px; font-size:13px; }
+  .rijknop{
+    flex:none; width:34px; height:34px; border-radius:50%;
+    border:1px solid rgba(43,45,66,.12);
+    background: rgba(255,255,255,.7);
+    cursor:pointer; font-size:14px; color: var(--ink-soft);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .night-mode .rijknop{ background: rgba(255,255,255,.10); border-color: rgba(255,255,255,.16); color:#C9CBEA; }
+  .rijknop.weg{ color:#E5484D; }
+  .dagen{ display:flex; gap:4px; padding:8px 0 2px; }
+  .dagen button{
+    flex:1; padding:7px 0; border-radius:10px; cursor:pointer;
+    border:1px solid rgba(43,45,66,.12);
+    background: rgba(255,255,255,.7);
+    font-family: var(--baloo); font-weight:800; font-size:12px; color: var(--ink-soft);
+  }
+  .night-mode .dagen button{ background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.14); color:#9EA1D4; }
+  .dagen button.aan{ background: var(--sun-deep); border-color: var(--sun-deep); color:#fff; }
+  .toevoeg{
+    width:100%; padding:12px; border-radius:16px; cursor:pointer;
+    border:1px dashed rgba(43,45,66,.24);
+    background: rgba(255,255,255,.4);
+    font-family: var(--baloo); font-weight:800; font-size:14px; color: var(--ink-soft);
+    margin-top:6px;
+  }
+  .night-mode .toevoeg{ background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.20); color:#9EA1D4; }
+  .kleuren{ display:flex; gap:6px; flex:none; }
+  .kleuren button{
+    width:24px; height:24px; border-radius:50%; cursor:pointer; border:2px solid transparent;
+  }
+  .kleuren button.aan{ border-color: var(--ink); }
+  .night-mode .kleuren button.aan{ border-color:#fff; }
+  .melding{
+    margin:0 16px 12px; padding:11px 14px; border-radius:14px;
+    background: rgba(229,72,77,.12); border:1px solid rgba(229,72,77,.3);
+    font-weight:700; font-size:13px; color:#B0272C;
+  }
+  .melding[hidden]{ display:none; }
+  .night-mode .melding{ color:#FFB3B5; }
+
   @media (max-width:600px){
-    body{ padding: 12px 8px; }
-    .card{ border-radius: 26px; }
-
-    /* Titel en knop naast elkaar wordt te krap; onder elkaar houdt beide leesbaar. */
-    .topbar{
-      flex-direction:column;
-      align-items:stretch;
-      gap: 12px;
-      padding: 20px 20px 12px;
-    }
-    .toggle{ width:100%; }
-    .toggle button{ flex:1; justify-content:center; }
-
-    .content{ flex-direction:column; }
-    /* De kolom valt weg als kader; de blokken erin worden zelf rijen, zodat ze
-       los van elkaar boven of onder de stappen gezet kunnen worden. */
+    .app{ padding: 20px 14px 34px; }
+    .content{ flex-direction:column; margin-top:20px; }
+    /* De kolom laat zich weg; de blokken erin worden zelf rijen, zodat 'Morgen'
+       los onder de stappen gezet kan worden. */
     .agenda{ display: contents; }
-    .agenda-blok,
-    .agenda-blok + .agenda-blok{
-      order: -1;
-      margin-top: 0;
-      padding: 18px 20px;
-      border-top: none;
-      border-bottom: 2px dashed rgba(43,45,66,0.10);
+    .agendablok,
+    .agendablok + .agendablok{
+      order:-1; margin:0 0 18px; padding:0 0 18px;
+      border-top:none; border-bottom:1px dashed rgba(43,45,66,.16);
     }
-    .night-mode .agenda-blok{ border-bottom-color: rgba(255,255,255,0.10); }
-    /* 'Morgen' is vooruitkijken en hoort na het naar bed gaan, niet ervoor. */
-    .agenda-blok.later{
-      order: 1;
-      padding-top: 20px;
-      border-bottom: none;
-      border-top: 2px dashed rgba(43,45,66,0.10);
+    .night-mode .agendablok{ border-bottom-color: rgba(255,255,255,.14); }
+    .agendablok.later{
+      order:1; margin:20px 0 0; padding:20px 0 0;
+      border-bottom:none; border-top:1px dashed rgba(43,45,66,.16);
     }
-    .night-mode .agenda-blok.later{ border-top-color: rgba(255,255,255,0.10); }
-    .agenda-lijst{
-      flex-direction:row;
-      flex-wrap:wrap;
-      gap: 10px 20px;
-    }
-    .path{ padding: 18px 20px 26px; gap: 24px; }
-    .group{ flex-direction:column; align-items:stretch; gap: 0; }
-
-    /* Naam en tijd naast elkaar op één regel, met de streep eronder. Die streep
-       vervangt de scheiding tússen de groepen; allebei zou twee lijnen vlak
-       boven elkaar geven. */
-    .group + .group{ border-top:none; padding-top:0; }
-    .group-label{
-      flex:none;
-      display:flex;
-      align-items:baseline;
-      justify-content:space-between;
-      gap: 10px;
-      padding-bottom: 8px;
-      margin-bottom: 14px;
-      border-bottom: 2px dashed rgba(43,45,66,0.12);
-    }
-    .night-mode .group-label{ border-bottom-color: rgba(255,255,255,0.12); }
-    .group-time{ margin-top: 0; }
-
-    /* Een raster van drie houdt de stappen onder elkaar uitgelijnd, ook als een
-       rij niet vol is — bij wrappen zou de laatste stap los gaan zweven. */
-    /* Vijf naast elkaar wordt op een telefoon te klein; drie houdt de vlakken
-       groot genoeg om met een vinger aan te tikken. */
-    .group-steps{ grid-template-columns: repeat(3, 1fr); gap: 12px; }
-    .stone{ max-width: 72px; font-size: 30px; }
-    .label{ font-size: 13px; }
+    .night-mode .agendablok.later{ border-top-color: rgba(255,255,255,.14); }
+    .agendalijst{ flex-direction:row; flex-wrap:wrap; gap:10px 20px; }
+    .voortgang{ flex-direction:column; }
+    .pvak + .pvak{ border-left:none; border-top:1px solid rgba(43,45,66,.08); }
+    .night-mode .pvak + .pvak{ border-top-color: rgba(255,255,255,.10); }
+    .blad{ top:24px; }
   }
 </style>
 </head>
 <body>
-  <div class="card" id="card">
+  <div class="app">
     <div class="topbar">
       <div>
         <h1 id="titel">Ons dagritme</h1>
-        <div class="kids" id="kids">voor Emma &amp; Mads</div>
+        <div class="kids" id="kids"></div>
       </div>
-      <div class="toggle" id="toggle">
-        <div class="thumb"></div>
-        <button class="active" id="btnDag">☀️ Dag</button>
-        <button id="btnNacht">🌙 Avond</button>
-      </div>
+      <button class="icoonknop glas" id="bewerkKnop" title="Bewerken" aria-label="Bewerken">✎</button>
     </div>
 
-    <div class="scene">
-      <div class="sky"></div>
-      <div class="sun-moon" id="sunMoon">☀️</div>
-      <div class="stars" id="stars"></div>
+    <div class="schakel glas glas-zwevend" id="schakel">
+      <button class="active" id="btnDag">☀️ Ochtend</button>
+      <button id="btnNacht">🌙 Avond</button>
     </div>
+
+    <div class="voortgang glas" id="voortgang" hidden></div>
 
     <div class="content">
       <div class="path" id="path"></div>
@@ -469,398 +405,628 @@
     </div>
   </div>
 
+  <div class="scrim" id="scrim" hidden></div>
+  <div class="blad glas glas-zwevend" id="blad" hidden>
+    <div class="bladkop">
+      <button class="tekstknop" id="bewerkAf">Annuleer</button>
+      <h2>Bewerken</h2>
+      <button class="tekstknop" id="bewerkBewaar"><b>Bewaar</b></button>
+    </div>
+    <div class="tabs" id="tabs">
+      <button data-tab="dag" class="active">Ochtend</button>
+      <button data-tab="nacht">Avond</button>
+      <button data-tab="mensen">Mensen</button>
+    </div>
+    <div class="melding" id="melding" hidden></div>
+    <div class="bladinhoud" id="bladinhoud"></div>
+  </div>
+
   <div class="trek" id="trek" aria-hidden="true"><span class="trek-icoon">↻</span></div>
 
 <script>
-// De namen en stappen komen uit routine.json. Lukt dat niet (bijvoorbeeld bij
-// openen via file://), dan valt de pagina terug op dit standaardritme.
-//
-// Een routine is óf een platte lijst stappen, óf een lijst groepen die elk een
-// eigen rij met kopje krijgen. Beide vormen mogen door elkaar gebruikt worden.
+// De inhoud van de app — ritmes, mensen, overzicht — staat in de database en is
+// in de app zelf te bewerken. routine.json is nog maar het zaadje: het vult de
+// database de eerste keer, en dient daarna als terugval.
+const VERSIE = '__VERSIE__';
+
+const KLEUREN = ['#2FA37C', '#7C6BD6', '#D9724F', '#3B82C4', '#C2417E', '#E0A33E'];
+const DAGEN = ['zo','ma','di','wo','do','vr','za'];
+const DAGNAMEN = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+const WERKDAGEN = ['ma','di','wo','do','vr','za','zo'];
+
 const STANDAARD = {
   titel: 'Ons dagritme',
-  kinderen: 'voor Emma & Mads',
   avondVanaf: 15,
+  mensen: [
+    { id:'emma', naam:'Emma', emoji:'🦄', kleur:'#2FA37C' },
+    { id:'mads', naam:'Mads', emoji:'🦖', kleur:'#7C6BD6' },
+  ],
   dag: [
-    {groep:'Boven', tijd:'6:00 – 6:30', stappen:[
-      {icoon:'🛏️', label:'Wakker worden'},
-      {icoon:'🪥', label:'Tanden poetsen'},
-      {icoon:'👕', label:'Aankleden'},
+    { groep:'Boven', tijd:'6:00 – 6:30', stappen:[
+      { icoon:'🛏️', label:'Wakker worden' },
+      { icoon:'🪥', label:'Tanden poetsen' },
+      { icoon:'👕', label:'Aankleden' },
     ]},
-    {groep:'Beneden', tijd:'6:30 – 7:30', stappen:[
-      {icoon:'💇', label:'Haren kammen'},
-      {icoon:'🥣', label:'Ontbijt'},
-      {icoon:'🧸', label:'Spelen'},
+    { groep:'Beneden', tijd:'6:30 – 7:30', stappen:[
+      { icoon:'💇', label:'Haren kammen' },
+      { icoon:'🥣', label:'Ontbijt' },
+      { icoon:'🧸', label:'Spelen' },
     ]},
-    {groep:'Weggaan', tijd:'8:00 – 8:15', stappen:[
-      {icoon:'🎒', label:'Tas & jas'},
-      {icoon:'⚽', label:'Voetbaltas', dagen:['wo']},
-      {icoon:'👟', label:'Schoenen aan'},
-      {icoon:'🐱', label:'Knuffel'},
-      {icoon:'🚪', label:'Naar school!'},
+    { groep:'Weggaan', tijd:'8:00 – 8:15', stappen:[
+      { icoon:'🎒', label:'Tas & jas' },
+      { icoon:'⚽', label:'Voetbaltas', dagen:['wo'] },
+      { icoon:'👟', label:'Schoenen aan' },
+      { icoon:'🐱', label:'Knuffel' },
+      { icoon:'🚪', label:'Naar school!' },
     ]},
   ],
   nacht: [
-    {groep:'Beneden', tijd:'18:00 – 18:45', stappen:[
-      {icoon:'🍽️', label:'Avondeten'},
-      {icoon:'🧸', label:'Even spelen'},
+    { groep:'Beneden', tijd:'18:00 – 18:45', stappen:[
+      { icoon:'🍽️', label:'Avondeten' },
+      { icoon:'🧸', label:'Even spelen' },
     ]},
-    {groep:'Boven', tijd:'18:45 – 19:15', stappen:[
-      {icoon:'🛁', label:'Bad'},
-      {icoon:'👕', label:'Pyjama aan'},
-      {icoon:'🪥', label:'Tanden poetsen'},
-      {icoon:'🚽', label:'Plassen'},
+    { groep:'Boven', tijd:'18:45 – 19:15', stappen:[
+      { icoon:'🛁', label:'Bad' },
+      { icoon:'👕', label:'Pyjama aan' },
+      { icoon:'🪥', label:'Tanden poetsen' },
+      { icoon:'🚽', label:'Plassen' },
     ]},
-    {groep:'Naar bed', tijd:'19:15 – 19:30', stappen:[
-      {icoon:'📖', label:'Voorlezen'},
-      {icoon:'🤗', label:'Knuffel'},
-      {icoon:'🌙', label:'Licht uit'},
+    { groep:'Naar bed', tijd:'19:15 – 19:30', stappen:[
+      { icoon:'📖', label:'Voorlezen' },
+      { icoon:'🤗', label:'Knuffel' },
+      { icoon:'🌙', label:'Licht uit' },
     ]},
   ],
-  overzicht: {
-    ma: [
-      {icoon:"🏫", tekst:"School"},
-      {icoon:"👨", tekst:"Papadag"},
-      {icoon:"🏊", tekst:"Zwemmen"},
-      {icoon:"🏋️", tekst:"Papa sporten", tijd:"20:00", avond:true},
-    ],
-    di: [
-      {icoon:"🏫", tekst:"School"},
-      {icoon:"🧑‍🤝‍🧑", tekst:"BSO"},
-    ],
-    wo: [
-      {icoon:"🏫", tekst:"Kort school"},
-      {icoon:"🧑‍🤝‍🧑", tekst:"Lang BSO"},
-      {icoon:"⚽", tekst:"Voetbal", tijd:"15:45 – 16:45", kind:"Mads"},
-      {icoon:"🏋️", tekst:"Papa sporten", tijd:"20:00", avond:true},
-    ],
-    do: [
-      {icoon:"🏫", tekst:"School"},
-      {icoon:"👩🏻", tekst:"Mamadag"},
-    ],
-    vr: [
-      {icoon:"🏫", tekst:"School"},
-      {icoon:"🧑‍🤝‍🧑", tekst:"BSO"},
-    ],
-    za: [
-      {icoon:"🤸", tekst:"Turnen", tijd:"10:00", kind:"Emma"},
-      {icoon:"⚽", tekst:"Voetbal", tijd:"11:00", kind:"Mads"},
-    ],
-    zo: [
-      {icoon:"🏡", tekst:"Niks"},
-    ],
-  },
+  overzicht: {},
 };
 
-let config = { titel: STANDAARD.titel, kinderen: STANDAARD.kinderen };
-let mode = 'dag';
-let done = { dag: new Set(), nacht: new Set() };
-
-const card = document.getElementById('card');
-const titelEl = document.getElementById('titel');
-const kidsEl = document.getElementById('kids');
-const pathEl = document.getElementById('path');
-const toggle = document.getElementById('toggle');
-const btnDag = document.getElementById('btnDag');
-const btnNacht = document.getElementById('btnNacht');
-const sunMoon = document.getElementById('sunMoon');
-const starsEl = document.getElementById('stars');
-const resetBtn = document.getElementById('resetBtn');
-const agendaEl = document.getElementById('agenda');
-
-function renderStars(){
-  starsEl.innerHTML = '';
-  const positions = [
-    [10,20],[25,10],[70,15],[85,30],[45,8],[92,12],[15,35],[60,25]
-  ];
-  positions.forEach(([left,top])=>{
-    const s = document.createElement('span');
-    s.textContent = '✦';
-    s.style.left = left+'%';
-    s.style.top = top+'px';
-    starsEl.appendChild(s);
-  });
+// Firebase levert een lijst soms terug als object met nummers als sleutel; hier
+// wordt allebei op dezelfde manier gelezen.
+function lijstVan(waarde){
+  if(Array.isArray(waarde)) return waarde.filter(x => x != null);
+  if(waarde && typeof waarde === 'object'){
+    return Object.keys(waarde).sort((a, b) => Number(a) - Number(b))
+      .map(k => waarde[k]).filter(x => x != null);
+  }
+  return [];
 }
 
-// Beide JSON-vormen worden hier naar dezelfde structuur getrokken: een lijst
-// groepen met een (eventueel lege) naam. Een platte lijst wordt één naamloze
-// groep, die dan gewoon als één gecentreerde rij verschijnt.
-function maakGroepen(lijst){
-  if(!Array.isArray(lijst) || !lijst.length) return [];
-  const gegroepeerd = lijst.some(item => item && Array.isArray(item.stappen));
-  if(!gegroepeerd) return [{ groep:'', tijd:'', stappen: lijst }];
-  return lijst
-    .filter(item => item && Array.isArray(item.stappen) && item.stappen.length)
-    .map(item => ({ groep: item.groep || '', tijd: item.tijd || '', stappen: item.stappen }));
+function tekst(waarde, terugval = ''){
+  const s = typeof waarde === 'string' ? waarde.trim() : '';
+  return s || terugval;
+}
+
+function uurOf(waarde, terugval){
+  const n = Number(waarde);
+  return Number.isFinite(n) && n >= 0 && n <= 23 ? Math.floor(n) : terugval;
+}
+
+function stapSleutel(step){
+  return String((step && step.label) || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '') || 'stap';
+}
+
+function nieuwId(){ return 'p' + Math.random().toString(36).slice(2, 8); }
+
+// Een routine is óf een platte lijst stappen, óf een lijst groepen. Beide vormen
+// worden hier naar dezelfde structuur getrokken.
+function maakGroepen(waarde){
+  const lijst = lijstVan(waarde);
+  if(!lijst.length) return [];
+  const gegroepeerd = lijst.some(item => item && (item.stappen !== undefined || item.groep !== undefined));
+  const rauw = gegroepeerd ? lijst : [{ groep:'', tijd:'', stappen: lijst }];
+  return rauw.map(item => ({
+    groep: tekst(item && item.groep),
+    tijd: tekst(item && item.tijd),
+    stappen: lijstVan(item && item.stappen).map(s => ({
+      icoon: tekst(s && s.icoon, '•'),
+      label: tekst(s && s.label),
+      dagen: lijstVan(s && s.dagen).map(d => String(d).trim().slice(0, 2).toLowerCase())
+                                   .filter(d => DAGEN.includes(d)),
+    })),
+  }));
 }
 
 function aantalStappen(groepen){
-  return groepen.reduce((n, g)=> n + g.stappen.length, 0);
+  return groepen.reduce((n, g) => n + g.stappen.length, 0);
 }
 
-// Een routine wordt alleen overgenomen als er stappen in zitten; anders blijft
-// het standaardritme staan, zodat een typefout in routine.json niets leegtrekt.
 function routine(waarde, terugval){
   const groepen = maakGroepen(waarde);
   return aantalStappen(groepen) ? groepen : maakGroepen(terugval);
 }
 
-const DAGEN = ['zo','ma','di','wo','do','vr','za'];
-
-// Een stap zonder 'dagen' hoort bij elke dag. Staat het veld er wel, dan
-// verschijnt de stap alleen op de genoemde dagen. Er wordt op de eerste twee
-// letters vergeleken, zodat zowel 'wo' als 'woensdag' werkt.
-function opVandaag(step){
-  if(!step || !Array.isArray(step.dagen) || !step.dagen.length) return true;
-  const nu = DAGEN[new Date().getDay()];
-  return step.dagen.some(d => String(d).trim().slice(0,2).toLowerCase() === nu);
+function overzichtPerDag(waarde){
+  const uit = {};
+  Object.entries(waarde || {}).forEach(([k, v]) => {
+    const dag = String(k).trim().slice(0, 2).toLowerCase();
+    if(!DAGEN.includes(dag)) return;
+    uit[dag] = lijstVan(v).map(item => ({
+      icoon: tekst(item && item.icoon, '•'),
+      tekst: tekst(item && item.tekst),
+      tijd: tekst(item && item.tijd),
+      persoon: tekst(item && (item.persoon || item.kind)),
+      avond: Boolean(item && item.avond),
+    }));
+  });
+  return uit;
 }
 
-// ---------------------------------------------------------------------------
-// Afvinkstatus delen tussen telefoons
-//
-// De status staat in een Firebase Realtime Database, per dag en per ritme:
-//
-//   <gezin>/<jjjj-mm-dd>/<dag|nacht>/<stap> = true
-//
-// Per dag een eigen tak, zodat het ritme 's ochtends vanzelf weer leeg is en er
-// niets gewist hoeft te worden. Aan- en afvinken schrijft precies één stap, niet
-// de hele lijst — twee telefoons die tegelijk iets aantikken overschrijven
-// elkaar dan niet.
-//
-// Zonder ingevulde url werkt alles gewoon lokaal verder.
-// ---------------------------------------------------------------------------
-const sync = { basis: '', datum: '', stroom: null };
+function normaliseer(ruw){
+  const bron = ruw || {};
+  const mensen = lijstVan(bron.mensen).map((p, i) => ({
+    id: tekst(p && p.id, 'p' + i),
+    naam: tekst(p && p.naam, 'Naamloos'),
+    emoji: tekst(p && p.emoji, '🙂'),
+    kleur: tekst(p && p.kleur, KLEUREN[i % KLEUREN.length]),
+  }));
+  return {
+    titel: tekst(bron.titel, STANDAARD.titel),
+    avondVanaf: uurOf(bron.avondVanaf, STANDAARD.avondVanaf),
+    mensen: mensen.length ? mensen : STANDAARD.mensen.map(p => ({ ...p })),
+    dag: routine(bron.dag, STANDAARD.dag),
+    nacht: routine(bron.nacht, STANDAARD.nacht),
+    overzicht: overzichtPerDag(bron.overzicht),
+  };
+}
+
+let config = normaliseer(STANDAARD);
+let instelling = null;          // { url, gezin } uit routine.json
+let mode = 'dag';
+// done[ritme] is een kaart van stapsleutel naar de verzameling mensen die klaar zijn.
+let done = { dag: new Map(), nacht: new Map() };
+
+const titelEl = document.getElementById('titel');
+const kidsEl = document.getElementById('kids');
+const pathEl = document.getElementById('path');
+const agendaEl = document.getElementById('agenda');
+const voortgangEl = document.getElementById('voortgang');
+const schakelEl = document.getElementById('schakel');
+const btnDag = document.getElementById('btnDag');
+const btnNacht = document.getElementById('btnNacht');
+const resetBtn = document.getElementById('resetBtn');
+
+function persoonById(id){ return config.mensen.find(p => p.id === id) || null; }
+function heeftVink(ritme, stap, persoon){
+  const set = done[ritme].get(stap);
+  return Boolean(set && set.has(persoon));
+}
+function zetVink(ritme, stap, persoon, aan){
+  const kaart = done[ritme];
+  if(!kaart.has(stap)) kaart.set(stap, new Set());
+  const set = kaart.get(stap);
+  if(aan) set.add(persoon); else set.delete(persoon);
+  if(!set.size) kaart.delete(stap);
+}
+
+// ---------------------------------------------------------------- opslag ---
+// Twee takken onder <gezin>: 'config' is de inhoud die je in de app bewerkt, en
+// per datum staat wie welke stap heeft afgevinkt. Een eigen tak per dag betekent
+// dat het ritme 's ochtends vanzelf leeg begint.
+const opslag = { basis:'', datum:'', datumStroom:null, configStroom:null };
 
 function datumVan(d){
   const p = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
-
 function vandaag(){ return datumVan(new Date()); }
 
-// Labels worden tot een eenvoudige sleutel teruggebracht, zodat spaties en
-// leestekens geen rol spelen in het pad naar de database.
-function stapSleutel(step){
-  return String((step && step.label) || '')
-    .toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '') || 'stap';
-}
-
-function pad(ritme, sleutel){
-  const delen = [sync.basis, sync.datum];
+function padConfig(){ return `${opslag.basis}/config.json`; }
+function padVink(ritme, stap, persoon){
+  const delen = [opslag.basis, opslag.datum];
   if(ritme) delen.push(ritme);
-  if(sleutel) delen.push(sleutel);
+  if(stap) delen.push(stap);
+  if(persoon) delen.push(persoon);
   return delen.join('/') + '.json';
 }
 
+function alsPlat(){
+  const uit = { datum: opslag.datum, dag:{}, nacht:{} };
+  ['dag','nacht'].forEach(r => done[r].forEach((set, stap) => { uit[r][stap] = [...set]; }));
+  return uit;
+}
+
 function bewaarLokaal(){
-  try{
-    localStorage.setItem('dagritme', JSON.stringify({
-      datum: sync.datum, dag: [...done.dag], nacht: [...done.nacht],
-    }));
-  }catch(err){ /* privémodus of vol: niet erg, dan alleen deze sessie */ }
+  try{ localStorage.setItem('dagritme-vinkjes', JSON.stringify(alsPlat())); }
+  catch(err){ /* privémodus of vol: dan alleen deze sessie */ }
 }
 
 function laadLokaal(){
   try{
-    const opgeslagen = JSON.parse(localStorage.getItem('dagritme') || 'null');
-    if(!opgeslagen || opgeslagen.datum !== sync.datum) return;
-    done.dag = new Set(opgeslagen.dag || []);
-    done.nacht = new Set(opgeslagen.nacht || []);
-  }catch(err){ /* onleesbaar: begin gewoon leeg */ }
+    const r = JSON.parse(localStorage.getItem('dagritme-vinkjes') || 'null');
+    if(!r || r.datum !== opslag.datum) return;
+    ['dag','nacht'].forEach(ritme => {
+      const kaart = new Map();
+      Object.entries(r[ritme] || {}).forEach(([stap, personen]) => {
+        const set = new Set(lijstVan(personen));
+        if(set.size) kaart.set(stap, set);
+      });
+      done[ritme] = kaart;
+    });
+  }catch(err){ /* onleesbaar: begin leeg */ }
 }
 
-async function schrijf(ritme, sleutel, aan){
+function bewaarLokaalConfig(ruw){
+  try{ localStorage.setItem('dagritme-config', JSON.stringify(ruw)); }catch(err){}
+}
+function laadLokaalConfig(){
+  try{ return JSON.parse(localStorage.getItem('dagritme-config') || 'null'); }
+  catch(err){ return null; }
+}
+
+async function schrijfVink(ritme, stap, persoon, aan){
   bewaarLokaal();
-  if(!sync.basis) return;
+  if(!opslag.basis) return;
   try{
-    await fetch(pad(ritme, sleutel), aan
-      ? { method: 'PUT', body: 'true' }
-      : { method: 'DELETE' });
+    await fetch(padVink(ritme, stap, persoon), aan
+      ? { method:'PUT', body:'true' }
+      : { method:'DELETE' });
   }catch(err){ console.warn('opslaan mislukt:', err); }
 }
 
-async function wis(ritme){
+async function wisRitme(ritme){
   bewaarLokaal();
-  if(!sync.basis) return;
-  try{
-    await fetch(pad(ritme), { method: 'DELETE' });
-  }catch(err){ console.warn('wissen mislukt:', err); }
+  if(!opslag.basis) return;
+  try{ await fetch(padVink(ritme), { method:'DELETE' }); }
+  catch(err){ console.warn('wissen mislukt:', err); }
 }
 
-function vulRitme(ritme, waarden){
-  if(!done[ritme]) return;
-  done[ritme] = new Set(Object.keys(waarden || {}).filter(k => waarden[k]));
+async function bewaarConfigOpAfstand(ruw){
+  const res = await fetch(padConfig(), { method:'PUT', body: JSON.stringify(ruw) });
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+}
+
+function vulRitme(ritme, obj){
+  const kaart = new Map();
+  Object.entries(obj || {}).forEach(([stap, personen]) => {
+    const set = new Set(Object.keys(personen || {}).filter(p => personen[p]));
+    if(set.size) kaart.set(stap, set);
+  });
+  done[ritme] = kaart;
 }
 
 // Firebase stuurt bij het openen de hele tak, en daarna per wijziging het pad
-// dat veranderd is. Beide vormen komen hier binnen.
-function verwerk(padTekst, data){
+// dat veranderd is. Alle vier de dieptes komen hier binnen.
+function verwerkDatum(padTekst, data){
   const delen = String(padTekst || '/').split('/').filter(Boolean);
   if(delen.length === 0){
-    ['dag', 'nacht'].forEach(r => vulRitme(r, (data || {})[r]));
+    ['dag','nacht'].forEach(r => vulRitme(r, (data || {})[r]));
   }else if(delen.length === 1){
-    vulRitme(delen[0], data);
-  }else{
-    const [ritme, sleutel] = delen;
+    if(done[delen[0]]) vulRitme(delen[0], data);
+  }else if(delen.length === 2){
+    const [ritme, stap] = delen;
     if(!done[ritme]) return;
-    if(data) done[ritme].add(sleutel);
-    else done[ritme].delete(sleutel);
+    const set = new Set(Object.keys(data || {}).filter(p => data[p]));
+    if(set.size) done[ritme].set(stap, set); else done[ritme].delete(stap);
+  }else{
+    const [ritme, stap, persoon] = delen;
+    if(!done[ritme]) return;
+    zetVink(ritme, stap, persoon, Boolean(data));
   }
   bewaarLokaal();
   render();
 }
 
-function luister(){
-  if(!sync.basis || typeof EventSource === 'undefined') return;
-  if(sync.stroom) sync.stroom.close();
-  try{
-    sync.stroom = new EventSource(pad());
-    const lees = e => {
-      try{
-        const bericht = JSON.parse(e.data);
-        if(bericht && bericht.path !== undefined) verwerk(bericht.path, bericht.data);
-      }catch(err){ /* keep-alive-regels bevatten geen json */ }
-    };
-    sync.stroom.addEventListener('put', lees);
-    sync.stroom.addEventListener('patch', e => {
-      try{
-        const { path, data } = JSON.parse(e.data);
-        Object.entries(data || {}).forEach(([k, v]) =>
-          verwerk((path === '/' ? '' : path) + '/' + k, v));
-      }catch(err){ /* zie boven */ }
-    });
-    // EventSource verbindt zelf opnieuw; hier alleen laten weten dat het hapert.
-    sync.stroom.onerror = () => console.warn('verbinding met de opslag hapert');
-  }catch(err){ console.warn('luisteren mislukt:', err); }
+function pasConfigToe(ruw){
+  if(!ruw) return false;
+  config = normaliseer(ruw);
+  bewaarLokaalConfig(ruw);
+  toepassen();
+  return true;
 }
 
-// Oude dagen blijven anders voor altijd staan. Alles ouder dan een week weg.
+function luister(url, opPut, opPatch){
+  if(!opslag.basis || typeof EventSource === 'undefined') return null;
+  try{
+    const bron = new EventSource(url);
+    const lees = handler => e => {
+      try{
+        const bericht = JSON.parse(e.data);
+        if(bericht && bericht.path !== undefined) handler(bericht.path, bericht.data);
+      }catch(err){ /* keep-alive-regels bevatten geen json */ }
+    };
+    bron.addEventListener('put', lees(opPut));
+    if(opPatch) bron.addEventListener('patch', lees(opPatch));
+    bron.onerror = () => console.warn('verbinding met de opslag hapert');
+    return bron;
+  }catch(err){ console.warn('luisteren mislukt:', err); return null; }
+}
+
+function luisterDatum(){
+  if(opslag.datumStroom) opslag.datumStroom.close();
+  opslag.datumStroom = luister(padVink(), verwerkDatum, (pad, data) => {
+    Object.entries(data || {}).forEach(([k, v]) =>
+      verwerkDatum((pad === '/' ? '' : pad) + '/' + k, v));
+  });
+}
+
+function luisterConfig(){
+  if(opslag.configStroom) opslag.configStroom.close();
+  opslag.configStroom = luister(padConfig(), (pad, data) => {
+    // Alleen de hele tak is meteen bruikbaar; bij een deelwijziging even
+    // helemaal ophalen — bewerken gebeurt zelden genoeg.
+    if(pad === '/') pasConfigToe(data);
+    else haalConfig();
+  });
+}
+
+async function haalConfig(){
+  if(!opslag.basis) return null;
+  try{
+    const res = await fetch(padConfig(), { cache:'no-store' });
+    if(!res.ok) return null;
+    return await res.json();
+  }catch(err){ return null; }
+}
+
+// Oude dagen blijven anders voor altijd staan. Alles ouder dan een week weg —
+// 'config' valt buiten dat patroon en blijft dus staan.
 async function ruimOp(){
-  if(!sync.basis) return;
+  if(!opslag.basis) return;
   try{
     const grens = new Date();
     grens.setDate(grens.getDate() - 7);
     const oudste = datumVan(grens);
-    const res = await fetch(`${sync.basis}.json?shallow=true`);
+    const res = await fetch(`${opslag.basis}.json?shallow=true`);
     if(!res.ok) return;
     Object.keys(await res.json() || {})
       .filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d) && d < oudste)
-      .forEach(d => fetch(`${sync.basis}/${d}.json`, { method: 'DELETE' }).catch(() => {}));
+      .forEach(d => fetch(`${opslag.basis}/${d}.json`, { method:'DELETE' }).catch(() => {}));
   }catch(err){ /* opruimen is nooit belangrijk genoeg om iets te laten mislukken */ }
 }
 
-// Blijft de pagina 's nachts openstaan, dan moet hij om middernacht naar de tak
-// van de nieuwe dag; anders staan 's ochtends de vinkjes van gisteren er nog.
 function bewaakDatum(){
   setInterval(() => {
-    if(vandaag() === sync.datum) return;
-    sync.datum = vandaag();
-    done = { dag: new Set(), nacht: new Set() };
+    if(vandaag() === opslag.datum) return;
+    opslag.datum = vandaag();
+    done = { dag: new Map(), nacht: new Map() };
     bewaarLokaal();
     render();
-    luister();
+    luisterDatum();
     ruimOp();
   }, 30000);
 }
 
-function startOpslag(instelling){
-  sync.datum = vandaag();
-  const url = String((instelling && instelling.url) || '').trim().replace(/\/+$/, '');
-  const gezin = String((instelling && instelling.gezin) || 'gezin').trim();
-  if(url) sync.basis = `${url}/${encodeURIComponent(gezin)}`;
+async function startOpslag(){
+  opslag.datum = vandaag();
+  const url = tekst(instelling && instelling.url).replace(/\/+$/, '');
+  const gezin = tekst(instelling && instelling.gezin, 'gezin');
+  if(url) opslag.basis = `${url}/${encodeURIComponent(gezin)}`;
+
   laadLokaal();
   render();
-  luister();
+  if(!opslag.basis) return;
+
+  const ruw = await haalConfig();
+  if(ruw) pasConfigToe(ruw);
+  else {
+    // Nog niets in de database: het huidige ritme wordt het zaadje.
+    try{ await bewaarConfigOpAfstand(alsRuweConfig()); }
+    catch(err){ console.warn('kon de inhoud niet in de database zetten:', err); }
+  }
+  luisterConfig();
+  luisterDatum();
   ruimOp();
   bewaakDatum();
 }
 
-const DAGNAMEN = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
-const KINDKLEUREN = ['#7C6BD6', '#2FA37C', '#D9724F', '#3B82C4'];
+function alsRuweConfig(){
+  return {
+    titel: config.titel,
+    avondVanaf: config.avondVanaf,
+    mensen: config.mensen.map(p => ({ ...p })),
+    dag: config.dag.map(g => ({ ...g, stappen: g.stappen.map(s => ({ ...s })) })),
+    nacht: config.nacht.map(g => ({ ...g, stappen: g.stappen.map(s => ({ ...s })) })),
+    overzicht: JSON.parse(JSON.stringify(config.overzicht)),
+  };
+}
 
-// Sleutels in het overzicht mogen 'wo' of 'woensdag' zijn; hier worden ze op
-// dezelfde twee letters gelegd als het dagfilter bij de stappen.
-function overzichtPerDag(waarde){
-  const uit = {};
-  Object.entries(waarde || {}).forEach(([k, v]) => {
-    const dag = String(k).trim().slice(0, 2).toLowerCase();
-    if(DAGEN.includes(dag) && Array.isArray(v)) uit[dag] = v;
+// ------------------------------------------------------------- weergeven ---
+function opVandaag(step){
+  if(!step.dagen || !step.dagen.length) return true;
+  return step.dagen.includes(DAGEN[new Date().getDay()]);
+}
+
+function zichtbareGroepen(){
+  return config[mode]
+    .map(g => ({ groep:g.groep, tijd:g.tijd, stappen:g.stappen.filter(s => s.label && opVandaag(s)) }))
+    .filter(g => g.stappen.length);
+}
+
+function namenZin(){
+  const namen = config.mensen.map(p => p.naam);
+  if(!namen.length) return '';
+  if(namen.length === 1) return 'voor ' + namen[0];
+  return 'voor ' + namen.slice(0, -1).join(', ') + ' & ' + namen[namen.length - 1];
+}
+
+function tint(kleur, alpha){
+  const m = /^#([0-9a-f]{6})$/i.exec(kleur || '');
+  if(!m) return 'rgba(43,45,66,.12)';
+  const n = parseInt(m[1], 16);
+  return `rgba(${n >> 16 & 255}, ${n >> 8 & 255}, ${n & 255}, ${alpha})`;
+}
+
+function renderVoortgang(){
+  const groepen = zichtbareGroepen();
+  const totaal = groepen.reduce((n, g) => n + g.stappen.length, 0);
+  voortgangEl.innerHTML = '';
+  voortgangEl.hidden = !totaal;
+  if(!totaal) return;
+
+  config.mensen.forEach(p => {
+    const af = groepen.reduce((n, g) =>
+      n + g.stappen.filter(s => heeftVink(mode, stapSleutel(s), p.id)).length, 0);
+
+    const vak = document.createElement('div');
+    vak.className = 'pvak';
+
+    const gezicht = document.createElement('div');
+    gezicht.className = 'pgezicht';
+    gezicht.style.background = tint(p.kleur, 0.18);
+    gezicht.textContent = p.emoji;
+
+    const rechts = document.createElement('div');
+    rechts.style.flex = '1';
+    rechts.style.minWidth = '0';
+
+    const regel = document.createElement('div');
+    regel.className = 'pnaam';
+    const naam = document.createElement('b');
+    naam.textContent = p.naam;
+    const telling = document.createElement('span');
+    telling.textContent = af + '/' + totaal;
+    regel.append(naam, telling);
+
+    const balk = document.createElement('div');
+    balk.className = 'balk';
+    const vulling = document.createElement('i');
+    vulling.style.width = Math.round(af / totaal * 100) + '%';
+    vulling.style.background = p.kleur;
+    balk.appendChild(vulling);
+
+    rechts.append(regel, balk);
+    vak.append(gezicht, rechts);
+    voortgangEl.appendChild(vak);
   });
-  return uit;
 }
 
-// Elk kind krijgt een vaste kleur, toegekend op volgorde van voorkomen in de
-// week — zo blijft die kleur gelijk zolang het overzicht niet verandert.
-function kindKleuren(overzicht){
-  const namen = [];
-  DAGEN.forEach(dag => (overzicht[dag] || []).forEach(item => {
-    const kind = item && item.kind;
-    if(kind && !namen.includes(kind)) namen.push(kind);
-  }));
-  return Object.fromEntries(namen.map((n, i) => [n, KINDKLEUREN[i % KINDKLEUREN.length]]));
+function maakKnop(step, persoon){
+  const sleutel = stapSleutel(step);
+  const af = heeftVink(mode, sleutel, persoon.id);
+
+  const knop = document.createElement('button');
+  knop.className = 'pknop';
+  knop.type = 'button';
+  knop.setAttribute('aria-pressed', af ? 'true' : 'false');
+  knop.setAttribute('aria-label', `${step.label} — ${persoon.naam}`);
+
+  const rond = document.createElement('span');
+  rond.className = 'rond';
+  rond.textContent = persoon.emoji;
+  if(af) rond.style.background = tint(persoon.kleur, 0.18);
+
+  const vink = document.createElement('span');
+  vink.className = 'vink';
+  vink.textContent = '✓';
+
+  knop.append(rond, vink);
+  knop.addEventListener('click', () => {
+    const aan = !heeftVink(mode, sleutel, persoon.id);
+    zetVink(mode, sleutel, persoon.id, aan);
+    render();
+    schrijfVink(mode, sleutel, persoon.id, aan);
+  });
+  return knop;
 }
 
-// 's Ochtends kijk je naar wat er vandaag overdag speelt. 's Avonds naar twee
-// dingen: wat er vanavond nog gebeurt, en wat er morgen op het programma staat.
-// Items met 'avond' horen bij dat eerste en blijven overdag dus buiten beeld.
+function maakStap(step){
+  const rij = document.createElement('div');
+  rij.className = 'stap';
+
+  const tegel = document.createElement('div');
+  tegel.className = 'tegel';
+  tegel.textContent = step.icoon || '•';
+
+  const label = document.createElement('div');
+  label.className = 'staplabel';
+  label.textContent = step.label;
+
+  const knoppen = document.createElement('div');
+  knoppen.className = 'knoppen';
+  config.mensen.forEach(p => knoppen.appendChild(maakKnop(step, p)));
+
+  rij.append(tegel, label, knoppen);
+  return rij;
+}
+
+function render(){
+  renderAgenda();
+  renderVoortgang();
+  pathEl.innerHTML = '';
+
+  zichtbareGroepen().forEach(groep => {
+    const blok = document.createElement('div');
+
+    if(groep.groep || groep.tijd){
+      const kop = document.createElement('div');
+      kop.className = 'groepkop';
+      const naam = document.createElement('div');
+      naam.className = 'groepnaam';
+      naam.textContent = groep.groep;
+      const tijd = document.createElement('div');
+      tijd.className = 'groeptijd';
+      tijd.textContent = groep.tijd;
+      kop.append(naam, tijd);
+      blok.appendChild(kop);
+    }
+
+    const kaart = document.createElement('div');
+    kaart.className = 'stapkaart glas';
+    groep.stappen.forEach(s => kaart.appendChild(maakStap(s)));
+    blok.appendChild(kaart);
+    pathEl.appendChild(blok);
+  });
+}
+
+// 's Ochtends kijk je naar wat er vandaag overdag speelt; 's avonds naar wat er
+// vanavond nog gebeurt én naar morgen.
 function agendaBlokken(){
-  const vandaag = new Date();
+  const nu = new Date();
   const morgen = new Date();
   morgen.setDate(morgen.getDate() + 1);
   const van = d => (config.overzicht || {})[DAGEN[d.getDay()]] || [];
-
   if(mode !== 'nacht'){
-    return [{ kop:'Vandaag', datum: vandaag, items: van(vandaag).filter(i => !i.avond) }];
+    return [{ kop:'Vandaag', datum:nu, items: van(nu).filter(i => !i.avond) }];
   }
   return [
-    { kop:'Vanavond', datum: vandaag, items: van(vandaag).filter(i => i.avond) },
-    { kop:'Morgen', datum: morgen, items: van(morgen).filter(i => !i.avond), later:true },
+    { kop:'Vanavond', datum:nu, items: van(nu).filter(i => i.avond) },
+    { kop:'Morgen', datum:morgen, items: van(morgen).filter(i => !i.avond), later:true },
   ];
 }
 
-function maakBlok(blok){
+function maakAgendaBlok(blok){
   const vak = document.createElement('section');
-  vak.className = 'agenda-blok' + (blok.later ? ' later' : '');
+  vak.className = 'agendablok' + (blok.later ? ' later' : '');
 
   const kop = document.createElement('div');
-  kop.className = 'agenda-kop';
+  kop.className = 'agendakop';
   kop.textContent = blok.kop;
 
   const dagnaam = document.createElement('div');
-  dagnaam.className = 'agenda-dag';
+  dagnaam.className = 'agendadag';
   dagnaam.textContent = DAGNAMEN[blok.datum.getDay()];
 
   const lijst = document.createElement('div');
-  lijst.className = 'agenda-lijst';
+  lijst.className = 'agendalijst';
   blok.items.forEach(item => {
     const rij = document.createElement('div');
-    rij.className = 'agenda-item';
+    rij.className = 'agendaitem';
 
     const icoon = document.createElement('div');
-    icoon.className = 'agenda-icoon';
-    icoon.textContent = item.icoon || '•';
+    icoon.className = 'agendaicoon';
+    icoon.textContent = item.icoon;
 
     const inhoud = document.createElement('div');
-    const tekst = document.createElement('div');
-    tekst.className = 'agenda-tekst';
-    // Zonder kind geldt het voor allebei; dan hoeft er geen naam bij.
-    if(item.kind){
-      const naam = document.createElement('span');
-      naam.className = 'kind';
-      naam.textContent = item.kind;
-      naam.style.background = config.kindkleuren[item.kind] || KINDKLEUREN[0];
-      tekst.appendChild(naam);
+    const regel = document.createElement('div');
+    regel.className = 'agendatekst';
+    const wie = item.persoon ? persoonById(item.persoon) : null;
+    if(wie){
+      const merk = document.createElement('span');
+      merk.className = 'merk';
+      merk.style.background = wie.kleur;
+      merk.textContent = wie.naam;
+      regel.appendChild(merk);
     }
-    tekst.appendChild(document.createTextNode(item.tekst || ''));
-    inhoud.appendChild(tekst);
+    regel.appendChild(document.createTextNode(item.tekst));
+    inhoud.appendChild(regel);
 
     if(item.tijd){
       const tijd = document.createElement('div');
-      tijd.className = 'agenda-tijd';
+      tijd.className = 'agendatijd';
       tijd.textContent = item.tijd;
       inhoud.appendChild(tijd);
     }
@@ -877,157 +1043,318 @@ function renderAgenda(){
   const blokken = agendaBlokken().filter(b => b.items.length);
   agendaEl.innerHTML = '';
   agendaEl.hidden = !blokken.length;
-  blokken.forEach(blok => agendaEl.appendChild(maakBlok(blok)));
-}
-
-function maakStap(step, i){
-  // Op de sleutel van de stap, niet op het volgnummer: schuift er een stap
-  // tussen, dan blijft het vinkje bij de juiste stap staan.
-  const sleutel = stapSleutel(step);
-  const el = document.createElement('div');
-  el.className = 'step' + (done[mode].has(sleutel) ? ' done' : '');
-
-  const num = document.createElement('div');
-  num.className = 'num';
-  num.textContent = 'stap ' + (i+1);
-
-  const stone = document.createElement('div');
-  stone.className = 'stone';
-  const icon = document.createElement('span');
-  icon.textContent = step.icoon || '•';
-  const check = document.createElement('div');
-  check.className = 'checkmark';
-  check.textContent = '✓';
-  stone.append(icon, check);
-
-  const label = document.createElement('div');
-  label.className = 'label';
-  label.textContent = step.label || '';
-
-  el.append(num, stone, label);
-  el.addEventListener('click', ()=>{
-    const aan = !done[mode].has(sleutel);
-    if(aan) done[mode].add(sleutel);
-    else done[mode].delete(sleutel);
-    render();
-    schrijf(mode, sleutel, aan);
-  });
-  return el;
-}
-
-function render(){
-  renderAgenda();
-  pathEl.innerHTML = '';
-  // De stapnummers lopen door over de groepen heen, zodat 'stap 5' hetzelfde
-  // betekent als je de rijen anders indeelt.
-  let nummer = 0;
-  config[mode].forEach(groep => {
-    // Valt een hele groep vandaag weg, dan verdwijnt ook zijn kopje; anders
-    // bleef er een lege rij met een streep staan.
-    const stappen = groep.stappen.filter(opVandaag);
-    if(!stappen.length) return;
-
-    const heeftKop = Boolean(groep.groep || groep.tijd);
-    const rij = document.createElement('div');
-    rij.className = 'group' + (heeftKop ? '' : ' no-label');
-
-    if(heeftKop){
-      const kop = document.createElement('div');
-      kop.className = 'group-label';
-      if(groep.groep){
-        const naam = document.createElement('div');
-        naam.className = 'group-name';
-        naam.textContent = groep.groep;
-        kop.appendChild(naam);
-      }
-      if(groep.tijd){
-        const tijd = document.createElement('div');
-        tijd.className = 'group-time';
-        tijd.textContent = groep.tijd;
-        kop.appendChild(tijd);
-      }
-      rij.appendChild(kop);
-    }
-
-    const vak = document.createElement('div');
-    vak.className = 'group-steps';
-    stappen.forEach(step => vak.appendChild(maakStap(step, nummer++)));
-
-    rij.appendChild(vak);
-    pathEl.appendChild(rij);
-  });
+  blokken.forEach(b => agendaEl.appendChild(maakAgendaBlok(b)));
 }
 
 function toepassen(){
   document.title = config.titel;
   titelEl.textContent = config.titel;
-  kidsEl.textContent = config.kinderen;
+  kidsEl.textContent = namenZin();
   render();
 }
 
-function setMode(newMode){
-  mode = newMode;
-  const isNight = mode === 'nacht';
-  card.classList.toggle('night-mode', isNight);
-  toggle.classList.toggle('is-night', isNight);
-  btnDag.classList.toggle('active', !isNight);
-  btnNacht.classList.toggle('active', isNight);
-  sunMoon.textContent = isNight ? '🌙' : '☀️';
+function setMode(nieuw){
+  mode = nieuw;
+  const isNacht = mode === 'nacht';
+  document.body.classList.toggle('night-mode', isNacht);
+  btnDag.classList.toggle('active', !isNacht);
+  btnNacht.classList.toggle('active', isNacht);
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', isNacht ? '#10122F' : '#F2994A');
   render();
-}
-
-// Welk ritme er bij het openen klaarstaat, hangt af van de klok: 's ochtends de
-// dag, vanaf het ingestelde uur de avond. Daarna beslist de knop; er wordt niet
-// vanzelf omgeschakeld terwijl iemand ernaar kijkt.
-function uurOf(waarde, terugval){
-  const n = Number(waarde);
-  return Number.isFinite(n) && n >= 0 && n <= 23 ? Math.floor(n) : terugval;
 }
 
 function beginRitme(){
   return new Date().getHours() >= config.avondVanaf ? 'nacht' : 'dag';
 }
 
-function overnemen(data){
-  config = {
-    titel: data.titel || STANDAARD.titel,
-    kinderen: data.kinderen || STANDAARD.kinderen,
-    avondVanaf: uurOf(data.avondVanaf, STANDAARD.avondVanaf),
-    dag: routine(data.dag, STANDAARD.dag),
-    nacht: routine(data.nacht, STANDAARD.nacht),
-    opslag: data.opslag || null,
-    overzicht: overzichtPerDag(data.overzicht),
+// -------------------------------------------------------------- bewerken ---
+const bladEl = document.getElementById('blad');
+const scrimEl = document.getElementById('scrim');
+const bladinhoud = document.getElementById('bladinhoud');
+const meldingEl = document.getElementById('melding');
+let concept = null;
+let bewerkTab = 'dag';
+const openDagen = new Set();
+
+function el(tag, klasse){
+  const d = document.createElement(tag);
+  if(klasse) d.className = klasse;
+  return d;
+}
+
+function veld(waarde, plaatshouder, klasse, opWijzig){
+  const i = document.createElement('input');
+  i.className = 'veld' + (klasse ? ' ' + klasse : '');
+  i.value = waarde || '';
+  i.placeholder = plaatshouder || '';
+  // Alleen de gegevens bijwerken, niet opnieuw tekenen: anders springt de
+  // cursor bij elke aanslag weg.
+  i.addEventListener('input', () => opWijzig(i.value));
+  return i;
+}
+
+function rijknop(teken, titel, opKlik, klasse){
+  const b = el('button', 'rijknop' + (klasse ? ' ' + klasse : ''));
+  b.type = 'button';
+  b.textContent = teken;
+  b.title = titel;
+  b.setAttribute('aria-label', titel);
+  b.addEventListener('click', opKlik);
+  return b;
+}
+
+function knopgroep(...kinderen){
+  const g = el('div', 'rijknoppen');
+  kinderen.forEach(k => g.appendChild(k));
+  return g;
+}
+
+function verplaats(lijst, i, richting){
+  const j = i + richting;
+  if(j < 0 || j >= lijst.length) return;
+  lijst.splice(j, 0, lijst.splice(i, 1)[0]);
+}
+
+function toonMelding(bericht){
+  meldingEl.textContent = bericht || '';
+  meldingEl.hidden = !bericht;
+}
+
+function tekenDagen(stap){
+  const rij = el('div', 'dagen');
+  WERKDAGEN.forEach(dag => {
+    const b = el('button');
+    b.type = 'button';
+    b.textContent = dag;
+    if(stap.dagen && stap.dagen.includes(dag)) b.classList.add('aan');
+    b.addEventListener('click', () => {
+      stap.dagen = stap.dagen || [];
+      const i = stap.dagen.indexOf(dag);
+      if(i >= 0) stap.dagen.splice(i, 1); else stap.dagen.push(dag);
+      tekenBlad();
+    });
+    rij.appendChild(b);
+  });
+  return rij;
+}
+
+function tekenRitme(ritme){
+  const stuk = document.createDocumentFragment();
+
+  concept[ritme].forEach((groep, gi) => {
+    const vak = el('div', 'bewerkgroep');
+
+    const regel = el('div', 'groepregel');
+    regel.append(
+      veld(groep.groep, 'Groep', '', v => { groep.groep = v; }),
+      veld(groep.tijd, 'tijd', 'tijd', v => { groep.tijd = v; }),
+      knopgroep(
+        rijknop('↑', 'Groep omhoog', () => { verplaats(concept[ritme], gi, -1); tekenBlad(); }),
+        rijknop('↓', 'Groep omlaag', () => { verplaats(concept[ritme], gi, 1); tekenBlad(); }),
+        rijknop('✕', 'Groep verwijderen', () => { concept[ritme].splice(gi, 1); tekenBlad(); }, 'weg'),
+      ),
+    );
+    vak.appendChild(regel);
+
+    groep.stappen.forEach((stap, si) => {
+      const sleutel = ritme + ':' + gi + ':' + si;
+      const rij = el('div', 'bewerkrij');
+
+      const dagKnop = rijknop('', 'Op welke dagen', () => {
+        if(openDagen.has(sleutel)) openDagen.delete(sleutel); else openDagen.add(sleutel);
+        tekenBlad();
+      });
+      const beperkt = Boolean(stap.dagen && stap.dagen.length);
+      dagKnop.innerHTML = '<svg width="16" height="16" viewBox="0 0 20 20" fill="none" '
+        + 'stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'
+        + '<rect x="3" y="4.5" width="14" height="13" rx="3"/><path d="M3 8.5h14M7 2.5v3M13 2.5v3"/></svg>';
+      if(beperkt){
+        dagKnop.style.background = 'var(--sun-deep)';
+        dagKnop.style.borderColor = 'var(--sun-deep)';
+        dagKnop.style.color = '#fff';
+      }
+
+      rij.append(
+        veld(stap.icoon, '🙂', 'smal', v => { stap.icoon = v; }),
+        veld(stap.label, 'Wat moet er gebeuren', '', v => { stap.label = v; }),
+        knopgroep(
+          dagKnop,
+          rijknop('↑', 'Stap omhoog', () => { verplaats(groep.stappen, si, -1); tekenBlad(); }),
+          rijknop('↓', 'Stap omlaag', () => { verplaats(groep.stappen, si, 1); tekenBlad(); }),
+          rijknop('✕', 'Stap verwijderen', () => { groep.stappen.splice(si, 1); tekenBlad(); }, 'weg'),
+        ),
+      );
+      vak.appendChild(rij);
+
+      if(openDagen.has(sleutel)){
+        vak.appendChild(tekenDagen(stap));
+        const uitleg = el('div', 'agendatijd');
+        uitleg.style.padding = '2px 2px 6px';
+        uitleg.textContent = (stap.dagen && stap.dagen.length)
+          ? 'Alleen op deze dagen.' : 'Geen dag gekozen betekent: elke dag.';
+        vak.appendChild(uitleg);
+      }
+    });
+
+    const stapErbij = el('button', 'toevoeg');
+    stapErbij.type = 'button';
+    stapErbij.textContent = '+ Stap toevoegen';
+    stapErbij.addEventListener('click', () => {
+      groep.stappen.push({ icoon:'⭐', label:'', dagen:[] });
+      tekenBlad();
+    });
+    vak.appendChild(stapErbij);
+    stuk.appendChild(vak);
+  });
+
+  const groepErbij = el('button', 'toevoeg');
+  groepErbij.type = 'button';
+  groepErbij.textContent = '+ Groep toevoegen';
+  groepErbij.addEventListener('click', () => {
+    concept[ritme].push({ groep:'Nieuwe groep', tijd:'', stappen:[] });
+    tekenBlad();
+  });
+  stuk.appendChild(groepErbij);
+  return stuk;
+}
+
+function tekenMensen(){
+  const stuk = document.createDocumentFragment();
+  const vak = el('div', 'bewerkgroep');
+
+  concept.mensen.forEach((persoon, i) => {
+    const rij = el('div', 'bewerkrij');
+
+    const kleuren = el('div', 'kleuren');
+    KLEUREN.forEach(kleur => {
+      const k = el('button');
+      k.type = 'button';
+      k.style.background = kleur;
+      k.title = 'Kleur';
+      k.setAttribute('aria-label', 'Kleur');
+      if(persoon.kleur === kleur) k.classList.add('aan');
+      k.addEventListener('click', () => { persoon.kleur = kleur; tekenBlad(); });
+      kleuren.appendChild(k);
+    });
+
+    const weg = rijknop('✕', 'Persoon verwijderen', () => {
+      if(concept.mensen.length <= 1) return toonMelding('Er moet minstens één persoon overblijven.');
+      concept.mensen.splice(i, 1);
+      toonMelding('');
+      tekenBlad();
+    }, 'weg');
+    if(concept.mensen.length <= 1) weg.style.opacity = '.4';
+
+    rij.append(
+      veld(persoon.emoji, '🙂', 'smal', v => { persoon.emoji = v; }),
+      veld(persoon.naam, 'Naam', '', v => { persoon.naam = v; }),
+      knopgroep(kleuren, weg),
+    );
+    vak.appendChild(rij);
+  });
+
+  stuk.appendChild(vak);
+
+  const erbij = el('button', 'toevoeg');
+  erbij.type = 'button';
+  erbij.textContent = '+ Persoon toevoegen';
+  erbij.addEventListener('click', () => {
+    concept.mensen.push({
+      id: nieuwId(), naam:'', emoji:'🙂',
+      kleur: KLEUREN[concept.mensen.length % KLEUREN.length],
+    });
+    tekenBlad();
+  });
+  stuk.appendChild(erbij);
+
+  const uitleg = el('div', 'agendatijd');
+  uitleg.style.padding = '12px 4px 0';
+  uitleg.textContent = 'Iedereen hier krijgt een eigen rondje bij elke stap. '
+    + 'Namen wijzigen mag: de vinkjes blijven bij de juiste persoon.';
+  stuk.appendChild(uitleg);
+  return stuk;
+}
+
+function tekenBlad(){
+  const hoogte = bladinhoud.scrollTop;
+  bladinhoud.innerHTML = '';
+  bladinhoud.appendChild(bewerkTab === 'mensen' ? tekenMensen() : tekenRitme(bewerkTab));
+  bladinhoud.scrollTop = hoogte;
+  document.querySelectorAll('#tabs button').forEach(b =>
+    b.classList.toggle('active', b.dataset.tab === bewerkTab));
+}
+
+function openBewerken(){
+  concept = alsRuweConfig();
+  bewerkTab = mode;
+  openDagen.clear();
+  toonMelding('');
+  scrimEl.hidden = false;
+  bladEl.hidden = false;
+  document.body.style.overflow = 'hidden';
+  tekenBlad();
+}
+
+function sluitBewerken(){
+  scrimEl.hidden = true;
+  bladEl.hidden = true;
+  document.body.style.overflow = '';
+  concept = null;
+}
+
+function schoneGroepen(lijst){
+  return lijstVan(lijst).map(g => ({
+    groep: tekst(g.groep),
+    tijd: tekst(g.tijd),
+    stappen: lijstVan(g.stappen).filter(s => tekst(s.label)).map(s => {
+      const uit = { icoon: tekst(s.icoon, '•'), label: tekst(s.label) };
+      if(s.dagen && s.dagen.length) uit.dagen = s.dagen.slice();
+      return uit;
+    }),
+  })).filter(g => g.stappen.length || tekst(g.groep));
+}
+
+function opgeschoond(c){
+  return {
+    titel: tekst(c.titel, STANDAARD.titel),
+    avondVanaf: uurOf(c.avondVanaf, STANDAARD.avondVanaf),
+    mensen: lijstVan(c.mensen).map((p, i) => ({
+      id: tekst(p.id, nieuwId()),
+      naam: tekst(p.naam, 'Naamloos'),
+      emoji: tekst(p.emoji, '🙂'),
+      kleur: tekst(p.kleur, KLEUREN[i % KLEUREN.length]),
+    })),
+    dag: schoneGroepen(c.dag),
+    nacht: schoneGroepen(c.nacht),
+    overzicht: c.overzicht || {},
   };
-  config.kindkleuren = kindKleuren(config.overzicht);
 }
 
-async function laden(){
-  try{
-    const res = await fetch('routine.json', {cache: 'no-cache'});
-    if(!res.ok) throw new Error('HTTP ' + res.status);
-    overnemen(await res.json());
-  }catch(err){
-    console.warn('routine.json niet geladen — standaardritme gebruikt:', err);
-    overnemen(STANDAARD);
+async function bewaarBewerking(){
+  const nieuw = opgeschoond(concept);
+  if(!nieuw.mensen.length) return toonMelding('Er moet minstens één persoon zijn.');
+  if(!aantalStappen(maakGroepen(nieuw.dag)) && !aantalStappen(maakGroepen(nieuw.nacht))){
+    return toonMelding('Er moet minstens één stap overblijven.');
   }
+  if(opslag.basis){
+    try{
+      await bewaarConfigOpAfstand(nieuw);
+    }catch(err){
+      return toonMelding('Opslaan in de database lukte niet (' + err.message
+        + '). Controleer de regels in Firebase — schrijven onder "config" moet toegestaan zijn.');
+    }
+  }
+  config = normaliseer(nieuw);
+  bewaarLokaalConfig(nieuw);
   toepassen();
+  sluitBewerken();
 }
 
-btnDag.addEventListener('click', ()=> setMode('dag'));
-btnNacht.addEventListener('click', ()=> setMode('nacht'));
-resetBtn.addEventListener('click', ()=>{
-  done[mode].clear();
-  render();
-  wis(mode);
-});
-
+// ----------------------------------------------------------- bijwerken ----
 // iOS bewaart index.html hardnekkig zodra de pagina op het beginscherm staat;
 // een gewone herlaad krijgt dan opnieuw dezelfde bewaarde versie. Daarom draagt
-// elke uitgave zijn commit-nummer bij zich, staat datzelfde nummer in
-// versie.txt ernaast, en wordt er met een verse url herladen zodra die twee
-// niet meer gelijk zijn.
-const VERSIE = '__VERSIE__';
-
+// elke uitgave zijn commit-nummer bij zich en staat datzelfde nummer in
+// versie.txt ernaast.
 function herlaad(){
   const url = new URL(location.href);
   url.searchParams.set('v', Date.now().toString(36));
@@ -1035,10 +1362,9 @@ function herlaad(){
 }
 
 async function nieuwerBeschikbaar(){
-  // Niet gestempeld: lokaal geopend, dan valt er niets te vergelijken.
   if(VERSIE.startsWith('__')) return null;
   try{
-    const res = await fetch('versie.txt', { cache: 'no-store' });
+    const res = await fetch('versie.txt', { cache:'no-store' });
     if(!res.ok) return null;
     const daar = (await res.text()).trim();
     return daar && daar !== VERSIE ? daar : null;
@@ -1046,60 +1372,53 @@ async function nieuwerBeschikbaar(){
 }
 
 async function haalNieuwsteBinnen(){
+  if(!bladEl.hidden) return;          // niet herladen terwijl iemand zit te bewerken
   const nieuw = await nieuwerBeschikbaar();
   if(!nieuw) return;
-  // Eén poging per versie: mocht de verse url tóch het oude bestand geven,
-  // dan blijft de pagina gewoon werken in plaats van eindeloos te herladen.
   try{
     if(sessionStorage.getItem('geprobeerd') === nieuw) return;
     sessionStorage.setItem('geprobeerd', nieuw);
-  }catch(err){ /* privémodus: dan maar zonder die rem */ }
+  }catch(err){}
   herlaad();
 }
 
 document.addEventListener('visibilitychange', () => {
   if(document.visibilityState === 'visible') haalNieuwsteBinnen();
 });
-haalNieuwsteBinnen();
 
 // In de app-weergave op iOS is er geen browserbalk en dus ook geen
-// trek-om-te-verversen. Daarom hier zelf: alleen als de pagina echt als app
-// draait, want in een gewoon tabblad doet de browser dit al.
+// trek-om-te-verversen. Daarom hier zelf, en alleen als de pagina echt als app
+// draait — in een tabblad doet de browser dit al.
 const alsApp = window.navigator.standalone === true ||
   window.matchMedia('(display-mode: standalone)').matches;
 
 if(alsApp){
   const trekEl = document.getElementById('trek');
   const DREMPEL = 70;
-  let begin = null;
-  let afstand = 0;
-  let bezig = false;
+  let begin = null, afstand = 0, bezig = false;
 
-  function toon(y){
+  const toon = y => {
     afstand = y;
     trekEl.style.transform = `translateY(${y - 48}px) rotate(${Math.round(y * 4)}deg)`;
     trekEl.style.opacity = Math.min(y / DREMPEL, 1);
-  }
-
-  function terug(){
+  };
+  const terug = () => {
     trekEl.classList.add('terug');
     toon(0);
     setTimeout(() => trekEl.classList.remove('terug'), 300);
-  }
+  };
 
-  // Passief meeluisteren: zo blijft gewoon scrollen precies zoals het was.
   document.addEventListener('touchstart', e => {
-    begin = (!bezig && window.scrollY <= 0 && e.touches.length === 1)
+    begin = (!bezig && bladEl.hidden && window.scrollY <= 0 && e.touches.length === 1)
       ? e.touches[0].clientY : null;
     afstand = 0;
-  }, { passive: true });
+  }, { passive:true });
 
   document.addEventListener('touchmove', e => {
     if(begin === null) return;
     const gesleept = e.touches[0].clientY - begin;
-    // Halve snelheid, zodat het meerekken aanvoelt en niet doorschiet.
     toon(gesleept > 0 ? Math.min(gesleept * 0.5, 95) : 0);
-  }, { passive: true });
+  }, { passive:true });
 
   document.addEventListener('touchend', () => {
     if(begin === null) return;
@@ -1109,17 +1428,49 @@ if(alsApp){
     trekEl.classList.add('bezig');
     toon(DREMPEL);
     herlaad();
-  }, { passive: true });
+  }, { passive:true });
 }
 
-renderStars();
-overnemen(STANDAARD);
+// ------------------------------------------------------------- aansluiten --
+btnDag.addEventListener('click', () => setMode('dag'));
+btnNacht.addEventListener('click', () => setMode('nacht'));
+
+resetBtn.addEventListener('click', () => {
+  done[mode] = new Map();
+  render();
+  wisRitme(mode);
+});
+
+document.getElementById('bewerkKnop').addEventListener('click', openBewerken);
+document.getElementById('bewerkAf').addEventListener('click', sluitBewerken);
+document.getElementById('bewerkBewaar').addEventListener('click', bewaarBewerking);
+scrimEl.addEventListener('click', sluitBewerken);
+document.getElementById('tabs').addEventListener('click', e => {
+  const knop = e.target.closest('button');
+  if(!knop) return;
+  bewerkTab = knop.dataset.tab;
+  tekenBlad();
+});
+
+async function laden(){
+  let ruw = null;
+  try{
+    const res = await fetch('routine.json', { cache:'no-cache' });
+    if(res.ok) ruw = await res.json();
+  }catch(err){ console.warn('routine.json niet geladen:', err); }
+  instelling = (ruw && ruw.opslag) || null;
+  // De laatst bekende inhoud staat lokaal en schildert meteen; de database
+  // corrigeert zodra die antwoordt.
+  config = normaliseer(laadLokaalConfig() || ruw || STANDAARD);
+}
+
 setMode(beginRitme());
 toepassen();
 laden().then(() => {
   setMode(beginRitme());
-  startOpslag(config.opslag);
-});
+  toepassen();
+  return startOpslag();
+}).then(haalNieuwsteBinnen);
 </script>
 </body>
 </html>
