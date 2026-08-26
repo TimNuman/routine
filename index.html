@@ -43,7 +43,7 @@
   }
   .card{
     width:100%;
-    max-width: 780px;
+    max-width: 960px;
     border-radius: 32px;
     overflow:hidden;
     box-shadow: 0 20px 50px rgba(35,39,82,0.15);
@@ -253,6 +253,78 @@
   }
   .night-mode .label{ color: var(--cream); }
 
+  .content{
+    display:flex;
+    align-items:stretch;
+  }
+  .path{ flex:1; min-width:0; }
+  .agenda{
+    flex: 0 0 210px;
+    padding: 22px 26px 32px;
+    border-left: 2px dashed rgba(43,45,66,0.10);
+    color: var(--ink);
+  }
+  .night-mode .agenda{ border-left-color: rgba(255,255,255,0.10); color: var(--cream); }
+  .agenda[hidden]{ display:none; }
+  .agenda-kop{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size: 15px;
+    line-height:1.15;
+    color: var(--ink-soft);
+  }
+  .night-mode .agenda-kop{ color:#9294c4; }
+  .agenda-dag{
+    font-family:'Nunito', sans-serif;
+    font-weight:700;
+    font-size: 12px;
+    line-height:1.2;
+    margin-top: 3px;
+    opacity: 0.75;
+    color: var(--ink-soft);
+  }
+  .night-mode .agenda-dag{ color:#9294c4; }
+  .agenda-lijst{
+    display:flex;
+    flex-direction:column;
+    gap: 14px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 2px dashed rgba(43,45,66,0.10);
+  }
+  .night-mode .agenda-lijst{ border-top-color: rgba(255,255,255,0.10); }
+  .agenda-item{
+    display:flex;
+    align-items:flex-start;
+    gap: 10px;
+  }
+  .agenda-icoon{ font-size: 22px; line-height:1.1; flex:none; }
+  .agenda-tekst{
+    font-family:'Baloo 2', sans-serif;
+    font-weight:600;
+    font-size: 14px;
+    line-height:1.2;
+  }
+  .agenda-tijd{
+    font-family:'Nunito', sans-serif;
+    font-weight:700;
+    font-size: 12px;
+    opacity: 0.7;
+    margin-top: 2px;
+  }
+  .kind{
+    display:inline-block;
+    margin-right: 6px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: var(--ink-soft);
+    color: #fff;
+    font-family:'Nunito', sans-serif;
+    font-weight:800;
+    font-size: 11px;
+    vertical-align: 1px;
+  }
+
   .footer{
     padding: 6px 28px 26px;
     text-align:center;
@@ -283,6 +355,21 @@
     .toggle{ width:100%; }
     .toggle button{ flex:1; justify-content:center; }
 
+    .content{ flex-direction:column; }
+    /* Boven de stappen: het vertelt in één oogopslag wat voor dag het is. */
+    .agenda{
+      order: -1;
+      flex:none;
+      border-left:none;
+      border-bottom: 2px dashed rgba(43,45,66,0.10);
+      padding: 18px 20px;
+    }
+    .night-mode .agenda{ border-bottom-color: rgba(255,255,255,0.10); }
+    .agenda-lijst{
+      flex-direction:row;
+      flex-wrap:wrap;
+      gap: 10px 20px;
+    }
     .path{ padding: 18px 20px 26px; gap: 24px; }
     .group{ flex-direction:column; align-items:stretch; gap: 0; }
 
@@ -333,7 +420,10 @@
       <div class="stars" id="stars"></div>
     </div>
 
-    <div class="path" id="path"></div>
+    <div class="content">
+      <div class="path" id="path"></div>
+      <aside class="agenda" id="agenda" hidden></aside>
+    </div>
 
     <div class="footer">
       <button class="reset" id="resetBtn">opnieuw beginnen</button>
@@ -385,7 +475,38 @@ const STANDAARD = {
       {icoon:'🤗', label:'Knuffel'},
       {icoon:'🌙', label:'Licht uit'},
     ]},
-  ]
+  ],
+  overzicht: {
+    ma: [
+      {icoon:"🏫", tekst:"School"},
+      {icoon:"👨", tekst:"Papadag"},
+      {icoon:"🏊", tekst:"Zwemmen"},
+    ],
+    di: [
+      {icoon:"🏫", tekst:"School"},
+      {icoon:"🧒", tekst:"BSO"},
+    ],
+    wo: [
+      {icoon:"🏫", tekst:"Kort school"},
+      {icoon:"🧒", tekst:"Lang BSO"},
+      {icoon:"⚽", tekst:"Voetbal", tijd:"15:45 – 16:45", kind:"Mads"},
+    ],
+    do: [
+      {icoon:"🏫", tekst:"School"},
+      {icoon:"👩", tekst:"Mamadag"},
+    ],
+    vr: [
+      {icoon:"🏫", tekst:"School"},
+      {icoon:"🧒", tekst:"BSO"},
+    ],
+    za: [
+      {icoon:"🤸", tekst:"Turnen", tijd:"10:00", kind:"Emma"},
+      {icoon:"⚽", tekst:"Voetbal", tijd:"11:00", kind:"Mads"},
+    ],
+    zo: [
+      {icoon:"🏡", tekst:"Niks"},
+    ],
+  },
 };
 
 let config = { titel: STANDAARD.titel, kinderen: STANDAARD.kinderen };
@@ -402,6 +523,7 @@ const btnNacht = document.getElementById('btnNacht');
 const sunMoon = document.getElementById('sunMoon');
 const starsEl = document.getElementById('stars');
 const resetBtn = document.getElementById('resetBtn');
+const agendaEl = document.getElementById('agenda');
 
 function renderStars(){
   starsEl.innerHTML = '';
@@ -614,6 +736,92 @@ function startOpslag(instelling){
   bewaakDatum();
 }
 
+const DAGNAMEN = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+const KINDKLEUREN = ['#7C6BD6', '#2FA37C', '#D9724F', '#3B82C4'];
+
+// Sleutels in het overzicht mogen 'wo' of 'woensdag' zijn; hier worden ze op
+// dezelfde twee letters gelegd als het dagfilter bij de stappen.
+function overzichtPerDag(waarde){
+  const uit = {};
+  Object.entries(waarde || {}).forEach(([k, v]) => {
+    const dag = String(k).trim().slice(0, 2).toLowerCase();
+    if(DAGEN.includes(dag) && Array.isArray(v)) uit[dag] = v;
+  });
+  return uit;
+}
+
+// Elk kind krijgt een vaste kleur, toegekend op volgorde van voorkomen in de
+// week — zo blijft die kleur gelijk zolang het overzicht niet verandert.
+function kindKleuren(overzicht){
+  const namen = [];
+  DAGEN.forEach(dag => (overzicht[dag] || []).forEach(item => {
+    const kind = item && item.kind;
+    if(kind && !namen.includes(kind)) namen.push(kind);
+  }));
+  return Object.fromEntries(namen.map((n, i) => [n, KINDKLEUREN[i % KINDKLEUREN.length]]));
+}
+
+// 's Ochtends kijk je naar vandaag, 's avonds naar wat er morgen op het
+// programma staat.
+function overzichtDatum(){
+  const d = new Date();
+  if(mode === 'nacht') d.setDate(d.getDate() + 1);
+  return d;
+}
+
+function renderAgenda(){
+  const datum = overzichtDatum();
+  const items = (config.overzicht || {})[DAGEN[datum.getDay()]] || [];
+  agendaEl.innerHTML = '';
+  agendaEl.hidden = !items.length;
+  if(!items.length) return;
+
+  const kop = document.createElement('div');
+  kop.className = 'agenda-kop';
+  kop.textContent = mode === 'nacht' ? 'Morgen' : 'Vandaag';
+
+  const dagnaam = document.createElement('div');
+  dagnaam.className = 'agenda-dag';
+  dagnaam.textContent = DAGNAMEN[datum.getDay()];
+
+  const lijst = document.createElement('div');
+  lijst.className = 'agenda-lijst';
+  items.forEach(item => {
+    const rij = document.createElement('div');
+    rij.className = 'agenda-item';
+
+    const icoon = document.createElement('div');
+    icoon.className = 'agenda-icoon';
+    icoon.textContent = item.icoon || '•';
+
+    const inhoud = document.createElement('div');
+    const tekst = document.createElement('div');
+    tekst.className = 'agenda-tekst';
+    // Zonder kind geldt het voor allebei; dan hoeft er geen naam bij.
+    if(item.kind){
+      const naam = document.createElement('span');
+      naam.className = 'kind';
+      naam.textContent = item.kind;
+      naam.style.background = config.kindkleuren[item.kind] || KINDKLEUREN[0];
+      tekst.appendChild(naam);
+    }
+    tekst.appendChild(document.createTextNode(item.tekst || ''));
+    inhoud.appendChild(tekst);
+
+    if(item.tijd){
+      const tijd = document.createElement('div');
+      tijd.className = 'agenda-tijd';
+      tijd.textContent = item.tijd;
+      inhoud.appendChild(tijd);
+    }
+
+    rij.append(icoon, inhoud);
+    lijst.appendChild(rij);
+  });
+
+  agendaEl.append(kop, dagnaam, lijst);
+}
+
 function maakStap(step, i){
   // Op de sleutel van de stap, niet op het volgnummer: schuift er een stap
   // tussen, dan blijft het vinkje bij de juiste stap staan.
@@ -650,6 +858,7 @@ function maakStap(step, i){
 }
 
 function render(){
+  renderAgenda();
   pathEl.innerHTML = '';
   // De stapnummers lopen door over de groepen heen, zodat 'stap 5' hetzelfde
   // betekent als je de rijen anders indeelt.
@@ -729,7 +938,9 @@ function overnemen(data){
     dag: routine(data.dag, STANDAARD.dag),
     nacht: routine(data.nacht, STANDAARD.nacht),
     opslag: data.opslag || null,
+    overzicht: overzichtPerDag(data.overzicht),
   };
+  config.kindkleuren = kindKleuren(config.overzicht);
 }
 
 async function laden(){

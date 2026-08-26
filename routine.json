@@ -6,6 +6,88 @@
     "url": "https://routine-35aaa-default-rtdb.europe-west1.firebasedatabase.app",
     "gezin": "huis-9f3k2a"
   },
+  "overzicht": {
+    "ma": [
+      {
+        "icoon": "🏫",
+        "tekst": "School"
+      },
+      {
+        "icoon": "👨",
+        "tekst": "Papadag"
+      },
+      {
+        "icoon": "🏊",
+        "tekst": "Zwemmen"
+      }
+    ],
+    "di": [
+      {
+        "icoon": "🏫",
+        "tekst": "School"
+      },
+      {
+        "icoon": "🧒",
+        "tekst": "BSO"
+      }
+    ],
+    "wo": [
+      {
+        "icoon": "🏫",
+        "tekst": "Kort school"
+      },
+      {
+        "icoon": "🧒",
+        "tekst": "Lang BSO"
+      },
+      {
+        "icoon": "⚽",
+        "tekst": "Voetbal",
+        "tijd": "15:45 – 16:45",
+        "kind": "Mads"
+      }
+    ],
+    "do": [
+      {
+        "icoon": "🏫",
+        "tekst": "School"
+      },
+      {
+        "icoon": "👩",
+        "tekst": "Mamadag"
+      }
+    ],
+    "vr": [
+      {
+        "icoon": "🏫",
+        "tekst": "School"
+      },
+      {
+        "icoon": "🧒",
+        "tekst": "BSO"
+      }
+    ],
+    "za": [
+      {
+        "icoon": "🤸",
+        "tekst": "Turnen",
+        "tijd": "10:00",
+        "kind": "Emma"
+      },
+      {
+        "icoon": "⚽",
+        "tekst": "Voetbal",
+        "tijd": "11:00",
+        "kind": "Mads"
+      }
+    ],
+    "zo": [
+      {
+        "icoon": "🏡",
+        "tekst": "Niks"
+      }
+    ]
+  },
   "dag": [
     {
       "groep": "Boven",

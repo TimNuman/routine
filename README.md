@@ -80,6 +80,35 @@ Sla het bestand op, push naar `main`, en de pagina is bijgewerkt.
 Gaat er iets mis in `routine.json` (typefout, komma vergeten), dan valt de pagina terug
 op het ingebouwde standaardritme in `index.html` — je krijgt dus nooit een lege pagina.
 
+## Dagoverzicht
+
+Naast de stappen staat een kolom met wat er die dag op het programma staat. In de
+ochtend gaat het over vandaag, in de avond over morgen — zodat je 's avonds al ziet
+of de zwemtas mee moet. Op een telefoon staat de kolom boven de stappen.
+
+Dat komt uit `overzicht` in `routine.json`, per weekdag:
+
+```json
+"overzicht": {
+  "ma": [
+    { "icoon": "🏫", "tekst": "School" },
+    { "icoon": "🏊", "tekst": "Zwemmen" }
+  ],
+  "wo": [
+    { "icoon": "⚽", "tekst": "Voetbal", "tijd": "15:45 – 16:45", "kind": "Mads" }
+  ]
+}
+```
+
+- `icoon` en `tekst` — wat er staat
+- `tijd` — optioneel, komt als kleinere regel eronder
+- `kind` — optioneel; laat je het weg, dan geldt het voor allebei de kinderen en
+  staat er geen naam bij. Vul je een naam in, dan verschijnt die als gekleurd
+  labeltje. Elk kind krijgt een eigen kleur, op volgorde van voorkomen in de week.
+
+Net als bij de stappen mag je `ma` of `maandag` schrijven. Staat er voor een dag
+niets, dan verdwijnt de kolom en krijgen de stappen de volle breedte.
+
 ## Afvinken delen tussen telefoons
 
 Zonder instellingen worden de vinkjes per toestel bewaard (in de browser), en
