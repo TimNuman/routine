@@ -25,10 +25,6 @@
       "tijd": "6:30 – 7:30",
       "stappen": [
         {
-          "icoon": "⬇️",
-          "label": "Naar beneden"
-        },
-        {
           "icoon": "💇",
           "label": "Haren kammen"
         },
@@ -52,7 +48,7 @@
         },
         {
           "icoon": "⚽",
-          "label": "Voetbaltas mee",
+          "label": "Voetbaltas",
           "dagen": [
             "wo"
           ]
@@ -60,6 +56,10 @@
         {
           "icoon": "👟",
           "label": "Schoenen aan"
+        },
+        {
+          "icoon": "🐱",
+          "label": "Knuffel"
         },
         {
           "icoon": "🚪",
