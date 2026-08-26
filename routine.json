@@ -63,32 +63,54 @@
   ],
   "nacht": [
     {
-      "icoon": "🍽️",
-      "label": "Avondeten"
+      "groep": "Beneden",
+      "tijd": "18:00 – 18:45",
+      "stappen": [
+        {
+          "icoon": "🍽️",
+          "label": "Avondeten"
+        },
+        {
+          "icoon": "🧸",
+          "label": "Even spelen"
+        }
+      ]
     },
     {
-      "icoon": "🧸",
-      "label": "Even spelen"
+      "groep": "Boven",
+      "tijd": "18:45 – 19:15",
+      "stappen": [
+        {
+          "icoon": "🛁",
+          "label": "Bad & pyjama"
+        },
+        {
+          "icoon": "🪥",
+          "label": "Tanden poetsen"
+        },
+        {
+          "icoon": "🚽",
+          "label": "Plassen"
+        }
+      ]
     },
     {
-      "icoon": "🛁",
-      "label": "Bad & pyjama"
-    },
-    {
-      "icoon": "🪥",
-      "label": "Tanden poetsen"
-    },
-    {
-      "icoon": "📖",
-      "label": "Voorlezen"
-    },
-    {
-      "icoon": "🤗",
-      "label": "Knuffel"
-    },
-    {
-      "icoon": "🌙",
-      "label": "Licht uit"
+      "groep": "Naar bed",
+      "tijd": "19:15 – 19:30",
+      "stappen": [
+        {
+          "icoon": "📖",
+          "label": "Voorlezen"
+        },
+        {
+          "icoon": "🤗",
+          "label": "Knuffel"
+        },
+        {
+          "icoon": "🌙",
+          "label": "Licht uit"
+        }
+      ]
     }
   ]
 }
