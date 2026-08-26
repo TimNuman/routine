@@ -349,6 +349,7 @@
 const STANDAARD = {
   titel: 'Ons dagritme',
   kinderen: 'voor Emma & Mads',
+  avondVanaf: 15,
   dag: [
     {groep:'Boven', tijd:'6:00 – 6:30', stappen:[
       {icoon:'🛏️', label:'Wakker worden'},
@@ -708,10 +709,23 @@ function setMode(newMode){
   render();
 }
 
+// Welk ritme er bij het openen klaarstaat, hangt af van de klok: 's ochtends de
+// dag, vanaf het ingestelde uur de avond. Daarna beslist de knop; er wordt niet
+// vanzelf omgeschakeld terwijl iemand ernaar kijkt.
+function uurOf(waarde, terugval){
+  const n = Number(waarde);
+  return Number.isFinite(n) && n >= 0 && n <= 23 ? Math.floor(n) : terugval;
+}
+
+function beginRitme(){
+  return new Date().getHours() >= config.avondVanaf ? 'nacht' : 'dag';
+}
+
 function overnemen(data){
   config = {
     titel: data.titel || STANDAARD.titel,
     kinderen: data.kinderen || STANDAARD.kinderen,
+    avondVanaf: uurOf(data.avondVanaf, STANDAARD.avondVanaf),
     dag: routine(data.dag, STANDAARD.dag),
     nacht: routine(data.nacht, STANDAARD.nacht),
     opslag: data.opslag || null,
@@ -740,8 +754,12 @@ resetBtn.addEventListener('click', ()=>{
 
 renderStars();
 overnemen(STANDAARD);
+setMode(beginRitme());
 toepassen();
-laden().then(() => startOpslag(config.opslag));
+laden().then(() => {
+  setMode(beginRitme());
+  startOpslag(config.opslag);
+});
 </script>
 </body>
 </html>

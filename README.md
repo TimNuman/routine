@@ -17,6 +17,7 @@ Alles wat je wilt wijzigen staat in **`routine.json`** — je hoeft de HTML niet
 
 - `titel` — de kop van de pagina (en de browsertab)
 - `kinderen` — het regeltje eronder
+- `avondVanaf` — vanaf welk uur de pagina op de avondroutine opent (standaard 15)
 - `dag` / `nacht` — de stappen, in volgorde; elke stap heeft een `icoon` (een emoji) en een `label`
 - `groep` / `tijd` — per rij een kopje en de tijd eronder; laat `tijd` weg als je die niet wilt
 
