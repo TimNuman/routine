@@ -230,8 +230,8 @@
   <div class="card" id="card">
     <div class="topbar">
       <div>
-        <h1>Ons dagritme</h1>
-        <div class="kids">voor Emma &amp; Mads</div>
+        <h1 id="titel">Ons dagritme</h1>
+        <div class="kids" id="kids">voor Emma &amp; Mads</div>
       </div>
       <div class="toggle" id="toggle">
         <div class="thumb"></div>
@@ -254,31 +254,38 @@
   </div>
 
 <script>
-const routines = {
+// De namen en stappen komen uit routine.json. Lukt dat niet (bijvoorbeeld bij
+// openen via file://), dan valt de pagina terug op dit standaardritme.
+const STANDAARD = {
+  titel: 'Ons dagritme',
+  kinderen: 'voor Emma & Mads',
   dag: [
-    {icon:'🛏️', label:'Wakker worden'},
-    {icon:'👕', label:'Aankleden'},
-    {icon:'🪥', label:'Tanden poetsen'},
-    {icon:'💇', label:'Haren kammen'},
-    {icon:'🥣', label:'Ontbijt'},
-    {icon:'🎒', label:'Tas & jas'},
-    {icon:'🚪', label:'Naar school!'},
+    {icoon:'🛏️', label:'Wakker worden'},
+    {icoon:'👕', label:'Aankleden'},
+    {icoon:'🪥', label:'Tanden poetsen'},
+    {icoon:'💇', label:'Haren kammen'},
+    {icoon:'🥣', label:'Ontbijt'},
+    {icoon:'🎒', label:'Tas & jas'},
+    {icoon:'🚪', label:'Naar school!'},
   ],
   nacht: [
-    {icon:'🍽️', label:'Avondeten'},
-    {icon:'🧸', label:'Even spelen'},
-    {icon:'🛁', label:'Bad & pyjama'},
-    {icon:'🪥', label:'Tanden poetsen'},
-    {icon:'📖', label:'Voorlezen'},
-    {icon:'🤗', label:'Knuffel'},
-    {icon:'🌙', label:'Licht uit'},
+    {icoon:'🍽️', label:'Avondeten'},
+    {icoon:'🧸', label:'Even spelen'},
+    {icoon:'🛁', label:'Bad & pyjama'},
+    {icoon:'🪥', label:'Tanden poetsen'},
+    {icoon:'📖', label:'Voorlezen'},
+    {icoon:'🤗', label:'Knuffel'},
+    {icoon:'🌙', label:'Licht uit'},
   ]
 };
 
+let config = STANDAARD;
 let mode = 'dag';
 let done = { dag: new Set(), nacht: new Set() };
 
 const card = document.getElementById('card');
+const titelEl = document.getElementById('titel');
+const kidsEl = document.getElementById('kids');
 const pathEl = document.getElementById('path');
 const toggle = document.getElementById('toggle');
 const btnDag = document.getElementById('btnDag');
@@ -301,26 +308,46 @@ function renderStars(){
   });
 }
 
+function maakStap(step, i){
+  const el = document.createElement('div');
+  el.className = 'step' + (done[mode].has(i) ? ' done' : '');
+
+  const num = document.createElement('div');
+  num.className = 'num';
+  num.textContent = 'stap ' + (i+1);
+
+  const stone = document.createElement('div');
+  stone.className = 'stone';
+  const icon = document.createElement('span');
+  icon.textContent = step.icoon || '•';
+  const check = document.createElement('div');
+  check.className = 'checkmark';
+  check.textContent = '✓';
+  stone.append(icon, check);
+
+  const label = document.createElement('div');
+  label.className = 'label';
+  label.textContent = step.label || '';
+
+  el.append(num, stone, label);
+  el.addEventListener('click', ()=>{
+    if(done[mode].has(i)) done[mode].delete(i);
+    else done[mode].add(i);
+    render();
+  });
+  return el;
+}
+
 function render(){
   pathEl.innerHTML = '';
-  routines[mode].forEach((step, i)=>{
-    const el = document.createElement('div');
-    el.className = 'step' + (done[mode].has(i) ? ' done' : '');
-    el.innerHTML = `
-      <div class="num">stap ${i+1}</div>
-      <div class="stone">
-        <span>${step.icon}</span>
-        <div class="checkmark">✓</div>
-      </div>
-      <div class="label">${step.label}</div>
-    `;
-    el.addEventListener('click', ()=>{
-      if(done[mode].has(i)) done[mode].delete(i);
-      else done[mode].add(i);
-      render();
-    });
-    pathEl.appendChild(el);
-  });
+  config[mode].forEach((step, i)=> pathEl.appendChild(maakStap(step, i)));
+}
+
+function toepassen(){
+  document.title = config.titel;
+  titelEl.textContent = config.titel;
+  kidsEl.textContent = config.kinderen;
+  render();
 }
 
 function setMode(newMode){
@@ -334,6 +361,29 @@ function setMode(newMode){
   render();
 }
 
+// Een lijst wordt alleen overgenomen als hij bruikbaar is; anders blijft het
+// standaardritme staan, zodat een typefout in routine.json niets leegtrekt.
+function lijst(waarde, terugval){
+  return Array.isArray(waarde) && waarde.length ? waarde : terugval;
+}
+
+async function laden(){
+  try{
+    const res = await fetch('routine.json', {cache: 'no-cache'});
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    config = {
+      titel: data.titel || STANDAARD.titel,
+      kinderen: data.kinderen || STANDAARD.kinderen,
+      dag: lijst(data.dag, STANDAARD.dag),
+      nacht: lijst(data.nacht, STANDAARD.nacht),
+    };
+  }catch(err){
+    console.warn('routine.json niet geladen — standaardritme gebruikt:', err);
+  }
+  toepassen();
+}
+
 btnDag.addEventListener('click', ()=> setMode('dag'));
 btnNacht.addEventListener('click', ()=> setMode('nacht'));
 resetBtn.addEventListener('click', ()=>{
@@ -342,7 +392,8 @@ resetBtn.addEventListener('click', ()=>{
 });
 
 renderStars();
-render();
+toepassen();
+laden();
 </script>
 </body>
 </html>

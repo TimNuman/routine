@@ -1,0 +1,27 @@
+{
+  "titel": "Ons dagritme",
+  "kinderen": "voor Emma & Mads",
+
+  "dag": [
+    { "icoon": "🛏️", "label": "Wakker worden" },
+    { "icoon": "🪥", "label": "Tanden poetsen" },
+    { "icoon": "⬇️", "label": "Naar beneden" },
+    { "icoon": "👕", "label": "Aankleden" },
+    { "icoon": "💇", "label": "Haren kammen" },
+    { "icoon": "🥣", "label": "Ontbijt" },
+    { "icoon": "🧸", "label": "Spelen" },
+    { "icoon": "🎒", "label": "Tas & jas" },
+    { "icoon": "👟", "label": "Schoenen aan" },
+    { "icoon": "🚪", "label": "Naar school!" }
+  ],
+
+  "nacht": [
+    { "icoon": "🍽️", "label": "Avondeten" },
+    { "icoon": "🧸", "label": "Even spelen" },
+    { "icoon": "🛁", "label": "Bad & pyjama" },
+    { "icoon": "🪥", "label": "Tanden poetsen" },
+    { "icoon": "📖", "label": "Voorlezen" },
+    { "icoon": "🤗", "label": "Knuffel" },
+    { "icoon": "🌙", "label": "Licht uit" }
+  ]
+}
