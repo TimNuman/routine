@@ -172,6 +172,11 @@ Open de pagina en kies *Deel → Zet op beginscherm* (iOS) of *Toevoegen aan sta
 (Android). Hij verschijnt dan als **Dagritme** met een eigen icoon — een zon boven een
 bed — en opent zonder browserbalk, dus als een losse app.
 
+Omdat de app-weergave geen browserbalk heeft, is er ook geen ingebouwd
+trek-om-te-verversen. Die beweging zit daarom zelf in de pagina: sleep vanaf
+bovenaan naar beneden tot het rondje verschijnt en laat los. In een gewoon
+tabblad wordt hij niet aangehaakt — daar doet de browser het al.
+
 Het icoon is `icon.svg`; de PNG's ernaast zijn daaruit gerenderd (32, 180, 192 en 512px,
 plus een ruimer opgezette `maskable`-versie voor Android, dat er een cirkel uit snijdt).
 Pas je `icon.svg` aan, render de PNG's dan opnieuw in dezelfde maten.
