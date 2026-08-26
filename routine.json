@@ -1,42 +1,94 @@
 {
   "titel": "Ons dagritme",
   "kinderen": "voor Emma & Mads",
-
   "dag": [
     {
       "groep": "Boven",
+      "tijd": "6:00 – 6:30",
       "stappen": [
-        { "icoon": "🛏️", "label": "Wakker worden" },
-        { "icoon": "🪥", "label": "Tanden poetsen" },
-        { "icoon": "👕", "label": "Aankleden" }
+        {
+          "icoon": "🛏️",
+          "label": "Wakker worden"
+        },
+        {
+          "icoon": "🪥",
+          "label": "Tanden poetsen"
+        },
+        {
+          "icoon": "👕",
+          "label": "Aankleden"
+        }
       ]
     },
     {
       "groep": "Beneden",
+      "tijd": "6:30 – 7:30",
       "stappen": [
-        { "icoon": "⬇️", "label": "Naar beneden" },
-        { "icoon": "💇", "label": "Haren kammen" },
-        { "icoon": "🥣", "label": "Ontbijt" },
-        { "icoon": "🧸", "label": "Spelen" }
+        {
+          "icoon": "⬇️",
+          "label": "Naar beneden"
+        },
+        {
+          "icoon": "💇",
+          "label": "Haren kammen"
+        },
+        {
+          "icoon": "🥣",
+          "label": "Ontbijt"
+        },
+        {
+          "icoon": "🧸",
+          "label": "Spelen"
+        }
       ]
     },
     {
       "groep": "Weggaan",
+      "tijd": "8:00 – 8:15",
       "stappen": [
-        { "icoon": "🎒", "label": "Tas & jas" },
-        { "icoon": "👟", "label": "Schoenen aan" },
-        { "icoon": "🚪", "label": "Naar school!" }
+        {
+          "icoon": "🎒",
+          "label": "Tas & jas"
+        },
+        {
+          "icoon": "👟",
+          "label": "Schoenen aan"
+        },
+        {
+          "icoon": "🚪",
+          "label": "Naar school!"
+        }
       ]
     }
   ],
-
   "nacht": [
-    { "icoon": "🍽️", "label": "Avondeten" },
-    { "icoon": "🧸", "label": "Even spelen" },
-    { "icoon": "🛁", "label": "Bad & pyjama" },
-    { "icoon": "🪥", "label": "Tanden poetsen" },
-    { "icoon": "📖", "label": "Voorlezen" },
-    { "icoon": "🤗", "label": "Knuffel" },
-    { "icoon": "🌙", "label": "Licht uit" }
+    {
+      "icoon": "🍽️",
+      "label": "Avondeten"
+    },
+    {
+      "icoon": "🧸",
+      "label": "Even spelen"
+    },
+    {
+      "icoon": "🛁",
+      "label": "Bad & pyjama"
+    },
+    {
+      "icoon": "🪥",
+      "label": "Tanden poetsen"
+    },
+    {
+      "icoon": "📖",
+      "label": "Voorlezen"
+    },
+    {
+      "icoon": "🤗",
+      "label": "Knuffel"
+    },
+    {
+      "icoon": "🌙",
+      "label": "Licht uit"
+    }
   ]
 }

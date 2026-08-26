@@ -18,6 +18,7 @@ Alles wat je wilt wijzigen staat in **`routine.json`** — je hoeft de HTML niet
 - `titel` — de kop van de pagina (en de browsertab)
 - `kinderen` — het regeltje eronder
 - `dag` / `nacht` — de stappen, in volgorde; elke stap heeft een `icoon` (een emoji) en een `label`
+- `groep` / `tijd` — per rij een kopje en de tijd eronder; laat `tijd` weg als je die niet wilt
 
 Een routine mag op twee manieren opgeschreven worden. Als **platte lijst**, die als
 één rij verschijnt:
@@ -35,6 +36,7 @@ Of opgedeeld in **groepen**, die elk een eigen rij met een kopje ervoor krijgen:
 "dag": [
   {
     "groep": "Boven",
+    "tijd": "6:00 – 6:30",
     "stappen": [
       { "icoon": "🛏️", "label": "Wakker worden" },
       { "icoon": "🪥", "label": "Tanden poetsen" }
@@ -42,6 +44,7 @@ Of opgedeeld in **groepen**, die elk een eigen rij met een kopje ervoor krijgen:
   },
   {
     "groep": "Weggaan",
+    "tijd": "8:00 – 8:15",
     "stappen": [
       { "icoon": "🚪", "label": "Naar school!" }
     ]

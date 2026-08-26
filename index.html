@@ -153,15 +153,26 @@
   }
   .night-mode .group + .group{ border-top-color: rgba(255,255,255,0.10); }
   .group-label{
-    flex: 0 0 92px;
-    text-align:right;
+    flex: 0 0 104px;
+    text-align:left;
+    color: var(--ink-soft);
+  }
+  .night-mode .group-label{ color:#9294c4; }
+  .group-name{
     font-family:'Baloo 2', sans-serif;
     font-weight:800;
     font-size: 15px;
     line-height:1.15;
-    color: var(--ink-soft);
   }
-  .night-mode .group-label{ color:#9294c4; }
+  .group-time{
+    font-family:'Nunito', sans-serif;
+    font-weight:700;
+    font-size: 12px;
+    line-height:1.2;
+    margin-top: 3px;
+    opacity: 0.75;
+    white-space: nowrap;
+  }
   .group-steps{
     flex:1;
     display:flex;
@@ -251,7 +262,7 @@
     .stone{ width:64px; height:64px; font-size:28px; }
     .path{ padding: 18px 16px 28px; }
     .group{ flex-direction:column; align-items:stretch; gap:8px; }
-    .group-label{ flex:none; text-align:left; }
+    .group-label{ flex:none; }
     .group-steps{ justify-content:center; }
   }
 </style>
@@ -293,18 +304,18 @@ const STANDAARD = {
   titel: 'Ons dagritme',
   kinderen: 'voor Emma & Mads',
   dag: [
-    {groep:'Boven', stappen:[
+    {groep:'Boven', tijd:'6:00 – 6:30', stappen:[
       {icoon:'🛏️', label:'Wakker worden'},
       {icoon:'🪥', label:'Tanden poetsen'},
       {icoon:'👕', label:'Aankleden'},
     ]},
-    {groep:'Beneden', stappen:[
+    {groep:'Beneden', tijd:'6:30 – 7:30', stappen:[
       {icoon:'⬇️', label:'Naar beneden'},
       {icoon:'💇', label:'Haren kammen'},
       {icoon:'🥣', label:'Ontbijt'},
       {icoon:'🧸', label:'Spelen'},
     ]},
-    {groep:'Weggaan', stappen:[
+    {groep:'Weggaan', tijd:'8:00 – 8:15', stappen:[
       {icoon:'🎒', label:'Tas & jas'},
       {icoon:'👟', label:'Schoenen aan'},
       {icoon:'🚪', label:'Naar school!'},
@@ -356,10 +367,10 @@ function renderStars(){
 function maakGroepen(lijst){
   if(!Array.isArray(lijst) || !lijst.length) return [];
   const gegroepeerd = lijst.some(item => item && Array.isArray(item.stappen));
-  if(!gegroepeerd) return [{ groep:'', stappen: lijst }];
+  if(!gegroepeerd) return [{ groep:'', tijd:'', stappen: lijst }];
   return lijst
     .filter(item => item && Array.isArray(item.stappen) && item.stappen.length)
-    .map(item => ({ groep: item.groep || '', stappen: item.stappen }));
+    .map(item => ({ groep: item.groep || '', tijd: item.tijd || '', stappen: item.stappen }));
 }
 
 function aantalStappen(groepen){
@@ -409,14 +420,26 @@ function render(){
   // betekent als je de rijen anders indeelt.
   let nummer = 0;
   config[mode].forEach(groep => {
+    const heeftKop = Boolean(groep.groep || groep.tijd);
     const rij = document.createElement('div');
-    rij.className = 'group' + (groep.groep ? '' : ' no-label');
+    rij.className = 'group' + (heeftKop ? '' : ' no-label');
 
-    if(groep.groep){
-      const naam = document.createElement('div');
-      naam.className = 'group-label';
-      naam.textContent = groep.groep;
-      rij.appendChild(naam);
+    if(heeftKop){
+      const kop = document.createElement('div');
+      kop.className = 'group-label';
+      if(groep.groep){
+        const naam = document.createElement('div');
+        naam.className = 'group-name';
+        naam.textContent = groep.groep;
+        kop.appendChild(naam);
+      }
+      if(groep.tijd){
+        const tijd = document.createElement('div');
+        tijd.className = 'group-time';
+        tijd.textContent = groep.tijd;
+        kop.appendChild(tijd);
+      }
+      rij.appendChild(kop);
     }
 
     const stappen = document.createElement('div');
