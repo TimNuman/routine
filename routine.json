@@ -51,6 +51,13 @@
           "label": "Tas & jas"
         },
         {
+          "icoon": "⚽",
+          "label": "Voetbaltas mee",
+          "dagen": [
+            "wo"
+          ]
+        },
+        {
           "icoon": "👟",
           "label": "Schoenen aan"
         },
@@ -82,7 +89,11 @@
       "stappen": [
         {
           "icoon": "🛁",
-          "label": "Bad & pyjama"
+          "label": "Bad"
+        },
+        {
+          "icoon": "👕",
+          "label": "Pyjama aan"
         },
         {
           "icoon": "🪥",

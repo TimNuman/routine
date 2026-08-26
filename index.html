@@ -272,10 +272,25 @@
     .toggle{ width:100%; }
     .toggle button{ flex:1; justify-content:center; }
 
-    .path{ padding: 18px 20px 28px; }
-    .group{ flex-direction:column; align-items:stretch; gap: 10px; }
-    .group + .group{ padding-top: 16px; }
-    .group-label{ flex:none; }
+    .path{ padding: 18px 20px 28px; gap: 24px; }
+    .group{ flex-direction:column; align-items:stretch; gap: 0; }
+
+    /* Naam en tijd naast elkaar op één regel, met de streep eronder. Die streep
+       vervangt de scheiding tússen de groepen; allebei zou twee lijnen vlak
+       boven elkaar geven. */
+    .group + .group{ border-top:none; padding-top:0; }
+    .group-label{
+      flex:none;
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap: 10px;
+      padding-bottom: 8px;
+      margin-bottom: 14px;
+      border-bottom: 2px dashed rgba(43,45,66,0.12);
+    }
+    .night-mode .group-label{ border-bottom-color: rgba(255,255,255,0.12); }
+    .group-time{ margin-top: 0; }
 
     /* Een raster van drie houdt de stappen onder elkaar uitgelijnd, ook als een
        rij niet vol is — bij wrappen zou de laatste stap los gaan zweven. */
@@ -340,6 +355,7 @@ const STANDAARD = {
     ]},
     {groep:'Weggaan', tijd:'8:00 – 8:15', stappen:[
       {icoon:'🎒', label:'Tas & jas'},
+      {icoon:'⚽', label:'Voetbaltas mee', dagen:['wo']},
       {icoon:'👟', label:'Schoenen aan'},
       {icoon:'🚪', label:'Naar school!'},
     ]},
@@ -350,7 +366,8 @@ const STANDAARD = {
       {icoon:'🧸', label:'Even spelen'},
     ]},
     {groep:'Boven', tijd:'18:45 – 19:15', stappen:[
-      {icoon:'🛁', label:'Bad & pyjama'},
+      {icoon:'🛁', label:'Bad'},
+      {icoon:'👕', label:'Pyjama aan'},
       {icoon:'🪥', label:'Tanden poetsen'},
       {icoon:'🚽', label:'Plassen'},
     ]},
@@ -414,6 +431,17 @@ function routine(waarde, terugval){
   return aantalStappen(groepen) ? groepen : maakGroepen(terugval);
 }
 
+const DAGEN = ['zo','ma','di','wo','do','vr','za'];
+
+// Een stap zonder 'dagen' hoort bij elke dag. Staat het veld er wel, dan
+// verschijnt de stap alleen op de genoemde dagen. Er wordt op de eerste twee
+// letters vergeleken, zodat zowel 'wo' als 'woensdag' werkt.
+function opVandaag(step){
+  if(!step || !Array.isArray(step.dagen) || !step.dagen.length) return true;
+  const nu = DAGEN[new Date().getDay()];
+  return step.dagen.some(d => String(d).trim().slice(0,2).toLowerCase() === nu);
+}
+
 function maakStap(step, i){
   const el = document.createElement('div');
   el.className = 'step' + (done[mode].has(i) ? ' done' : '');
@@ -450,6 +478,11 @@ function render(){
   // betekent als je de rijen anders indeelt.
   let nummer = 0;
   config[mode].forEach(groep => {
+    // Valt een hele groep vandaag weg, dan verdwijnt ook zijn kopje; anders
+    // bleef er een lege rij met een streep staan.
+    const stappen = groep.stappen.filter(opVandaag);
+    if(!stappen.length) return;
+
     const heeftKop = Boolean(groep.groep || groep.tijd);
     const rij = document.createElement('div');
     rij.className = 'group' + (heeftKop ? '' : ' no-label');
@@ -472,11 +505,11 @@ function render(){
       rij.appendChild(kop);
     }
 
-    const stappen = document.createElement('div');
-    stappen.className = 'group-steps';
-    groep.stappen.forEach(step => stappen.appendChild(maakStap(step, nummer++)));
+    const vak = document.createElement('div');
+    vak.className = 'group-steps';
+    stappen.forEach(step => vak.appendChild(maakStap(step, nummer++)));
 
-    rij.appendChild(stappen);
+    rij.appendChild(vak);
     pathEl.appendChild(rij);
   });
 }

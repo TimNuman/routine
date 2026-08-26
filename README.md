@@ -56,6 +56,24 @@ Beide vormen mogen naast elkaar gebruikt worden — de ochtend in groepen, de av
 als platte lijst, of andersom. Lijsten mogen zo lang of kort zijn als je wilt, en de
 stapnummers lopen gewoon door over de groepen heen.
 
+### Stappen op bepaalde dagen
+
+Een stap kan een `dagen`-lijst krijgen. Staat die er, dan verschijnt de stap
+alleen op die dagen; zonder `dagen` hoort een stap bij elke dag.
+
+```json
+{ "icoon": "⚽", "label": "Voetbaltas mee", "dagen": ["wo"] }
+```
+
+Gebruik `ma di wo do vr za zo`, of de dagen voluit (`woensdag`) — beide worden
+herkend. Meerdere dagen mag: `["di", "do"]`.
+
+De stapnummers tellen alleen wat er die dag te zien is, en valt een hele groep
+weg, dan verdwijnt zijn kopje mee.
+
+Let op: er wordt naar de dag van *vandaag* gekeken. Moet de voetbaltas dinsdag­avond
+al klaargezet worden, zet die stap dan in de avondroutine op `["di"]`.
+
 Sla het bestand op, push naar `main`, en de pagina is bijgewerkt.
 
 Gaat er iets mis in `routine.json` (typefout, komma vergeten), dan valt de pagina terug
