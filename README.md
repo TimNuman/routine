@@ -15,21 +15,45 @@ stappen, in een dag/nacht-thema dat meeschakelt.
 
 Alles wat je wilt wijzigen staat in **`routine.json`** — je hoeft de HTML niet aan te raken.
 
-```json
-{
-  "titel": "Ons dagritme",
-  "kinderen": "voor Emma & Mads",
-  "dag":   [ { "icoon": "🛏️", "label": "Wakker worden" } ],
-  "nacht": [ { "icoon": "🌙", "label": "Licht uit" } ]
-}
-```
-
 - `titel` — de kop van de pagina (en de browsertab)
 - `kinderen` — het regeltje eronder
 - `dag` / `nacht` — de stappen, in volgorde; elke stap heeft een `icoon` (een emoji) en een `label`
 
-Een lijst mag zo lang of kort zijn als je wilt. Sla het bestand op, push naar `main`,
-en de pagina is bijgewerkt.
+Een routine mag op twee manieren opgeschreven worden. Als **platte lijst**, die als
+één rij verschijnt:
+
+```json
+"nacht": [
+  { "icoon": "🍽️", "label": "Avondeten" },
+  { "icoon": "🌙", "label": "Licht uit" }
+]
+```
+
+Of opgedeeld in **groepen**, die elk een eigen rij met een kopje ervoor krijgen:
+
+```json
+"dag": [
+  {
+    "groep": "Boven",
+    "stappen": [
+      { "icoon": "🛏️", "label": "Wakker worden" },
+      { "icoon": "🪥", "label": "Tanden poetsen" }
+    ]
+  },
+  {
+    "groep": "Weggaan",
+    "stappen": [
+      { "icoon": "🚪", "label": "Naar school!" }
+    ]
+  }
+]
+```
+
+Beide vormen mogen naast elkaar gebruikt worden — de ochtend in groepen, de avond
+als platte lijst, of andersom. Lijsten mogen zo lang of kort zijn als je wilt, en de
+stapnummers lopen gewoon door over de groepen heen.
+
+Sla het bestand op, push naar `main`, en de pagina is bijgewerkt.
 
 Gaat er iets mis in `routine.json` (typefout, komma vergeten), dan valt de pagina terug
 op het ingebouwde standaardritme in `index.html` — je krijgt dus nooit een lege pagina.

@@ -3,16 +3,31 @@
   "kinderen": "voor Emma & Mads",
 
   "dag": [
-    { "icoon": "🛏️", "label": "Wakker worden" },
-    { "icoon": "🪥", "label": "Tanden poetsen" },
-    { "icoon": "⬇️", "label": "Naar beneden" },
-    { "icoon": "👕", "label": "Aankleden" },
-    { "icoon": "💇", "label": "Haren kammen" },
-    { "icoon": "🥣", "label": "Ontbijt" },
-    { "icoon": "🧸", "label": "Spelen" },
-    { "icoon": "🎒", "label": "Tas & jas" },
-    { "icoon": "👟", "label": "Schoenen aan" },
-    { "icoon": "🚪", "label": "Naar school!" }
+    {
+      "groep": "Boven",
+      "stappen": [
+        { "icoon": "🛏️", "label": "Wakker worden" },
+        { "icoon": "🪥", "label": "Tanden poetsen" },
+        { "icoon": "👕", "label": "Aankleden" }
+      ]
+    },
+    {
+      "groep": "Beneden",
+      "stappen": [
+        { "icoon": "⬇️", "label": "Naar beneden" },
+        { "icoon": "💇", "label": "Haren kammen" },
+        { "icoon": "🥣", "label": "Ontbijt" },
+        { "icoon": "🧸", "label": "Spelen" }
+      ]
+    },
+    {
+      "groep": "Weggaan",
+      "stappen": [
+        { "icoon": "🎒", "label": "Tas & jas" },
+        { "icoon": "👟", "label": "Schoenen aan" },
+        { "icoon": "🚪", "label": "Naar school!" }
+      ]
+    }
   ],
 
   "nacht": [

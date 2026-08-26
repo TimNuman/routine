@@ -139,10 +139,36 @@
   .path{
     padding: 20px 28px 32px;
     display:flex;
+    flex-direction:column;
+    gap: 18px;
+  }
+  .group{
+    display:flex;
+    align-items:center;
+    gap: 16px;
+  }
+  .group + .group{
+    border-top: 2px dashed rgba(43,45,66,0.10);
+    padding-top: 18px;
+  }
+  .night-mode .group + .group{ border-top-color: rgba(255,255,255,0.10); }
+  .group-label{
+    flex: 0 0 92px;
+    text-align:right;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:800;
+    font-size: 15px;
+    line-height:1.15;
+    color: var(--ink-soft);
+  }
+  .night-mode .group-label{ color:#9294c4; }
+  .group-steps{
+    flex:1;
+    display:flex;
     flex-wrap:wrap;
     gap: 14px;
-    justify-content:center;
   }
+  .group.no-label .group-steps{ justify-content:center; }
   .step{
     width: 118px;
     text-align:center;
@@ -223,6 +249,10 @@
   @media (max-width:480px){
     .step{ width: 92px; }
     .stone{ width:64px; height:64px; font-size:28px; }
+    .path{ padding: 18px 16px 28px; }
+    .group{ flex-direction:column; align-items:stretch; gap:8px; }
+    .group-label{ flex:none; text-align:left; }
+    .group-steps{ justify-content:center; }
   }
 </style>
 </head>
@@ -256,17 +286,29 @@
 <script>
 // De namen en stappen komen uit routine.json. Lukt dat niet (bijvoorbeeld bij
 // openen via file://), dan valt de pagina terug op dit standaardritme.
+//
+// Een routine is óf een platte lijst stappen, óf een lijst groepen die elk een
+// eigen rij met kopje krijgen. Beide vormen mogen door elkaar gebruikt worden.
 const STANDAARD = {
   titel: 'Ons dagritme',
   kinderen: 'voor Emma & Mads',
   dag: [
-    {icoon:'🛏️', label:'Wakker worden'},
-    {icoon:'👕', label:'Aankleden'},
-    {icoon:'🪥', label:'Tanden poetsen'},
-    {icoon:'💇', label:'Haren kammen'},
-    {icoon:'🥣', label:'Ontbijt'},
-    {icoon:'🎒', label:'Tas & jas'},
-    {icoon:'🚪', label:'Naar school!'},
+    {groep:'Boven', stappen:[
+      {icoon:'🛏️', label:'Wakker worden'},
+      {icoon:'🪥', label:'Tanden poetsen'},
+      {icoon:'👕', label:'Aankleden'},
+    ]},
+    {groep:'Beneden', stappen:[
+      {icoon:'⬇️', label:'Naar beneden'},
+      {icoon:'💇', label:'Haren kammen'},
+      {icoon:'🥣', label:'Ontbijt'},
+      {icoon:'🧸', label:'Spelen'},
+    ]},
+    {groep:'Weggaan', stappen:[
+      {icoon:'🎒', label:'Tas & jas'},
+      {icoon:'👟', label:'Schoenen aan'},
+      {icoon:'🚪', label:'Naar school!'},
+    ]},
   ],
   nacht: [
     {icoon:'🍽️', label:'Avondeten'},
@@ -279,7 +321,7 @@ const STANDAARD = {
   ]
 };
 
-let config = STANDAARD;
+let config = { titel: STANDAARD.titel, kinderen: STANDAARD.kinderen };
 let mode = 'dag';
 let done = { dag: new Set(), nacht: new Set() };
 
@@ -306,6 +348,29 @@ function renderStars(){
     s.style.top = top+'px';
     starsEl.appendChild(s);
   });
+}
+
+// Beide JSON-vormen worden hier naar dezelfde structuur getrokken: een lijst
+// groepen met een (eventueel lege) naam. Een platte lijst wordt één naamloze
+// groep, die dan gewoon als één gecentreerde rij verschijnt.
+function maakGroepen(lijst){
+  if(!Array.isArray(lijst) || !lijst.length) return [];
+  const gegroepeerd = lijst.some(item => item && Array.isArray(item.stappen));
+  if(!gegroepeerd) return [{ groep:'', stappen: lijst }];
+  return lijst
+    .filter(item => item && Array.isArray(item.stappen) && item.stappen.length)
+    .map(item => ({ groep: item.groep || '', stappen: item.stappen }));
+}
+
+function aantalStappen(groepen){
+  return groepen.reduce((n, g)=> n + g.stappen.length, 0);
+}
+
+// Een routine wordt alleen overgenomen als er stappen in zitten; anders blijft
+// het standaardritme staan, zodat een typefout in routine.json niets leegtrekt.
+function routine(waarde, terugval){
+  const groepen = maakGroepen(waarde);
+  return aantalStappen(groepen) ? groepen : maakGroepen(terugval);
 }
 
 function maakStap(step, i){
@@ -340,7 +405,27 @@ function maakStap(step, i){
 
 function render(){
   pathEl.innerHTML = '';
-  config[mode].forEach((step, i)=> pathEl.appendChild(maakStap(step, i)));
+  // De stapnummers lopen door over de groepen heen, zodat 'stap 5' hetzelfde
+  // betekent als je de rijen anders indeelt.
+  let nummer = 0;
+  config[mode].forEach(groep => {
+    const rij = document.createElement('div');
+    rij.className = 'group' + (groep.groep ? '' : ' no-label');
+
+    if(groep.groep){
+      const naam = document.createElement('div');
+      naam.className = 'group-label';
+      naam.textContent = groep.groep;
+      rij.appendChild(naam);
+    }
+
+    const stappen = document.createElement('div');
+    stappen.className = 'group-steps';
+    groep.stappen.forEach(step => stappen.appendChild(maakStap(step, nummer++)));
+
+    rij.appendChild(stappen);
+    pathEl.appendChild(rij);
+  });
 }
 
 function toepassen(){
@@ -361,25 +446,23 @@ function setMode(newMode){
   render();
 }
 
-// Een lijst wordt alleen overgenomen als hij bruikbaar is; anders blijft het
-// standaardritme staan, zodat een typefout in routine.json niets leegtrekt.
-function lijst(waarde, terugval){
-  return Array.isArray(waarde) && waarde.length ? waarde : terugval;
+function overnemen(data){
+  config = {
+    titel: data.titel || STANDAARD.titel,
+    kinderen: data.kinderen || STANDAARD.kinderen,
+    dag: routine(data.dag, STANDAARD.dag),
+    nacht: routine(data.nacht, STANDAARD.nacht),
+  };
 }
 
 async function laden(){
   try{
     const res = await fetch('routine.json', {cache: 'no-cache'});
     if(!res.ok) throw new Error('HTTP ' + res.status);
-    const data = await res.json();
-    config = {
-      titel: data.titel || STANDAARD.titel,
-      kinderen: data.kinderen || STANDAARD.kinderen,
-      dag: lijst(data.dag, STANDAARD.dag),
-      nacht: lijst(data.nacht, STANDAARD.nacht),
-    };
+    overnemen(await res.json());
   }catch(err){
     console.warn('routine.json niet geladen — standaardritme gebruikt:', err);
+    overnemen(STANDAARD);
   }
   toepassen();
 }
@@ -392,6 +475,7 @@ resetBtn.addEventListener('click', ()=>{
 });
 
 renderStars();
+overnemen(STANDAARD);
 toepassen();
 laden();
 </script>
