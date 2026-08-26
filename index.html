@@ -339,6 +339,26 @@
     margin-top:6px;
   }
   .night-mode .toevoeg{ background: rgba(255,255,255,.05); border-color: rgba(255,255,255,.20); color:#9EA1D4; }
+  .dagkop{
+    font-family: var(--baloo); font-weight:800; font-size:15px; color: var(--ink);
+    padding:2px 2px 6px;
+  }
+  .night-mode .dagkop{ color: var(--cream); }
+  .leeg{ font-size:13px; font-weight:700; color: var(--ink-soft); padding:2px 2px 6px; }
+  .night-mode .leeg{ color:#9EA1D4; }
+  /* Tweede regel onder een dagitem: tijd, voor wie, en of het 's avonds is. */
+  .wierij{ display:flex; gap:6px; align-items:center; flex-wrap:wrap; padding:0 0 6px; }
+  .wierij + .wierij{ padding-bottom:10px; }
+  .chips{ display:flex; gap:6px; flex-wrap:wrap; }
+  .chip{
+    padding:6px 11px; border-radius:999px; cursor:pointer;
+    border:1px solid rgba(43,45,66,.14);
+    background: rgba(255,255,255,.7);
+    font-family: var(--baloo); font-weight:800; font-size:12px; color: var(--ink-soft);
+  }
+  .night-mode .chip{ background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.14); color:#9EA1D4; }
+  .chip.aan{ background: var(--ink); border-color: var(--ink); color:#fff; }
+  .night-mode .chip.aan{ background: var(--cream); border-color: var(--cream); color: var(--ink); }
   .kleuren{ display:flex; gap:6px; flex:none; }
   .kleuren button{
     width:24px; height:24px; border-radius:50%; cursor:pointer; border:2px solid transparent;
@@ -416,6 +436,7 @@
       <button data-tab="dag" class="active">Ochtend</button>
       <button data-tab="nacht">Avond</button>
       <button data-tab="mensen">Mensen</button>
+      <button data-tab="overzicht">Dagen</button>
     </div>
     <div class="melding" id="melding" hidden></div>
     <div class="bladinhoud" id="bladinhoud"></div>
@@ -1103,6 +1124,15 @@ function rijknop(teken, titel, opKlik, klasse){
   return b;
 }
 
+function chip(tekst, aan, opKlik, kleur){
+  const b = el('button', 'chip' + (aan ? ' aan' : ''));
+  b.type = 'button';
+  b.textContent = tekst;
+  if(aan && kleur){ b.style.background = kleur; b.style.borderColor = kleur; b.style.color = '#fff'; }
+  b.addEventListener('click', opKlik);
+  return b;
+}
+
 function knopgroep(...kinderen){
   const g = el('div', 'rijknoppen');
   kinderen.forEach(k => g.appendChild(k));
@@ -1239,6 +1269,9 @@ function tekenMensen(){
 
     const weg = rijknop('✕', 'Persoon verwijderen', () => {
       if(concept.mensen.length <= 1) return toonMelding('Er moet minstens één persoon overblijven.');
+      // Anders wijst een dagitem naar iemand die er niet meer is.
+      Object.values(concept.overzicht || {}).forEach(items =>
+        lijstVan(items).forEach(item => { if(item.persoon === persoon.id) item.persoon = ''; }));
       concept.mensen.splice(i, 1);
       toonMelding('');
       tekenBlad();
@@ -1275,10 +1308,82 @@ function tekenMensen(){
   return stuk;
 }
 
+// Het dagoverzicht: per dag van de week een lijstje met wat er die dag speelt.
+// 's Ochtends toont de app de dag zelf, 's avonds de avonditems van vandaag en
+// de gewone items van morgen.
+function tekenOverzicht(){
+  const stuk = document.createDocumentFragment();
+  if(!concept.overzicht) concept.overzicht = {};
+
+  WERKDAGEN.forEach(dag => {
+    const items = concept.overzicht[dag] = lijstVan(concept.overzicht[dag]);
+    const vak = el('div', 'bewerkgroep');
+
+    const kop = el('div', 'dagkop');
+    kop.textContent = DAGNAMEN[DAGEN.indexOf(dag)];
+    vak.appendChild(kop);
+
+    if(!items.length){
+      const leeg = el('div', 'leeg');
+      leeg.textContent = 'Niks bijzonders.';
+      vak.appendChild(leeg);
+    }
+
+    items.forEach((item, i) => {
+      const rij = el('div', 'bewerkrij');
+      rij.append(
+        veld(item.icoon, '📅', 'smal', v => { item.icoon = v; }),
+        veld(item.tekst, 'Wat er die dag is', '', v => { item.tekst = v; }),
+        knopgroep(
+          rijknop('↑', 'Omhoog', () => { verplaats(items, i, -1); tekenBlad(); }),
+          rijknop('↓', 'Omlaag', () => { verplaats(items, i, 1); tekenBlad(); }),
+          rijknop('✕', 'Verwijderen', () => { items.splice(i, 1); tekenBlad(); }, 'weg'),
+        ),
+      );
+      vak.appendChild(rij);
+
+      // Wanneer op de ene regel, voor wie op de volgende: op een telefoon past
+      // dat niet naast elkaar en willekeurig afbreken leest rommelig.
+      const wanneer = el('div', 'wierij');
+      wanneer.appendChild(veld(item.tijd, 'tijd', 'tijd', v => { item.tijd = v; }));
+      wanneer.appendChild(chip('🌙 \'s avonds', Boolean(item.avond),
+        () => { item.avond = !item.avond; tekenBlad(); }));
+      vak.appendChild(wanneer);
+
+      const wie = el('div', 'wierij');
+      wie.appendChild(chip('iedereen', !item.persoon, () => { item.persoon = ''; tekenBlad(); }));
+      concept.mensen.forEach(persoon => {
+        wie.appendChild(chip(persoon.naam || 'naamloos', item.persoon === persoon.id,
+          () => { item.persoon = persoon.id; tekenBlad(); }, persoon.kleur));
+      });
+      vak.appendChild(wie);
+    });
+
+    const erbij = el('button', 'toevoeg');
+    erbij.type = 'button';
+    erbij.textContent = '+ Iets op ' + DAGNAMEN[DAGEN.indexOf(dag)];
+    erbij.addEventListener('click', () => {
+      items.push({ icoon:'📅', tekst:'', tijd:'', persoon:'', avond:false });
+      tekenBlad();
+    });
+    vak.appendChild(erbij);
+    stuk.appendChild(vak);
+  });
+
+  const uitleg = el('div', 'agendatijd');
+  uitleg.style.padding = '0 4px 10px';
+  uitleg.textContent = 'Zonder naam geldt het voor iedereen. Zet \'s avonds aan voor '
+    + 'wat pas na het avondeten speelt — dat komt bij "Vanavond" te staan in plaats van bij de dag zelf.';
+  stuk.appendChild(uitleg);
+  return stuk;
+}
+
 function tekenBlad(){
   const hoogte = bladinhoud.scrollTop;
   bladinhoud.innerHTML = '';
-  bladinhoud.appendChild(bewerkTab === 'mensen' ? tekenMensen() : tekenRitme(bewerkTab));
+  if(bewerkTab === 'mensen') bladinhoud.appendChild(tekenMensen());
+  else if(bewerkTab === 'overzicht') bladinhoud.appendChild(tekenOverzicht());
+  else bladinhoud.appendChild(tekenRitme(bewerkTab));
   bladinhoud.scrollTop = hoogte;
   document.querySelectorAll('#tabs button').forEach(b =>
     b.classList.toggle('active', b.dataset.tab === bewerkTab));
@@ -1314,6 +1419,25 @@ function schoneGroepen(lijst){
   })).filter(g => g.stappen.length || tekst(g.groep));
 }
 
+// Lege regels vallen weg, en een dag zonder items verdwijnt helemaal uit de
+// database — anders blijft er een leeg lijstje achter na het laatste item.
+function schoonOverzicht(bron){
+  const uit = {};
+  WERKDAGEN.forEach(dag => {
+    const items = lijstVan(bron && bron[dag])
+      .filter(item => tekst(item && item.tekst))
+      .map(item => {
+        const rij = { icoon: tekst(item.icoon, '•'), tekst: tekst(item.tekst) };
+        if(tekst(item.tijd)) rij.tijd = tekst(item.tijd);
+        if(tekst(item.persoon)) rij.persoon = tekst(item.persoon);
+        if(item.avond) rij.avond = true;
+        return rij;
+      });
+    if(items.length) uit[dag] = items;
+  });
+  return uit;
+}
+
 function opgeschoond(c){
   return {
     titel: tekst(c.titel, STANDAARD.titel),
@@ -1326,7 +1450,7 @@ function opgeschoond(c){
     })),
     dag: schoneGroepen(c.dag),
     nacht: schoneGroepen(c.nacht),
-    overzicht: c.overzicht || {},
+    overzicht: schoonOverzicht(c.overzicht),
   };
 }
 

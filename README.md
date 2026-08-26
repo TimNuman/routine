@@ -26,6 +26,11 @@ rechtsboven:
 - **Mensen** — wie er meedoet, met een emoji als gezicht en een eigen kleur.
   Iedereen in die lijst krijgt een rondje bij elke stap. Namen wijzigen mag: de
   vinkjes blijven bij de juiste persoon, want die hangen aan een vast id.
+- **Dagen** — het overzicht naast de stappen: per dag van de week wat er die dag
+  is, met een emoji, een tijd als die er is, en voor wie het geldt. Kies je
+  niemand, dan geldt het voor iedereen. Zet **'s avonds** aan voor wat pas na het
+  avondeten speelt: dat komt bij *Vanavond* te staan in plaats van bij de dag
+  zelf. Een dag zonder regels verdwijnt vanzelf uit de database.
 
 **Bewaar** schrijft alles naar de database, en de andere telefoons zien het
 meteen. Lukt dat niet, dan blijft het scherm open staan met de reden — er wordt
