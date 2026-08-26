@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>Ons Dagritme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sun: #FFB84D;
+    --sun-deep: #F2994A;
+    --sky: #8FD3F4;
+    --sky-deep: #5CB8E0;
+    --night: #232752;
+    --night-deep: #14163A;
+    --star: #FFD966;
+    --cream: #FFF9EF;
+    --ink: #2B2D42;
+    --ink-soft: #5B5D7A;
+    --done: #6FCF97;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Nunito', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 24px 12px;
+  }
+  .card{
+    width:100%;
+    max-width: 780px;
+    border-radius: 32px;
+    overflow:hidden;
+    box-shadow: 0 20px 50px rgba(35,39,82,0.15);
+    background: var(--cream);
+    transition: background 0.6s ease;
+  }
+  .card.night-mode{
+    background: var(--night-deep);
+  }
+  .topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding: 22px 28px 10px;
+  }
+  h1{
+    font-family:'Baloo 2', sans-serif;
+    font-size: clamp(22px, 4vw, 30px);
+    margin:0;
+    color: var(--ink);
+    transition: color 0.6s ease;
+  }
+  .night-mode h1{ color: var(--cream); }
+  .kids{
+    font-weight:700;
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin-top:2px;
+  }
+  .night-mode .kids{ color: #B7BAE0; }
+
+  .toggle{
+    display:flex;
+    background: rgba(0,0,0,0.06);
+    border-radius: 999px;
+    padding: 4px;
+    position:relative;
+    cursor:pointer;
+    user-select:none;
+    flex-shrink:0;
+  }
+  .night-mode .toggle{ background: rgba(255,255,255,0.08); }
+  .toggle button{
+    border:none;
+    background:transparent;
+    font-family:'Baloo 2', sans-serif;
+    font-weight:700;
+    font-size: 16px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    color: var(--ink-soft);
+    position:relative;
+    z-index:2;
+    transition: color 0.3s ease;
+  }
+  .night-mode .toggle button{ color:#9294c4; }
+  .toggle button.active{ color: #fff; }
+  .toggle .thumb{
+    position:absolute;
+    top:4px; bottom:4px; left:4px;
+    width: calc(50% - 4px);
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--sun), var(--sun-deep));
+    transition: transform 0.35s cubic-bezier(.4,1.6,.4,1), background 0.35s ease;
+    z-index:1;
+  }
+  .night-mode .thumb{
+    background: linear-gradient(135deg, #4A4E8C, var(--night));
+  }
+  .toggle.is-night .thumb{ transform: translateX(100%); }
+
+  .scene{
+    position:relative;
+    height: 90px;
+    overflow:hidden;
+  }
+  .scene .sky{
+    position:absolute; inset:0;
+    background: linear-gradient(180deg, var(--sky), var(--sky-deep));
+    transition: opacity 0.6s ease;
+  }
+  .night-mode .scene .sky{
+    background: linear-gradient(180deg, var(--night-deep), var(--night));
+  }
+  .sun-moon{
+    position:absolute;
+    top: 18px; left: 40px;
+    font-size: 38px;
+    transition: transform 0.6s ease, left 0.6s ease;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
+  }
+  .night-mode .sun-moon{ left: calc(100% - 78px); }
+  .stars{ position:absolute; inset:0; opacity:0; transition:opacity 0.6s ease; }
+  .night-mode .stars{ opacity:1; }
+  .stars span{
+    position:absolute; color:var(--star); font-size:12px;
+  }
+
+  .path{
+    padding: 20px 28px 32px;
+    display:flex;
+    flex-wrap:wrap;
+    gap: 14px;
+    justify-content:center;
+  }
+  .step{
+    width: 118px;
+    text-align:center;
+    cursor:pointer;
+    user-select:none;
+  }
+  .stone{
+    width: 76px; height: 76px;
+    margin: 0 auto 8px;
+    border-radius: 24px;
+    background: #fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size: 34px;
+    box-shadow: 0 6px 14px rgba(35,39,82,0.12);
+    border: 3px solid transparent;
+    position:relative;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+  .night-mode .stone{ background: #2E3163; }
+  .step:hover .stone{ transform: translateY(-3px); }
+  .step.done .stone{
+    border-color: var(--done);
+    background: #EAFBF1;
+  }
+  .night-mode .step.done .stone{ background: #1E4A38; }
+  .checkmark{
+    position:absolute;
+    top:-8px; right:-8px;
+    width:26px; height:26px;
+    border-radius:50%;
+    background: var(--done);
+    color:#fff;
+    font-size:15px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    opacity:0;
+    transform: scale(0.5);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    font-weight:800;
+  }
+  .step.done .checkmark{ opacity:1; transform: scale(1); }
+  .num{
+    font-family:'Baloo 2', sans-serif;
+    font-size:12px;
+    font-weight:700;
+    color: var(--ink-soft);
+    margin-bottom:2px;
+  }
+  .night-mode .num{ color:#8386bd; }
+  .label{
+    font-family:'Baloo 2', sans-serif;
+    font-size: 14px;
+    font-weight:600;
+    color: var(--ink);
+    line-height:1.15;
+  }
+  .night-mode .label{ color: var(--cream); }
+
+  .footer{
+    padding: 6px 28px 26px;
+    text-align:center;
+  }
+  .reset{
+    font-family:'Nunito', sans-serif;
+    font-weight:700;
+    font-size: 13px;
+    color: var(--ink-soft);
+    background: none;
+    border: none;
+    cursor:pointer;
+    text-decoration: underline;
+  }
+  .night-mode .reset{ color:#9294c4; }
+
+  @media (max-width:480px){
+    .step{ width: 92px; }
+    .stone{ width:64px; height:64px; font-size:28px; }
+  }
+</style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="topbar">
+      <div>
+        <h1>Ons dagritme</h1>
+        <div class="kids">voor Emma &amp; Mads</div>
+      </div>
+      <div class="toggle" id="toggle">
+        <div class="thumb"></div>
+        <button class="active" id="btnDag">☀️ Dag</button>
+        <button id="btnNacht">🌙 Avond</button>
+      </div>
+    </div>
+
+    <div class="scene">
+      <div class="sky"></div>
+      <div class="sun-moon" id="sunMoon">☀️</div>
+      <div class="stars" id="stars"></div>
+    </div>
+
+    <div class="path" id="path"></div>
+
+    <div class="footer">
+      <button class="reset" id="resetBtn">opnieuw beginnen</button>
+    </div>
+  </div>
+
+<script>
+const routines = {
+  dag: [
+    {icon:'🛏️', label:'Wakker worden'},
+    {icon:'👕', label:'Aankleden'},
+    {icon:'🪥', label:'Tanden poetsen'},
+    {icon:'💇', label:'Haren kammen'},
+    {icon:'🥣', label:'Ontbijt'},
+    {icon:'🎒', label:'Tas & jas'},
+    {icon:'🚪', label:'Naar school!'},
+  ],
+  nacht: [
+    {icon:'🍽️', label:'Avondeten'},
+    {icon:'🧸', label:'Even spelen'},
+    {icon:'🛁', label:'Bad & pyjama'},
+    {icon:'🪥', label:'Tanden poetsen'},
+    {icon:'📖', label:'Voorlezen'},
+    {icon:'🤗', label:'Knuffel'},
+    {icon:'🌙', label:'Licht uit'},
+  ]
+};
+
+let mode = 'dag';
+let done = { dag: new Set(), nacht: new Set() };
+
+const card = document.getElementById('card');
+const pathEl = document.getElementById('path');
+const toggle = document.getElementById('toggle');
+const btnDag = document.getElementById('btnDag');
+const btnNacht = document.getElementById('btnNacht');
+const sunMoon = document.getElementById('sunMoon');
+const starsEl = document.getElementById('stars');
+const resetBtn = document.getElementById('resetBtn');
+
+function renderStars(){
+  starsEl.innerHTML = '';
+  const positions = [
+    [10,20],[25,10],[70,15],[85,30],[45,8],[92,12],[15,35],[60,25]
+  ];
+  positions.forEach(([left,top])=>{
+    const s = document.createElement('span');
+    s.textContent = '✦';
+    s.style.left = left+'%';
+    s.style.top = top+'px';
+    starsEl.appendChild(s);
+  });
+}
+
+function render(){
+  pathEl.innerHTML = '';
+  routines[mode].forEach((step, i)=>{
+    const el = document.createElement('div');
+    el.className = 'step' + (done[mode].has(i) ? ' done' : '');
+    el.innerHTML = `
+      <div class="num">stap ${i+1}</div>
+      <div class="stone">
+        <span>${step.icon}</span>
+        <div class="checkmark">✓</div>
+      </div>
+      <div class="label">${step.label}</div>
+    `;
+    el.addEventListener('click', ()=>{
+      if(done[mode].has(i)) done[mode].delete(i);
+      else done[mode].add(i);
+      render();
+    });
+    pathEl.appendChild(el);
+  });
+}
+
+function setMode(newMode){
+  mode = newMode;
+  const isNight = mode === 'nacht';
+  card.classList.toggle('night-mode', isNight);
+  toggle.classList.toggle('is-night', isNight);
+  btnDag.classList.toggle('active', !isNight);
+  btnNacht.classList.toggle('active', isNight);
+  sunMoon.textContent = isNight ? '🌙' : '☀️';
+  render();
+}
+
+btnDag.addEventListener('click', ()=> setMode('dag'));
+btnNacht.addEventListener('click', ()=> setMode('nacht'));
+resetBtn.addEventListener('click', ()=>{
+  done[mode].clear();
+  render();
+});
+
+renderStars();
+render();
+</script>
+</body>
+</html>
