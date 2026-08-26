@@ -987,6 +987,47 @@ resetBtn.addEventListener('click', ()=>{
   wis(mode);
 });
 
+// iOS bewaart index.html hardnekkig zodra de pagina op het beginscherm staat;
+// een gewone herlaad krijgt dan opnieuw dezelfde bewaarde versie. Daarom draagt
+// elke uitgave zijn commit-nummer bij zich, staat datzelfde nummer in
+// versie.txt ernaast, en wordt er met een verse url herladen zodra die twee
+// niet meer gelijk zijn.
+const VERSIE = '__VERSIE__';
+
+function herlaad(){
+  const url = new URL(location.href);
+  url.searchParams.set('v', Date.now().toString(36));
+  location.replace(url);
+}
+
+async function nieuwerBeschikbaar(){
+  // Niet gestempeld: lokaal geopend, dan valt er niets te vergelijken.
+  if(VERSIE.startsWith('__')) return null;
+  try{
+    const res = await fetch('versie.txt', { cache: 'no-store' });
+    if(!res.ok) return null;
+    const daar = (await res.text()).trim();
+    return daar && daar !== VERSIE ? daar : null;
+  }catch(err){ return null; }
+}
+
+async function haalNieuwsteBinnen(){
+  const nieuw = await nieuwerBeschikbaar();
+  if(!nieuw) return;
+  // Eén poging per versie: mocht de verse url tóch het oude bestand geven,
+  // dan blijft de pagina gewoon werken in plaats van eindeloos te herladen.
+  try{
+    if(sessionStorage.getItem('geprobeerd') === nieuw) return;
+    sessionStorage.setItem('geprobeerd', nieuw);
+  }catch(err){ /* privémodus: dan maar zonder die rem */ }
+  herlaad();
+}
+
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible') haalNieuwsteBinnen();
+});
+haalNieuwsteBinnen();
+
 // In de app-weergave op iOS is er geen browserbalk en dus ook geen
 // trek-om-te-verversen. Daarom hier zelf: alleen als de pagina echt als app
 // draait, want in een gewoon tabblad doet de browser dit al.
@@ -1033,7 +1074,7 @@ if(alsApp){
     bezig = true;
     trekEl.classList.add('bezig');
     toon(DREMPEL);
-    location.reload();
+    herlaad();
   }, { passive: true });
 }
 

@@ -177,6 +177,14 @@ trek-om-te-verversen. Die beweging zit daarom zelf in de pagina: sleep vanaf
 bovenaan naar beneden tot het rondje verschijnt en laat los. In een gewoon
 tabblad wordt hij niet aangehaakt — daar doet de browser het al.
 
+Maar iOS bewaart `index.html` hardnekkig zodra de pagina op het beginscherm
+staat, en een gewone herlaad krijgt dan opnieuw dezelfde bewaarde versie. Daarom
+stempelt de workflow bij elke deploy het commit-nummer in de pagina én in
+`versie.txt` ernaast. De pagina haalt dat bestandje op bij het openen en telkens
+als je terugkomt in de app; verschilt het, dan herlaadt hij zichzelf met een
+verse url zodat de cache gepasseerd wordt. Je hoeft er dus meestal niets voor te
+doen — de app werkt zichzelf bij.
+
 Het icoon is `icon.svg`; de PNG's ernaast zijn daaruit gerenderd (32, 180, 192 en 512px,
 plus een ruimer opgezette `maskable`-versie voor Android, dat er een cirkel uit snijdt).
 Pas je `icon.svg` aan, render de PNG's dan opnieuw in dezelfde maten.

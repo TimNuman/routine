@@ -29,6 +29,14 @@ jobs:
         with:
           enablement: true
 
+      # Het commit-nummer komt zowel in de pagina als in een los bestandje te
+      # staan. De pagina vergelijkt die twee en weet zo of er iets nieuwers is.
+      - name: Versie stempelen
+        run: |
+          printf '%s' "$GITHUB_SHA" > versie.txt
+          sed -i "s/__VERSIE__/$GITHUB_SHA/" index.html
+          grep -q "$GITHUB_SHA" index.html
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
