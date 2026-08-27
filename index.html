@@ -534,7 +534,7 @@
     .rondjes{ --rond:42px; --gezicht:34px; --teken:20px; --vinkmaat:16px; }
   }
 
-  /* Breed: de titel, de schakelaar en het menu op één regel, en het dagoverzicht
+  /* Breed: de titel, de schakelaar en het menu op één regel, en het weekritme
      als kolom ernaast — even breed als het menu en er precies onder. */
   @media (min-width:1000px){
     :root{ --gootje: 26px; }
@@ -1457,7 +1457,7 @@ function tekenInstellingen(){
       () => openVel('dag')),
     instelrij('🌙', 'Avondritme', aantalStappen(config.nacht) + ' stappen',
       () => openVel('nacht')),
-    instelrij('📅', 'Dagoverzicht', 'school, sport en wat er verder is',
+    instelrij('📅', 'Weekritme', 'school, sport en wat er verder is',
       () => openVel('overzicht')),
     instelrij('⚙️', 'Naam en tijden', `${config.titel} · avond vanaf ${config.avondVanaf}:00`,
       () => openVel('algemeen')),
@@ -1632,7 +1632,7 @@ const VELTITELS = {
   kinderen: 'Kinderen',
   dag: 'Ochtendritme',
   nacht: 'Avondritme',
-  overzicht: 'Dagoverzicht',
+  overzicht: 'Weekritme',
   algemeen: 'Naam en tijden',
 };
 

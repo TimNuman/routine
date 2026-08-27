@@ -22,7 +22,7 @@ Onderin zweeft een menubalk met drie plekken:
 
 De kaartjes zijn overal even breed: drie op een rij op een telefoon, vijf zodra
 er ruimte is. Op een breed scherm (laptop, iPad in liggende stand) staan de
-titel, de schakelaar en het menu op één regel en schuift het dagoverzicht naar
+titel, de schakelaar en het menu op één regel en schuift het weekritme naar
 een kolom naast de stappen.
 
 ## Bewerken
@@ -33,14 +33,14 @@ Alles wat in de app staat, pas je in de app zelf aan, onder **Instellingen**:
   Namen wijzigen mag: de vinkjes blijven bij de juiste persoon, want die hangen
   aan een vast id.
 - **Ochtendritme** en **Avondritme** — groepen en stappen.
-- **Dagoverzicht** — één lijst met alles wat er in de week speelt: school, BSO,
+- **Weekritme** — één lijst met alles wat er in de week speelt: school, BSO,
   sport. Elk item kent zelf de dagen waarop het valt, dus school staat er één
   keer met *ma, di, do, vr* erachter in plaats van vier keer.
 - **Naam en tijden** — hoe de app heet en vanaf welk uur hij op de avond opent.
 
 Elke regel werkt hetzelfde: rood rondje weghalen, met de greep rechts verslepen,
 en de regel zelf aanraken opent een blad met alles wat erbij hoort — icoon, naam,
-op welke dagen, en wie meedoet (bij het dagoverzicht ook een tijd en of het pas
+op welke dagen, en wie meedoet (bij het weekritme ook een tijd en of het pas
 's avonds speelt). **Bewaar** zet het terug in de lijst; annuleren laat alles
 zoals het was. In de lijst zie je per regel al staan op welke dagen hij valt en
 voor wie hij is.
@@ -51,7 +51,7 @@ onderwerp — dagritme, eten, spelen, huis, dieren, mensen, dingen.
 Een taak is standaard voor iedereen. Wil je er één kind aan hangen, kies dan
 onder **Wie doet mee** wie het betreft; alleen die kinderen krijgen dan een
 rondje bij die stap, en hun teller telt hem mee. Hetzelfde geldt voor een regel
-in het dagoverzicht — daar verschijnt de naam als gekleurd label.
+in het weekritme — daar verschijnt de naam als gekleurd label.
 
 **Gereed** schrijft alles naar de database, en de andere telefoons zien het
 meteen. Lukt dat niet, dan blijft het scherm open staan met de reden — er wordt
