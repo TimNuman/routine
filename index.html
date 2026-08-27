@@ -2371,6 +2371,8 @@ async function zetVoorstellenIn(items){
   ruw.events = lijstVan(ruw.events);
   items.forEach(item => {
     if(item.soort === 'stap') return zetStapIn(ruw, item);
+    // Hetzelfde bericht twee keer plakken hoort niet twee regels op te leveren.
+    if(ruw.events.some(e => zelfde(e, item))) return;
     ruw.events.push({
       id: nieuwId(), icoon: item.icoon, tekst: item.tekst,
       tijd: item.tijd, datum: item.datum, wie: item.wie,
@@ -2379,10 +2381,19 @@ async function zetVoorstellenIn(items){
   return await bewaarInhoud(ruw, toonAssiMelding);
 }
 
+function zelfde(bestaand, item){
+  return tekst(bestaand.tekst).toLowerCase() === item.tekst.toLowerCase()
+    && tekst(bestaand.datum) === item.datum
+    && lijstVan(bestaand.wie).join('+') === item.wie.join('+');
+}
+
 // Een eenmalige stap hangt aan een groep in het ritme. Is de voorgestelde groep
 // er niet, dan gaat hij bij de laatste — daar staat het weggaan meestal.
 function zetStapIn(ruw, item){
   const groepen = ruw[item.ritme] = maakGroepen(ruw[item.ritme]);
+  const bestaat = groepen.some(g => lijstVan(g.stappen)
+    .some(stap => zelfde({ tekst: stap.label, datum: stap.datum, wie: stap.wie }, item)));
+  if(bestaat) return;
   const naam = item.groep.toLowerCase();
   let doel = naam && groepen.find(g => g.groep.toLowerCase() === naam)
           || naam && groepen.find(g => g.groep.toLowerCase().includes(naam))
@@ -2426,6 +2437,7 @@ const NEP_ICONEN = [
   [/dokter|tandarts|prik|ggd|luizen/, '🩺'],
   [/excursie|museum|uitje|schoolreis|bus/, '🚌'],
   [/voorstelling|optreden|musical/, '🎭'],
+  [/rugzak|tas|spullen|lunch|drinken/, '🎒'],
   [/school|juf|meester|groep|ouderavond|rapport/, '🏫'],
 ];
 
@@ -2455,14 +2467,45 @@ function nepStempel(jaar, maand, dag){
   return `${jaar}-${String(maand + 1).padStart(2, '0')}-${String(dag).padStart(2, '0')}`;
 }
 
-// '4 september' of '4 september 2026'; zonder jaartal is het de eerstvolgende.
-function nepDatum(zin, nu){
-  const m = /\b(\d{1,2})\s*(?:e|de|ste)?\s+(januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)\b(?:\s+(\d{4}))?/i.exec(zin);
-  if(!m) return '';
-  const maand = MAANDEN.indexOf(m[2].toLowerCase());
-  const jaar = m[3] ? Number(m[3]) : Number(nu.slice(0, 4));
-  const uit = nepStempel(jaar, maand, Number(m[1]));
-  return (!m[3] && uit < nu) ? nepStempel(jaar + 1, maand, Number(m[1])) : uit;
+// '4 september' of '4 september 2026', en ook '4 of vrijdag 11 september' —
+// dan noemt één zin er twee. Zonder jaartal is het de eerstvolgende keer.
+function nepDatums(zin, nu){
+  const uit = [];
+  const maanden = new RegExp(`\\b(${MAANDEN.join('|')})\\b(?:\\s+(\\d{4}))?`, 'gi');
+  let m, vanaf = 0;
+  while((m = maanden.exec(zin))){
+    const maand = MAANDEN.indexOf(m[1].toLowerCase());
+    const jaar = m[2] ? Number(m[2]) : Number(nu.slice(0, 4));
+    const dagen = nepDagnummers(zin.slice(vanaf, m.index));
+    vanaf = maanden.lastIndex;
+    dagen.forEach(dag => {
+      let stempel = nepStempel(jaar, maand, dag);
+      if(!m[2] && stempel < nu) stempel = nepStempel(jaar + 1, maand, dag);
+      if(!uit.includes(stempel)) uit.push(stempel);
+    });
+  }
+  return uit;
+}
+
+// De dagnummers die vlak voor een maandnaam staan. Weekdagen en 'of' en 'en'
+// mogen ertussen; bij het eerste andere woord houdt de rij op.
+function nepDagnummers(stuk){
+  const uit = [];
+  const woorden = stuk.toLowerCase().trim().split(/\s+/);
+  for(let i = woorden.length - 1; i >= 0; i--){
+    if(/\d\s*-\s*\d/.test(woorden[i])) break;        // '1-2' is een groep, geen dag
+    const woord = woorden[i].replace(/[^a-z0-9]/g, '');
+    const getal = /^(\d{1,2})(?:e|de|ste)?$/.exec(woord);
+    if(getal){
+      const dag = Number(getal[1]);
+      if(dag < 1 || dag > 31) break;
+      uit.unshift(dag);
+      continue;
+    }
+    if(!woord || woord === 'of' || woord === 'en' || DAGNAMEN.includes(woord)) continue;
+    break;
+  }
+  return uit;
 }
 
 // 'groep 1-2 B en D' levert 1-2B en 1-2D op.
@@ -2514,8 +2557,10 @@ function nepMeeZin(zin){
   return /\bmee\b/i.test(zin) && nepDingen(zin).length > 0;
 }
 
-function nepMeeNemen(zin){
-  const gevonden = nepDingen(zin);
+// 'Deze mag 's morgens worden meegenomen' zegt niet wát; dan kijken we naar de
+// rest van het bericht, want daar staat de fiets of de step wel.
+function nepMeeNemen(zin, bericht){
+  const gevonden = nepDingen(zin).length ? nepDingen(zin) : nepDingen(bericht);
   const uniek = gevonden.filter((w, i) => gevonden.indexOf(w) === i);
   if(!uniek.length) return 'Spullen mee';
   const woorden = uniek.join(' of ');
@@ -2526,12 +2571,17 @@ function nepAssistent(lading){
   const nu = tekst(lading.vandaag, vandaag());
   const bericht = tekst(lading.tekst);
   const regels = nepZinnen(bericht)
-    .map(zin => ({ zin, datum: nepDatum(zin, nu), groepen: nepGroepen(zin) }));
-  const metDatum = regels.filter(r => r.datum);
-  if(!metDatum.length) return { type:'niets' };
+    .map(zin => ({ zin, datums: nepDatums(zin, nu), groepen: nepGroepen(zin) }));
+
+  let bruikbaar = regels.filter(r => r.datums.length);
+  if(!bruikbaar.length) return { type:'niets' };
+  // 'Op vrijdag 4 of vrijdag 11 september' zegt nog niet wie wanneer moet. Staan
+  // er zinnen bij die één dag noemen, dan is dit de inleiding en telt hij niet.
+  const enkel = bruikbaar.filter(r => r.datums.length === 1);
+  if(enkel.length) bruikbaar = enkel;
 
   const alleGroepen = [];
-  metDatum.forEach(r => r.groepen.forEach(g => { if(!alleGroepen.includes(g)) alleGroepen.push(g); }));
+  bruikbaar.forEach(r => r.groepen.forEach(g => { if(!alleGroepen.includes(g)) alleGroepen.push(g); }));
   const kinderen = lijstVan(lading.kinderen);
   const kent = kinderen.some(kind => nepWaarden(kind).some(w => alleGroepen.includes(w)));
 
@@ -2545,25 +2595,39 @@ function nepAssistent(lading){
     };
   }
 
+  // Zegt een deel van de zinnen bij welke groep een dag hoort, dan zijn de
+  // zinnen zonder groep de inleiding — die gaan er ook af.
+  const metGroep = bruikbaar.filter(r => r.groepen.length);
+  if(metGroep.length) bruikbaar = metGroep;
+
   const naam = nepNaam(bericht);
   const icoon = nepIcoon(bericht, '📅');
   const items = [];
-  metDatum.forEach(regel => {
+  const gezien = new Set();
+  // Twee zinnen over dezelfde dag leveren één voorstel op, geen twee.
+  const erbij = item => {
+    const sleutel = [item.soort, item.tekst, item.datum, item.wie.join('+')].join('|');
+    if(gezien.has(sleutel)) return;
+    gezien.add(sleutel);
+    items.push(item);
+  };
+
+  bruikbaar.forEach(regel => {
     const wie = regel.groepen.length
       ? kinderen.filter(kind => nepWaarden(kind).some(w => regel.groepen.includes(w))).map(k => k.id)
       : [];
     // Weten we de groepen wél, en zit er niemand van ons in, dan gaat die dag
     // niet over dit gezin.
     if(regel.groepen.length && !wie.length && kent) return;
-    items.push({ soort:'bijzonderheid', icoon, tekst: naam, datum: regel.datum, wie, bron: regel.zin });
+    erbij({ soort:'bijzonderheid', icoon, tekst: naam, datum: regel.datums[0], wie, bron: regel.zin });
   });
 
   const mee = regels.find(r => nepMeeZin(r.zin));
   if(mee){
-    const label = nepMeeNemen(mee.zin);
-    items.slice().forEach(v => items.push({
+    const label = nepMeeNemen(mee.zin, bericht);
+    items.slice().forEach(v => erbij({
       soort:'stap', ritme:'dag', groep:'Weggaan',
-      icoon: nepIcoon(mee.zin, '🎒'), tekst: label,
+      icoon: nepIcoon(label, nepIcoon(mee.zin, '🎒')), tekst: label,
       datum: v.datum, wie: v.wie, bron: mee.zin,
     }));
   }

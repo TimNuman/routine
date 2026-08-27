@@ -79,7 +79,9 @@ School, voetbal, judo en de bso sturen mail. In plaats van die over te tikken
 plak je hem op **Deze week** onder *Uit een bericht overnemen*. Wat eruit komt is
 een lijstje voorstellen — een bijzonderheid op een datum, of een eenmalige stap
 in het ochtendritme (*fiets mee*) — met de zin uit het bericht eronder waar het
-vandaan komt. Tik weg wat je niet wilt en zet de rest in één keer in de app.
+vandaan komt. Tik weg wat je niet wilt en zet de rest in één keer in de app. Wat er al staat
+komt er niet nog eens bij: dezelfde mail twee keer plakken levert niets dubbels
+op.
 
 Weet de app iets niet, dan vraagt hij het eerst. Een schoolmail die het over
 groep 1-2 A tot en met D heeft is pas te plaatsen als bekend is wie waarin zit;
