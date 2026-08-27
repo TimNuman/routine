@@ -139,13 +139,21 @@
   .voortgang[hidden]{ display:none; }
   .vperson{ flex:1; display:flex; align-items:center; gap:11px; padding:13px 14px; min-width:0; }
   .vperson + .vperson{ border-left:1px solid var(--scheiding); }
+  /* Vanaf drie kinderen naast elkaar wordt het te smal: dan twee per regel. */
+  .voortgang.velen{ display:grid; grid-template-columns:1fr 1fr; }
+  .voortgang.velen .vperson{ border-left:none; }
+  .voortgang.velen .vperson:nth-child(even){ border-left:1px solid var(--scheiding); }
+  .voortgang.velen .vperson:nth-child(n+3){ border-top:1px solid var(--scheiding); }
   .vbol{
     width:46px; height:46px; border-radius:50%; flex:none;
     display:flex; align-items:center; justify-content:center; font-size:26px; line-height:1;
   }
   .vtekst{ flex:1; min-width:0; }
   .vregel{ display:flex; align-items:baseline; justify-content:space-between; gap:6px; }
-  .vnaam{ font-family: var(--baloo); font-weight:800; font-size:16px; }
+  .vnaam{
+    font-family: var(--baloo); font-weight:800; font-size:16px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
   .vtelling{ font-weight:800; font-size:12.5px; color: var(--inkt-zacht); }
   .vbalk{ height:7px; border-radius:99px; background: rgba(43,45,66,.10); overflow:hidden; margin-top:6px; }
   body.nacht .vbalk{ background: rgba(255,255,255,.14); }
@@ -206,8 +214,12 @@
     flex:1; min-width:0;
     font-family: var(--baloo); font-weight:700; font-size:16.5px; line-height:1.2;
   }
+  /* Meer kinderen dan er naast elkaar passen zakken naar een volgende regel;
+     een oneven laatste regel staat gecentreerd. */
   .rondjes{
-    display:flex; gap:2px; flex:none; margin-top:auto;
+    display:flex; flex-wrap:wrap; justify-content:center;
+    column-gap:2px; row-gap:2px;
+    flex:none; align-self:stretch; margin-top:auto;
     --rond:40px; --gezicht:34px; --teken:21px;
   }
   .rondje{
@@ -1270,6 +1282,7 @@ function tekenVoortgang(groepen){
   const stappen = groepen.flatMap(g => g.stappen);
   if(!stappen.length || !config.mensen.length){ voortgangEl.hidden = true; return; }
   voortgangEl.hidden = false;
+  voortgangEl.classList.toggle('velen', config.mensen.length > 2);
 
   config.mensen.forEach(persoon => {
     const van = stappen.filter(s => wieDoetMee(s).some(p => p.id === persoon.id));
