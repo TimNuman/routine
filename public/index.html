@@ -425,6 +425,11 @@
   body.nacht .rijwie span{ box-shadow: 0 0 0 2px rgba(24,26,58,.9); }
   .rijwie span:first-child{ margin-left:0; }
   .rijkleur{ width:16px; height:16px; border-radius:50%; flex:none; }
+  /* Staat er veel naast de naam — een datum, een groep, wie het betreft — dan
+     wint de naam en zakt de rest naar een tweede regel, uitgelijnd op de tekst. */
+  .bewerkrij.tweeregels .rijknopvlak{ flex-wrap:wrap; align-content:center; row-gap:3px; }
+  .bewerkrij.tweeregels .rijlabel{ flex:1 1 100px; }
+  .bewerkrij.tweeregels .rijmeta{ flex:1 1 100%; padding-left:52px; }
   .bewerkrij + .bewerkrij{ border-top:1px solid var(--scheiding); }
   .bewerkrij.sleept{ position:relative; z-index:3; box-shadow: 0 12px 26px rgba(0,0,0,.16); background: rgba(255,255,255,.7); }
   body.nacht .bewerkrij.sleept{ background: rgba(60,62,110,.9); }
@@ -1632,6 +1637,8 @@ function tekenInstellingen(){
       () => openVel('nacht')),
     instelrij('📅', 'Weekritme', 'school, sport en wat er verder is',
       () => openVel('overzicht')),
+    instelrij('📌', 'Eenmalig', eenmaligTekst(),
+      () => openVel('eenmalig')),
     instelrij('⚙️', 'Naam en tijden', `${config.titel} · avond vanaf ${config.avondVanaf}:00`,
       () => openVel('algemeen')),
   );
@@ -1806,6 +1813,7 @@ const VELTITELS = {
   dag: 'Ochtendritme',
   nacht: 'Avondritme',
   overzicht: 'Weekritme',
+  eenmalig: 'Eenmalig',
   algemeen: 'Naam en tijden',
 };
 
@@ -2656,7 +2664,7 @@ function wieVoorRij(wie){
 }
 
 function maakBewerkRij(opties){
-  const rij = el('div', 'bewerkrij');
+  const rij = el('div', 'bewerkrij' + (opties.tweeregels ? ' tweeregels' : ''));
   rij.appendChild(minKnop(opties.wegTitel, opties.opWeg));
 
   const vlak = knop('rijknopvlak');
@@ -2668,6 +2676,7 @@ function maakBewerkRij(opties){
   if(opties.tijd) meta.appendChild(el('div', 'rijdagen', opties.tijd));
   const dagen = dagenTekst(opties.dagen);
   if(dagen) meta.appendChild(el('div', 'rijdagen', dagen));
+  if(opties.extra) meta.appendChild(el('div', 'rijdagen', opties.extra));
   const wie = wieVoorRij(opties.wie);
   if(wie.length){
     const vak = el('div', 'rijwie');
@@ -2686,7 +2695,10 @@ function maakBewerkRij(opties){
   if(meta.childNodes.length) vlak.appendChild(meta);
   vlak.addEventListener('click', opties.opOpenen);
 
-  rij.append(vlak, greepKnop());
+  // Zonder greep in een lijst die je niet zelf ordent; anders belooft hij iets
+  // wat er niet gebeurt.
+  rij.appendChild(vlak);
+  if(!opties.geenGreep) rij.appendChild(greepKnop());
   return rij;
 }
 
@@ -2864,6 +2876,125 @@ function velOverzicht(){
   return stuk;
 }
 
+// Alles wat maar één dag geldt, ongeacht waar het staat: een bijzonderheid bij
+// Deze week, en een stap die één ochtend meedoet. Op datum bij elkaar, want zo
+// kijk je ernaar — niet per lijst waar het toevallig in bewaard wordt.
+function eenmaligeDingen(bron){
+  const uit = lijstVan(bron.events)
+    .filter(item => isDatum(item.datum))
+    .map(item => ({ soort:'event', datum:item.datum, item }));
+  ['dag','nacht'].forEach(ritme => lijstVan(bron[ritme]).forEach(groep =>
+    lijstVan(groep.stappen).forEach(stap => {
+      if(isDatum(stap.datum)) uit.push({ soort:'stap', datum:stap.datum, ritme, groep, stap });
+    })));
+  return uit.sort((a, b) => a.datum.localeCompare(b.datum)
+    || tekst(a.item && a.item.tijd).localeCompare(tekst(b.item && b.item.tijd)));
+}
+
+function eenmaligTekst(){
+  const aantal = eenmaligeDingen(config).length;
+  if(!aantal) return 'niets op een datum';
+  return aantal === 1 ? 'één ding op een datum' : aantal + ' dingen op een datum';
+}
+
+function eventGegevens(item){
+  return { id:item.id, icoon:item.icoon, tekst:item.tekst, tijd:item.tijd,
+           datum:item.datum, wie:lijstVan(item.wie) };
+}
+
+// Terug in het item schrijven; false houdt het blad open met de reden.
+function neemEventOver(item, g){
+  if(!tekst(g.tekst) || !isDatum(g.datum)){
+    toonFormMelding('Vul een naam en een datum in.');
+    return false;
+  }
+  Object.assign(item, {
+    icoon: tekst(g.icoon, '🎉'), tekst: tekst(g.tekst), tijd: tekst(g.tijd),
+    datum: tekst(g.datum), wie: lijstVan(g.wie),
+  });
+  tekenVel();
+}
+
+function eenmaligeRij(ding){
+  if(ding.soort === 'event'){
+    const item = ding.item;
+    return maakBewerkRij({
+      icoon: item.icoon,
+      label: item.tekst,
+      leeg: 'Naamloos',
+      tijd: kortDatum(item.datum),
+      extra: tekst(item.tijd),
+      wie: item.wie,
+      tweeregels: true,
+      geenGreep: true,
+      wegTitel: 'Verwijderen',
+      opWeg: () => {
+        concept.events = lijstVan(concept.events).filter(x => x !== item);
+        tekenVel();
+      },
+      opOpenen: () => openFormulier(item.tekst || 'Iets eenmaligs', eventGegevens(item),
+        g => eventFormulier(g, null), g => neemEventOver(item, g)),
+    });
+  }
+  const stap = ding.stap;
+  return maakBewerkRij({
+    icoon: stap.icoon,
+    label: stap.label,
+    leeg: 'Naamloze stap',
+    tijd: kortDatum(stap.datum),
+    extra: (ding.ritme === 'dag' ? '☀️ ' : '🌙 ') + tekst(ding.groep.groep, 'ritme'),
+    wie: stap.wie,
+    tweeregels: true,
+    geenGreep: true,
+    wegTitel: 'Stap verwijderen',
+    opOpenen: () => openFormulier('Stap', stap, taakFormulier, nieuw => {
+      Object.assign(stap, {
+        icoon: tekst(nieuw.icoon, '⭐'),
+        label: nieuw.label,
+        dagen: dagenVan(nieuw.dagen),
+        datum: isDatum(nieuw.datum) ? tekst(nieuw.datum) : '',
+        wie: lijstVan(nieuw.wie),
+      });
+      tekenVel();
+    }),
+    opWeg: () => {
+      ding.groep.stappen = lijstVan(ding.groep.stappen).filter(x => x !== stap);
+      tekenVel();
+    },
+  });
+}
+
+function velEenmalig(){
+  const stuk = document.createDocumentFragment();
+  const dingen = eenmaligeDingen(concept);
+
+  if(dingen.length){
+    const kaart = el('div', 'bewerkkaart glas');
+    dingen.forEach(ding => kaart.appendChild(eenmaligeRij(ding)));
+    stuk.appendChild(kaart);
+  }else{
+    stuk.appendChild(el('div', 'leegkaart glas', 'Er staat niets op een datum.'));
+  }
+
+  const erbij = knop('kaartknop glas');
+  erbij.append(el('span', 'plusknop', '+'), document.createTextNode('Iets eenmaligs toevoegen'));
+  erbij.addEventListener('click', () => {
+    const nieuw = { id: nieuwId(), icoon:'🎉', tekst:'', tijd:'', datum: vandaag(), wie:[] };
+    openFormulier('Iets eenmaligs', nieuw, g => eventFormulier(g, null), g => {
+      if(neemEventOver(nieuw, g) === false) return false;
+      concept.events = lijstVan(concept.events).concat([nieuw]);
+      tekenVel();
+    });
+  });
+  stuk.appendChild(erbij);
+
+  stuk.appendChild(el('div', 'notitie',
+    'Alles wat maar één dag geldt staat hier bij elkaar: een uitje of een ouderavond, '
+    + 'en stappen die één ochtend meedoen — die laatste met ☀️ of 🌙 en de groep waar ze in staan. '
+    + 'Wat geweest is verdwijnt vanzelf bij het eerstvolgende bewaren.'));
+  return stuk;
+}
+
 function schoonItem(ruw){
   return {
     icoon: tekst(ruw.icoon, '📅'),
@@ -2901,6 +3032,7 @@ function tekenVel(){
   velinhoudEl.innerHTML = '';
   if(velSoort === 'kinderen') velinhoudEl.appendChild(velKinderen());
   else if(velSoort === 'overzicht') velinhoudEl.appendChild(velOverzicht());
+  else if(velSoort === 'eenmalig') velinhoudEl.appendChild(velEenmalig());
   else if(velSoort === 'algemeen') velinhoudEl.appendChild(velAlgemeen());
   else velinhoudEl.appendChild(velRitme(velSoort));
   velEl.scrollTop = hoogte;

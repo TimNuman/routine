@@ -44,6 +44,11 @@ Alles wat in de app staat, pas je in de app zelf aan, onder **Instellingen**:
 - **Weekritme** — één lijst met alles wat er in de week speelt: school, BSO,
   sport. Elk item kent zelf de dagen waarop het valt, dus school staat er één
   keer met *ma, di, do, vr* erachter in plaats van vier keer.
+- **Eenmalig** — alles wat maar één dag geldt, op datum bij elkaar: de
+  bijzonderheden die je bij *Deze week* toevoegt, én stappen die één ochtend
+  meedoen (*fiets mee*). Die staan verspreid over het ritme, maar hier zie je ze
+  in één lijst — met ☀️ of 🌙 en de groep erachter, zodat duidelijk is waar ze
+  vandaan komen. Wat geweest is verdwijnt vanzelf bij het eerstvolgende bewaren.
 - **Naam en tijden** — hoe de app heet en vanaf welk uur hij op de avond opent.
 
 Elke regel werkt hetzelfde: rood rondje weghalen, met de greep rechts verslepen,
