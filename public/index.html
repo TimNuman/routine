@@ -461,6 +461,10 @@
   input.veld.tijd{ flex:0 0 126px; padding:9px 6px; font-size:13px; text-align:center; font-family: var(--nunito); font-weight:800; }
   input.veld.getal{ flex:0 0 84px; text-align:center; }
   .tijdstreep{ flex:none; font-weight:800; color: var(--inkt-zacht); }
+  .kaartnoot{
+    font-weight:700; font-size:12.5px; color: var(--inkt-zacht);
+    padding:9px 14px; border-top:1px solid var(--scheiding); line-height:1.35;
+  }
   .toevoegrij{
     display:flex; align-items:center; gap:10px; padding:11px 12px; width:100%;
     background:none; border:none; border-top:1px solid var(--scheiding); cursor:pointer;
@@ -2000,23 +2004,145 @@ function taakFormulier(gegevens){
     veld(gegevens.label, 'Wat moet er gebeuren', '', v => { gegevens.label = v; }),
   );
   stuk.append(formKop('Icoon en naam'), regel);
-
-  // Een stap hoort bij vaste weekdagen óf bij één datum — allebei tegelijk zou
-  // maar de vraag oproepen welke van de twee wint.
-  if(tekst(gegevens.datum)){
-    const eenmalig = el('div', 'formregel');
-    const datum = veld(gegevens.datum, '', 'datum', v => { gegevens.datum = v; });
-    datum.type = 'date';
-    eenmalig.append(datum, chip('elke week', false, () => { gegevens.datum = ''; tekenFormulier(); }));
-    stuk.append(formKop('Alleen op'), eenmalig);
-    stuk.appendChild(el('div', 'notitie', 'Deze stap staat er alleen op die ene dag.'));
-  }else{
-    stuk.append(formKop('Op welke dagen'), dagenKiezer(gegevens));
-    stuk.appendChild(el('div', 'notitie', gegevens.dagen.length
-      ? 'Alleen op deze dagen.' : 'Geen dag gekozen betekent: elke dag.'));
-  }
+  stuk.append(formKop('Op welke dagen'), dagenKiezer(gegevens));
+  stuk.appendChild(el('div', 'notitie', gegevens.dagen.length
+    ? 'Alleen op deze dagen.' : 'Geen dag gekozen betekent: elke dag.'));
   stuk.append(formKop('Wie doet mee'), wieKiezer(gegevens));
   return stuk;
+}
+
+// In het bewerkscherm is de bron het concept; op de weekpagina de inhoud zelf.
+function bewerkBron(){ return concept || config; }
+
+// Eén formulier voor alles wat maar één dag geldt. Zet je 'afvinken' aan, dan
+// wordt het een stap in het ritme en kies je waar hij komt te staan; anders
+// blijft het een regel in de agenda.
+function eenmaligFormulier(gegevens, opWeg){
+  const stuk = document.createDocumentFragment();
+  const regel = el('div', 'formregel');
+  regel.append(
+    emojiKnop(gegevens.icoon, 'Icoon', v => { gegevens.icoon = v; tekenFormulier(); }),
+    veld(gegevens.tekst, 'Wat is er', '', v => { gegevens.tekst = v; }),
+  );
+  stuk.append(formKop('Icoon en naam'), regel);
+
+  const wanneer = el('div', 'formregel');
+  const datum = veld(gegevens.datum, '', 'datum', v => { gegevens.datum = v; });
+  datum.type = 'date';
+  wanneer.appendChild(datum);
+  stuk.append(formKop('Op welke dag'), wanneer);
+
+  const knopje = el('div', 'chips glas');
+  knopje.appendChild(chip('✅ afvinken die dag', Boolean(gegevens.actie), () => {
+    gegevens.actie = !gegevens.actie;
+    tekenFormulier();
+  }));
+  stuk.append(formKop('Wat voor iets'), knopje);
+
+  if(gegevens.actie){
+    const bron = bewerkBron();
+    const welk = el('div', 'chips glas');
+    [['dag','☀️ Ochtend'], ['nacht','🌙 Avond']].forEach(([waarde, label]) => {
+      welk.appendChild(chip(label, gegevens.ritme === waarde, () => {
+        gegevens.ritme = waarde;
+        gegevens.groep = eersteGroepnaam(bron, waarde);
+        tekenFormulier();
+      }));
+    });
+    stuk.append(formKop('In welk ritme'), welk);
+
+    const groepen = lijstVan(bron[gegevens.ritme]).filter(g => tekst(g.groep));
+    const kiezer = el('div', 'chips glas');
+    groepen.forEach(g => kiezer.appendChild(chip(g.groep, gegevens.groep === g.groep, () => {
+      gegevens.groep = g.groep;
+      tekenFormulier();
+    })));
+    stuk.append(formKop('Bij welk onderdeel'), kiezer);
+    stuk.appendChild(el('div', 'notitie',
+      'Komt die dag als kaartje tussen de stappen te staan, met een rondje per kind om af te vinken. '
+      + 'Een stap heeft geen tijd — die hoort bij het onderdeel waar hij in staat.'));
+  }else{
+    stuk.append(formKop('Hoe laat'), tijdregel(gegevens, null));
+    stuk.appendChild(el('div', 'notitie',
+      'Komt bij Vandaag en Deze week te staan. Laat je de tijd leeg, dan staat het bij Overdag.'));
+  }
+
+  stuk.append(formKop('Voor wie'), wieKiezer(gegevens));
+
+  if(opWeg){
+    const weg = knop('verwijderknop', 'Verwijderen');
+    weg.addEventListener('click', opWeg);
+    stuk.appendChild(weg);
+  }
+  return stuk;
+}
+
+function eersteGroepnaam(bron, ritme){
+  const groepen = lijstVan(bron[ritme]).filter(g => tekst(g.groep));
+  return groepen.length ? tekst(groepen[groepen.length - 1].groep) : '';
+}
+
+// Van wat er staat naar wat het formulier verwacht, en terug.
+function eenmaligGegevens(ding){
+  if(!ding){
+    return { icoon:'🎉', tekst:'', datum: vandaag(), tijd:'', tot:'', wie:[],
+             actie:false, ritme:'dag', groep: eersteGroepnaam(bewerkBron(), 'dag') };
+  }
+  if(ding.soort === 'event'){
+    const i = ding.item;
+    return { icoon:i.icoon, tekst:i.tekst, datum:i.datum, tijd:i.tijd, tot:i.tot,
+             wie:lijstVan(i.wie), actie:false, ritme:'dag',
+             groep: eersteGroepnaam(bewerkBron(), 'dag') };
+  }
+  const s = ding.stap;
+  return { icoon:s.icoon, tekst:s.label, datum:s.datum, tijd:'', tot:'',
+           wie:lijstVan(s.wie), actie:true, ritme:ding.ritme, groep: tekst(ding.groep.groep) };
+}
+
+function haalEenmaligWeg(bron, oud){
+  if(!oud) return;
+  if(oud.soort === 'event'){
+    bron.events = lijstVan(bron.events).filter(e => e.id !== oud.item.id);
+    return;
+  }
+  lijstVan(bron[oud.ritme]).forEach(groep => {
+    groep.stappen = lijstVan(groep.stappen).filter(x => x !== oud.stap);
+  });
+}
+
+function zetEenmaligNeer(bron, g, id){
+  if(!g.actie){
+    bron.events = lijstVan(bron.events).concat([{
+      id: id || nieuwId(),
+      icoon: tekst(g.icoon, '🎉'), tekst: tekst(g.tekst),
+      tijd: tekst(g.tijd), tot: tekst(g.tot),
+      datum: tekst(g.datum), wie: lijstVan(g.wie),
+    }]);
+    return;
+  }
+  const groepen = bron[g.ritme] = lijstVan(bron[g.ritme]);
+  let doel = groepen.find(x => tekst(x.groep) === tekst(g.groep)) || groepen[groepen.length - 1];
+  if(!doel){
+    doel = { groep: tekst(g.groep, 'Erbij'), tijd:'', stappen:[] };
+    groepen.push(doel);
+  }
+  doel.stappen = lijstVan(doel.stappen).concat([{
+    icoon: tekst(g.icoon, '⭐'), label: tekst(g.tekst), dagen: [],
+    datum: tekst(g.datum), wie: lijstVan(g.wie),
+  }]);
+}
+
+// Eerst weghalen waar het stond, dan neerzetten waar het hoort — zo is een
+// agendaregel die een stap wordt gewoon één beweging.
+function verplaatsEenmalig(bron, oud, g){
+  if(!tekst(g.tekst) || !isDatum(g.datum)){
+    toonFormMelding('Vul een naam en een datum in.');
+    return false;
+  }
+  const id = oud && oud.soort === 'event' ? oud.item.id : nieuwId();
+  haalEenmaligWeg(bron, oud);
+  zetEenmaligNeer(bron, g, id);
+  return true;
 }
 
 // De tijd bepaalt of iets bij Overdag of bij Vanavond komt te staan; dat is
@@ -2067,63 +2193,20 @@ function itemFormulier(gegevens){
   return stuk;
 }
 
-function eventFormulier(gegevens, opWeg){
-  const stuk = document.createDocumentFragment();
-  const regel = el('div', 'formregel');
-  regel.append(
-    emojiKnop(gegevens.icoon, 'Icoon', v => { gegevens.icoon = v; tekenFormulier(); }),
-    veld(gegevens.tekst, 'Wat is er', '', v => { gegevens.tekst = v; }),
-  );
-  stuk.append(formKop('Icoon en naam'), regel);
 
-  const wanneer = el('div', 'formregel');
-  const datum = veld(gegevens.datum, '', 'datum', v => { gegevens.datum = v; });
-  datum.type = 'date';
-  wanneer.appendChild(datum);
-  stuk.append(formKop('Wanneer'), wanneer, tijdregel(gegevens, null));
-
-  stuk.append(formKop('Voor wie'), wieKiezer(gegevens));
-
-  if(opWeg){
-    const weg = knop('verwijderknop', 'Verwijderen');
-    weg.addEventListener('click', opWeg);
-    stuk.appendChild(weg);
-  }
-  return stuk;
-}
-
-// Een bijzonderheid hoort bij één dag en wordt vanaf de weekpagina bewerkt, dus
-// buiten het bewerkscherm om: hier gaat de hele inhoud in één keer weg.
+// Een eenmalig ding wordt vanaf de weekpagina bewerkt, dus buiten het
+// bewerkscherm om: hier gaat de hele inhoud in één keer weg.
 function bewerkEvent(item){
-  const gegevens = item
-    ? { id:item.id, icoon:item.icoon, tekst:item.tekst, tijd:item.tijd, tot:item.tot,
-        datum:item.datum, wie:lijstVan(item.wie) }
-    : { id:'', icoon:'🎉', tekst:'', tijd:'', tot:'', datum: datumVan(overzichtDatum()), wie:[] };
-  openFormulier(item ? (item.tekst || 'Iets bijzonders') : 'Iets bijzonders', gegevens,
-    g => eventFormulier(g, item ? () => verwijderEvent(item.id) : null),
-    g => bewaarEvent(g));
-}
-
-async function bewaarEvent(g){
-  if(!tekst(g.tekst) || !/^\d{4}-\d{2}-\d{2}$/.test(tekst(g.datum))){
-    toonFormMelding('Vul een naam en een datum in.');
-    return false;
-  }
-  const ruw = alsRuweConfig();
-  const rij = {
-    id: tekst(g.id) || nieuwId(),
-    icoon: tekst(g.icoon, '🎉'),
-    tekst: tekst(g.tekst),
-    tijd: tekst(g.tijd),
-    tot: tekst(g.tot),
-    datum: tekst(g.datum),
-    wie: lijstVan(g.wie),
-  };
-  const lijst = lijstVan(ruw.events);
-  const i = lijst.findIndex(e => e.id === rij.id);
-  if(i >= 0) lijst[i] = rij; else lijst.push(rij);
-  ruw.events = lijst;
-  return await bewaarInhoud(ruw);
+  const ding = item ? { soort:'event', datum:item.datum, item } : null;
+  const gegevens = item ? eenmaligGegevens(ding)
+    : { ...eenmaligGegevens(null), datum: datumVan(overzichtDatum()) };
+  openFormulier(item ? (item.tekst || 'Iets eenmaligs') : 'Iets eenmaligs', gegevens,
+    g => eenmaligFormulier(g, item ? () => verwijderEvent(item.id) : null),
+    async g => {
+      const ruw = alsRuweConfig();
+      if(verplaatsEenmalig(ruw, ding, g) === false) return false;
+      return await bewaarInhoud(ruw);
+    });
 }
 
 async function verwijderEvent(id){
@@ -2793,8 +2876,12 @@ function velRitme(soort){
     );
     kaart.appendChild(regel);
 
+    // Een stap met een datum hoort maar op één plek thuis: bij Eenmalig.
+    const vast = groep.stappen.filter(stap => !isDatum(stap.datum));
+    const eenmalig = groep.stappen.length - vast.length;
     const rijenvak = el('div');
-    groep.stappen.forEach((stap, si) => {
+    vast.forEach((stap) => {
+      const si = groep.stappen.indexOf(stap);
       rijenvak.appendChild(maakBewerkRij({
         icoon: stap.icoon,
         label: stap.label,
@@ -2819,8 +2906,14 @@ function velRitme(soort){
     kaart.appendChild(rijenvak);
     maakSleepbaar(rijenvak, groep.stappen, tekenVel);
 
+    if(eenmalig){
+      kaart.appendChild(el('div', 'kaartnoot', eenmalig === 1
+        ? 'Hier staat ook één ding voor één dag; dat bewerk je bij Eenmalig.'
+        : `Hier staan ook ${eenmalig} dingen voor één dag; die bewerk je bij Eenmalig.`));
+    }
+
     kaart.appendChild(toevoegRij('Stap toevoegen', () => {
-      const stap = { icoon:'⭐', label:'', dagen:[], datum:'', wie:[] };
+      const stap = { icoon:'⭐', label:'', dagen:[], wie:[] };
       openFormulier('Nieuwe stap', stap, taakFormulier, nieuw => {
         if(!tekst(nieuw.label)) return;
         groep.stappen.push({
@@ -2968,71 +3061,28 @@ function eenmaligTekst(){
   return aantal === 1 ? 'één ding op een datum' : aantal + ' dingen op een datum';
 }
 
-function eventGegevens(item){
-  return { id:item.id, icoon:item.icoon, tekst:item.tekst, tijd:item.tijd, tot:item.tot,
-           datum:item.datum, wie:lijstVan(item.wie) };
-}
 
-// Terug in het item schrijven; false houdt het blad open met de reden.
-function neemEventOver(item, g){
-  if(!tekst(g.tekst) || !isDatum(g.datum)){
-    toonFormMelding('Vul een naam en een datum in.');
-    return false;
-  }
-  Object.assign(item, {
-    icoon: tekst(g.icoon, '🎉'), tekst: tekst(g.tekst),
-    tijd: tekst(g.tijd), tot: tekst(g.tot),
-    datum: tekst(g.datum), wie: lijstVan(g.wie),
-  });
-  tekenVel();
-}
 
 function eenmaligeRij(ding){
-  if(ding.soort === 'event'){
-    const item = ding.item;
-    return maakBewerkRij({
-      icoon: item.icoon,
-      label: item.tekst,
-      leeg: 'Naamloos',
-      tijd: kortDatum(item.datum),
-      extra: tijdTekst(item),
-      wie: item.wie,
-      tweeregels: true,
-      geenGreep: true,
-      wegTitel: 'Verwijderen',
-      opWeg: () => {
-        concept.events = lijstVan(concept.events).filter(x => x !== item);
-        tekenVel();
-      },
-      opOpenen: () => openFormulier(item.tekst || 'Iets eenmaligs', eventGegevens(item),
-        g => eventFormulier(g, null), g => neemEventOver(item, g)),
-    });
-  }
-  const stap = ding.stap;
+  const isEvent = ding.soort === 'event';
+  const bron = isEvent ? ding.item : ding.stap;
   return maakBewerkRij({
-    icoon: stap.icoon,
-    label: stap.label,
-    leeg: 'Naamloze stap',
-    tijd: kortDatum(stap.datum),
-    extra: (ding.ritme === 'dag' ? '☀️ ' : '🌙 ') + tekst(ding.groep.groep, 'ritme'),
-    wie: stap.wie,
+    icoon: bron.icoon,
+    label: isEvent ? bron.tekst : bron.label,
+    leeg: 'Naamloos',
+    tijd: kortDatum(ding.datum),
+    extra: isEvent
+      ? tijdTekst(bron)
+      : '✅ ' + (ding.ritme === 'dag' ? '☀️ ' : '🌙 ') + tekst(ding.groep.groep, 'ritme'),
+    wie: bron.wie,
     tweeregels: true,
     geenGreep: true,
-    wegTitel: 'Stap verwijderen',
-    opOpenen: () => openFormulier('Stap', stap, taakFormulier, nieuw => {
-      Object.assign(stap, {
-        icoon: tekst(nieuw.icoon, '⭐'),
-        label: nieuw.label,
-        dagen: dagenVan(nieuw.dagen),
-        datum: isDatum(nieuw.datum) ? tekst(nieuw.datum) : '',
-        wie: lijstVan(nieuw.wie),
-      });
-      tekenVel();
-    }),
-    opWeg: () => {
-      ding.groep.stappen = lijstVan(ding.groep.stappen).filter(x => x !== stap);
-      tekenVel();
-    },
+    wegTitel: 'Verwijderen',
+    opWeg: () => { haalEenmaligWeg(concept, ding); tekenVel(); },
+    opOpenen: () => openFormulier(
+      (isEvent ? bron.tekst : bron.label) || 'Iets eenmaligs',
+      eenmaligGegevens(ding), eenmaligFormulier,
+      g => { if(verplaatsEenmalig(concept, ding, g) === false) return false; tekenVel(); }),
   });
 }
 
@@ -3051,19 +3101,15 @@ function velEenmalig(){
   const erbij = knop('kaartknop glas');
   erbij.append(el('span', 'plusknop', '+'), document.createTextNode('Iets eenmaligs toevoegen'));
   erbij.addEventListener('click', () => {
-    const nieuw = { id: nieuwId(), icoon:'🎉', tekst:'', tijd:'', tot:'', datum: vandaag(), wie:[] };
-    openFormulier('Iets eenmaligs', nieuw, g => eventFormulier(g, null), g => {
-      if(neemEventOver(nieuw, g) === false) return false;
-      concept.events = lijstVan(concept.events).concat([nieuw]);
-      tekenVel();
-    });
+    openFormulier('Iets eenmaligs', eenmaligGegevens(null), eenmaligFormulier,
+      g => { if(verplaatsEenmalig(concept, null, g) === false) return false; tekenVel(); });
   });
   stuk.appendChild(erbij);
 
   stuk.appendChild(el('div', 'notitie',
-    'Alles wat maar één dag geldt staat hier bij elkaar: een uitje of een ouderavond, '
-    + 'en stappen die één ochtend meedoen — die laatste met ☀️ of 🌙 en de groep waar ze in staan. '
-    + 'Wat geweest is verdwijnt vanzelf bij het eerstvolgende bewaren.'));
+    'Alles wat maar één dag geldt staat hier, en alleen hier. Zet je ✅ afvinken aan, dan wordt het '
+    + 'die dag een kaartje tussen de stappen, in het onderdeel dat je kiest; anders is het een regel '
+    + 'bij Vandaag en Deze week. Wat geweest is verdwijnt vanzelf bij het eerstvolgende bewaren.'));
   return stuk;
 }
 

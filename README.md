@@ -54,11 +54,16 @@ tijden* instelt (standaard 15:00) staat het bij *Vanavond*, daarvoor bij
 alleen een eindtijd, dan telt die; is er helemaal geen tijd, dan staat het bij
 Overdag.
 
-- **Eenmalig** — alles wat maar één dag geldt, op datum bij elkaar: de
-  bijzonderheden die je bij *Deze week* toevoegt, én stappen die één ochtend
-  meedoen (*fiets mee*). Die staan verspreid over het ritme, maar hier zie je ze
-  in één lijst — met ☀️ of 🌙 en de groep erachter, zodat duidelijk is waar ze
-  vandaan komen. Wat geweest is verdwijnt vanzelf bij het eerstvolgende bewaren.
+- **Eenmalig** — alles wat maar één dag geldt, op datum bij elkaar, en alleen
+  hier. Elk zo'n ding kan twee vormen hebben, en je wisselt met één knop:
+  *afvinken die dag* uit, dan is het een regel bij Vandaag en Deze week, met een
+  tijd; *afvinken die dag* aan, dan wordt het die dag een kaartje tussen de
+  stappen — en kies je erbij in welk ritme en bij welk onderdeel het hoort. In de
+  lijst staat ✅ voor de dingen die je afvinkt. Wat geweest is verdwijnt vanzelf
+  bij het eerstvolgende bewaren.
+
+  Bij *Ochtendritme* en *Avondritme* staan die eenmalige kaartjes bewust niet
+  tussen de vaste stappen; daar meldt de kaart alleen dat ze er zijn.
 - **Naam en tijden** — hoe de app heet en vanaf welk uur hij op de avond opent.
 
 Elke regel werkt hetzelfde: rood rondje weghalen, met de greep rechts verslepen,
