@@ -1,0 +1,173 @@
+# De achterkant
+
+Eén Cloudflare Worker doet twee dingen: de app uitserveren (dat zijn de bestanden
+in `public/`) en `/api/*` afhandelen. Statische bestanden zijn bij Cloudflare
+gratis en ongemeten, dus de app kost niets; alleen `/api` draait code.
+
+Dat het één ding is, is de bedoeling. De app en de api staan op hetzelfde adres,
+dus er is geen CORS nodig en niets om te configureren — en straks kan een React
+Native app dezelfde adressen gebruiken.
+
+```
+routine.<jij>.workers.dev/            → public/index.html
+                         /icon-*.png  → public/
+                         /routine.json
+                         /api/lees    → worker/index.js
+```
+
+## Neerzetten
+
+```bash
+npm install
+npx wrangler secret put ANTHROPIC_API_KEY     # van console.anthropic.com
+npx wrangler deploy
+```
+
+Meer is het niet: `SLEUTEL` heb je pas nodig als er een client van buiten de
+browser bij komt (zie onder).
+
+### Vanzelf uitrollen
+
+`.github/workflows/deploy.yml` doet `wrangler deploy` bij elke push naar `main`,
+zodra deze twee bij **Settings → Secrets and variables → Actions** staan:
+
+| Secret | Waar |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | Cloudflare → My Profile → API Tokens, sjabloon *Edit Cloudflare Workers* |
+| `CLOUDFLARE_ACCOUNT_ID` | staat rechts op je Workers-overzicht |
+
+Staan ze er niet, dan slaat die stap zichzelf over in plaats van rood te worden.
+Dit is precies waar GitHub-secrets wél voor bedoeld zijn: ze bestaan alleen
+tijdens de build en komen nergens in iets gepubliceerds terecht — anders dan
+`routine.json`, dat gewoon openbaar is.
+
+De GitHub Pages-baan in dezelfde workflow is er alleen om de oude plek te laten
+draaien tot Cloudflare staat. Als je die niet meer nodig hebt, mag dat hele blok
+weg.
+
+### Zelf draaien
+
+```bash
+npx wrangler dev
+```
+
+Draait alles op `http://localhost:8787` — app en api, net als live. Secrets komen
+dan uit een `.dev.vars` ernaast:
+
+```
+ANTHROPIC_API_KEY = "sk-ant-..."
+```
+
+Dat bestand staat in `.gitignore` en hoort daar te blijven; het is het enige
+plekje in deze repo waar een echte sleutel kan belanden.
+
+## Wie mag erbij
+
+De Worker stuurt met opzet **geen CORS-kopjes**. Daardoor kan een pagina op een
+ander adres hier niet bij: de browser blokkeert het antwoord. De app zelf staat
+op hetzelfde adres en heeft er dus niets voor nodig.
+
+Een app buiten de browser kent geen CORS en heeft daar dus ook niets aan. Zet
+daarvoor een `SLEUTEL` neer:
+
+```bash
+npx wrangler secret put SLEUTEL
+```
+
+Dan wil `/api/*` een `X-Routine-Sleutel`-kopje met dat woord. Zet hetzelfde woord
+bij `assistentSleutel` in `routine.json`, anders komt de web-app er zelf ook niet
+meer langs.
+
+Wees eerlijk over wat dat is: een drempel, geen slot. Het woord staat ook in
+`routine.json` en dat bestand is openbaar. Het houdt scanners tegen, niet iemand
+die de app openmaakt. Echt dichtzetten is inloggen — zie *Straks* hieronder.
+
+## `POST /api/lees`
+
+Erin:
+
+```json
+{
+  "tekst": "het geplakte bericht",
+  "vandaag": "2026-08-27",
+  "ronde": 1,
+  "kinderen": [{ "id": "emma", "naam": "Emma", "kenmerken": { "schoolgroep": "1-2B" } }]
+}
+```
+
+Alleen de tekst die je plakt, plus de voornamen en kenmerken van de kinderen —
+die zijn nodig om te weten bij wie iets hoort.
+
+Eruit komt één van drie dingen. De vorm staat vast, want het antwoord wordt met
+een JSON-schema afgedwongen (`output_config.format`):
+
+```jsonc
+{ "type": "vraag", "sleutel": "schoolgroep", "vraag": "Wie zit waarin?",
+  "opties": ["1-2A", "1-2B"], "meerkeuze": false }
+
+{ "type": "voorstellen", "items": [
+  { "soort": "bijzonderheid", "icoon": "🚸", "tekst": "Verkeersles",
+    "datum": "2026-09-04", "tijd": "", "wie": ["emma"], "bron": "de zin uit de mail" },
+  { "soort": "stap", "ritme": "dag", "groep": "Weggaan", "icoon": "🚲",
+    "tekst": "Fiets mee", "datum": "2026-09-04", "wie": ["emma"],
+    "bron": "de zin uit de mail" } ] }
+
+{ "type": "niets" }
+```
+
+Gaat er iets mis, dan komt er `{ "fout": "..." }` met een leesbare reden; de app
+laat die letterlijk zien.
+
+De app vraagt hooguit twee keer door; `ronde` zegt de hoeveelste het is, en vanaf
+2 hoort de uitlezer het te doen met wat hij heeft.
+
+## Model en kosten
+
+`claude-opus-5` op `effort: "low"` — uitlezen is licht werk, en het schema doet
+het zware sturen al. Een schoolmail is ongeveer 1300 tokens in en 500 uit, dus
+rond de twee cent per keer (Opus 5: $5 per miljoen in, $25 per miljoen uit). Een
+vraagronde telt als een tweede keer. Geschat, niet gemeten.
+
+De 10 ms cpu-tijd van het gratis plan is geen probleem: wachten op de api kost
+geen cpu.
+
+Goedkoper mag, zonder de code aan te raken, met een var in `wrangler.toml`:
+
+```toml
+[vars]
+MODEL = "claude-sonnet-5"
+MOEITE = "medium"
+```
+
+## Straks: dezelfde achterkant voor een app
+
+`/api` is nu al de goede vorm voor een React Native app: gewoon HTTP en JSON,
+niets browser-eigens. Een native client die `/api/lees` aanroept met een
+`X-Routine-Sleutel` werkt vandaag.
+
+Wat er nog niet klopt, is de opslag. De app praat rechtstreeks met Firebase, en
+een native app zou dat ook kunnen — maar dan erft hij hetzelfde probleem: het pad
+`<gezin>` is het enige wat de database beschermt, en dat staat openbaar in
+`routine.json`. Zolang er één web-app is valt daarmee te leven; met een app in
+een store niet meer.
+
+De weg daarheen is de opslag ook achter deze Worker zetten:
+
+```
+POST /api/aanmelden          → een token voor dit gezin
+GET  /api/config             → wat er nu in de app staat
+PUT  /api/config             → het bewerkte geheel
+PUT  /api/vink/<datum>/<ritme>/<stap>/<persoon>
+GET  /api/dag/<datum>        → de vinkjes van die dag
+```
+
+Beide clients praten dan met dezelfde vijf adressen, en de database is alleen
+nog vanaf de Worker bereikbaar. Cloudflare D1 past er ruim in (5 GB, 5 miljoen
+regels lezen per dag op het gratis plan).
+
+Eén ding om van tevoren te weten, want het is de echte beslissing: **Firebase
+geeft nu live-sync**. Vink je iets af, dan staat het binnen een seconde op de
+andere telefoon, via een open SSE-verbinding. D1 kan dat niet — dat is een
+database, geen kanaal. Je hebt dan de keuze tussen pollen (simpel, voelt trager)
+of Durable Objects met websockets (doet wat Firebase nu doet, maar is echt werk).
+Daarom is dit geen verhuizing voor tussendoor.

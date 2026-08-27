@@ -1,6 +1,5 @@
 node_modules/
 .wrangler/
-package-lock.json
 
 # wrangler leest hier lokale secrets uit; die horen nergens heen
 .dev.vars

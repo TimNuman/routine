@@ -1,47 +1,71 @@
-name: Deploy to GitHub Pages
+name: Uitrollen
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 concurrency:
-  group: pages
+  group: uitrollen
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  # Cloudflare serveert de app én /api. Dit is waar het heen gaat.
+  cloudflare:
     runs-on: ubuntu-latest
+    # De secrets-context bestaat niet in een step-if; via env wel.
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Versie stempelen
+        run: |
+          printf '%s' "$GITHUB_SHA" > public/versie.txt
+          sed -i "s/__VERSIE__/$GITHUB_SHA/" public/index.html
+          grep -q "$GITHUB_SHA" public/index.html
+
+      # Overslaan zolang het token er nog niet is, in plaats van rood worden.
+      - name: Uitrollen naar Cloudflare
+        if: ${{ env.CLOUDFLARE_API_TOKEN != '' }}
+        run: npm ci && npx wrangler deploy
+
+      - name: Nog geen token
+        if: ${{ env.CLOUDFLARE_API_TOKEN == '' }}
+        run: echo "CLOUDFLARE_API_TOKEN staat nog niet bij de secrets; overgeslagen."
+
+  # De oude plek. Blijft draaien tot Cloudflare staat; daarna mag dit hele blok
+  # weg, samen met de pages-rechten hierboven.
+  pages:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v5
         with:
           enablement: true
 
-      # Het commit-nummer komt zowel in de pagina als in een los bestandje te
-      # staan. De pagina vergelijkt die twee en weet zo of er iets nieuwers is.
       - name: Versie stempelen
         run: |
-          printf '%s' "$GITHUB_SHA" > versie.txt
-          sed -i "s/__VERSIE__/$GITHUB_SHA/" index.html
-          grep -q "$GITHUB_SHA" index.html
+          printf '%s' "$GITHUB_SHA" > public/versie.txt
+          sed -i "s/__VERSIE__/$GITHUB_SHA/" public/index.html
+          grep -q "$GITHUB_SHA" public/index.html
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: ./public
 
-      - name: Deploy to GitHub Pages
-        id: deployment
+      - id: deployment
         uses: actions/deploy-pages@v4

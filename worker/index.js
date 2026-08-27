@@ -1,8 +1,10 @@
-// De uitlezer achter 'Uit een bericht overnemen'. Draait als Cloudflare Worker,
-// zodat de sleutel van de Claude-api op de server blijft en niet in de pagina
-// staat. De app stuurt hier het geplakte bericht heen en krijgt terug wat er in
-// de app zou moeten komen — of één vraag, als er iets ontbreekt om het aan het
-// juiste kind te kunnen hangen.
+// De achterkant. Eén Worker die twee dingen doet: de app uitserveren (dat zijn
+// de bestanden in public/, en dat kost niets) en /api/* afhandelen.
+//
+// Nu zit er één ding onder /api: de uitlezer achter 'Uit een bericht overnemen'.
+// Die staat hier en niet in de pagina, zodat de sleutel van de Claude-api op de
+// server blijft. Alles wat er later bij komt — inloggen, het ritme zelf — hoort
+// hier ook, want dan kan een React Native app dezelfde adressen gebruiken.
 import Anthropic from '@anthropic-ai/sdk';
 
 const MODEL = 'claude-opus-5';
@@ -70,29 +72,19 @@ Antwoord met één van drie dingen.
 
 Ga alleen af op wat er staat. Verzin geen data, tijden of namen die er niet in staan.`;
 
-function kopjes(oorsprong){
-  return {
-    'Access-Control-Allow-Origin': oorsprong || '*',
-    'Access-Control-Allow-Methods': 'POST,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type,X-Routine-Sleutel',
-    'Access-Control-Max-Age': '86400',
-    'Vary': 'Origin',
-  };
-}
-
-function antwoord(inhoud, status, oorsprong){
+function antwoord(inhoud, status){
   return new Response(JSON.stringify(inhoud), {
     status: status || 200,
-    headers: { ...kopjes(oorsprong), 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json; charset=utf-8' },
   });
 }
 
-// Alleen de pagina zelf mag erbij; env.HERKOMST is de url van de app.
-function toegestaneOorsprong(request, env){
-  const gevraagd = request.headers.get('Origin') || '';
-  const mag = String(env.HERKOMST || '').split(',').map(s => s.trim()).filter(Boolean);
-  if(!mag.length) return '*';
-  return mag.includes(gevraagd) ? gevraagd : '';
+// Geen CORS-kopjes, met opzet: daardoor kan een browser op een ander adres hier
+// niet bij. Een app buiten de browser kent geen CORS en heeft er ook niets aan,
+// dus daarvoor is er SLEUTEL — zie de README.
+function magErbij(request, env){
+  if(!env.SLEUTEL) return true;
+  return request.headers.get('X-Routine-Sleutel') === env.SLEUTEL;
 }
 
 function kindregel(kind){
@@ -133,59 +125,68 @@ function schoneLading(ruw){
   };
 }
 
-export default {
-  async fetch(request, env){
-    const oorsprong = toegestaneOorsprong(request, env);
-    if(request.method === 'OPTIONS') return new Response(null, { status:204, headers: kopjes(oorsprong) });
-    if(!oorsprong) return antwoord({ fout: 'Deze pagina mag hier niet bij.' }, 403, '');
-    if(request.method !== 'POST') return antwoord({ fout: 'Alleen POST.' }, 405, oorsprong);
+// POST /api/lees — bericht erin, voorstellen eruit.
+async function lees(request, env){
+  if(request.method !== 'POST') return antwoord({ fout: 'Alleen POST.' }, 405);
+  if(!magErbij(request, env)) return antwoord({ fout: 'Verkeerde of ontbrekende sleutel.' }, 401);
+  if(!env.ANTHROPIC_API_KEY) return antwoord({ fout: 'De uitlezer heeft nog geen sleutel.' }, 500);
 
-    if(env.SLEUTEL && request.headers.get('X-Routine-Sleutel') !== env.SLEUTEL){
-      return antwoord({ fout: 'Verkeerde of ontbrekende sleutel.' }, 401, oorsprong);
-    }
+  let ruw;
+  try{ ruw = await request.json(); }
+  catch{ return antwoord({ fout: 'Geen geldige JSON.' }, 400); }
 
-    let ruw;
-    try{ ruw = await request.json(); }
-    catch{ return antwoord({ fout: 'Geen geldige JSON.' }, 400, oorsprong); }
+  const lading = schoneLading(ruw || {});
+  if(!lading.tekst) return antwoord({ type: 'niets' });
 
-    const lading = schoneLading(ruw || {});
-    if(!lading.tekst) return antwoord({ type: 'niets' }, 200, oorsprong);
+  const claude = new Anthropic({
+    apiKey: env.ANTHROPIC_API_KEY,
+    ...(env.ANTHROPIC_BASIS ? { baseURL: env.ANTHROPIC_BASIS } : {}),
+  });
 
-    const claude = new Anthropic({
-      apiKey: env.ANTHROPIC_API_KEY,
-      ...(env.ANTHROPIC_BASIS ? { baseURL: env.ANTHROPIC_BASIS } : {}),
+  try{
+    const bericht = await claude.messages.create({
+      model: env.MODEL || MODEL,
+      max_tokens: 4000,
+      output_config: {
+        effort: env.MOEITE || MOEITE,
+        format: { type: 'json_schema', schema: SCHEMA },
+      },
+      system: [{ type: 'text', text: SYSTEEM, cache_control: { type: 'ephemeral' } }],
+      messages: [{ role: 'user', content: vraagtekst(lading) }],
     });
 
-    try{
-      const bericht = await claude.messages.create({
-        model: env.MODEL || MODEL,
-        max_tokens: 4000,
-        output_config: {
-          effort: env.MOEITE || MOEITE,
-          format: { type: 'json_schema', schema: SCHEMA },
-        },
-        system: [{ type: 'text', text: SYSTEEM, cache_control: { type: 'ephemeral' } }],
-        messages: [{ role: 'user', content: vraagtekst(lading) }],
-      });
-
-      const tekstblok = bericht.content.find(blok => blok.type === 'text');
-      if(!tekstblok) return antwoord({ type: 'niets' }, 200, oorsprong);
-      // Het schema garandeert de vorm, dus dit is alleen nog omzetten.
-      return antwoord(JSON.parse(tekstblok.text), 200, oorsprong);
-    }catch(err){
-      if(err instanceof Anthropic.AuthenticationError){
-        console.error('sleutel klopt niet:', err.message);
-        return antwoord({ fout: 'De sleutel van de uitlezer klopt niet.' }, 500, oorsprong);
-      }
-      if(err instanceof Anthropic.RateLimitError){
-        return antwoord({ fout: 'Even te druk, probeer het zo nog eens.' }, 429, oorsprong);
-      }
-      if(err instanceof Anthropic.APIError){
-        console.error('api gaf', err.status, err.message);
-        return antwoord({ fout: 'Het uitlezen lukte niet.' }, 502, oorsprong);
-      }
-      console.error('onverwacht:', err);
-      return antwoord({ fout: 'Het uitlezen lukte niet.' }, 500, oorsprong);
+    const tekstblok = bericht.content.find(blok => blok.type === 'text');
+    if(!tekstblok) return antwoord({ type: 'niets' });
+    // Het schema garandeert de vorm, dus dit is alleen nog omzetten.
+    return antwoord(JSON.parse(tekstblok.text));
+  }catch(err){
+    if(err instanceof Anthropic.AuthenticationError){
+      console.error('sleutel klopt niet:', err.message);
+      return antwoord({ fout: 'De sleutel van de uitlezer klopt niet.' }, 500);
     }
+    if(err instanceof Anthropic.RateLimitError){
+      return antwoord({ fout: 'Even te druk, probeer het zo nog eens.' }, 429);
+    }
+    if(err instanceof Anthropic.APIError){
+      console.error('api gaf', err.status, err.message);
+      return antwoord({ fout: 'Het uitlezen lukte niet.' }, 502);
+    }
+    console.error('onverwacht:', err);
+    return antwoord({ fout: 'Het uitlezen lukte niet.' }, 500);
+  }
+}
+
+const ROUTES = {
+  '/api/lees': lees,
+};
+
+export default {
+  async fetch(request, env){
+    const pad = new URL(request.url).pathname;
+    const route = ROUTES[pad];
+    if(route) return await route(request, env);
+    if(pad.startsWith('/api/')) return antwoord({ fout: 'Onbekend adres.' }, 404);
+    // Al het andere is de app zelf.
+    return env.ASSETS.fetch(request);
   },
 };

@@ -1,0 +1,15 @@
+name = "routine"
+main = "worker/index.js"
+compatibility_date = "2026-08-01"
+compatibility_flags = ["nodejs_compat"]
+
+# De app zelf. Statische bestanden zijn gratis en ongemeten; alleen /api/*
+# komt bij de Worker langs.
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+# ANTHROPIC_API_KEY en SLEUTEL zijn geheimen, geen vars:
+#   npx wrangler secret put ANTHROPIC_API_KEY
+#   npx wrangler secret put SLEUTEL      (alleen nodig voor clients van buiten,
+#                                         zoals straks een React Native app)

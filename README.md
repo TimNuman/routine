@@ -3,7 +3,8 @@
 Een visueel dagritme voor kinderen: een ochtend- en een avondroutine met
 afvinkbare stappen, één per kind, gedeeld tussen alle telefoons in huis.
 
-**Live:** https://timnuman.github.io/routine/
+**Live:** https://timnuman.github.io/routine/ — verhuist naar Cloudflare, zie
+*Publiceren*.
 
 ## Hoe het werkt
 
@@ -95,19 +96,20 @@ de kinderen — die zijn nodig om te weten bij wie iets hoort. Verder niets: de 
 kent zelf ook geen achternamen, adressen of mailadressen. Wat terugkomt zijn ids
 die de app al had.
 
-Staat er geen adres in `routine.json`, dan doet een ingebouwde namaak-assistent
-het werk. Die kent maar een handvol patronen — een datum, een groep als `1-2B`,
-en een paar woorden — genoeg om de schermen te proberen. Het echte uitlezen doet
-Claude, achter een Cloudflare Worker die in [`assistent/`](assistent/) staat:
+Het echte uitlezen doet Claude, op `/api/lees` — hetzelfde adres als de app, dus
+`routine.json` hoeft alleen te weten dat het er is:
 
 ```json
-"assistent": "https://routine-assistent.jij.workers.dev",
-"assistentSleutel": "een-zelfverzonnen-woord"
+"assistent": "/api/lees"
 ```
 
-Die Worker staat er apart om één reden: de sleutel van de Claude-api hoort niet in
-een pagina die iedereen kan openen. Hoe je hem neerzet, wat hij kost en welk
-protocol hij spreekt staat in [`assistent/README.md`](assistent/README.md).
+Dat draait in de Worker en niet in de pagina, om één reden: de sleutel van de
+Claude-api hoort niet in iets wat iedereen kan openen. Hoe je hem neerzet, wat hij
+kost en welk protocol hij spreekt staat in [`worker/README.md`](worker/README.md).
+
+Maak je dat veld leeg, dan neemt een ingebouwde namaak-assistent het over. Die
+kent maar een handvol patronen — een datum, een groep als `1-2B`, en een paar
+woorden — genoeg om de schermen te proberen zonder achterkant.
 
 
 ## Opslag
@@ -184,10 +186,31 @@ Het icoon is `icon.svg`; de PNG's ernaast zijn daaruit gerenderd (32, 180, 192 e
 512px, plus een ruimer opgezette `maskable`-versie voor Android, dat er een cirkel
 uit snijdt).
 
+## Hoe het in elkaar zit
+
+```
+public/     de app: index.html met alles erin, de iconen, routine.json
+worker/     de achterkant: /api/*, en hij serveert public/ uit
+wrangler.toml
+```
+
+Nog steeds geen build voor de app zelf: `public/index.html` is één bestand met de
+hele boel erin. De Worker heeft wel `npm install` nodig, voor de Claude-sdk.
+
 ## Publiceren
 
-Eén statische pagina, geen build. Elke push naar `main` publiceert via
-GitHub Actions (`.github/workflows/deploy.yml`) naar GitHub Pages.
+Alles draait bij Cloudflare, op één adres: de app als statische bestanden (gratis
+en ongemeten) en `/api/*` in dezelfde Worker. Elke push naar `main` rolt uit via
+GitHub Actions, zodra `CLOUDFLARE_API_TOKEN` en `CLOUDFLARE_ACCOUNT_ID` bij de
+Actions-secrets staan; staan ze er nog niet, dan slaat die stap zichzelf over.
+
+Zelf uitrollen kan ook: `npx wrangler deploy`.
+
+Dezelfde workflow publiceert voorlopig óók nog naar GitHub Pages, zodat de oude
+plek blijft werken tot Cloudflare staat. Daarna mag die baan eruit.
+
+Zie [`worker/README.md`](worker/README.md) voor het opzetten, en voor waar dit
+heen gaat als er een React Native app bij komt.
 
 ## Ontwerpen
 
