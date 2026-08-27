@@ -16,8 +16,11 @@ Onderin zweeft een menubalk met drie plekken:
   telefoon. Daarboven staat per kind hoever het is. Elke dag begint vanzelf leeg.
   Wat er die dag verder is staat er meteen bij: 's ochtends *Vandaag*, 's avonds
   *Vanavond* en *Morgen*.
-- **Overzicht** — de hele week: bovenin kies je een dag, daaronder staat wat er
-  die dag speelt.
+- **Deze week** — een week vooruit vanaf vandaag: bovenin kies je een dag,
+  daaronder staat wat er die dag speelt. Hier voeg je ook **iets bijzonders**
+  toe: een verjaardag, een uitje, de tandarts. Zo'n regel staat op één datum en
+  krijgt een oranje randje, en verschijnt ook bij *Vandaag* en *Morgen* op de
+  ritmepagina. Wat geweest is verdwijnt vanzelf bij het eerstvolgende bewaren.
 - **Instellingen** — hier bewerk je alles wat in de app staat.
 
 De kaartjes zijn overal even breed: drie op een rij op een telefoon, vijf zodra

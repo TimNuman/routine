@@ -260,9 +260,25 @@
     padding:0 var(--insprong) 9px; margin-top:22px;
   }
   .agendarij{
-    display:flex; align-items:flex-start; gap:12px;
+    display:flex; align-items:flex-start; gap:12px; width:100%; text-align:left;
     padding:12px var(--insprong); min-height:54px;
+    background:none; border:none; font-family:inherit; color:inherit;
   }
+  /* Iets bijzonders op één datum krijgt een eigen randje, zodat het opvalt
+     tussen het vaste weekritme. */
+  .agendarij.bijzonder{
+    background: rgba(242,153,74,.13);
+    box-shadow: inset 3px 0 0 var(--oranje);
+  }
+  body.nacht .agendarij.bijzonder{ background: rgba(242,153,74,.16); }
+  button.agendarij{ cursor:pointer; }
+  #formmelding{ margin:10px 2px 4px; }
+  .verwijderknop{
+    width:100%; margin-top:18px; padding:13px 0; border-radius:18px; cursor:pointer;
+    border:1px solid rgba(229,72,77,.35); background: rgba(229,72,77,.10);
+    font-family: var(--baloo); font-weight:800; font-size:14.5px; color:#E5484D;
+  }
+  input.veld.datum{ flex:1 1 150px; font-size:14px; font-family: var(--nunito); font-weight:800; }
   .agendaicoon{ font-size:24px; flex:none; width:30px; text-align:center; line-height:1.2; }
   .agendatekst{ flex:1; min-width:0; }
   .agendanaam{ font-family: var(--baloo); font-weight:700; font-size:15.5px; }
@@ -586,7 +602,7 @@
         </button>
         <button type="button" data-pagina="overzicht">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="4"/><path d="M3.5 10h17M8.5 3.2v3.4M15.5 3.2v3.4"/></svg>
-          <span>Overzicht</span>
+          <span>Deze week</span>
         </button>
         <button type="button" data-pagina="instellingen">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3.2v2.2M12 18.6V20.8M20.8 12h-2.2M5.4 12H3.2M17.3 6.7l-1.5 1.5M8.2 15.8l-1.5 1.5M17.3 17.3l-1.5-1.5M8.2 8.2 6.7 6.7"/></svg>
@@ -637,6 +653,7 @@
       <div class="kiezerkop" id="formtitel">Bewerken</div>
       <span class="tekstknop" aria-hidden="true">&nbsp;</span>
     </div>
+    <div class="melding" id="formmelding" hidden></div>
     <div class="forminhoud" id="forminhoud"></div>
     <button class="grootknop" id="formGereed" type="button">Bewaar</button>
   </section>
@@ -722,6 +739,7 @@ const STANDAARD = {
     ]},
   ],
   overzicht: [],
+  events: [],
 };
 
 // Firebase levert een lijst soms terug als object met nummers als sleutel; hier
@@ -842,6 +860,24 @@ function overzichtLijst(waarde){
   return uit;
 }
 
+// Een bijzonderheid staat op één datum in plaats van op weekdagen: een
+// verjaardag, een uitje, een dokter.
+function eventItem(ruw){
+  return {
+    id: tekst(ruw && ruw.id) || nieuwId(),
+    icoon: tekst(ruw && ruw.icoon, '🎉'),
+    tekst: tekst(ruw && ruw.tekst),
+    tijd: tekst(ruw && ruw.tijd),
+    datum: /^\d{4}-\d{2}-\d{2}$/.test(tekst(ruw && ruw.datum)) ? tekst(ruw.datum) : '',
+    wie: wieVan(ruw),
+  };
+}
+
+function eventLijst(waarde){
+  return lijstVan(waarde).map(eventItem).filter(e => e.tekst && e.datum)
+    .sort((a, b) => a.datum.localeCompare(b.datum) || a.tijd.localeCompare(b.tijd));
+}
+
 function normaliseer(ruw){
   const bron = ruw || {};
   const mensen = lijstVan(bron.mensen).map((p, i) => ({
@@ -857,6 +893,7 @@ function normaliseer(ruw){
     dag: routine(bron.dag, STANDAARD.dag),
     nacht: routine(bron.nacht, STANDAARD.nacht),
     overzicht: overzichtLijst(bron.overzicht),
+    events: eventLijst(bron.events),
   };
   // Een verwijzing naar een kind dat er niet meer is telt niet mee; blijft er
   // niemand over, dan geldt het weer voor iedereen.
@@ -864,6 +901,7 @@ function normaliseer(ruw){
   const schoon = w => w.filter(id => bestaat.has(id));
   ['dag','nacht'].forEach(r => uit[r].forEach(g => g.stappen.forEach(s => { s.wie = schoon(s.wie); })));
   uit.overzicht.forEach(i => { i.wie = schoon(i.wie); });
+  uit.events.forEach(i => { i.wie = schoon(i.wie); });
   return uit;
 }
 
@@ -871,7 +909,7 @@ let config = normaliseer(STANDAARD);
 let instelling = null;          // { url, gezin } uit routine.json
 let ritme = 'dag';              // 'dag' of 'nacht'
 let pagina = 'ritme';           // 'ritme' | 'overzicht' | 'instellingen'
-let gekozenDag = null;          // dagsleutel in het overzicht; null = vandaag
+let gekozenDag = null;          // gekozen datum op de weekpagina; null = vandaag
 // done[ritme] is een kaart van stapsleutel naar de verzameling mensen die klaar zijn.
 let done = { dag: new Map(), nacht: new Map() };
 
@@ -1137,6 +1175,7 @@ function alsRuweConfig(){
     dag: config.dag,
     nacht: config.nacht,
     overzicht: config.overzicht,
+    events: config.events,
   }));
 }
 
@@ -1320,10 +1359,10 @@ function tekenRitmeAgenda(){
 }
 
 // ------------------------------------------------------------- overzicht ---
+// Een week vooruit vanaf vandaag, niet de kalenderweek: wat geweest is heeft
+// geen nut meer, wat komt wel.
 function weekVan(d){
   const begin = new Date(d);
-  const verschuiving = (begin.getDay() + 6) % 7;      // maandag als eerste dag
-  begin.setDate(begin.getDate() - verschuiving);
   begin.setHours(0, 0, 0, 0);
   return Array.from({ length: 7 }, (_, i) => {
     const dag = new Date(begin);
@@ -1335,7 +1374,7 @@ function weekVan(d){
 function overzichtDatum(){
   const nu = new Date();
   if(!gekozenDag) return nu;
-  const gevonden = weekVan(nu).find(d => DAGEN[d.getDay()] === gekozenDag);
+  const gevonden = weekVan(nu).find(d => datumVan(d) === gekozenDag);
   return gevonden || nu;
 }
 
@@ -1351,14 +1390,19 @@ function tekenWeekstrip(){
     b.append(el('span', 'wletter', DAGLETTERS[sleutel]),
              el('span', 'wdag', String(d.getDate())));
     b.setAttribute('aria-label', datumTekst(d));
-    b.addEventListener('click', () => { gekozenDag = sleutel; render(); });
+    b.addEventListener('click', () => { gekozenDag = datumVan(d); toepassen(); });
     weekstripEl.appendChild(b);
   });
 }
 
 function itemsVan(d){
   const dag = DAGEN[d.getDay()];
-  return lijstVan(config.overzicht).filter(i => !i.dagen.length || i.dagen.includes(dag));
+  const datum = datumVan(d);
+  // Wat er die dag bijzonder is staat bovenaan; daaronder het vaste weekritme.
+  const bijzonder = lijstVan(config.events).filter(e => e.datum === datum)
+    .map(e => ({ ...e, dagen:[], avond:false, bijzonder:true }));
+  const week = lijstVan(config.overzicht).filter(i => !i.dagen.length || i.dagen.includes(dag));
+  return bijzonder.concat(week);
 }
 
 function agendaBlokken(){
@@ -1377,8 +1421,10 @@ function agendaBlokken(){
   return blokken.filter(b => b.items.length);
 }
 
-function maakAgendaRij(item){
-  const rij = el('div', 'agendarij');
+function maakAgendaRij(item, opOpenen){
+  const rij = opOpenen ? knop('agendarij') : el('div', 'agendarij');
+  if(item.bijzonder) rij.classList.add('bijzonder');
+  if(opOpenen) rij.addEventListener('click', () => opOpenen(item));
   const tekstvak = el('div', 'agendatekst');
   tekstvak.appendChild(el('div', 'agendanaam', item.tekst));
 
@@ -1401,14 +1447,14 @@ function maakAgendaRij(item){
 
 // Eén blok met een kopje en een kaart eronder — zowel naast de stappen als op
 // de overzichtpagina. 'later' zet Morgen op een telefoon onder de stappen.
-function maakAgendaBlok(blok){
+function maakAgendaBlok(blok, opOpenen){
   const vak = document.createElement('section');
   vak.className = 'agendablok' + (blok.later ? ' later' : '');
   vak.appendChild(el('div', 'blokkop', blok.kop));
   const kaart = el('div', 'kaart glas');
   blok.items.forEach((item, i) => {
     if(i) kaart.appendChild(el('div', 'streep'));
-    kaart.appendChild(maakAgendaRij(item));
+    kaart.appendChild(maakAgendaRij(item, item.bijzonder ? opOpenen : null));
   });
   vak.appendChild(kaart);
   return vak;
@@ -1421,9 +1467,14 @@ function tekenOverzicht(){
   if(!blokken.length){
     agendaEl.appendChild(el('div', 'blokkop', 'Niks bijzonders'));
     agendaEl.appendChild(el('div', 'leegkaart glas', 'Deze dag staat er niets in de agenda.'));
-    return;
+  }else{
+    blokken.forEach(blok => agendaEl.appendChild(maakAgendaBlok(blok, bewerkEvent)));
   }
-  blokken.forEach(blok => agendaEl.appendChild(maakAgendaBlok(blok)));
+
+  const erbij = knop('kaartknop glas');
+  erbij.append(el('span', 'plusknop', '+'), document.createTextNode('Iets bijzonders toevoegen'));
+  erbij.addEventListener('click', () => bewerkEvent(null));
+  agendaEl.appendChild(erbij);
 }
 
 // ----------------------------------------------------------- instellingen ---
@@ -1483,7 +1534,7 @@ function toepassen(){
     paginatitelEl.textContent = isNacht ? 'Avond' : 'Ochtend';
     paginadatumEl.textContent = datumTekst(new Date());
   }else if(pagina === 'overzicht'){
-    paginatitelEl.textContent = 'Overzicht';
+    paginatitelEl.textContent = 'Deze week';
     paginadatumEl.textContent = datumTekst(overzichtDatum());
   }else{
     paginatitelEl.textContent = 'Instellingen';
@@ -1696,6 +1747,7 @@ const formEl = $('formulier');
 const formScrimEl = $('formScrim');
 const formtitelEl = $('formtitel');
 const forminhoudEl = $('forminhoud');
+const formmeldingEl = $('formmelding');
 let formGegevens = null;
 let formTeken = null;
 let formKlaar = null;
@@ -1705,10 +1757,16 @@ function tekenFormulier(){
   forminhoudEl.appendChild(formTeken(formGegevens));
 }
 
+function toonFormMelding(bericht){
+  formmeldingEl.textContent = bericht || '';
+  formmeldingEl.hidden = !bericht;
+}
+
 function openFormulier(titel, gegevens, teken, klaar){
   formGegevens = JSON.parse(JSON.stringify(gegevens));
   formTeken = teken;
   formKlaar = klaar;
+  toonFormMelding('');
   formtitelEl.textContent = titel;
   formScrimEl.hidden = false;
   formEl.hidden = false;
@@ -1716,12 +1774,14 @@ function openFormulier(titel, gegevens, teken, klaar){
   forminhoudEl.scrollTop = 0;
 }
 
-function sluitFormulier(bewaar){
-  const gegevens = formGegevens, klaar = formKlaar;
+// Geeft de afhandeling false terug, dan blijft het blad open — dan staat er een
+// reden in beeld, bijvoorbeeld omdat het opslaan mislukte.
+async function sluitFormulier(bewaar){
+  if(bewaar && formKlaar && await formKlaar(formGegevens) === false) return;
   formScrimEl.hidden = true;
   formEl.hidden = true;
   formGegevens = null; formTeken = null; formKlaar = null;
-  if(bewaar && klaar) klaar(gegevens);
+  toonFormMelding('');
 }
 
 function formKop(tekstje){ return el('div', 'formkop', tekstje); }
@@ -1739,11 +1799,15 @@ function dagenKiezer(gegevens){
   return rij;
 }
 
+// In het bewerkscherm zijn de kinderen die van het concept; op de weekpagina
+// die van de inhoud zelf.
+function bewerkMensen(){ return concept ? concept.mensen : config.mensen; }
+
 function wieKiezer(gegevens){
   gegevens.wie = lijstVan(gegevens.wie);
   const rij = el('div', 'chips glas');
   rij.appendChild(chip('iedereen', !gegevens.wie.length, () => { gegevens.wie = []; tekenFormulier(); }));
-  concept.mensen.forEach(persoon => {
+  bewerkMensen().forEach(persoon => {
     const aan = gegevens.wie.includes(persoon.id);
     rij.appendChild(chip(persoon.emoji + ' ' + (persoon.naam || 'kind'), aan, () => {
       const i = gegevens.wie.indexOf(persoon.id);
@@ -1794,6 +1858,86 @@ function itemFormulier(gegevens){
   return stuk;
 }
 
+function eventFormulier(gegevens, opWeg){
+  const stuk = document.createDocumentFragment();
+  const regel = el('div', 'formregel');
+  regel.append(
+    emojiKnop(gegevens.icoon, 'Icoon', v => { gegevens.icoon = v; tekenFormulier(); }),
+    veld(gegevens.tekst, 'Wat is er', '', v => { gegevens.tekst = v; }),
+  );
+  stuk.append(formKop('Icoon en naam'), regel);
+
+  const wanneer = el('div', 'formregel');
+  const datum = veld(gegevens.datum, '', 'datum', v => { gegevens.datum = v; });
+  datum.type = 'date';
+  wanneer.append(datum, veld(gegevens.tijd, 'tijd', 'tijd', v => { gegevens.tijd = v; }));
+  stuk.append(formKop('Wanneer'), wanneer);
+
+  stuk.append(formKop('Voor wie'), wieKiezer(gegevens));
+
+  if(opWeg){
+    const weg = knop('verwijderknop', 'Verwijderen');
+    weg.addEventListener('click', opWeg);
+    stuk.appendChild(weg);
+  }
+  return stuk;
+}
+
+// Een bijzonderheid hoort bij één dag en wordt vanaf de weekpagina bewerkt, dus
+// buiten het bewerkscherm om: hier gaat de hele inhoud in één keer weg.
+function bewerkEvent(item){
+  const gegevens = item
+    ? { id:item.id, icoon:item.icoon, tekst:item.tekst, tijd:item.tijd,
+        datum:item.datum, wie:lijstVan(item.wie) }
+    : { id:'', icoon:'🎉', tekst:'', tijd:'', datum: datumVan(overzichtDatum()), wie:[] };
+  openFormulier(item ? (item.tekst || 'Iets bijzonders') : 'Iets bijzonders', gegevens,
+    g => eventFormulier(g, item ? () => verwijderEvent(item.id) : null),
+    g => bewaarEvent(g));
+}
+
+async function bewaarEvent(g){
+  if(!tekst(g.tekst) || !/^\d{4}-\d{2}-\d{2}$/.test(tekst(g.datum))){
+    toonFormMelding('Vul een naam en een datum in.');
+    return false;
+  }
+  const ruw = alsRuweConfig();
+  const rij = {
+    id: tekst(g.id) || nieuwId(),
+    icoon: tekst(g.icoon, '🎉'),
+    tekst: tekst(g.tekst),
+    tijd: tekst(g.tijd),
+    datum: tekst(g.datum),
+    wie: lijstVan(g.wie),
+  };
+  const lijst = lijstVan(ruw.events);
+  const i = lijst.findIndex(e => e.id === rij.id);
+  if(i >= 0) lijst[i] = rij; else lijst.push(rij);
+  ruw.events = lijst;
+  return await bewaarInhoud(ruw);
+}
+
+async function verwijderEvent(id){
+  const ruw = alsRuweConfig();
+  ruw.events = lijstVan(ruw.events).filter(e => e.id !== id);
+  if(await bewaarInhoud(ruw) !== false) sluitFormulier(false);
+}
+
+async function bewaarInhoud(ruw){
+  const nieuw = opgeschoond(ruw);
+  if(opslag.basis){
+    try{
+      await bewaarConfigOpAfstand(nieuw);
+    }catch(err){
+      toonFormMelding('Opslaan in de database lukte niet (' + err.message + ').');
+      return false;
+    }
+  }
+  config = normaliseer(nieuw);
+  bewaarLokaalConfig(nieuw);
+  toepassen();
+  return true;
+}
+
 function kindFormulier(gegevens){
   const stuk = document.createDocumentFragment();
   const regel = el('div', 'formregel');
@@ -1828,8 +1972,9 @@ function dagenTekst(dagen){
 }
 
 function wieVoorRij(wie){
-  const gekozen = lijstVan(wie).map(id => concept.mensen.find(p => p.id === id)).filter(Boolean);
-  return gekozen.length && gekozen.length < concept.mensen.length ? gekozen : [];
+  const mensen = bewerkMensen();
+  const gekozen = lijstVan(wie).map(id => mensen.find(p => p.id === id)).filter(Boolean);
+  return gekozen.length && gekozen.length < mensen.length ? gekozen : [];
 }
 
 function maakBewerkRij(opties){
@@ -1993,9 +2138,9 @@ function velKinderen(){
 function losmaken(id){
   ['dag','nacht'].forEach(r => lijstVan(concept[r]).forEach(g =>
     lijstVan(g.stappen).forEach(s => { s.wie = lijstVan(s.wie).filter(x => x !== id); })));
-  lijstVan(concept.overzicht).forEach(item => {
+  [concept.overzicht, concept.events].forEach(lijst => lijstVan(lijst).forEach(item => {
     item.wie = lijstVan(item.wie).filter(x => x !== id);
-  });
+  }));
 }
 
 function velOverzicht(){
@@ -2129,6 +2274,27 @@ function schoonOverzicht(bron){
   });
 }
 
+// Wat geweest is ruimt zichzelf op: een bijzonderheid van gisteren gaat er bij
+// het eerstvolgende bewaren uit.
+function schoonEvents(bron){
+  const grens = vandaag();
+  return lijstVan(bron)
+    .filter(e => tekst(e && e.tekst) && /^\d{4}-\d{2}-\d{2}$/.test(tekst(e && e.datum)))
+    .filter(e => tekst(e.datum) >= grens)
+    .map(e => {
+      const uit = {
+        id: tekst(e.id) || nieuwId(),
+        icoon: tekst(e.icoon, '🎉'),
+        tekst: tekst(e.tekst),
+        datum: tekst(e.datum),
+      };
+      if(tekst(e.tijd)) uit.tijd = tekst(e.tijd);
+      const wie = lijstVan(e.wie);
+      if(wie.length) uit.wie = wie;
+      return uit;
+    });
+}
+
 function opgeschoond(c){
   return {
     titel: tekst(c.titel, STANDAARD.titel),
@@ -2142,6 +2308,7 @@ function opgeschoond(c){
     dag: schoneGroepen(c.dag),
     nacht: schoneGroepen(c.nacht),
     overzicht: schoonOverzicht(c.overzicht),
+    events: schoonEvents(c.events),
   };
 }
 
