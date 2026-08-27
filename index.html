@@ -239,10 +239,14 @@
   }
 
   /* ---------------------------------------------------------- overzicht --- */
-  .weekstrip{ display:flex; border-radius:24px; padding:10px 6px; margin-top:16px; }
+  .weekstrip{ display:flex; align-items:stretch; border-radius:24px; padding:10px 4px; margin-top:16px; }
   .weekstrip button{
     flex:1; background:none; border:none; cursor:pointer; padding:0;
     display:flex; flex-direction:column; align-items:center; gap:8px;
+  }
+  .weekstrip button.weekpijl{
+    flex:0 0 26px; align-items:center; justify-content:center;
+    color: var(--inkt-zacht); opacity:.65;
   }
   .wletter{ font-family: var(--baloo); font-weight:800; font-size:12px; color: var(--inkt-zacht); }
   .wdag{
@@ -910,6 +914,7 @@ let instelling = null;          // { url, gezin } uit routine.json
 let ritme = 'dag';              // 'dag' of 'nacht'
 let pagina = 'ritme';           // 'ritme' | 'overzicht' | 'instellingen'
 let gekozenDag = null;          // gekozen datum op de weekpagina; null = vandaag
+let weekVerschuiving = 0;       // 0 = deze week, 1 = volgende, -1 = vorige
 // done[ritme] is een kaart van stapsleutel naar de verzameling mensen die klaar zijn.
 let done = { dag: new Map(), nacht: new Map() };
 
@@ -1359,10 +1364,10 @@ function tekenRitmeAgenda(){
 }
 
 // ------------------------------------------------------------- overzicht ---
-function weekVan(d){
+function weekVan(d, weken = 0){
   const begin = new Date(d);
   const verschuiving = (begin.getDay() + 6) % 7;      // maandag als eerste dag
-  begin.setDate(begin.getDate() - verschuiving);
+  begin.setDate(begin.getDate() - verschuiving + weken * 7);
   begin.setHours(0, 0, 0, 0);
   return Array.from({ length: 7 }, (_, i) => {
     const dag = new Date(begin);
@@ -1371,18 +1376,42 @@ function weekVan(d){
   });
 }
 
+// De gekozen dag, of anders vandaag zolang die in beeld is; in een andere week
+// de maandag.
 function overzichtDatum(){
-  const nu = new Date();
-  if(!gekozenDag) return nu;
-  const gevonden = weekVan(nu).find(d => datumVan(d) === gekozenDag);
-  return gevonden || nu;
+  const week = weekVan(new Date(), weekVerschuiving);
+  const gekozen = gekozenDag && week.find(d => datumVan(d) === gekozenDag);
+  if(gekozen) return gekozen;
+  const vandaagStr = vandaag();
+  return week.find(d => datumVan(d) === vandaagStr) || week[0];
+}
+
+// Een week verder of terug, op dezelfde weekdag als waar je stond.
+function schuifWeek(weken){
+  const nieuw = new Date(overzichtDatum());
+  nieuw.setDate(nieuw.getDate() + weken * 7);
+  weekVerschuiving += weken;
+  gekozenDag = datumVan(nieuw);
+  toepassen();
+}
+
+function weekPijl(richting, titel){
+  const b = knop('weekpijl');
+  b.setAttribute('aria-label', titel);
+  b.title = titel;
+  const pijl = svgPijl();
+  if(richting < 0) pijl.style.transform = 'rotate(180deg)';
+  b.appendChild(pijl);
+  b.addEventListener('click', () => schuifWeek(richting));
+  return b;
 }
 
 function tekenWeekstrip(){
   const nu = new Date();
   const gekozen = overzichtDatum();
   weekstripEl.innerHTML = '';
-  weekVan(nu).forEach(d => {
+  weekstripEl.appendChild(weekPijl(-1, 'Vorige week'));
+  weekVan(nu, weekVerschuiving).forEach(d => {
     const sleutel = DAGEN[d.getDay()];
     const b = knop('');
     if(datumVan(d) === datumVan(nu)) b.classList.add('vandaag');
@@ -1393,6 +1422,7 @@ function tekenWeekstrip(){
     b.addEventListener('click', () => { gekozenDag = datumVan(d); toepassen(); });
     weekstripEl.appendChild(b);
   });
+  weekstripEl.appendChild(weekPijl(1, 'Volgende week'));
 }
 
 function itemsVan(d){
@@ -1555,7 +1585,7 @@ function toepassen(){
 function zetRitme(nieuw){ ritme = nieuw; toepassen(); }
 function zetPagina(nieuw){
   pagina = nieuw;
-  if(nieuw === 'overzicht') gekozenDag = null;
+  if(nieuw === 'overzicht'){ gekozenDag = null; weekVerschuiving = 0; }
   window.scrollTo(0, 0);
   toepassen();
 }

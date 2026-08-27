@@ -17,7 +17,8 @@ Onderin zweeft een menubalk met drie plekken:
   Wat er die dag verder is staat er meteen bij: 's ochtends *Vandaag*, 's avonds
   *Vanavond* en *Morgen*.
 - **Deze week** — de week van maandag tot en met zondag: bovenin kies je een
-  dag, daaronder staat wat er die dag speelt. Hier voeg je ook **iets bijzonders**
+  dag, met pijltjes ernaast om een week vooruit of terug te gaan; daaronder
+  staat wat er die dag speelt. Hier voeg je ook **iets bijzonders**
   toe: een verjaardag, een uitje, de tandarts. Zo'n regel staat op één datum en
   krijgt een oranje randje, en verschijnt ook bij *Vandaag* en *Morgen* op de
   ritmepagina. Wat geweest is verdwijnt vanzelf bij het eerstvolgende bewaren.
