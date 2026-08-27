@@ -40,6 +40,7 @@ const SCHEMA = {
           tekst: { type: 'string' },
           datum: { type: 'string', format: 'date' },
           tijd: { type: 'string' },
+          tot: { type: 'string' },
           wie: { type: 'array', items: { type: 'string' } },
           ritme: { type: 'string', enum: ['dag', 'nacht'] },
           groep: { type: 'string' },
@@ -62,7 +63,7 @@ Antwoord met één van drie dingen.
    - "soort": "bijzonderheid" voor iets dat op één dag speelt en in de weekagenda hoort (een uitje, een ouderavond, een verkeersles, een wedstrijd). "stap" voor iets dat een kind die dag zelf moet dóén en tussen de afvinkbare stappen hoort — meestal iets meenemen. Zet bij een stap ook "ritme" ("dag" voor de ochtend, "nacht" voor de avond) en "groep": de naam van de groep waar hij hoort, meestal "Weggaan".
    - "tekst": kort, zoals je het tegen een kind zegt. "Verkeersles", "Fiets mee", "Gymspullen mee". Geen hele zinnen.
    - "datum": jjjj-mm-dd, uitgerekend vanaf vandaag. Staat er geen jaartal bij, dan is het de eerstvolgende keer.
-   - "tijd": alleen als het bericht een tijd noemt, anders leeg.
+   - "tijd": de begintijd, alleen als het bericht die noemt, anders leeg. "tot" is de eindtijd, ook alleen als die er staat.
    - "wie": de ids van de kinderen die het betreft, uit de meegegeven lijst. Leeg betekent iedereen; gebruik dat als het bericht geen onderscheid maakt. Gaat een dag over een groep waar geen van de kinderen in zit, laat dat voorstel dan helemaal weg.
    - "bron": de zin uit het bericht waar dit vandaan komt, letterlijk overgenomen, zodat de ouder het kan nakijken.
    - "icoon": één emoji die erbij past.

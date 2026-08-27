@@ -44,10 +44,15 @@ Alles wat in de app staat, pas je in de app zelf aan, onder **Instellingen**:
 - **Weekritme** — één lijst met alles wat er in de week speelt: school, BSO,
   sport. Elk item kent zelf de dagen waarop het valt, dus school staat er één
   keer met *ma, di, do, vr* erachter in plaats van vier keer.
-De tijd bepaalt waar iets terechtkomt: vanaf het uur dat je bij *Naam en tijden*
-instelt (standaard 15:00) staat het bij *Vanavond*, daarvoor bij *Overdag*. Het
-formulier zegt er meteen bij welke van de twee het wordt. Heeft iets geen tijd,
-dan staat het bij Overdag.
+Een tijd bestaat uit een begin en een eind, allebei optioneel: `8:30 – 14:15`,
+alleen `18:00`, of alleen `tot 20:00`. Vrije tekst mag ook — *na school* blijft
+gewoon staan.
+
+De begintijd bepaalt waar iets terechtkomt: vanaf het uur dat je bij *Naam en
+tijden* instelt (standaard 15:00) staat het bij *Vanavond*, daarvoor bij
+*Overdag*. Het formulier zegt er meteen bij welke van de twee het wordt. Staat er
+alleen een eindtijd, dan telt die; is er helemaal geen tijd, dan staat het bij
+Overdag.
 
 - **Eenmalig** — alles wat maar één dag geldt, op datum bij elkaar: de
   bijzonderheden die je bij *Deze week* toevoegt, én stappen die één ochtend

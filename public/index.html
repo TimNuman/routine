@@ -460,6 +460,7 @@
   input.veld::placeholder{ color: var(--inkt-zacht); opacity:.7; }
   input.veld.tijd{ flex:0 0 126px; padding:9px 6px; font-size:13px; text-align:center; font-family: var(--nunito); font-weight:800; }
   input.veld.getal{ flex:0 0 84px; text-align:center; }
+  .tijdstreep{ flex:none; font-weight:800; color: var(--inkt-zacht); }
   .toevoegrij{
     display:flex; align-items:center; gap:10px; padding:11px 12px; width:100%;
     background:none; border:none; border-top:1px solid var(--scheiding); cursor:pointer;
@@ -884,11 +885,34 @@ function uurUitTijd(waarde){
 // Hoort dit bij de avond? De tijd beslist; heeft het er geen, dan telt nog wat
 // er vroeger met de hand is aangevinkt.
 function naAvond(item, vanaf){
-  const uur = uurUitTijd(item && item.tijd);
-  return uur === null ? Boolean(item && item.avond) : uur >= vanaf;
+  // Staat alleen de eindtijd er, dan is dat het enige wat we weten.
+  const uur = uurUitTijd(item && item.tijd) ?? uurUitTijd(item && item.tot);
+  return uur === null || uur === undefined ? Boolean(item && item.avond) : uur >= vanaf;
 }
 
 function isAvond(item){ return naAvond(item, config.avondVanaf); }
+
+// Een begintijd en een eindtijd, allebei optioneel. Stond er vroeger één veld
+// met '8:00 – 8:15' in, dan gaat dat hier alsnog uit elkaar — maar alleen als
+// beide helften ook echt een tijd zijn.
+function tijden(ruw){
+  let tijd = tekst(ruw && ruw.tijd);
+  let tot = tekst(ruw && ruw.tot);
+  if(!tot){
+    const m = /^(.*?)\s*(?:–|—|-|tot|t\/m)\s*(.+)$/i.exec(tijd);
+    if(m && uurUitTijd(m[1]) !== null && uurUitTijd(m[2]) !== null){
+      tijd = m[1].trim();
+      tot = m[2].trim();
+    }
+  }
+  return { tijd, tot };
+}
+
+function tijdTekst(item){
+  const van = tekst(item && item.tijd), tot = tekst(item && item.tot);
+  if(van && tot) return `${van} – ${tot}`;
+  return tot ? 'tot ' + tot : van;
+}
 
 function alsDatum(waarde){
   const p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(tekst(waarde));
@@ -952,7 +976,7 @@ function overzichtItem(ruw){
   return {
     icoon: tekst(ruw && ruw.icoon, '📅'),
     tekst: tekst(ruw && ruw.tekst),
-    tijd: tekst(ruw && ruw.tijd),
+    ...tijden(ruw),
     dagen: dagenVan(ruw && ruw.dagen),
     wie: wieVan(ruw),
     avond: Boolean(ruw && ruw.avond),
@@ -977,7 +1001,7 @@ function overzichtLijst(waarde){
     lijstVan(waarde[dag]).forEach(ruw => {
       const item = overzichtItem(ruw);
       if(!item.tekst) return;
-      const sleutel = [item.icoon, item.tekst, item.tijd, item.wie.join('+'), item.avond].join('|');
+      const sleutel = [item.icoon, item.tekst, item.tijd, item.tot, item.wie.join('+'), item.avond].join('|');
       if(gezien.has(sleutel)){
         gezien.get(sleutel).dagen.push(dag);
         return;
@@ -999,7 +1023,7 @@ function eventItem(ruw){
     id: tekst(ruw && ruw.id) || nieuwId(),
     icoon: tekst(ruw && ruw.icoon, '🎉'),
     tekst: tekst(ruw && ruw.tekst),
-    tijd: tekst(ruw && ruw.tijd),
+    ...tijden(ruw),
     datum: /^\d{4}-\d{2}-\d{2}$/.test(tekst(ruw && ruw.datum)) ? tekst(ruw.datum) : '',
     wie: wieVan(ruw),
   };
@@ -1579,7 +1603,8 @@ function maakAgendaRij(item, opOpenen){
       meta.appendChild(merk);
     });
   }
-  if(item.tijd) meta.appendChild(el('div', 'agendatijd', item.tijd));
+  const wanneer = tijdTekst(item);
+  if(wanneer) meta.appendChild(el('div', 'agendatijd', wanneer));
   if(meta.childNodes.length) tekstvak.appendChild(meta);
 
   rij.append(el('div', 'agendaicoon', item.icoon), tekstvak);
@@ -2009,6 +2034,17 @@ function tijduitleg(gegevens){
     : `Komt bij Overdag te staan; vanaf ${vanaf}:00 zou het Vanavond zijn.`;
 }
 
+// Begin en eind, allebei mag je leeglaten.
+function tijdregel(gegevens, opWijzig){
+  const rij = el('div', 'formregel');
+  rij.append(
+    veld(gegevens.tijd, 'van', 'tijd', v => { gegevens.tijd = v; if(opWijzig) opWijzig(); }),
+    el('span', 'tijdstreep', '–'),
+    veld(gegevens.tot, 'tot', 'tijd', v => { gegevens.tot = v; if(opWijzig) opWijzig(); }),
+  );
+  return rij;
+}
+
 function itemFormulier(gegevens){
   const stuk = document.createDocumentFragment();
   const regel = el('div', 'formregel');
@@ -2020,12 +2056,9 @@ function itemFormulier(gegevens){
 
   // De uitleg loopt mee met wat je typt, zodat je meteen ziet waar het belandt.
   const tijdnotitie = el('div', 'notitie', tijduitleg(gegevens));
-  const wanneer = el('div', 'formregel');
-  wanneer.appendChild(veld(gegevens.tijd, 'hoe laat', 'tijd', v => {
-    gegevens.tijd = v;
+  stuk.append(formKop('Hoe laat'), tijdregel(gegevens, () => {
     tijdnotitie.textContent = tijduitleg(gegevens);
-  }));
-  stuk.append(formKop('Hoe laat'), wanneer, tijdnotitie);
+  }), tijdnotitie);
 
   stuk.append(formKop('Op welke dagen'), dagenKiezer(gegevens));
   stuk.appendChild(el('div', 'notitie', gegevens.dagen.length
@@ -2046,8 +2079,8 @@ function eventFormulier(gegevens, opWeg){
   const wanneer = el('div', 'formregel');
   const datum = veld(gegevens.datum, '', 'datum', v => { gegevens.datum = v; });
   datum.type = 'date';
-  wanneer.append(datum, veld(gegevens.tijd, 'tijd', 'tijd', v => { gegevens.tijd = v; }));
-  stuk.append(formKop('Wanneer'), wanneer);
+  wanneer.appendChild(datum);
+  stuk.append(formKop('Wanneer'), wanneer, tijdregel(gegevens, null));
 
   stuk.append(formKop('Voor wie'), wieKiezer(gegevens));
 
@@ -2063,9 +2096,9 @@ function eventFormulier(gegevens, opWeg){
 // buiten het bewerkscherm om: hier gaat de hele inhoud in één keer weg.
 function bewerkEvent(item){
   const gegevens = item
-    ? { id:item.id, icoon:item.icoon, tekst:item.tekst, tijd:item.tijd,
+    ? { id:item.id, icoon:item.icoon, tekst:item.tekst, tijd:item.tijd, tot:item.tot,
         datum:item.datum, wie:lijstVan(item.wie) }
-    : { id:'', icoon:'🎉', tekst:'', tijd:'', datum: datumVan(overzichtDatum()), wie:[] };
+    : { id:'', icoon:'🎉', tekst:'', tijd:'', tot:'', datum: datumVan(overzichtDatum()), wie:[] };
   openFormulier(item ? (item.tekst || 'Iets bijzonders') : 'Iets bijzonders', gegevens,
     g => eventFormulier(g, item ? () => verwijderEvent(item.id) : null),
     g => bewaarEvent(g));
@@ -2082,6 +2115,7 @@ async function bewaarEvent(g){
     icoon: tekst(g.icoon, '🎉'),
     tekst: tekst(g.tekst),
     tijd: tekst(g.tijd),
+    tot: tekst(g.tot),
     datum: tekst(g.datum),
     wie: lijstVan(g.wie),
   };
@@ -2292,7 +2326,7 @@ function tekenAssiVoorstellen(){
     const rij = knop('vondst' + (aan ? ' aan' : ''));
     const tekstvak = el('div', 'vondsttekst');
     tekstvak.appendChild(el('div', 'vondstnaam', item.tekst));
-    const meta = [langeDatum(item.datum), tekst(item.tijd), assiWieTekst(item.wie), assiSoortTekst(item)]
+    const meta = [langeDatum(item.datum), tijdTekst(item), assiWieTekst(item.wie), assiSoortTekst(item)]
       .filter(Boolean).join(' · ');
     if(meta) tekstvak.appendChild(el('div', 'vondstmeta', meta));
     if(tekst(item.bron)) tekstvak.appendChild(el('div', 'vondstbron', '„' + tekst(item.bron) + '”'));
@@ -2387,6 +2421,7 @@ function schoonVoorstel(ruw){
     icoon: tekst(ruw && ruw.icoon, soort === 'stap' ? '⭐' : '🎉'),
     tekst: tekst(ruw && (ruw.tekst || ruw.label)),
     tijd: tekst(ruw && ruw.tijd),
+    tot: tekst(ruw && ruw.tot),
     datum: isDatum(ruw && ruw.datum) ? tekst(ruw.datum) : '',
     wie: lijstVan(ruw && ruw.wie).map(String).filter(id => bekend.has(id)),
     bron: tekst(ruw && ruw.bron).slice(0, 200),
@@ -2420,7 +2455,7 @@ async function zetVoorstellenIn(items){
     if(ruw.events.some(e => zelfde(e, item))) return;
     ruw.events.push({
       id: nieuwId(), icoon: item.icoon, tekst: item.tekst,
-      tijd: item.tijd, datum: item.datum, wie: item.wie,
+      tijd: item.tijd, tot: item.tot, datum: item.datum, wie: item.wie,
     });
   });
   return await bewaarInhoud(ruw, toonAssiMelding);
@@ -2884,9 +2919,11 @@ function velOverzicht(){
       icoon: item.icoon,
       label: item.tekst,
       leeg: 'Naamloos',
-      tijd: (naAvond(item, concept.avondVanaf) ? '🌙 ' : '') + tekst(item.tijd),
+      tijd: (naAvond(item, concept.avondVanaf) ? '🌙 ' : '') + tijdTekst(item),
       dagen: item.dagen,
       wie: item.wie,
+      // Een tijdvak, de dagen én wie het betreft passen niet naast de naam.
+      tweeregels: true,
       wegTitel: 'Verwijderen',
       opWeg: () => { items.splice(i, 1); tekenVel(); },
       opOpenen: () => openFormulier(item.tekst || 'Item', item, itemFormulier, nieuw => {
@@ -2899,7 +2936,7 @@ function velOverzicht(){
   maakSleepbaar(rijenvak, items, tekenVel);
 
   kaart.appendChild(toevoegRij('Item toevoegen', () => {
-    const item = { icoon:'📅', tekst:'', tijd:'', dagen:[], wie:[], avond:false };
+    const item = { icoon:'📅', tekst:'', tijd:'', tot:'', dagen:[], wie:[], avond:false };
     openFormulier('Nieuw item', item, itemFormulier, nieuw => {
       if(!tekst(nieuw.tekst)) return;
       items.push(schoonItem(nieuw));
@@ -2932,7 +2969,7 @@ function eenmaligTekst(){
 }
 
 function eventGegevens(item){
-  return { id:item.id, icoon:item.icoon, tekst:item.tekst, tijd:item.tijd,
+  return { id:item.id, icoon:item.icoon, tekst:item.tekst, tijd:item.tijd, tot:item.tot,
            datum:item.datum, wie:lijstVan(item.wie) };
 }
 
@@ -2943,7 +2980,8 @@ function neemEventOver(item, g){
     return false;
   }
   Object.assign(item, {
-    icoon: tekst(g.icoon, '🎉'), tekst: tekst(g.tekst), tijd: tekst(g.tijd),
+    icoon: tekst(g.icoon, '🎉'), tekst: tekst(g.tekst),
+    tijd: tekst(g.tijd), tot: tekst(g.tot),
     datum: tekst(g.datum), wie: lijstVan(g.wie),
   });
   tekenVel();
@@ -2957,7 +2995,7 @@ function eenmaligeRij(ding){
       label: item.tekst,
       leeg: 'Naamloos',
       tijd: kortDatum(item.datum),
-      extra: tekst(item.tijd),
+      extra: tijdTekst(item),
       wie: item.wie,
       tweeregels: true,
       geenGreep: true,
@@ -3013,7 +3051,7 @@ function velEenmalig(){
   const erbij = knop('kaartknop glas');
   erbij.append(el('span', 'plusknop', '+'), document.createTextNode('Iets eenmaligs toevoegen'));
   erbij.addEventListener('click', () => {
-    const nieuw = { id: nieuwId(), icoon:'🎉', tekst:'', tijd:'', datum: vandaag(), wie:[] };
+    const nieuw = { id: nieuwId(), icoon:'🎉', tekst:'', tijd:'', tot:'', datum: vandaag(), wie:[] };
     openFormulier('Iets eenmaligs', nieuw, g => eventFormulier(g, null), g => {
       if(neemEventOver(nieuw, g) === false) return false;
       concept.events = lijstVan(concept.events).concat([nieuw]);
@@ -3034,6 +3072,7 @@ function schoonItem(ruw){
     icoon: tekst(ruw.icoon, '📅'),
     tekst: tekst(ruw.tekst),
     tijd: tekst(ruw.tijd),
+    tot: tekst(ruw.tot),
     dagen: dagenVan(ruw.dagen),
     wie: lijstVan(ruw.wie),
     avond: Boolean(ruw.avond),
@@ -3116,6 +3155,7 @@ function schoonOverzicht(bron, vanaf){
   return lijstVan(bron).filter(item => tekst(item && item.tekst)).map(item => {
     const uit = { icoon: tekst(item.icoon, '📅'), tekst: tekst(item.tekst) };
     if(tekst(item.tijd)) uit.tijd = tekst(item.tijd);
+    if(tekst(item.tot)) uit.tot = tekst(item.tot);
     const dagen = dagenVan(item.dagen);
     if(dagen.length && dagen.length < WEEKDAGEN.length) uit.dagen = dagen;
     const wie = lijstVan(item.wie);
@@ -3140,6 +3180,7 @@ function schoonEvents(bron){
         datum: tekst(e.datum),
       };
       if(tekst(e.tijd)) uit.tijd = tekst(e.tijd);
+      if(tekst(e.tot)) uit.tot = tekst(e.tot);
       const wie = lijstVan(e.wie);
       if(wie.length) uit.wie = wie;
       return uit;
