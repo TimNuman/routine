@@ -1359,10 +1359,10 @@ function tekenRitmeAgenda(){
 }
 
 // ------------------------------------------------------------- overzicht ---
-// Een week vooruit vanaf vandaag, niet de kalenderweek: wat geweest is heeft
-// geen nut meer, wat komt wel.
 function weekVan(d){
   const begin = new Date(d);
+  const verschuiving = (begin.getDay() + 6) % 7;      // maandag als eerste dag
+  begin.setDate(begin.getDate() - verschuiving);
   begin.setHours(0, 0, 0, 0);
   return Array.from({ length: 7 }, (_, i) => {
     const dag = new Date(begin);
