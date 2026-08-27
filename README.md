@@ -44,6 +44,11 @@ Alles wat in de app staat, pas je in de app zelf aan, onder **Instellingen**:
 - **Weekritme** — één lijst met alles wat er in de week speelt: school, BSO,
   sport. Elk item kent zelf de dagen waarop het valt, dus school staat er één
   keer met *ma, di, do, vr* erachter in plaats van vier keer.
+De tijd bepaalt waar iets terechtkomt: vanaf het uur dat je bij *Naam en tijden*
+instelt (standaard 15:00) staat het bij *Vanavond*, daarvoor bij *Overdag*. Het
+formulier zegt er meteen bij welke van de twee het wordt. Heeft iets geen tijd,
+dan staat het bij Overdag.
+
 - **Eenmalig** — alles wat maar één dag geldt, op datum bij elkaar: de
   bijzonderheden die je bij *Deze week* toevoegt, én stappen die één ochtend
   meedoen (*fiets mee*). Die staan verspreid over het ritme, maar hier zie je ze
@@ -53,9 +58,8 @@ Alles wat in de app staat, pas je in de app zelf aan, onder **Instellingen**:
 
 Elke regel werkt hetzelfde: rood rondje weghalen, met de greep rechts verslepen,
 en de regel zelf aanraken opent een blad met alles wat erbij hoort — icoon, naam,
-op welke dagen, en wie meedoet (bij het weekritme ook een tijd en of het pas
-'s avonds speelt). **Bewaar** zet het terug in de lijst; annuleren laat alles
-zoals het was. In de lijst zie je per regel al staan op welke dagen hij valt en
+op welke dagen, en wie meedoet (bij het weekritme ook een tijd). **Bewaar** zet
+het terug in de lijst; annuleren laat alles zoals het was. In de lijst zie je per regel al staan op welke dagen hij valt en
 voor wie hij is.
 
 Een stap hoort bij vaste weekdagen óf bij één datum. Zet de assistent er een op

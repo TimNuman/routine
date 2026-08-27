@@ -871,6 +871,25 @@ function kenmerkenVan(waarde){
 
 function isDatum(waarde){ return /^\d{4}-\d{2}-\d{2}$/.test(tekst(waarde)); }
 
+// Het uur uit een tijd zoals je hem opschrijft: '19:30', '8.00 – 8.15', '15u',
+// of gewoon '19'. Het eerste uur telt; staat er niets bruikbaars, dan null.
+function uurUitTijd(waarde){
+  const t = tekst(waarde);
+  const m = /(\d{1,2})\s*[:.uh]\s*(\d{2})?/i.exec(t) || /^\s*(\d{1,2})\s*$/.exec(t);
+  if(!m) return null;
+  const uur = Number(m[1]);
+  return uur >= 0 && uur <= 23 ? uur : null;
+}
+
+// Hoort dit bij de avond? De tijd beslist; heeft het er geen, dan telt nog wat
+// er vroeger met de hand is aangevinkt.
+function naAvond(item, vanaf){
+  const uur = uurUitTijd(item && item.tijd);
+  return uur === null ? Boolean(item && item.avond) : uur >= vanaf;
+}
+
+function isAvond(item){ return naAvond(item, config.avondVanaf); }
+
 function alsDatum(waarde){
   const p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(tekst(waarde));
   return p ? new Date(Number(p[1]), Number(p[2]) - 1, Number(p[3])) : null;
@@ -1442,14 +1461,14 @@ function tekenRitme(){
 // 's ochtends vandaag, 's avonds wat er vanavond nog komt en wat morgen wacht.
 function ritmeBlokken(){
   const nu = new Date();
-  const van = d => itemsVan(d).filter(i => !i.avond);
+  const van = d => itemsVan(d).filter(i => !isAvond(i));
   if(ritme !== 'nacht'){
     return [{ kop:'Vandaag', items: van(nu) }];
   }
   const morgen = new Date(nu);
   morgen.setDate(morgen.getDate() + 1);
   return [
-    { kop:'Vanavond', items: itemsVan(nu).filter(i => i.avond) },
+    { kop:'Vanavond', items: itemsVan(nu).filter(isAvond) },
     { kop:'Morgen', items: van(morgen), later:true },
   ];
 }
@@ -1528,7 +1547,7 @@ function itemsVan(d){
   const datum = datumVan(d);
   // Wat er die dag bijzonder is staat bovenaan; daaronder het vaste weekritme.
   const bijzonder = lijstVan(config.events).filter(e => e.datum === datum)
-    .map(e => ({ ...e, dagen:[], avond:false, bijzonder:true }));
+    .map(e => ({ ...e, dagen:[], bijzonder:true }));
   const week = lijstVan(config.overzicht).filter(i => !i.dagen.length || i.dagen.includes(dag));
   return bijzonder.concat(week);
 }
@@ -1538,8 +1557,8 @@ function agendaBlokken(){
   const gekozen = overzichtDatum();
   const isVandaag = datumVan(gekozen) === vandaag();
   return [
-    { kop:'Overdag', items: itemsVan(gekozen).filter(i => !i.avond) },
-    { kop: isVandaag ? 'Vanavond' : "'s Avonds", items: itemsVan(gekozen).filter(i => i.avond) },
+    { kop:'Overdag', items: itemsVan(gekozen).filter(i => !isAvond(i)) },
+    { kop: isVandaag ? 'Vanavond' : "'s Avonds", items: itemsVan(gekozen).filter(isAvond) },
   ].filter(b => b.items.length);
 }
 
@@ -1975,6 +1994,21 @@ function taakFormulier(gegevens){
   return stuk;
 }
 
+// De tijd bepaalt of iets bij Overdag of bij Vanavond komt te staan; dat is
+// beter uit te leggen dan het te laten zien nadat je hebt bewaard.
+function tijduitleg(gegevens){
+  const vanaf = (concept ? concept.avondVanaf : config.avondVanaf);
+  const uur = uurUitTijd(gegevens.tijd);
+  if(uur === null){
+    return gegevens.avond
+      ? `Zonder tijd blijft dit bij Vanavond staan, zoals het was. Vul een tijd in vanaf ${vanaf}:00 om dat zo te houden.`
+      : `Zonder tijd komt dit bij Overdag te staan. Vanaf ${vanaf}:00 gaat het naar Vanavond.`;
+  }
+  return uur >= vanaf
+    ? `Komt bij Vanavond te staan — dat begint om ${vanaf}:00.`
+    : `Komt bij Overdag te staan; vanaf ${vanaf}:00 zou het Vanavond zijn.`;
+}
+
 function itemFormulier(gegevens){
   const stuk = document.createDocumentFragment();
   const regel = el('div', 'formregel');
@@ -1984,14 +2018,14 @@ function itemFormulier(gegevens){
   );
   stuk.append(formKop('Icoon en naam'), regel);
 
+  // De uitleg loopt mee met wat je typt, zodat je meteen ziet waar het belandt.
+  const tijdnotitie = el('div', 'notitie', tijduitleg(gegevens));
   const wanneer = el('div', 'formregel');
-  wanneer.append(
-    veld(gegevens.tijd, 'tijd', 'tijd', v => { gegevens.tijd = v; }),
-    chip("🌙 's avonds", Boolean(gegevens.avond), () => { gegevens.avond = !gegevens.avond; tekenFormulier(); }),
-  );
-  stuk.append(formKop('Wanneer'), wanneer);
-  stuk.appendChild(el('div', 'notitie',
-    "Zet 's avonds aan voor wat pas na het avondeten speelt; dat komt bij Vanavond te staan."));
+  wanneer.appendChild(veld(gegevens.tijd, 'hoe laat', 'tijd', v => {
+    gegevens.tijd = v;
+    tijdnotitie.textContent = tijduitleg(gegevens);
+  }));
+  stuk.append(formKop('Hoe laat'), wanneer, tijdnotitie);
 
   stuk.append(formKop('Op welke dagen'), dagenKiezer(gegevens));
   stuk.appendChild(el('div', 'notitie', gegevens.dagen.length
@@ -2850,7 +2884,7 @@ function velOverzicht(){
       icoon: item.icoon,
       label: item.tekst,
       leeg: 'Naamloos',
-      tijd: (item.avond ? '🌙 ' : '') + tekst(item.tijd),
+      tijd: (naAvond(item, concept.avondVanaf) ? '🌙 ' : '') + tekst(item.tijd),
       dagen: item.dagen,
       wie: item.wie,
       wegTitel: 'Verwijderen',
@@ -3078,7 +3112,7 @@ function schoneGroepen(lijst){
 }
 
 // Eén lijst met items die zelf hun dagen kennen; lege regels vallen weg.
-function schoonOverzicht(bron){
+function schoonOverzicht(bron, vanaf){
   return lijstVan(bron).filter(item => tekst(item && item.tekst)).map(item => {
     const uit = { icoon: tekst(item.icoon, '📅'), tekst: tekst(item.tekst) };
     if(tekst(item.tijd)) uit.tijd = tekst(item.tijd);
@@ -3086,7 +3120,7 @@ function schoonOverzicht(bron){
     if(dagen.length && dagen.length < WEEKDAGEN.length) uit.dagen = dagen;
     const wie = lijstVan(item.wie);
     if(wie.length) uit.wie = wie;
-    if(item.avond) uit.avond = true;
+    if(naAvond(item, vanaf)) uit.avond = true;
     return uit;
   });
 }
@@ -3125,7 +3159,7 @@ function opgeschoond(c){
     })),
     dag: schoneGroepen(c.dag),
     nacht: schoneGroepen(c.nacht),
-    overzicht: schoonOverzicht(c.overzicht),
+    overzicht: schoonOverzicht(c.overzicht, uurOf(c.avondVanaf, STANDAARD.avondVanaf)),
     events: schoonEvents(c.events),
   };
 }
