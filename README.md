@@ -22,6 +22,8 @@ Onderin zweeft een menubalk met drie plekken:
   toe: een verjaardag, een uitje, de tandarts. Zo'n regel staat op één datum en
   krijgt een oranje randje, en verschijnt ook bij *Vandaag* en *Morgen* op de
   ritmepagina. Wat geweest is verdwijnt vanzelf bij het eerstvolgende bewaren.
+  Daaronder staat **Uit een bericht overnemen**: daar plak je een mail of appje
+  in en hoef je niets over te tikken.
 - **Instellingen** — hier bewerk je alles wat in de app staat.
 
 De kaartjes zijn overal even breed: drie op een rij op een telefoon, vijf zodra
@@ -35,7 +37,9 @@ Alles wat in de app staat, pas je in de app zelf aan, onder **Instellingen**:
 
 - **Kinderen** — wie er meedoet, met een emoji als gezicht en een eigen kleur.
   Namen wijzigen mag: de vinkjes blijven bij de juiste persoon, want die hangen
-  aan een vast id.
+  aan een vast id. Onder **Wat we verder weten** staan de kenmerken van een kind:
+  schoolgroep `1-2B`, team `JO9-3`. Meestal hoef je die niet zelf in te vullen —
+  zie *Uit een bericht* hieronder.
 - **Ochtendritme** en **Avondritme** — groepen en stappen.
 - **Weekritme** — één lijst met alles wat er in de week speelt: school, BSO,
   sport. Elk item kent zelf de dagen waarop het valt, dus school staat er één
@@ -48,6 +52,10 @@ op welke dagen, en wie meedoet (bij het weekritme ook een tijd en of het pas
 's avonds speelt). **Bewaar** zet het terug in de lijst; annuleren laat alles
 zoals het was. In de lijst zie je per regel al staan op welke dagen hij valt en
 voor wie hij is.
+
+Een stap hoort bij vaste weekdagen óf bij één datum. Zet de assistent er een op
+één dag neer, dan staat er **Alleen op** met die datum in het blad, en een knopje
+om hem alsnog elke week te laten terugkomen.
 
 Iconen typ je niet; overal waar er één staat opent een **kiezer** met emoji per
 onderwerp — dagritme, eten, spelen, huis, dieren, mensen, dingen.
@@ -64,6 +72,53 @@ nooit stilletjes iets half opgeslagen.
 `routine.json` in deze repo is alleen nog het **zaadje**: de eerste keer dat de
 app een lege database vindt, zet hij die inhoud erin. Daarna is de database de
 baas en hoef je dit bestand niet meer aan te raken.
+
+## Uit een bericht
+
+School, voetbal, judo en de bso sturen mail. In plaats van die over te tikken
+plak je hem op **Deze week** onder *Uit een bericht overnemen*. Wat eruit komt is
+een lijstje voorstellen — een bijzonderheid op een datum, of een eenmalige stap
+in het ochtendritme (*fiets mee*) — met de zin uit het bericht eronder waar het
+vandaan komt. Tik weg wat je niet wilt en zet de rest in één keer in de app.
+
+Weet de app iets niet, dan vraagt hij het eerst. Een schoolmail die het over
+groep 1-2 A tot en met D heeft is pas te plaatsen als bekend is wie waarin zit;
+dan verschijnt die vraag met een rijtje knopjes per kind. Het antwoord blijft als
+kenmerk bij het kind staan, dus de volgende mail van dezelfde school komt er
+zonder vragen doorheen. Hij vraagt hooguit twee keer; daarna doet hij het met
+wat hij heeft.
+
+Alleen de tekst die je plakt gaat de deur uit — de namen van de kinderen blijven
+in de app, en wat terugkomt zijn ids die de app zelf al kende.
+
+Staat er geen adres in `routine.json`, dan doet een ingebouwde namaak-assistent
+het werk. Die kent maar een handvol patronen — een datum, een groep als `1-2B`,
+en een paar woorden — genoeg om de schermen te proberen. Voor het echte uitlezen
+zet je er een adres bij:
+
+```json
+"assistent": "https://jouw-uitlezer.example/lees"
+```
+
+Daar komt `{ tekst, vandaag, ronde, kinderen }` binnen (elk kind met `id`, `naam`
+en zijn kenmerken) en er gaat één van drie dingen terug:
+
+```jsonc
+{ "type": "vraag", "sleutel": "schoolgroep", "vraag": "Wie zit waarin?",
+  "opties": ["1-2A", "1-2B"], "meerkeuze": false }
+
+{ "type": "voorstellen", "items": [
+  { "soort": "bijzonderheid", "icoon": "🚸", "tekst": "Verkeersles",
+    "datum": "2026-09-04", "tijd": "", "wie": ["emma"], "bron": "de zin uit de mail" },
+  { "soort": "stap", "ritme": "dag", "groep": "Weggaan", "icoon": "🚲",
+    "tekst": "Fiets of step mee", "datum": "2026-09-04", "wie": ["emma"],
+    "bron": "de zin uit de mail" } ] }
+
+{ "type": "niets" }
+```
+
+De sleutel van een uitlezer hoort daar te staan en niet in de browser: iedereen
+die de pagina opent kan die anders meelezen.
 
 ## Opslag
 

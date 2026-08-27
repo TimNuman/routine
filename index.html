@@ -460,6 +460,7 @@
     background:none; border:none; border-top:1px solid var(--scheiding); cursor:pointer;
     font-family: var(--baloo); font-weight:800; font-size:15.5px; color: var(--inkt-zacht);
   }
+  .knopicoon{ width:28px; flex:none; text-align:center; font-size:20px; line-height:1; }
   .kaartknop{
     display:flex; align-items:center; gap:10px; width:100%; margin-top:14px;
     padding:15px 16px; border-radius:22px; border:none; cursor:pointer;
@@ -485,6 +486,9 @@
   }
   body.nacht .chip{ background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.14); }
   .chip.aan{ background: var(--oranje); border-color: var(--oranje); color:#fff; }
+  /* 'Geen van deze' is een antwoord, geen keuze om naar toe te trekken. */
+  .chip.stil.aan{ background: rgba(43,45,66,.14); border-color:transparent; color: var(--inkt); }
+  body.nacht .chip.stil.aan{ background: rgba(255,255,255,.16); color:#fff; }
   .chip.persoon.aan{ color:#fff; }
   .kleuren{ display:flex; gap:8px; flex:none; }
   /* De kleuren zakken naar een tweede regel binnen dezelfde rij, zodat elk kind
@@ -540,6 +544,48 @@
     width:100%; margin-top:14px; padding:15px 0; border-radius:20px; border:none; cursor:pointer;
     background: var(--oranje); color:#fff;
     font-family: var(--baloo); font-weight:800; font-size:17px;
+  }
+  .grootknop:disabled{ opacity:.45; cursor:default; }
+
+  /* ------------------------------------------------------------ assistent --- */
+  #assiScrim{ z-index:72; }
+  #assistent{ z-index:73; }
+  textarea.plakvak{
+    width:100%; min-height:148px; resize:vertical; display:block;
+    font-family: var(--nunito); font-weight:600; font-size:14px; line-height:1.45;
+    color: var(--inkt); padding:12px 13px; border-radius:16px;
+    border:1px solid var(--veldrand); background: var(--veld);
+  }
+  textarea.plakvak::placeholder{ color: var(--inkt-zacht); opacity:.7; }
+  .vraagkind{ padding:10px 0 2px; }
+  .vraagnaam{
+    display:flex; align-items:center; gap:8px; padding:0 6px 7px;
+    font-family: var(--baloo); font-weight:800; font-size:15.5px;
+  }
+  .vraagnaam i{ font-style:normal; font-size:19px; }
+  .vondstlijst{ border-radius:22px; overflow:hidden; margin-top:4px; }
+  .vondst{
+    display:flex; align-items:flex-start; gap:11px; width:100%; text-align:left;
+    padding:12px 13px; background:none; border:none; cursor:pointer; color: var(--inkt);
+  }
+  .vondst + .vondst{ border-top:1px solid var(--scheiding); }
+  .vinkvak{
+    width:23px; height:23px; border-radius:8px; flex:none; margin-top:2px;
+    border:1.5px solid var(--tegelrand); background: var(--tegel);
+    display:flex; align-items:center; justify-content:center; font-size:13px; color:#fff;
+  }
+  .vondst.aan .vinkvak{ background: var(--oranje); border-color: var(--oranje); }
+  .vondsticoon{ font-size:24px; line-height:1.15; flex:none; }
+  .vondsttekst{ flex:1; min-width:0; }
+  .vondstnaam{ font-family: var(--baloo); font-weight:800; font-size:15.5px; }
+  .vondstmeta{ font-weight:800; font-size:12.5px; color: var(--inkt-zacht); padding-top:2px; }
+  .vondstbron{
+    font-weight:600; font-size:12px; font-style:italic; line-height:1.35;
+    color: var(--inkt-zacht); opacity:.85; padding-top:5px;
+  }
+  .bezigvak{
+    text-align:center; padding:34px 12px; line-height:1.4;
+    font-family: var(--baloo); font-weight:800; color: var(--inkt-zacht);
   }
 
   /* ------------------------------------------------------------ verversen --- */
@@ -676,6 +722,19 @@
     <button class="grootknop" id="formGereed" type="button">Bewaar</button>
   </section>
 
+  <div class="scrim" id="assiScrim" hidden></div>
+  <section class="bodemblad glas glas-zwevend" id="assistent" hidden>
+    <div class="greepje"></div>
+    <div class="bladkop2">
+      <button class="tekstknop" id="assiAf" type="button">Sluiten</button>
+      <div class="kiezerkop" id="assititel">Uit een bericht</div>
+      <span class="tekstknop" aria-hidden="true">&nbsp;</span>
+    </div>
+    <div class="melding" id="assimelding" hidden></div>
+    <div class="forminhoud" id="assiinhoud"></div>
+    <button class="grootknop" id="assiKnop" type="button">Lees uit</button>
+  </section>
+
   <div class="scrim" id="kiesScrim" hidden></div>
   <section class="bodemblad kiezer glas glas-zwevend" id="kiezer" hidden>
     <div class="greepje"></div>
@@ -794,6 +853,35 @@ function stapSleutel(step){
 
 function nieuwId(){ return 'p' + Math.random().toString(36).slice(2, 8); }
 
+// Wat de app over een kind weet buiten naam en gezicht om: schoolgroep,
+// voetbalteam, wat er verder nodig blijkt om een bericht te kunnen plaatsen.
+function kenmerkenVan(waarde){
+  const uit = {};
+  Object.entries(waarde || {}).forEach(([k, v]) => {
+    const sleutel = tekst(k), inhoud = tekst(v);
+    if(sleutel && inhoud) uit[sleutel] = inhoud;
+  });
+  return uit;
+}
+
+function isDatum(waarde){ return /^\d{4}-\d{2}-\d{2}$/.test(tekst(waarde)); }
+
+function alsDatum(waarde){
+  const p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(tekst(waarde));
+  return p ? new Date(Number(p[1]), Number(p[2]) - 1, Number(p[3])) : null;
+}
+
+// 'vr 4 sep' voor in een regel, 'vrijdag 4 september' als er ruimte is.
+function kortDatum(waarde){
+  const d = alsDatum(waarde);
+  return d ? `${WEEKDAGEN[(d.getDay() + 6) % 7]} ${d.getDate()} ${MAANDEN[d.getMonth()].slice(0, 3)}` : '';
+}
+
+function langeDatum(waarde){
+  const d = alsDatum(waarde);
+  return d ? `${DAGNAMEN[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]}` : '';
+}
+
 function dagenVan(waarde){
   return lijstVan(waarde).map(d => String(d).trim().slice(0, 2).toLowerCase())
     .filter(d => DAGEN.includes(d));
@@ -820,6 +908,8 @@ function maakGroepen(waarde){
       icoon: tekst(s && s.icoon, '⭐'),
       label: tekst(s && s.label),
       dagen: dagenVan(s && s.dagen),
+      // Een stap kan ook eenmalig zijn: dan telt alleen die datum.
+      datum: isDatum(s && s.datum) ? tekst(s.datum) : '',
       wie: wieVan(s),
     })),
   }));
@@ -903,6 +993,7 @@ function normaliseer(ruw){
     naam: tekst(p && p.naam, 'Naamloos'),
     emoji: tekst(p && p.emoji, '🙂'),
     kleur: tekst(p && p.kleur, KLEUREN[i % KLEUREN.length]),
+    kenmerken: kenmerkenVan(p && p.kenmerken),
   }));
   const uit = {
     titel: tekst(bron.titel, STANDAARD.titel),
@@ -925,6 +1016,7 @@ function normaliseer(ruw){
 
 let config = normaliseer(STANDAARD);
 let instelling = null;          // { url, gezin } uit routine.json
+let assistentUrl = '';          // waar een bericht heen mag om uitgelezen te worden
 let ritme = 'dag';              // 'dag' of 'nacht'
 let pagina = 'ritme';           // 'ritme' | 'overzicht' | 'instellingen'
 let gekozenDag = null;          // gekozen datum op de weekpagina; null = vandaag
@@ -1245,6 +1337,7 @@ function zacht(hex, alpha){
 
 // ---------------------------------------------------------------- ritme ----
 function opDeze(item, d){
+  if(item.datum) return item.datum === datumVan(d);
   if(!item.dagen || !item.dagen.length) return true;
   return item.dagen.includes(DAGEN[d.getDay()]);
 }
@@ -1498,6 +1591,11 @@ function tekenOverzicht(){
   erbij.append(el('span', 'plusknop', '+'), document.createTextNode('Iets bijzonders toevoegen'));
   erbij.addEventListener('click', () => bewerkEvent(null));
   agendaEl.appendChild(erbij);
+
+  const uitBericht = knop('kaartknop glas');
+  uitBericht.append(el('span', 'knopicoon', '✨'), document.createTextNode('Uit een bericht overnemen'));
+  uitBericht.addEventListener('click', openAssistent);
+  agendaEl.appendChild(uitBericht);
 }
 
 // ----------------------------------------------------------- instellingen ---
@@ -1849,9 +1947,21 @@ function taakFormulier(gegevens){
     veld(gegevens.label, 'Wat moet er gebeuren', '', v => { gegevens.label = v; }),
   );
   stuk.append(formKop('Icoon en naam'), regel);
-  stuk.append(formKop('Op welke dagen'), dagenKiezer(gegevens));
-  stuk.appendChild(el('div', 'notitie', gegevens.dagen.length
-    ? 'Alleen op deze dagen.' : 'Geen dag gekozen betekent: elke dag.'));
+
+  // Een stap hoort bij vaste weekdagen óf bij één datum — allebei tegelijk zou
+  // maar de vraag oproepen welke van de twee wint.
+  if(tekst(gegevens.datum)){
+    const eenmalig = el('div', 'formregel');
+    const datum = veld(gegevens.datum, '', 'datum', v => { gegevens.datum = v; });
+    datum.type = 'date';
+    eenmalig.append(datum, chip('elke week', false, () => { gegevens.datum = ''; tekenFormulier(); }));
+    stuk.append(formKop('Alleen op'), eenmalig);
+    stuk.appendChild(el('div', 'notitie', 'Deze stap staat er alleen op die ene dag.'));
+  }else{
+    stuk.append(formKop('Op welke dagen'), dagenKiezer(gegevens));
+    stuk.appendChild(el('div', 'notitie', gegevens.dagen.length
+      ? 'Alleen op deze dagen.' : 'Geen dag gekozen betekent: elke dag.'));
+  }
   stuk.append(formKop('Wie doet mee'), wieKiezer(gegevens));
   return stuk;
 }
@@ -1945,13 +2055,14 @@ async function verwijderEvent(id){
   if(await bewaarInhoud(ruw) !== false) sluitFormulier(false);
 }
 
-async function bewaarInhoud(ruw){
+async function bewaarInhoud(ruw, meld){
+  const zeg = meld || toonFormMelding;
   const nieuw = opgeschoond(ruw);
   if(opslag.basis){
     try{
       await bewaarConfigOpAfstand(nieuw);
     }catch(err){
-      toonFormMelding('Opslaan in de database lukte niet (' + err.message + ').');
+      zeg('Opslaan in de database lukte niet (' + err.message + ').');
       return false;
     }
   }
@@ -1984,7 +2095,479 @@ function kindFormulier(gegevens){
   stuk.append(formKop('Kleur'), kleuren);
   stuk.appendChild(el('div', 'notitie',
     'Naam wijzigen mag: de vinkjes blijven bij de juiste persoon.'));
+
+  // Wat een bericht van school of de club nodig heeft om bij het juiste kind
+  // uit te komen. Je kunt het hier zelf invullen, maar meestal vult het zich:
+  // de assistent vraagt ernaar zodra hij het in een bericht tegenkomt.
+  const paren = kenmerkParen(gegevens);
+  const kaart = el('div', 'bewerkkaart glas');
+  kaart.style.marginTop = '4px';
+  paren.forEach((paar, i) => {
+    const rij = el('div', 'bewerkrij');
+    rij.append(
+      minKnop('Kenmerk verwijderen', () => { paren.splice(i, 1); tekenFormulier(); }),
+      veld(paar.sleutel, 'waarvan', '', v => { paar.sleutel = v; }),
+      veld(paar.waarde, 'welke', '', v => { paar.waarde = v; }),
+    );
+    kaart.appendChild(rij);
+  });
+  kaart.appendChild(toevoegRij('Kenmerk toevoegen',
+    () => { paren.push({ sleutel:'', waarde:'' }); tekenFormulier(); }));
+  stuk.append(formKop('Wat we verder weten'), kaart);
+  stuk.appendChild(el('div', 'notitie',
+    'Bijvoorbeeld schoolgroep 1-2B, of team JO9-3. Daarmee weet de app bij wie '
+    + 'een bericht van school of de club hoort.'));
   return stuk;
+}
+
+// In het formulier is een kenmerk even een rijtje paren, zodat je de naam van
+// het kenmerk net zo goed kunt aanpassen als de inhoud.
+function kenmerkParen(gegevens){
+  if(!Array.isArray(gegevens.kenmerkParen)){
+    gegevens.kenmerkParen = Object.entries(kenmerkenVan(gegevens.kenmerken))
+      .map(([sleutel, waarde]) => ({ sleutel, waarde }));
+  }
+  return gegevens.kenmerkParen;
+}
+
+function uitParen(paren){
+  const uit = {};
+  lijstVan(paren).forEach(paar => {
+    const sleutel = tekst(paar && paar.sleutel), waarde = tekst(paar && paar.waarde);
+    if(sleutel && waarde) uit[sleutel] = waarde;
+  });
+  return uit;
+}
+
+// ------------------------------------------------------------- assistent ---
+// School, voetbal, judo en de bso sturen berichten; die wil je niet overtikken.
+// Plak er een in en er komt een lijstje uit dat je met een tik overneemt.
+// Weet de uitlezer iets niet — welk kind in 1-2B zit bijvoorbeeld — dan vraagt
+// hij ernaar, en het antwoord blijft als kenmerk bij het kind staan, zodat het
+// de volgende keer vanzelf goed gaat.
+const assiEl = $('assistent');
+const assiScrimEl = $('assiScrim');
+const assiInhoudEl = $('assiinhoud');
+const assiMeldingEl = $('assimelding');
+const assiKnopEl = $('assiKnop');
+const assiTitelEl = $('assititel');
+const MAX_VRAGEN = 2;           // daarna raadt hij liever dan nog eens te vragen
+let assi = null;
+
+function toonAssiMelding(bericht){
+  assiMeldingEl.textContent = bericht || '';
+  assiMeldingEl.hidden = !bericht;
+}
+
+function openAssistent(){
+  assi = { stap:'plakken', bericht:'', ronde:0, vragen:0, vraag:null,
+           antwoord:{}, items:[], keuze:[] };
+  toonAssiMelding('');
+  assiScrimEl.hidden = false;
+  assiEl.hidden = false;
+  tekenAssistent();
+}
+
+function sluitAssistent(){
+  assiScrimEl.hidden = true;
+  assiEl.hidden = true;
+  assi = null;
+  toonAssiMelding('');
+}
+
+function tekenAssistent(){
+  if(!assi) return;
+  assiInhoudEl.innerHTML = '';
+  assiKnopEl.disabled = false;
+  if(assi.stap === 'vraag') return tekenAssiVraag();
+  if(assi.stap === 'voorstellen') return tekenAssiVoorstellen();
+
+  if(assi.stap === 'bezig'){
+    assiTitelEl.textContent = 'Even lezen';
+    assiInhoudEl.appendChild(el('div', 'bezigvak', 'Even kijken wat erin staat…'));
+    assiKnopEl.textContent = 'Even lezen…';
+    assiKnopEl.disabled = true;
+    return;
+  }
+  if(assi.stap === 'niets'){
+    assiTitelEl.textContent = 'Niets gevonden';
+    assiInhoudEl.appendChild(el('div', 'bezigvak',
+      'Hier kon ik geen datum of afspraak in vinden. Plak eventueel wat meer van het bericht.'));
+    assiKnopEl.textContent = 'Opnieuw proberen';
+    return;
+  }
+
+  assiTitelEl.textContent = 'Uit een bericht';
+  const vak = document.createElement('textarea');
+  vak.className = 'plakvak';
+  vak.placeholder = 'Plak hier de mail of het appje van school, de club of de bso…';
+  vak.value = assi.bericht;
+  vak.addEventListener('input', () => { assi.bericht = vak.value; });
+  assiInhoudEl.append(formKop('Het bericht'), vak);
+  assiInhoudEl.appendChild(el('div', 'notitie',
+    'Alleen wat je hier plakt gaat mee. De namen van de kinderen blijven in de app.'));
+  assiKnopEl.textContent = 'Lees uit';
+}
+
+function tekenAssiVraag(){
+  const v = assi.vraag;
+  assiTitelEl.textContent = 'Even iets vragen';
+  assiInhoudEl.append(formKop('Vraag'), el('div', 'notitie', v.vraag));
+  config.mensen.forEach(persoon => {
+    const gekozen = lijstVan(assi.antwoord[persoon.id]);
+    const vak = el('div', 'vraagkind');
+    const kop = el('div', 'vraagnaam');
+    kop.append(el('i', '', persoon.emoji), document.createTextNode(persoon.naam));
+    const rij = el('div', 'chips glas');
+    v.opties.forEach(optie => {
+      rij.appendChild(chip(optie, gekozen.includes(optie), () => {
+        const i = gekozen.indexOf(optie);
+        if(i >= 0) gekozen.splice(i, 1);
+        else if(v.meerkeuze) gekozen.push(optie);
+        else gekozen.splice(0, gekozen.length, optie);
+        assi.antwoord[persoon.id] = gekozen;
+        tekenAssistent();
+      }, persoon.kleur));
+    });
+    const geen = chip('geen van deze', !gekozen.length,
+      () => { assi.antwoord[persoon.id] = []; tekenAssistent(); });
+    geen.classList.add('stil');
+    rij.appendChild(geen);
+    vak.append(kop, rij);
+    assiInhoudEl.appendChild(vak);
+  });
+  assiInhoudEl.appendChild(el('div', 'notitie',
+    'Wat je kiest blijft bij het kind staan, dus dit hoeft maar één keer.'));
+  assiKnopEl.textContent = 'Ga verder';
+}
+
+function tekenAssiVoorstellen(){
+  assiTitelEl.textContent = 'Dit haalde ik eruit';
+  const kaart = el('div', 'vondstlijst glas');
+  assi.items.forEach((item, i) => {
+    const aan = Boolean(assi.keuze[i]);
+    const rij = knop('vondst' + (aan ? ' aan' : ''));
+    const tekstvak = el('div', 'vondsttekst');
+    tekstvak.appendChild(el('div', 'vondstnaam', item.tekst));
+    const meta = [langeDatum(item.datum), tekst(item.tijd), assiWieTekst(item.wie), assiSoortTekst(item)]
+      .filter(Boolean).join(' · ');
+    if(meta) tekstvak.appendChild(el('div', 'vondstmeta', meta));
+    if(tekst(item.bron)) tekstvak.appendChild(el('div', 'vondstbron', '„' + tekst(item.bron) + '”'));
+    rij.append(el('div', 'vinkvak', aan ? '✓' : ''), el('div', 'vondsticoon', item.icoon), tekstvak);
+    rij.addEventListener('click', () => { assi.keuze[i] = !assi.keuze[i]; tekenAssistent(); });
+    kaart.appendChild(rij);
+  });
+  assiInhoudEl.append(formKop('Voorstellen'), kaart);
+  assiInhoudEl.appendChild(el('div', 'notitie',
+    'Tik weg wat je niet wilt. De rest komt in de app te staan; aanpassen kan daarna gewoon.'));
+  const aantal = assi.keuze.filter(Boolean).length;
+  assiKnopEl.textContent = aantal === 1 ? 'Zet er 1 in de app' : `Zet er ${aantal} in de app`;
+  assiKnopEl.disabled = !aantal;
+}
+
+function assiWieTekst(wie){
+  const namen = lijstVan(wie).map(id => persoonById(id)).filter(Boolean).map(p => p.naam);
+  return namen.length ? namen.join(' en ') : 'iedereen';
+}
+
+function assiSoortTekst(item){
+  if(item.soort !== 'stap') return '';
+  return 'bij het ' + (item.ritme === 'nacht' ? 'avondritme' : 'ochtendritme');
+}
+
+async function assiVerder(){
+  if(!assi) return;
+  if(assi.stap === 'niets'){ assi.stap = 'plakken'; return tekenAssistent(); }
+  if(assi.stap === 'plakken'){
+    if(!tekst(assi.bericht)) return toonAssiMelding('Plak eerst een bericht.');
+    return await leesUit();
+  }
+  if(assi.stap === 'vraag'){
+    if(await bewaarAntwoorden() === false) return;
+    return await leesUit();
+  }
+  if(assi.stap === 'voorstellen'){
+    const gekozen = assi.items.filter((_, i) => assi.keuze[i]);
+    if(!gekozen.length) return toonAssiMelding('Kies er minstens één.');
+    if(await zetVoorstellenIn(gekozen) !== false) sluitAssistent();
+  }
+}
+
+async function leesUit(){
+  toonAssiMelding('');
+  assi.stap = 'bezig';
+  tekenAssistent();
+  let uit;
+  try{
+    uit = await vraagAssistent({
+      tekst: assi.bericht,
+      vandaag: vandaag(),
+      ronde: assi.ronde + 1,
+      kinderen: config.mensen.map(p => ({ id:p.id, naam:p.naam, kenmerken:p.kenmerken })),
+    });
+  }catch(err){
+    if(!assi) return;
+    assi.stap = 'plakken';
+    tekenAssistent();
+    return toonAssiMelding('Het uitlezen lukte niet (' + err.message + ').');
+  }
+  if(!assi) return;
+  assi.ronde += 1;
+  const soort = tekst(uit && uit.type);
+  const opties = lijstVan(uit && uit.opties).map(o => tekst(o)).filter(Boolean);
+  if(soort === 'vraag' && opties.length && assi.vragen < MAX_VRAGEN){
+    assi.vragen += 1;
+    assi.vraag = {
+      sleutel: tekst(uit.sleutel, 'kenmerk'),
+      vraag: tekst(uit.vraag, 'Waar hoort dit bij?'),
+      opties,
+      meerkeuze: Boolean(uit.meerkeuze),
+    };
+    assi.antwoord = {};
+    assi.stap = 'vraag';
+  }else{
+    assi.items = lijstVan(uit && uit.items).map(schoonVoorstel).filter(Boolean);
+    assi.keuze = assi.items.map(() => true);
+    assi.stap = assi.items.length ? 'voorstellen' : 'niets';
+  }
+  tekenAssistent();
+}
+
+// Wat er terugkomt is van buiten: alleen wat we snappen komt erdoor.
+function schoonVoorstel(ruw){
+  const soort = tekst(ruw && ruw.soort) === 'stap' ? 'stap' : 'bijzonderheid';
+  const bekend = new Set(config.mensen.map(p => p.id));
+  const uit = {
+    soort,
+    icoon: tekst(ruw && ruw.icoon, soort === 'stap' ? '⭐' : '🎉'),
+    tekst: tekst(ruw && (ruw.tekst || ruw.label)),
+    tijd: tekst(ruw && ruw.tijd),
+    datum: isDatum(ruw && ruw.datum) ? tekst(ruw.datum) : '',
+    wie: lijstVan(ruw && ruw.wie).map(String).filter(id => bekend.has(id)),
+    bron: tekst(ruw && ruw.bron).slice(0, 200),
+    ritme: tekst(ruw && ruw.ritme) === 'nacht' ? 'nacht' : 'dag',
+    groep: tekst(ruw && ruw.groep),
+  };
+  return uit.tekst && uit.datum ? uit : null;
+}
+
+// Het antwoord op een vraag is een kenmerk van het kind en gaat meteen mee de
+// database in — dan hoeft het de volgende keer niet nog eens gevraagd.
+async function bewaarAntwoorden(){
+  const sleutel = tekst(assi.vraag.sleutel, 'kenmerk');
+  const ruw = alsRuweConfig();
+  let iets = false;
+  lijstVan(ruw.mensen).forEach(persoon => {
+    const gekozen = lijstVan(assi.antwoord[persoon.id]).map(x => tekst(x)).filter(Boolean);
+    persoon.kenmerken = kenmerkenVan(persoon.kenmerken);
+    if(gekozen.length){ persoon.kenmerken[sleutel] = gekozen.join(', '); iets = true; }
+    else delete persoon.kenmerken[sleutel];
+  });
+  return iets ? await bewaarInhoud(ruw, toonAssiMelding) : true;
+}
+
+async function zetVoorstellenIn(items){
+  const ruw = alsRuweConfig();
+  ruw.events = lijstVan(ruw.events);
+  items.forEach(item => {
+    if(item.soort === 'stap') return zetStapIn(ruw, item);
+    ruw.events.push({
+      id: nieuwId(), icoon: item.icoon, tekst: item.tekst,
+      tijd: item.tijd, datum: item.datum, wie: item.wie,
+    });
+  });
+  return await bewaarInhoud(ruw, toonAssiMelding);
+}
+
+// Een eenmalige stap hangt aan een groep in het ritme. Is de voorgestelde groep
+// er niet, dan gaat hij bij de laatste — daar staat het weggaan meestal.
+function zetStapIn(ruw, item){
+  const groepen = ruw[item.ritme] = maakGroepen(ruw[item.ritme]);
+  const naam = item.groep.toLowerCase();
+  let doel = naam && groepen.find(g => g.groep.toLowerCase() === naam)
+          || naam && groepen.find(g => g.groep.toLowerCase().includes(naam))
+          || groepen[groepen.length - 1];
+  if(!doel){
+    doel = { groep: tekst(item.groep, 'Erbij'), tijd:'', stappen:[] };
+    groepen.push(doel);
+  }
+  doel.stappen.push({
+    icoon: item.icoon, label: item.tekst, dagen: [],
+    datum: item.datum, wie: item.wie,
+  });
+}
+
+// Staat er een uitlezer in routine.json, dan gaat het bericht daarheen. Zo niet,
+// dan doet de namaak-assistent hieronder het werk, zodat de schermen ook zonder
+// server te proberen zijn.
+async function vraagAssistent(lading){
+  if(!assistentUrl) return nepAssistent(lading);
+  const res = await fetch(assistentUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(lading),
+  });
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  return await res.json();
+}
+
+// --------------------------------------------------------- namaak-assistent ---
+// Kent maar een handvol patronen: een datum, een groep als 1-2B, en een paar
+// woorden. Genoeg om de hele lus te lopen; het echte uitlezen komt van de
+// uitlezer achter `assistent` in routine.json.
+const NEP_ICONEN = [
+  [/verkeer|fiets|step/, '🚲'],
+  [/zwem/, '🏊'],
+  [/voetbal|wedstrijd|toernooi/, '⚽'],
+  [/judo|karate/, '🥋'],
+  [/gym|sportdag|sport/, '🤸'],
+  [/verjaardag|trakt|feest/, '🎉'],
+  [/foto/, '📷'],
+  [/dokter|tandarts|prik|ggd|luizen/, '🩺'],
+  [/excursie|museum|uitje|schoolreis|bus/, '🚌'],
+  [/voorstelling|optreden|musical/, '🎭'],
+  [/school|juf|meester|groep|ouderavond|rapport/, '🏫'],
+];
+
+// Los van elkaar gehouden: hier de dingen die mee moeten, daar de namen van
+// wat er te doen is. Als tekst bewaard, want ze worden allebei twee keer
+// gebruikt — één keer zoekend, één keer toetsend.
+const NEP_DINGEN = '\\b(fiets|step|zwemspullen|zwemtas|gymspullen|gymkleding|gymschoenen|'
+  + 'laarzen|regenjas|regenlaarzen|bal|rugzak|tas|lunch|drinken|knuffel|boek|'
+  + 'verkleedkleren|helm|gympen|zwemdiploma|kaartje)\\b';
+const NEP_NAMEN = new RegExp('\\b(verkeersles|zwemles|gymles|schoolreis|schoolkamp|kamp|'
+  + 'excursie|schoolfoto|schoolfotograaf|fotograaf|ouderavond|rapportgesprek|studiedag|'
+  + 'sportdag|koningsspelen|voorstelling|musical|toernooi|wedstrijd|training|examen|'
+  + 'luizencontrole|juffendag|meesterdag|playbackshow|kerstdiner|paasontbijt|inloopochtend)\\b', 'i');
+
+function nepIcoon(zin, terugval){
+  const laag = String(zin || '').toLowerCase();
+  const paar = NEP_ICONEN.find(([regel]) => regel.test(laag));
+  return paar ? paar[1] : terugval;
+}
+
+function nepZinnen(bericht){
+  return String(bericht || '').replace(/([.!?:])\s+/g, '$1\n').split(/\n+/)
+    .map(z => z.trim()).filter(Boolean);
+}
+
+function nepStempel(jaar, maand, dag){
+  return `${jaar}-${String(maand + 1).padStart(2, '0')}-${String(dag).padStart(2, '0')}`;
+}
+
+// '4 september' of '4 september 2026'; zonder jaartal is het de eerstvolgende.
+function nepDatum(zin, nu){
+  const m = /\b(\d{1,2})\s*(?:e|de|ste)?\s+(januari|februari|maart|april|mei|juni|juli|augustus|september|oktober|november|december)\b(?:\s+(\d{4}))?/i.exec(zin);
+  if(!m) return '';
+  const maand = MAANDEN.indexOf(m[2].toLowerCase());
+  const jaar = m[3] ? Number(m[3]) : Number(nu.slice(0, 4));
+  const uit = nepStempel(jaar, maand, Number(m[1]));
+  return (!m[3] && uit < nu) ? nepStempel(jaar + 1, maand, Number(m[1])) : uit;
+}
+
+// 'groep 1-2 B en D' levert 1-2B en 1-2D op.
+function nepGroepen(zin){
+  const uit = [];
+  const regel = /(\d\s*-\s*\d|\d)\s*([A-H])\b((?:\s*(?:,|\ben\b|\bof\b|\/)\s*[A-H]\b)*)/g;
+  let m;
+  while((m = regel.exec(zin))){
+    const basis = m[1].replace(/\s+/g, '');
+    [m[2]].concat((m[3] || '').match(/[A-H]\b/g) || []).forEach(letter => {
+      const groep = basis + letter;
+      if(!uit.includes(groep)) uit.push(groep);
+    });
+  }
+  return uit;
+}
+
+function nepWaarden(kind){
+  return Object.values(kenmerkenVan(kind && kind.kenmerken))
+    .flatMap(waarde => String(waarde).split(/\s*,\s*/)).map(w => w.trim()).filter(Boolean);
+}
+
+// Een woord als 'verkeerslessen' of 'ouderavond' is de naam van wat er speelt;
+// weekdagen tellen niet mee, want die eindigen ook op -dag.
+function nepNaam(bericht){
+  const bekend = NEP_NAMEN.exec(String(bericht));
+  if(bekend) return bekend[1].charAt(0).toUpperCase() + bekend[1].slice(1).toLowerCase();
+  const woorden = String(bericht)
+    .match(/\b[A-Za-z]{4,}(?:les|lessen|dag|avond|reis|tocht|feest|show|gesprek|uitje|toernooi|wedstrijd|training|controle|optreden)\b/g) || [];
+  const woord = woorden.find(w => !DAGNAMEN.includes(w.toLowerCase())
+    && !/^(vandaag|middag|namiddag|ochtend|morgen|overdag|weekdag|werkdag)$/i.test(w));
+  if(woord){
+    const enkel = woord.replace(/lessen$/i, 'les');
+    return enkel.charAt(0).toUpperCase() + enkel.slice(1).toLowerCase();
+  }
+  const eerste = (nepZinnen(bericht)[0] || 'Uit een bericht')
+    .replace(/^(onderwerp|betreft|subject)\s*:?\s*/i, '');
+  return eerste.slice(0, 40);
+}
+
+function nepDingen(zin){
+  return (String(zin).match(new RegExp(NEP_DINGEN, 'gi')) || []).map(w => w.toLowerCase());
+}
+
+// 'Neem een rugzak mee' telt net zo goed als 'meegeven'; een kale 'mee' alleen
+// als er ook iets in de zin staat dat je mee kúnt nemen.
+function nepMeeZin(zin){
+  if(/mee(?:geven|nemen|brengen|genomen|gebracht|gegeven)|mee te nemen|denk\s+aan/i.test(zin)) return true;
+  return /\bmee\b/i.test(zin) && nepDingen(zin).length > 0;
+}
+
+function nepMeeNemen(zin){
+  const gevonden = nepDingen(zin);
+  const uniek = gevonden.filter((w, i) => gevonden.indexOf(w) === i);
+  if(!uniek.length) return 'Spullen mee';
+  const woorden = uniek.join(' of ');
+  return woorden.charAt(0).toUpperCase() + woorden.slice(1) + ' mee';
+}
+
+function nepAssistent(lading){
+  const nu = tekst(lading.vandaag, vandaag());
+  const bericht = tekst(lading.tekst);
+  const regels = nepZinnen(bericht)
+    .map(zin => ({ zin, datum: nepDatum(zin, nu), groepen: nepGroepen(zin) }));
+  const metDatum = regels.filter(r => r.datum);
+  if(!metDatum.length) return { type:'niets' };
+
+  const alleGroepen = [];
+  metDatum.forEach(r => r.groepen.forEach(g => { if(!alleGroepen.includes(g)) alleGroepen.push(g); }));
+  const kinderen = lijstVan(lading.kinderen);
+  const kent = kinderen.some(kind => nepWaarden(kind).some(w => alleGroepen.includes(w)));
+
+  if(alleGroepen.length && !kent && Number(lading.ronde) < 2){
+    return {
+      type: 'vraag',
+      sleutel: 'schoolgroep',
+      vraag: `Dit bericht gaat over ${alleGroepen.join(', ')}. Wie zit waarin?`,
+      opties: alleGroepen,
+      meerkeuze: false,
+    };
+  }
+
+  const naam = nepNaam(bericht);
+  const icoon = nepIcoon(bericht, '📅');
+  const items = [];
+  metDatum.forEach(regel => {
+    const wie = regel.groepen.length
+      ? kinderen.filter(kind => nepWaarden(kind).some(w => regel.groepen.includes(w))).map(k => k.id)
+      : [];
+    // Weten we de groepen wél, en zit er niemand van ons in, dan gaat die dag
+    // niet over dit gezin.
+    if(regel.groepen.length && !wie.length && kent) return;
+    items.push({ soort:'bijzonderheid', icoon, tekst: naam, datum: regel.datum, wie, bron: regel.zin });
+  });
+
+  const mee = regels.find(r => nepMeeZin(r.zin));
+  if(mee){
+    const label = nepMeeNemen(mee.zin);
+    items.slice().forEach(v => items.push({
+      soort:'stap', ritme:'dag', groep:'Weggaan',
+      icoon: nepIcoon(mee.zin, '🎒'), tekst: label,
+      datum: v.datum, wie: v.wie, bron: mee.zin,
+    }));
+  }
+  return items.length ? { type:'voorstellen', items } : { type:'niets' };
 }
 
 // ------------------------------------------------------------ regels in de lijst
@@ -2063,6 +2646,7 @@ function velRitme(soort){
         icoon: stap.icoon,
         label: stap.label,
         leeg: 'Naamloze stap',
+        tijd: kortDatum(stap.datum),
         dagen: stap.dagen,
         wie: stap.wie,
         wegTitel: 'Stap verwijderen',
@@ -2072,6 +2656,7 @@ function velRitme(soort){
             icoon: tekst(nieuw.icoon, '⭐'),
             label: nieuw.label,
             dagen: dagenVan(nieuw.dagen),
+            datum: isDatum(nieuw.datum) ? tekst(nieuw.datum) : '',
             wie: lijstVan(nieuw.wie),
           };
           tekenVel();
@@ -2082,13 +2667,14 @@ function velRitme(soort){
     maakSleepbaar(rijenvak, groep.stappen, tekenVel);
 
     kaart.appendChild(toevoegRij('Stap toevoegen', () => {
-      const stap = { icoon:'⭐', label:'', dagen:[], wie:[] };
+      const stap = { icoon:'⭐', label:'', dagen:[], datum:'', wie:[] };
       openFormulier('Nieuwe stap', stap, taakFormulier, nieuw => {
         if(!tekst(nieuw.label)) return;
         groep.stappen.push({
           icoon: tekst(nieuw.icoon, '⭐'),
           label: nieuw.label,
           dagen: dagenVan(nieuw.dagen),
+          datum: isDatum(nieuw.datum) ? tekst(nieuw.datum) : '',
           wie: lijstVan(nieuw.wie),
         });
         tekenVel();
@@ -2131,6 +2717,7 @@ function velKinderen(){
         Object.assign(persoon, {
           naam: nieuw.naam, emoji: tekst(nieuw.emoji, '🙂'),
           kleur: tekst(nieuw.kleur, persoon.kleur),
+          kenmerken: uitParen(nieuw.kenmerkParen),
         });
         tekenVel();
       }),
@@ -2143,10 +2730,12 @@ function velKinderen(){
     const kind = {
       id: nieuwId(), naam:'', emoji:'🙂',
       kleur: KLEUREN[concept.mensen.length % KLEUREN.length],
+      kenmerken: {},
     };
     openFormulier('Nieuw kind', kind, kindFormulier, nieuw => {
       if(!tekst(nieuw.naam)) return;
-      concept.mensen.push({ ...kind, naam: nieuw.naam, emoji: nieuw.emoji, kleur: nieuw.kleur });
+      concept.mensen.push({ ...kind, naam: nieuw.naam, emoji: nieuw.emoji, kleur: nieuw.kleur,
+        kenmerken: uitParen(nieuw.kenmerkParen) });
       tekenVel();
     });
   }));
@@ -2274,8 +2863,9 @@ function schoneGroepen(lijst){
     tijd: tekst(g.tijd),
     stappen: lijstVan(g.stappen).filter(s => tekst(s.label)).map(s => {
       const uit = { icoon: tekst(s.icoon, '⭐'), label: tekst(s.label) };
+      if(isDatum(s.datum)) uit.datum = tekst(s.datum);
       const dagen = dagenVan(s.dagen);
-      if(dagen.length) uit.dagen = dagen;
+      if(dagen.length && !uit.datum) uit.dagen = dagen;
       const wie = lijstVan(s.wie);
       if(wie.length) uit.wie = wie;
       return uit;
@@ -2327,6 +2917,7 @@ function opgeschoond(c){
       naam: tekst(p.naam, 'Naamloos'),
       emoji: tekst(p.emoji, '🙂'),
       kleur: tekst(p.kleur, KLEUREN[i % KLEUREN.length]),
+      kenmerken: kenmerkenVan(p.kenmerken),
     })),
     dag: schoneGroepen(c.dag),
     nacht: schoneGroepen(c.nacht),
@@ -2458,6 +3049,9 @@ $('velGereed').addEventListener('click', bewaarVel);
 $('formAf').addEventListener('click', () => sluitFormulier(false));
 $('formGereed').addEventListener('click', () => sluitFormulier(true));
 formScrimEl.addEventListener('click', () => sluitFormulier(false));
+$('assiAf').addEventListener('click', sluitAssistent);
+$('assiKnop').addEventListener('click', assiVerder);
+assiScrimEl.addEventListener('click', sluitAssistent);
 $('kiezerGereed').addEventListener('click', () => sluitKiezer(true));
 kiesScrimEl.addEventListener('click', () => sluitKiezer(false));
 
@@ -2468,6 +3062,7 @@ async function laden(){
     if(res.ok) ruw = await res.json();
   }catch(err){ console.warn('routine.json niet geladen:', err); }
   instelling = (ruw && ruw.opslag) || null;
+  assistentUrl = tekst(ruw && ruw.assistent);
   // De laatst bekende inhoud staat lokaal en schildert meteen; de database
   // corrigeert zodra die antwoordt.
   config = normaliseer(laadLokaalConfig() || ruw || STANDAARD);
