@@ -142,104 +142,109 @@
       ]
     }
   ],
-  "overzicht": {
-    "ma": [
-      {
-        "icoon": "🏫",
-        "tekst": "School"
-      },
-      {
-        "icoon": "👨",
-        "tekst": "Papadag"
-      },
-      {
-        "icoon": "🏊",
-        "tekst": "Zwemmen"
-      },
-      {
-        "icoon": "🏋️",
-        "tekst": "Papa sporten",
-        "tijd": "20:00",
-        "avond": true
-      }
-    ],
-    "di": [
-      {
-        "icoon": "🏫",
-        "tekst": "School"
-      },
-      {
-        "icoon": "🧑‍🤝‍🧑",
-        "tekst": "BSO"
-      }
-    ],
-    "wo": [
-      {
-        "icoon": "🏫",
-        "tekst": "Kort school"
-      },
-      {
-        "icoon": "🧑‍🤝‍🧑",
-        "tekst": "Lang BSO"
-      },
-      {
-        "icoon": "⚽",
-        "tekst": "Voetbal",
-        "tijd": "15:45 – 16:45",
-        "wie": [
-          "mads"
-        ]
-      },
-      {
-        "icoon": "🏋️",
-        "tekst": "Papa sporten",
-        "tijd": "20:00",
-        "avond": true
-      }
-    ],
-    "do": [
-      {
-        "icoon": "🏫",
-        "tekst": "School"
-      },
-      {
-        "icoon": "👩🏻",
-        "tekst": "Mamadag"
-      }
-    ],
-    "vr": [
-      {
-        "icoon": "🏫",
-        "tekst": "School"
-      },
-      {
-        "icoon": "🧑‍🤝‍🧑",
-        "tekst": "BSO"
-      }
-    ],
-    "za": [
-      {
-        "icoon": "🤸",
-        "tekst": "Turnen",
-        "tijd": "10:00",
-        "wie": [
-          "emma"
-        ]
-      },
-      {
-        "icoon": "⚽",
-        "tekst": "Voetbal",
-        "tijd": "11:00",
-        "wie": [
-          "mads"
-        ]
-      }
-    ],
-    "zo": [
-      {
-        "icoon": "🏡",
-        "tekst": "Niks"
-      }
-    ]
-  }
+  "overzicht": [
+    {
+      "icoon": "🏫",
+      "tekst": "School",
+      "dagen": [
+        "ma",
+        "di",
+        "do",
+        "vr"
+      ]
+    },
+    {
+      "icoon": "👨",
+      "tekst": "Papadag",
+      "dagen": [
+        "ma"
+      ]
+    },
+    {
+      "icoon": "🏊",
+      "tekst": "Zwemmen",
+      "dagen": [
+        "ma"
+      ]
+    },
+    {
+      "icoon": "🏋️",
+      "tekst": "Papa sporten",
+      "tijd": "20:00",
+      "dagen": [
+        "ma",
+        "wo"
+      ],
+      "avond": true
+    },
+    {
+      "icoon": "🧑‍🤝‍🧑",
+      "tekst": "BSO",
+      "dagen": [
+        "di",
+        "vr"
+      ]
+    },
+    {
+      "icoon": "🏫",
+      "tekst": "Kort school",
+      "dagen": [
+        "wo"
+      ]
+    },
+    {
+      "icoon": "🧑‍🤝‍🧑",
+      "tekst": "Lang BSO",
+      "dagen": [
+        "wo"
+      ]
+    },
+    {
+      "icoon": "⚽",
+      "tekst": "Voetbal",
+      "tijd": "15:45 – 16:45",
+      "dagen": [
+        "wo"
+      ],
+      "wie": [
+        "mads"
+      ]
+    },
+    {
+      "icoon": "👩🏻",
+      "tekst": "Mamadag",
+      "dagen": [
+        "do"
+      ]
+    },
+    {
+      "icoon": "🤸",
+      "tekst": "Turnen",
+      "tijd": "10:00",
+      "dagen": [
+        "za"
+      ],
+      "wie": [
+        "emma"
+      ]
+    },
+    {
+      "icoon": "⚽",
+      "tekst": "Voetbal",
+      "tijd": "11:00",
+      "dagen": [
+        "za"
+      ],
+      "wie": [
+        "mads"
+      ]
+    },
+    {
+      "icoon": "🏡",
+      "tekst": "Niks",
+      "dagen": [
+        "zo"
+      ]
+    }
+  ]
 }

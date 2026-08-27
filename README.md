@@ -32,14 +32,18 @@ Alles wat in de app staat, pas je in de app zelf aan, onder **Instellingen**:
 - **Kinderen** — wie er meedoet, met een emoji als gezicht en een eigen kleur.
   Namen wijzigen mag: de vinkjes blijven bij de juiste persoon, want die hangen
   aan een vast id.
-- **Ochtendritme** en **Avondritme** — groepen en stappen. Rood rondje weg,
-  groen rondje erbij, en met de greep rechts versleep je een stap naar een andere
-  plek. Tik een stap aan en eronder verschijnt voor wie hij is en op welke dagen.
-- **Dagoverzicht** — per dag van de week wat er die dag is, met een tijd als die
-  er is. Zet **'s avonds** aan voor wat pas na het avondeten speelt: dat komt bij
-  *Vanavond* te staan in plaats van bij de dag zelf. Een dag zonder regels
-  verdwijnt vanzelf uit de database.
+- **Ochtendritme** en **Avondritme** — groepen en stappen.
+- **Dagoverzicht** — één lijst met alles wat er in de week speelt: school, BSO,
+  sport. Elk item kent zelf de dagen waarop het valt, dus school staat er één
+  keer met *ma, di, do, vr* erachter in plaats van vier keer.
 - **Naam en tijden** — hoe de app heet en vanaf welk uur hij op de avond opent.
+
+Elke regel werkt hetzelfde: rood rondje weghalen, met de greep rechts verslepen,
+en de regel zelf aanraken opent een blad met alles wat erbij hoort — icoon, naam,
+op welke dagen, en wie meedoet (bij het dagoverzicht ook een tijd en of het pas
+'s avonds speelt). **Bewaar** zet het terug in de lijst; annuleren laat alles
+zoals het was. In de lijst zie je per regel al staan op welke dagen hij valt en
+voor wie hij is.
 
 Iconen typ je niet; overal waar er één staat opent een **kiezer** met emoji per
 onderwerp — dagritme, eten, spelen, huis, dieren, mensen, dingen.

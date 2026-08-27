@@ -322,7 +322,7 @@
   .scrim{ position:fixed; inset:0; background: rgba(22,15,6,.34); z-index:60; }
   /* De emojikiezer komt over het bewerkblad heen, dus zijn waas ook. */
   #kiesScrim{ z-index:70; }
-  .scrim[hidden], .vel[hidden], .kiezer[hidden]{ display:none; }
+  .scrim[hidden], .vel[hidden], .bodemblad[hidden]{ display:none; }
   .vel{
     position:fixed; inset:0; z-index:61; overflow-y:auto;
     padding: calc(env(safe-area-inset-top) + 18px) 0 calc(env(safe-area-inset-bottom) + 30px);
@@ -365,7 +365,32 @@
     display:flex; align-items:center; gap:10px; padding:8px 12px; min-height:58px;
     background: transparent; transition: background .2s ease;
   }
-  .bewerkrij.gekozen{ background: rgba(242,153,74,.16); }
+  /* De hele regel opent het formulier; alleen de knoppen aan de randen niet. */
+  .rijknopvlak{
+    flex:1; min-width:0; display:flex; align-items:center; gap:10px;
+    background:none; border:none; padding:6px 2px; cursor:pointer; text-align:left;
+    font-family: inherit; color: inherit;
+  }
+  .rijlabel{
+    flex:1; min-width:0;
+    font-family: var(--baloo); font-weight:700; font-size:15.5px; color: var(--inkt);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .rijlabel.leeg{ color: var(--inkt-zacht); font-weight:600; }
+  .rijmeta{ display:flex; align-items:center; gap:8px; flex:none; }
+  .rijdagen{
+    font-weight:800; font-size:11.5px; color: var(--inkt-zacht);
+    white-space:nowrap; letter-spacing:.2px;
+  }
+  .rijwie{ display:flex; flex:none; }
+  .rijwie span{
+    width:24px; height:24px; border-radius:50%; margin-left:-7px;
+    display:flex; align-items:center; justify-content:center; font-size:13px;
+    box-shadow: 0 0 0 2px rgba(255,255,255,.85);
+  }
+  body.nacht .rijwie span{ box-shadow: 0 0 0 2px rgba(24,26,58,.9); }
+  .rijwie span:first-child{ margin-left:0; }
+  .rijkleur{ width:16px; height:16px; border-radius:50%; flex:none; }
   .bewerkrij + .bewerkrij{ border-top:1px solid var(--scheiding); }
   .bewerkrij.sleept{ position:relative; z-index:3; box-shadow: 0 12px 26px rgba(0,0,0,.16); background: rgba(255,255,255,.7); }
   body.nacht .bewerkrij.sleept{ background: rgba(60,62,110,.9); }
@@ -435,13 +460,27 @@
   .kleuren button{ width:22px; height:22px; border-radius:50%; cursor:pointer; border:2px solid transparent; }
   .kleuren button.aan{ border-color: var(--inkt); }
 
-  /* --------------------------------------------------------- emojikiezer --- */
-  .kiezer{
-    position:fixed; left:0; right:0; bottom:0; z-index:71;
+  /* ------------------------------------------------------------ bodembladen --- */
+  .bodemblad{
+    position:fixed; left:0; right:0; bottom:0;
     max-width:520px; margin:0 auto;
     border-radius:30px 30px 0 0; padding:10px 18px calc(env(safe-area-inset-bottom) + 18px);
-    display:flex; flex-direction:column; max-height:78vh;
+    display:flex; flex-direction:column; max-height:84vh;
   }
+  #formulier{ z-index:71; }
+  #formScrim{ z-index:70; }
+  #kiesScrim{ z-index:80; }
+  .kiezer{ z-index:81; }
+  .bladkop2{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; }
+  .bladkop2 .tekstknop:first-child{ justify-self:start; }
+  .forminhoud{ flex:1; overflow-y:auto; padding:4px 2px 8px; }
+  .formkop{
+    font-weight:800; font-size:11.5px; letter-spacing:.6px; text-transform:uppercase;
+    color: var(--inkt-zacht); padding:16px 6px 8px;
+  }
+  .formkop:first-child{ padding-top:8px; }
+  .formregel{ display:flex; align-items:center; gap:10px; }
+  .formregel .emojiknop{ width:52px; height:52px; border-radius:17px; font-size:27px; }
   .greepje{ width:44px; height:5px; border-radius:99px; background: rgba(43,45,66,.22); margin:0 auto 10px; }
   body.nacht .greepje{ background: rgba(255,255,255,.3); }
   .kiezerkop{ text-align:center; font-family: var(--baloo); font-weight:800; font-size:18px; }
@@ -590,8 +629,20 @@
     <div class="velinhoud" id="velinhoud"></div>
   </section>
 
+  <div class="scrim" id="formScrim" hidden></div>
+  <section class="bodemblad glas glas-zwevend" id="formulier" hidden>
+    <div class="greepje"></div>
+    <div class="bladkop2">
+      <button class="tekstknop" id="formAf" type="button">Annuleer</button>
+      <div class="kiezerkop" id="formtitel">Bewerken</div>
+      <span class="tekstknop" aria-hidden="true">&nbsp;</span>
+    </div>
+    <div class="forminhoud" id="forminhoud"></div>
+    <button class="grootknop" id="formGereed" type="button">Bewaar</button>
+  </section>
+
   <div class="scrim" id="kiesScrim" hidden></div>
-  <section class="kiezer glas glas-zwevend" id="kiezer" hidden>
+  <section class="bodemblad kiezer glas glas-zwevend" id="kiezer" hidden>
     <div class="greepje"></div>
     <div class="kiezerkop" id="kiezerkop">Kies een icoon</div>
     <div class="kiezervoorbeeld" id="kiezervoorbeeld">🙂</div>
@@ -670,7 +721,7 @@ const STANDAARD = {
       { icoon:'🌙', label:'Licht uit' },
     ]},
   ],
-  overzicht: {},
+  overzicht: [],
 };
 
 // Firebase levert een lijst soms terug als object met nummers als sleutel; hier
@@ -747,19 +798,47 @@ function routine(waarde, terugval){
   return aantalStappen(groepen) ? groepen : maakGroepen(terugval);
 }
 
-function overzichtPerDag(waarde){
-  const uit = {};
-  Object.entries(waarde || {}).forEach(([k, v]) => {
-    const dag = String(k).trim().slice(0, 2).toLowerCase();
-    if(!DAGEN.includes(dag)) return;
-    uit[dag] = lijstVan(v).map(item => ({
-      icoon: tekst(item && item.icoon, '📅'),
-      tekst: tekst(item && item.tekst),
-      tijd: tekst(item && item.tijd),
-      wie: wieVan(item),
-      avond: Boolean(item && item.avond),
-    }));
+function overzichtItem(ruw){
+  return {
+    icoon: tekst(ruw && ruw.icoon, '📅'),
+    tekst: tekst(ruw && ruw.tekst),
+    tijd: tekst(ruw && ruw.tijd),
+    dagen: dagenVan(ruw && ruw.dagen),
+    wie: wieVan(ruw),
+    avond: Boolean(ruw && ruw.avond),
+  };
+}
+
+// Het overzicht was eerst per dag ingevuld, waardoor school vijf keer in de
+// database stond. Het is nu één lijst waarin elk item zelf zijn dagen kent;
+// een oude, per dag ingevulde tak wordt hier samengevoegd.
+function overzichtLijst(waarde){
+  if(Array.isArray(waarde) || !waarde || typeof waarde !== 'object'){
+    return lijstVan(waarde).map(overzichtItem).filter(i => i.tekst);
+  }
+  const sleutels = Object.keys(waarde);
+  const perDag = sleutels.length && sleutels.every(k => DAGEN.includes(String(k).trim().slice(0, 2).toLowerCase()));
+  if(!perDag) return lijstVan(waarde).map(overzichtItem).filter(i => i.tekst);
+
+  const uit = [];
+  const gezien = new Map();
+  DAGEN.forEach(() => {});
+  WEEKDAGEN.forEach(dag => {
+    lijstVan(waarde[dag]).forEach(ruw => {
+      const item = overzichtItem(ruw);
+      if(!item.tekst) return;
+      const sleutel = [item.icoon, item.tekst, item.tijd, item.wie.join('+'), item.avond].join('|');
+      if(gezien.has(sleutel)){
+        gezien.get(sleutel).dagen.push(dag);
+        return;
+      }
+      item.dagen = [dag];
+      gezien.set(sleutel, item);
+      uit.push(item);
+    });
   });
+  // Staat iets op alle zeven dagen, dan is 'elke dag' hetzelfde en korter.
+  uit.forEach(item => { if(item.dagen.length === 7) item.dagen = []; });
   return uit;
 }
 
@@ -777,14 +856,14 @@ function normaliseer(ruw){
     mensen: mensen.length ? mensen : STANDAARD.mensen.map(p => ({ ...p })),
     dag: routine(bron.dag, STANDAARD.dag),
     nacht: routine(bron.nacht, STANDAARD.nacht),
-    overzicht: overzichtPerDag(bron.overzicht),
+    overzicht: overzichtLijst(bron.overzicht),
   };
   // Een verwijzing naar een kind dat er niet meer is telt niet mee; blijft er
   // niemand over, dan geldt het weer voor iedereen.
   const bestaat = new Set(uit.mensen.map(p => p.id));
   const schoon = w => w.filter(id => bestaat.has(id));
   ['dag','nacht'].forEach(r => uit[r].forEach(g => g.stappen.forEach(s => { s.wie = schoon(s.wie); })));
-  Object.values(uit.overzicht).forEach(items => items.forEach(i => { i.wie = schoon(i.wie); }));
+  uit.overzicht.forEach(i => { i.wie = schoon(i.wie); });
   return uit;
 }
 
@@ -1277,7 +1356,10 @@ function tekenWeekstrip(){
   });
 }
 
-function itemsVan(d){ return (config.overzicht || {})[DAGEN[d.getDay()]] || []; }
+function itemsVan(d){
+  const dag = DAGEN[d.getDay()];
+  return lijstVan(config.overzicht).filter(i => !i.dagen.length || i.dagen.includes(dag));
+}
 
 function agendaBlokken(){
   const nu = new Date();
@@ -1545,7 +1627,6 @@ function maakSleepbaar(vak, lijst, klaar){
 // -------------------------------------------------------------- bewerken ---
 let concept = null;
 let velSoort = 'dag';
-let gekozenRij = null;      // welke regel zijn details laat zien
 
 const VELTITELS = {
   kinderen: 'Kinderen',
@@ -1569,10 +1650,7 @@ function veld(waarde, plaatshouder, klasse, opWijzig){
 function emojiKnop(waarde, titel, opWijzig){
   const b = knop('emojiknop', waarde);
   b.setAttribute('aria-label', titel);
-  b.addEventListener('click', () => kiesEmoji(waarde, titel, gekozen => {
-    opWijzig(gekozen);
-    tekenVel();
-  }));
+  b.addEventListener('click', () => kiesEmoji(waarde, titel, opWijzig));
   return b;
 }
 
@@ -1603,12 +1681,6 @@ function toonMelding(bericht){
   meldingEl.hidden = !bericht;
 }
 
-function chipsVak(...kinderen){
-  const v = el('div', 'chips glas');
-  kinderen.forEach(k => v.appendChild(k));
-  return v;
-}
-
 function chip(label, aan, opKlik, kleur){
   const b = knop('chip' + (aan ? ' aan' : ''), label);
   if(aan && kleur){ b.style.background = kleur; b.style.borderColor = kleur; b.style.color = '#fff'; }
@@ -1616,69 +1688,183 @@ function chip(label, aan, opKlik, kleur){
   return b;
 }
 
-// De kinderenkiezer onder een regel: niets gekozen betekent iedereen.
-function wieDetail(item){
-  const vak = document.createDocumentFragment();
-  const kop = el('div', 'detailkop', 'Wie doet mee');
-  kop.style.paddingTop = '16px';
-  vak.appendChild(kop);
-  const rij = el('div', 'chips glas');
-  item.wie = lijstVan(item.wie);
-  rij.appendChild(chip('iedereen', !item.wie.length, () => { item.wie = []; tekenVel(); }));
-  concept.mensen.forEach(persoon => {
-    const aan = item.wie.includes(persoon.id);
-    rij.appendChild(chip(persoon.emoji + ' ' + (persoon.naam || 'kind'), aan, () => {
-      const i = item.wie.indexOf(persoon.id);
-      if(i >= 0) item.wie.splice(i, 1); else item.wie.push(persoon.id);
-      tekenVel();
-    }, persoon.kleur));
-  });
-  vak.appendChild(rij);
-  return vak;
+// ------------------------------------------------------------- formulier ---
+// Eén regel aanraken opent een blad met alles wat erbij hoort: icoon, naam,
+// dagen en wie meedoet. Zolang je daarin bezig bent verandert er niets aan de
+// lijst eronder; pas Bewaar zet het terug.
+const formEl = $('formulier');
+const formScrimEl = $('formScrim');
+const formtitelEl = $('formtitel');
+const forminhoudEl = $('forminhoud');
+let formGegevens = null;
+let formTeken = null;
+let formKlaar = null;
+
+function tekenFormulier(){
+  forminhoudEl.innerHTML = '';
+  forminhoudEl.appendChild(formTeken(formGegevens));
 }
 
-function dagenDetail(stap){
-  const vak = document.createDocumentFragment();
-  vak.appendChild(el('div', 'detailkop', (stap.label || 'Deze stap') + ' — alleen op'));
+function openFormulier(titel, gegevens, teken, klaar){
+  formGegevens = JSON.parse(JSON.stringify(gegevens));
+  formTeken = teken;
+  formKlaar = klaar;
+  formtitelEl.textContent = titel;
+  formScrimEl.hidden = false;
+  formEl.hidden = false;
+  tekenFormulier();
+  forminhoudEl.scrollTop = 0;
+}
+
+function sluitFormulier(bewaar){
+  const gegevens = formGegevens, klaar = formKlaar;
+  formScrimEl.hidden = true;
+  formEl.hidden = true;
+  formGegevens = null; formTeken = null; formKlaar = null;
+  if(bewaar && klaar) klaar(gegevens);
+}
+
+function formKop(tekstje){ return el('div', 'formkop', tekstje); }
+
+function dagenKiezer(gegevens){
+  gegevens.dagen = lijstVan(gegevens.dagen);
   const rij = el('div', 'chips dagen glas');
-  stap.dagen = lijstVan(stap.dagen);
   WEEKDAGEN.forEach(dag => {
-    rij.appendChild(chip(dag, stap.dagen.includes(dag), () => {
-      const i = stap.dagen.indexOf(dag);
-      if(i >= 0) stap.dagen.splice(i, 1); else stap.dagen.push(dag);
-      tekenVel();
+    rij.appendChild(chip(dag, gegevens.dagen.includes(dag), () => {
+      const i = gegevens.dagen.indexOf(dag);
+      if(i >= 0) gegevens.dagen.splice(i, 1); else gegevens.dagen.push(dag);
+      tekenFormulier();
     }));
   });
-  vak.appendChild(rij);
-  vak.appendChild(el('div', 'notitie', stap.dagen.length
-    ? 'Alleen op deze dagen.' : 'Geen dag gekozen betekent: elke dag.'));
-  return vak;
+  return rij;
 }
 
-// De details verschijnen zodra je een regel aanraakt of in het tekstveld gaat
-// staan. Omdat het blad daarna opnieuw getekend wordt, moet de cursor terug
-// naar hetzelfde veld — anders klapt het toetsenbord meteen weer dicht.
-function kiesRij(sleutel, metFocus){
-  if(gekozenRij === sleutel) return;
-  gekozenRij = sleutel;
-  tekenVel();
-  if(!metFocus) return;
-  const inp = velinhoudEl.querySelector('.bewerkrij.gekozen input.veld');
-  if(!inp) return;
-  inp.focus();
-  const n = inp.value.length;
-  try{ inp.setSelectionRange(n, n); }catch(err){}
-}
-
-function selecteerbaar(rij, sleutel){
-  rij.classList.toggle('gekozen', gekozenRij === sleutel);
-  rij.querySelectorAll('input.veld').forEach(i =>
-    i.addEventListener('focus', () => kiesRij(sleutel, true)));
-  rij.addEventListener('click', e => {
-    if(e.target.closest('input, button')) return;
-    gekozenRij = gekozenRij === sleutel ? null : sleutel;
-    tekenVel();
+function wieKiezer(gegevens){
+  gegevens.wie = lijstVan(gegevens.wie);
+  const rij = el('div', 'chips glas');
+  rij.appendChild(chip('iedereen', !gegevens.wie.length, () => { gegevens.wie = []; tekenFormulier(); }));
+  concept.mensen.forEach(persoon => {
+    const aan = gegevens.wie.includes(persoon.id);
+    rij.appendChild(chip(persoon.emoji + ' ' + (persoon.naam || 'kind'), aan, () => {
+      const i = gegevens.wie.indexOf(persoon.id);
+      if(i >= 0) gegevens.wie.splice(i, 1); else gegevens.wie.push(persoon.id);
+      tekenFormulier();
+    }, persoon.kleur));
   });
+  return rij;
+}
+
+function taakFormulier(gegevens){
+  const stuk = document.createDocumentFragment();
+  const regel = el('div', 'formregel');
+  regel.append(
+    emojiKnop(gegevens.icoon, 'Icoon', v => { gegevens.icoon = v; tekenFormulier(); }),
+    veld(gegevens.label, 'Wat moet er gebeuren', '', v => { gegevens.label = v; }),
+  );
+  stuk.append(formKop('Icoon en naam'), regel);
+  stuk.append(formKop('Op welke dagen'), dagenKiezer(gegevens));
+  stuk.appendChild(el('div', 'notitie', gegevens.dagen.length
+    ? 'Alleen op deze dagen.' : 'Geen dag gekozen betekent: elke dag.'));
+  stuk.append(formKop('Wie doet mee'), wieKiezer(gegevens));
+  return stuk;
+}
+
+function itemFormulier(gegevens){
+  const stuk = document.createDocumentFragment();
+  const regel = el('div', 'formregel');
+  regel.append(
+    emojiKnop(gegevens.icoon, 'Icoon', v => { gegevens.icoon = v; tekenFormulier(); }),
+    veld(gegevens.tekst, 'Wat er die dag is', '', v => { gegevens.tekst = v; }),
+  );
+  stuk.append(formKop('Icoon en naam'), regel);
+
+  const wanneer = el('div', 'formregel');
+  wanneer.append(
+    veld(gegevens.tijd, 'tijd', 'tijd', v => { gegevens.tijd = v; }),
+    chip("🌙 's avonds", Boolean(gegevens.avond), () => { gegevens.avond = !gegevens.avond; tekenFormulier(); }),
+  );
+  stuk.append(formKop('Wanneer'), wanneer);
+  stuk.appendChild(el('div', 'notitie',
+    "Zet 's avonds aan voor wat pas na het avondeten speelt; dat komt bij Vanavond te staan."));
+
+  stuk.append(formKop('Op welke dagen'), dagenKiezer(gegevens));
+  stuk.appendChild(el('div', 'notitie', gegevens.dagen.length
+    ? 'Alleen op deze dagen.' : 'Geen dag gekozen betekent: elke dag.'));
+  stuk.append(formKop('Voor wie'), wieKiezer(gegevens));
+  return stuk;
+}
+
+function kindFormulier(gegevens){
+  const stuk = document.createDocumentFragment();
+  const regel = el('div', 'formregel');
+  regel.append(
+    emojiKnop(gegevens.emoji, 'Gezicht', v => { gegevens.emoji = v; tekenFormulier(); }),
+    veld(gegevens.naam, 'Naam', '', v => { gegevens.naam = v; }),
+  );
+  stuk.append(formKop('Gezicht en naam'), regel);
+
+  const kleuren = el('div', 'chips glas');
+  KLEUREN.forEach(kleur => {
+    const k = knop('chip' + (gegevens.kleur === kleur ? ' aan' : ''), ' ');
+    k.style.background = kleur;
+    k.style.borderColor = kleur;
+    k.style.minHeight = '34px';
+    k.setAttribute('aria-label', 'Kleur');
+    k.addEventListener('click', () => { gegevens.kleur = kleur; tekenFormulier(); });
+    if(gegevens.kleur === kleur) k.style.boxShadow = '0 0 0 2.5px var(--inkt)';
+    kleuren.appendChild(k);
+  });
+  stuk.append(formKop('Kleur'), kleuren);
+  stuk.appendChild(el('div', 'notitie',
+    'Naam wijzigen mag: de vinkjes blijven bij de juiste persoon.'));
+  return stuk;
+}
+
+// ------------------------------------------------------------ regels in de lijst
+function dagenTekst(dagen){
+  const d = lijstVan(dagen);
+  if(!d.length || d.length >= WEEKDAGEN.length) return '';
+  return WEEKDAGEN.filter(x => d.includes(x)).join(', ');
+}
+
+function wieVoorRij(wie){
+  const gekozen = lijstVan(wie).map(id => concept.mensen.find(p => p.id === id)).filter(Boolean);
+  return gekozen.length && gekozen.length < concept.mensen.length ? gekozen : [];
+}
+
+function maakBewerkRij(opties){
+  const rij = el('div', 'bewerkrij');
+  rij.appendChild(minKnop(opties.wegTitel, opties.opWeg));
+
+  const vlak = knop('rijknopvlak');
+  vlak.append(
+    el('div', 'emojiknop', opties.icoon),
+    el('div', 'rijlabel' + (opties.label ? '' : ' leeg'), opties.label || opties.leeg),
+  );
+  const meta = el('div', 'rijmeta');
+  if(opties.tijd) meta.appendChild(el('div', 'rijdagen', opties.tijd));
+  const dagen = dagenTekst(opties.dagen);
+  if(dagen) meta.appendChild(el('div', 'rijdagen', dagen));
+  const wie = wieVoorRij(opties.wie);
+  if(wie.length){
+    const vak = el('div', 'rijwie');
+    wie.forEach(p => {
+      const bol = el('span', '', p.emoji);
+      bol.style.background = zacht(p.kleur, .22);
+      vak.appendChild(bol);
+    });
+    meta.appendChild(vak);
+  }
+  if(opties.kleur){
+    const bol = el('div', 'rijkleur');
+    bol.style.background = opties.kleur;
+    meta.appendChild(bol);
+  }
+  if(meta.childNodes.length) vlak.appendChild(meta);
+  vlak.addEventListener('click', opties.opOpenen);
+
+  rij.append(vlak, greepKnop());
+  return rij;
 }
 
 function velRitme(soort){
@@ -1688,7 +1874,7 @@ function velRitme(soort){
   segment.style.marginTop = '0';
   [['dag','Ochtend'], ['nacht','Avond']].forEach(([waarde, label]) => {
     const b = knop(waarde === soort ? 'aan' : '', label);
-    b.addEventListener('click', () => { velSoort = waarde; gekozenRij = null; tekenVel(); });
+    b.addEventListener('click', () => { velSoort = waarde; tekenVel(); });
     segment.appendChild(b);
   });
   stuk.appendChild(segment);
@@ -1697,7 +1883,7 @@ function velRitme(soort){
     const kaart = el('div', 'bewerkkaart glas');
     const regel = el('div', 'groepregel');
     regel.append(
-      minKnop('Groep verwijderen', () => { concept[soort].splice(gi, 1); gekozenRij = null; tekenVel(); }),
+      minKnop('Groep verwijderen', () => { concept[soort].splice(gi, 1); tekenVel(); }),
       veld(groep.groep, 'Groep', '', v => { groep.groep = v; }),
       veld(groep.tijd, 'tijd', 'tijd', v => { groep.tijd = v; }),
     );
@@ -1705,36 +1891,42 @@ function velRitme(soort){
 
     const rijenvak = el('div');
     groep.stappen.forEach((stap, si) => {
-      const sleutel = `${soort}:${gi}:${si}`;
-      const rij = el('div', 'bewerkrij');
-      rij.append(
-        minKnop('Stap verwijderen', () => {
-          groep.stappen.splice(si, 1); gekozenRij = null; tekenVel();
+      rijenvak.appendChild(maakBewerkRij({
+        icoon: stap.icoon,
+        label: stap.label,
+        leeg: 'Naamloze stap',
+        dagen: stap.dagen,
+        wie: stap.wie,
+        wegTitel: 'Stap verwijderen',
+        opWeg: () => { groep.stappen.splice(si, 1); tekenVel(); },
+        opOpenen: () => openFormulier('Stap', stap, taakFormulier, nieuw => {
+          groep.stappen[si] = {
+            icoon: tekst(nieuw.icoon, '⭐'),
+            label: nieuw.label,
+            dagen: dagenVan(nieuw.dagen),
+            wie: lijstVan(nieuw.wie),
+          };
+          tekenVel();
         }),
-        emojiKnop(stap.icoon, 'Icoon voor ' + (stap.label || 'deze stap'), v => { stap.icoon = v; }),
-        veld(stap.label, 'Wat moet er gebeuren', '', v => { stap.label = v; }),
-        greepKnop(),
-      );
-      selecteerbaar(rij, sleutel);
-      rijenvak.appendChild(rij);
+      }));
     });
     kaart.appendChild(rijenvak);
     maakSleepbaar(rijenvak, groep.stappen, tekenVel);
 
     kaart.appendChild(toevoegRij('Stap toevoegen', () => {
-      groep.stappen.push({ icoon:'⭐', label:'', dagen:[], wie:[] });
-      gekozenRij = `${soort}:${gi}:${groep.stappen.length - 1}`;
-      tekenVel();
+      const stap = { icoon:'⭐', label:'', dagen:[], wie:[] };
+      openFormulier('Nieuwe stap', stap, taakFormulier, nieuw => {
+        if(!tekst(nieuw.label)) return;
+        groep.stappen.push({
+          icoon: tekst(nieuw.icoon, '⭐'),
+          label: nieuw.label,
+          dagen: dagenVan(nieuw.dagen),
+          wie: lijstVan(nieuw.wie),
+        });
+        tekenVel();
+      });
     }));
     stuk.appendChild(kaart);
-
-    // De details van de gekozen stap staan onder de kaart, zoals in het ontwerp.
-    const gekozen = groep.stappen.findIndex((_, si) => gekozenRij === `${soort}:${gi}:${si}`);
-    if(gekozen >= 0){
-      const details = el('div', 'details');
-      details.append(dagenDetail(groep.stappen[gekozen]), wieDetail(groep.stappen[gekozen]));
-      stuk.appendChild(details);
-    }
   });
 
   const erbij = knop('kaartknop glas');
@@ -1753,41 +1945,42 @@ function velKinderen(){
   const rijenvak = el('div');
 
   concept.mensen.forEach((persoon, i) => {
-    const rij = el('div', 'bewerkrij');
-    const kleuren = el('div', 'kleuren kleurenrij');
-    KLEUREN.forEach(kleur => {
-      const k = knop(persoon.kleur === kleur ? 'aan' : '');
-      k.style.background = kleur;
-      k.setAttribute('aria-label', 'Kleur');
-      k.addEventListener('click', () => { persoon.kleur = kleur; tekenVel(); });
-      kleuren.appendChild(k);
-    });
-
-    rij.append(
-      minKnop('Kind verwijderen', () => {
+    rijenvak.appendChild(maakBewerkRij({
+      icoon: persoon.emoji,
+      label: persoon.naam,
+      leeg: 'Naamloos',
+      kleur: persoon.kleur,
+      wegTitel: 'Kind verwijderen',
+      opWeg: () => {
         if(concept.mensen.length <= 1) return toonMelding('Er moet minstens één kind overblijven.');
         // Anders wijst een stap naar iemand die er niet meer is.
         losmaken(persoon.id);
         concept.mensen.splice(i, 1);
         toonMelding('');
         tekenVel();
+      },
+      opOpenen: () => openFormulier(persoon.naam || 'Kind', persoon, kindFormulier, nieuw => {
+        Object.assign(persoon, {
+          naam: nieuw.naam, emoji: tekst(nieuw.emoji, '🙂'),
+          kleur: tekst(nieuw.kleur, persoon.kleur),
+        });
+        tekenVel();
       }),
-      emojiKnop(persoon.emoji, (persoon.naam || 'Dit kind') + "'s gezicht", v => { persoon.emoji = v; }),
-      veld(persoon.naam, 'Naam', '', v => { persoon.naam = v; }),
-      greepKnop(),
-      kleuren,
-    );
-    rijenvak.appendChild(rij);
+    }));
   });
 
   kaart.appendChild(rijenvak);
   maakSleepbaar(rijenvak, concept.mensen, tekenVel);
   kaart.appendChild(toevoegRij('Kind toevoegen', () => {
-    concept.mensen.push({
+    const kind = {
       id: nieuwId(), naam:'', emoji:'🙂',
       kleur: KLEUREN[concept.mensen.length % KLEUREN.length],
+    };
+    openFormulier('Nieuw kind', kind, kindFormulier, nieuw => {
+      if(!tekst(nieuw.naam)) return;
+      concept.mensen.push({ ...kind, naam: nieuw.naam, emoji: nieuw.emoji, kleur: nieuw.kleur });
+      tekenVel();
     });
-    tekenVel();
   }));
   stuk.appendChild(kaart);
 
@@ -1798,68 +1991,63 @@ function velKinderen(){
 }
 
 function losmaken(id){
-  ['dag','nacht'].forEach(r => (concept[r] || []).forEach(g =>
-    lijstVan(g.stappen).forEach(s => {
-      s.wie = lijstVan(s.wie).filter(x => x !== id);
-    })));
-  Object.values(concept.overzicht || {}).forEach(items =>
-    lijstVan(items).forEach(item => { item.wie = lijstVan(item.wie).filter(x => x !== id); }));
+  ['dag','nacht'].forEach(r => lijstVan(concept[r]).forEach(g =>
+    lijstVan(g.stappen).forEach(s => { s.wie = lijstVan(s.wie).filter(x => x !== id); })));
+  lijstVan(concept.overzicht).forEach(item => {
+    item.wie = lijstVan(item.wie).filter(x => x !== id);
+  });
 }
 
 function velOverzicht(){
   const stuk = document.createDocumentFragment();
-  if(!concept.overzicht) concept.overzicht = {};
+  const items = concept.overzicht = lijstVan(concept.overzicht);
 
-  WEEKDAGEN.forEach(dag => {
-    const items = concept.overzicht[dag] = lijstVan(concept.overzicht[dag]);
-    const kop = el('div', 'groepkop');
-    kop.style.marginTop = '20px';
-    kop.append(el('div', 'groepnaam', DAGNAMEN[DAGEN.indexOf(dag)]));
-    stuk.appendChild(kop);
-
-    const kaart = el('div', 'bewerkkaart glas');
-    const rijenvak = el('div');
-    items.forEach((item, i) => {
-      const sleutel = `ov:${dag}:${i}`;
-      const rij = el('div', 'bewerkrij');
-      rij.append(
-        minKnop('Verwijderen', () => { items.splice(i, 1); gekozenRij = null; tekenVel(); }),
-        emojiKnop(item.icoon, 'Icoon voor ' + (item.tekst || 'dit item'), v => { item.icoon = v; }),
-        veld(item.tekst, 'Wat er die dag is', '', v => { item.tekst = v; }),
-        greepKnop(),
-      );
-      selecteerbaar(rij, sleutel);
-      rijenvak.appendChild(rij);
-    });
-    kaart.appendChild(rijenvak);
-    maakSleepbaar(rijenvak, items, tekenVel);
-
-    kaart.appendChild(toevoegRij('Iets op ' + DAGNAMEN[DAGEN.indexOf(dag)], () => {
-      items.push({ icoon:'📅', tekst:'', tijd:'', wie:[], avond:false });
-      gekozenRij = `ov:${dag}:${items.length - 1}`;
-      tekenVel();
+  const kaart = el('div', 'bewerkkaart glas');
+  const rijenvak = el('div');
+  items.forEach((item, i) => {
+    rijenvak.appendChild(maakBewerkRij({
+      icoon: item.icoon,
+      label: item.tekst,
+      leeg: 'Naamloos',
+      tijd: (item.avond ? '🌙 ' : '') + tekst(item.tijd),
+      dagen: item.dagen,
+      wie: item.wie,
+      wegTitel: 'Verwijderen',
+      opWeg: () => { items.splice(i, 1); tekenVel(); },
+      opOpenen: () => openFormulier(item.tekst || 'Item', item, itemFormulier, nieuw => {
+        items[i] = schoonItem(nieuw);
+        tekenVel();
+      }),
     }));
-    stuk.appendChild(kaart);
-
-    const gekozen = items.findIndex((_, i) => gekozenRij === `ov:${dag}:${i}`);
-    if(gekozen >= 0){
-      const item = items[gekozen];
-      const details = el('div', 'details');
-      details.appendChild(el('div', 'detailkop', 'Wanneer'));
-      const rij = el('div', 'chips glas');
-      rij.appendChild(veld(item.tijd, 'tijd', 'tijd', v => { item.tijd = v; }));
-      rij.appendChild(chip("🌙 's avonds", Boolean(item.avond), () => {
-        item.avond = !item.avond; tekenVel();
-      }));
-      details.appendChild(rij);
-      details.appendChild(wieDetail(item));
-      stuk.appendChild(details);
-    }
   });
+  kaart.appendChild(rijenvak);
+  maakSleepbaar(rijenvak, items, tekenVel);
+
+  kaart.appendChild(toevoegRij('Item toevoegen', () => {
+    const item = { icoon:'📅', tekst:'', tijd:'', dagen:[], wie:[], avond:false };
+    openFormulier('Nieuw item', item, itemFormulier, nieuw => {
+      if(!tekst(nieuw.tekst)) return;
+      items.push(schoonItem(nieuw));
+      tekenVel();
+    });
+  }));
+  stuk.appendChild(kaart);
 
   stuk.appendChild(el('div', 'notitie',
-    "Zet 's avonds aan voor wat pas na het avondeten speelt; dat komt bij Vanavond te staan."));
+    'Eén regel per ding, met de dagen waarop het valt — school hoeft dus niet '
+    + 'vijf keer. Zonder gekozen dag staat het er elke dag.'));
   return stuk;
+}
+
+function schoonItem(ruw){
+  return {
+    icoon: tekst(ruw.icoon, '📅'),
+    tekst: tekst(ruw.tekst),
+    tijd: tekst(ruw.tijd),
+    dagen: dagenVan(ruw.dagen),
+    wie: lijstVan(ruw.wie),
+    avond: Boolean(ruw.avond),
+  };
 }
 
 function velAlgemeen(){
@@ -1898,10 +2086,8 @@ function openVel(soort){
   ['dag','nacht'].forEach(r => concept[r].forEach(g => g.stappen.forEach(s => {
     s.dagen = lijstVan(s.dagen); s.wie = lijstVan(s.wie);
   })));
-  Object.values(concept.overzicht || {}).forEach(items =>
-    lijstVan(items).forEach(i => { i.wie = lijstVan(i.wie); }));
+  concept.overzicht = lijstVan(concept.overzicht).map(schoonItem);
   velSoort = soort;
-  gekozenRij = null;
   toonMelding('');
   scrimEl.hidden = false;
   velEl.hidden = false;
@@ -1911,6 +2097,7 @@ function openVel(soort){
 }
 
 function sluitVel(){
+  sluitFormulier(false);
   scrimEl.hidden = true;
   velEl.hidden = true;
   document.body.style.overflow = '';
@@ -1932,24 +2119,18 @@ function schoneGroepen(lijst){
   })).filter(g => g.stappen.length || tekst(g.groep));
 }
 
-// Lege regels vallen weg, en een dag zonder items verdwijnt helemaal uit de
-// database — anders blijft er een leeg lijstje achter na het laatste item.
+// Eén lijst met items die zelf hun dagen kennen; lege regels vallen weg.
 function schoonOverzicht(bron){
-  const uit = {};
-  WEEKDAGEN.forEach(dag => {
-    const items = lijstVan(bron && bron[dag])
-      .filter(item => tekst(item && item.tekst))
-      .map(item => {
-        const rij = { icoon: tekst(item.icoon, '📅'), tekst: tekst(item.tekst) };
-        if(tekst(item.tijd)) rij.tijd = tekst(item.tijd);
-        const wie = lijstVan(item.wie);
-        if(wie.length) rij.wie = wie;
-        if(item.avond) rij.avond = true;
-        return rij;
-      });
-    if(items.length) uit[dag] = items;
+  return lijstVan(bron).filter(item => tekst(item && item.tekst)).map(item => {
+    const uit = { icoon: tekst(item.icoon, '📅'), tekst: tekst(item.tekst) };
+    if(tekst(item.tijd)) uit.tijd = tekst(item.tijd);
+    const dagen = dagenVan(item.dagen);
+    if(dagen.length && dagen.length < WEEKDAGEN.length) uit.dagen = dagen;
+    const wie = lijstVan(item.wie);
+    if(wie.length) uit.wie = wie;
+    if(item.avond) uit.avond = true;
+    return uit;
   });
-  return uit;
 }
 
 function opgeschoond(c){
@@ -2088,6 +2269,9 @@ $('opnieuwKnop').addEventListener('click', () => {
 
 $('velAf').addEventListener('click', sluitVel);
 $('velGereed').addEventListener('click', bewaarVel);
+$('formAf').addEventListener('click', () => sluitFormulier(false));
+$('formGereed').addEventListener('click', () => sluitFormulier(true));
+formScrimEl.addEventListener('click', () => sluitFormulier(false));
 $('kiezerGereed').addEventListener('click', () => sluitKiezer(true));
 kiesScrimEl.addEventListener('click', () => sluitKiezer(false));
 
