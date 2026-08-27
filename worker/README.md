@@ -59,10 +59,6 @@ Dit is precies waar GitHub-secrets wél voor bedoeld zijn: ze bestaan alleen
 tijdens de build en komen nergens in iets gepubliceerds terecht — anders dan
 `routine.json`, dat gewoon openbaar is.
 
-De GitHub Pages-baan in dezelfde workflow is er alleen om de oude plek te laten
-draaien tot Cloudflare staat. Als je die niet meer nodig hebt, mag dat hele blok
-weg.
-
 ### Zelf draaien
 
 ```bash

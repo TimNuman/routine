@@ -10,7 +10,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Cloudflare serveert de app én /api. Dit is waar het heen gaat.
+  # Alleen nodig als Cloudflare níét zelf uit deze repo bouwt. Doet hij dat wel
+  # (Workers & Pages → Import a repository), dan is deze hele workflow overbodig
+  # en mag hij weg.
   cloudflare:
     runs-on: ubuntu-latest
     # De secrets-context bestaat niet in een step-if; via env wel.
@@ -35,31 +37,3 @@ jobs:
       - name: Nog geen token
         if: ${{ env.CLOUDFLARE_API_TOKEN == '' }}
         run: echo "CLOUDFLARE_API_TOKEN staat nog niet bij de secrets; overgeslagen."
-
-  # De oude plek. Blijft draaien tot Cloudflare staat; daarna mag dit hele blok
-  # weg, samen met de pages-rechten hierboven.
-  pages:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
-      - name: Versie stempelen
-        run: node stempel.mjs
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./public
-
-      - id: deployment
-        uses: actions/deploy-pages@v4

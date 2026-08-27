@@ -3,8 +3,7 @@
 Een visueel dagritme voor kinderen: een ochtend- en een avondroutine met
 afvinkbare stappen, één per kind, gedeeld tussen alle telefoons in huis.
 
-**Live:** https://timnuman.github.io/routine/ — verhuist naar Cloudflare, zie
-*Publiceren*.
+**Live:** bij Cloudflare, op je eigen `workers.dev`-adres — zie *Publiceren*.
 
 ## Hoe het werkt
 
@@ -202,14 +201,13 @@ hoe de app merkt dat er iets nieuwers staat.
 ## Publiceren
 
 Alles draait bij Cloudflare, op één adres: de app als statische bestanden (gratis
-en ongemeten) en `/api/*` in dezelfde Worker. Elke push naar `main` rolt uit via
-GitHub Actions, zodra `CLOUDFLARE_API_TOKEN` en `CLOUDFLARE_ACCOUNT_ID` bij de
-Actions-secrets staan; staan ze er nog niet, dan slaat die stap zichzelf over.
+en ongemeten) en `/api/*` in dezelfde Worker. Elke push naar `main` rolt vanzelf
+uit — Cloudflare bouwt zelf uit deze repo.
 
-Zelf uitrollen kan ook: `npx wrangler deploy`.
+Zelf uitrollen kan ook: `npm run deploy`.
 
-Dezelfde workflow publiceert voorlopig óók nog naar GitHub Pages, zodat de oude
-plek blijft werken tot Cloudflare staat. Daarna mag die baan eruit.
+`.github/workflows/deploy.yml` is er alleen nog voor wie het liever via GitHub
+Actions doet; bouwt Cloudflare zelf, dan mag dat bestand weg.
 
 Zie [`worker/README.md`](worker/README.md) voor het opzetten, en voor waar dit
 heen gaat als er een React Native app bij komt.
