@@ -90,37 +90,25 @@ kenmerk bij het kind staan, dus de volgende mail van dezelfde school komt er
 zonder vragen doorheen. Hij vraagt hooguit twee keer; daarna doet hij het met
 wat hij heeft.
 
-Alleen de tekst die je plakt gaat de deur uit — de namen van de kinderen blijven
-in de app, en wat terugkomt zijn ids die de app zelf al kende.
+Wat de deur uit gaat is de tekst die je plakt, plus de voornamen en kenmerken van
+de kinderen — die zijn nodig om te weten bij wie iets hoort. Verder niets: de app
+kent zelf ook geen achternamen, adressen of mailadressen. Wat terugkomt zijn ids
+die de app al had.
 
 Staat er geen adres in `routine.json`, dan doet een ingebouwde namaak-assistent
 het werk. Die kent maar een handvol patronen — een datum, een groep als `1-2B`,
-en een paar woorden — genoeg om de schermen te proberen. Voor het echte uitlezen
-zet je er een adres bij:
+en een paar woorden — genoeg om de schermen te proberen. Het echte uitlezen doet
+Claude, achter een Cloudflare Worker die in [`assistent/`](assistent/) staat:
 
 ```json
-"assistent": "https://jouw-uitlezer.example/lees"
+"assistent": "https://routine-assistent.jij.workers.dev",
+"assistentSleutel": "een-zelfverzonnen-woord"
 ```
 
-Daar komt `{ tekst, vandaag, ronde, kinderen }` binnen (elk kind met `id`, `naam`
-en zijn kenmerken) en er gaat één van drie dingen terug:
+Die Worker staat er apart om één reden: de sleutel van de Claude-api hoort niet in
+een pagina die iedereen kan openen. Hoe je hem neerzet, wat hij kost en welk
+protocol hij spreekt staat in [`assistent/README.md`](assistent/README.md).
 
-```jsonc
-{ "type": "vraag", "sleutel": "schoolgroep", "vraag": "Wie zit waarin?",
-  "opties": ["1-2A", "1-2B"], "meerkeuze": false }
-
-{ "type": "voorstellen", "items": [
-  { "soort": "bijzonderheid", "icoon": "🚸", "tekst": "Verkeersles",
-    "datum": "2026-09-04", "tijd": "", "wie": ["emma"], "bron": "de zin uit de mail" },
-  { "soort": "stap", "ritme": "dag", "groep": "Weggaan", "icoon": "🚲",
-    "tekst": "Fiets of step mee", "datum": "2026-09-04", "wie": ["emma"],
-    "bron": "de zin uit de mail" } ] }
-
-{ "type": "niets" }
-```
-
-De sleutel van een uitlezer hoort daar te staan en niet in de browser: iedereen
-die de pagina opent kan die anders meelezen.
 
 ## Opslag
 

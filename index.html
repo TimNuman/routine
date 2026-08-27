@@ -1017,6 +1017,7 @@ function normaliseer(ruw){
 let config = normaliseer(STANDAARD);
 let instelling = null;          // { url, gezin } uit routine.json
 let assistentUrl = '';          // waar een bericht heen mag om uitgelezen te worden
+let assistentSleutel = '';      // meegestuurd woord, zodat niet iedereen erbij kan
 let ritme = 'dag';              // 'dag' of 'nacht'
 let pagina = 'ritme';           // 'ritme' | 'overzicht' | 'instellingen'
 let gekozenDag = null;          // gekozen datum op de weekpagina; null = vandaag
@@ -2413,13 +2414,12 @@ function zetStapIn(ruw, item){
 // server te proberen zijn.
 async function vraagAssistent(lading){
   if(!assistentUrl) return nepAssistent(lading);
-  const res = await fetch(assistentUrl, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(lading),
-  });
-  if(!res.ok) throw new Error('HTTP ' + res.status);
-  return await res.json();
+  const kopjes = { 'Content-Type': 'application/json' };
+  if(assistentSleutel) kopjes['X-Routine-Sleutel'] = assistentSleutel;
+  const res = await fetch(assistentUrl, { method:'POST', headers: kopjes, body: JSON.stringify(lading) });
+  const uit = await res.json().catch(() => null);
+  if(!res.ok) throw new Error(tekst(uit && uit.fout, 'HTTP ' + res.status));
+  return uit || { type:'niets' };
 }
 
 // --------------------------------------------------------- namaak-assistent ---
@@ -3127,6 +3127,7 @@ async function laden(){
   }catch(err){ console.warn('routine.json niet geladen:', err); }
   instelling = (ruw && ruw.opslag) || null;
   assistentUrl = tekst(ruw && ruw.assistent);
+  assistentSleutel = tekst(ruw && ruw.assistentSleutel);
   // De laatst bekende inhoud staat lokaal en schildert meteen; de database
   // corrigeert zodra die antwoordt.
   config = normaliseer(laadLokaalConfig() || ruw || STANDAARD);

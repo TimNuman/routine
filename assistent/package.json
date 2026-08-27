@@ -1,0 +1,16 @@
+{
+  "name": "routine-assistent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.121.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
