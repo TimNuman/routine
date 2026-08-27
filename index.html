@@ -180,8 +180,13 @@
      ruimte is. Een groep met minder stappen laat de rij verder leeg. */
   .kaartraster{ display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:10px; }
   .taakkaart{
-    display:flex; flex-direction:column; align-items:center; gap:7px;
-    padding:12px 6px 10px; border-radius:22px; min-height:142px;
+    display:flex; flex-direction:column; align-items:center; gap:5px;
+    padding:8px 6px 8px; border-radius:22px; min-height:142px;
+  }
+  /* De emoji staat los op de kaart: geen vlakje eromheen, wel groter. */
+  .taakkaart .tegel{
+    width:auto; height:auto; border-radius:0;
+    background:none; border:none; font-size:36px; line-height:1.15;
   }
   .tegel{
     width:46px; height:46px; border-radius:15px; flex:none;
@@ -198,7 +203,7 @@
   }
   .rondjes{
     display:flex; gap:2px; flex:none; margin-top:auto;
-    --rond:34px; --gezicht:28px; --teken:16px; --vinkmaat:14px;
+    --rond:40px; --gezicht:34px; --teken:21px;
   }
   .rondje{
     width: var(--rond); height: var(--rond);
@@ -219,14 +224,6 @@
     box-shadow: 0 0 0 2.5px var(--groen), 0 4px 10px rgba(0,0,0,.16);
   }
   .rondje[aria-pressed="true"] .gezicht{ filter:none; opacity:1; }
-  .vink{
-    position:absolute; right:0; bottom:0;
-    width: var(--vinkmaat); height: var(--vinkmaat); border-radius:50%;
-    background: var(--groen); border:2px solid #fff;
-    display:none; align-items:center; justify-content:center;
-  }
-  body.nacht .vink{ border-color:#181A3A; }
-  .rondje[aria-pressed="true"] .vink{ display:flex; }
 
   .leegkaart{
     border-radius:26px; padding:28px 20px; text-align:center;
@@ -542,16 +539,16 @@
 
   @media (max-width:360px){
     :root{ --gootje: 16px; }
-    .rondjes{ --rond:30px; --gezicht:26px; --teken:15px; --vinkmaat:13px; }
+    .rondjes{ --rond:34px; --gezicht:30px; --teken:19px; }
   }
 
   /* Zodra er ruimte is: vijf kaartjes op een rij, en alles een maatje groter. */
   @media (min-width:700px){
     .kaartraster{ grid-template-columns: repeat(5, minmax(0, 1fr)); gap:14px; }
-    .taakkaart{ gap:9px; padding:16px 10px 13px; min-height:172px; }
-    .taakkaart .tegel{ width:56px; height:56px; border-radius:18px; font-size:30px; }
+    .taakkaart{ gap:6px; padding:10px 10px 10px; min-height:172px; }
+    .taakkaart .tegel{ font-size:46px; }
     .taakkaart .taaknaam{ font-size:15px; }
-    .rondjes{ --rond:42px; --gezicht:34px; --teken:20px; --vinkmaat:16px; }
+    .rondjes{ --rond:50px; --gezicht:44px; --teken:27px; }
   }
 
   /* Breed: de titel, de schakelaar en het menu op één regel, en het weekritme
@@ -1210,18 +1207,6 @@ function svgPijl(){
   return s;
 }
 
-function svgVink(){
-  const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  s.setAttribute('width', '10'); s.setAttribute('height', '10'); s.setAttribute('viewBox', '0 0 12 12');
-  const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  p.setAttribute('d', 'M2 6.4 4.6 9 10 3.4');
-  p.setAttribute('fill', 'none'); p.setAttribute('stroke', '#fff');
-  p.setAttribute('stroke-width', '2.5'); p.setAttribute('stroke-linecap', 'round');
-  p.setAttribute('stroke-linejoin', 'round');
-  s.appendChild(p);
-  return s;
-}
-
 function svgGreep(){
   const s = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   s.setAttribute('width', '18'); s.setAttribute('height', '18'); s.setAttribute('viewBox', '0 0 18 18');
@@ -1265,11 +1250,7 @@ function maakRondje(stap, persoon){
   const gezicht = el('div', 'gezicht', persoon.emoji);
   gezicht.style.background = zacht(persoon.kleur, .16);
   ring.appendChild(gezicht);
-
-  const vink = el('div', 'vink');
-  vink.appendChild(svgVink());
-
-  b.append(ring, vink);
+  b.appendChild(ring);
   b.addEventListener('click', () => {
     const nieuw = b.getAttribute('aria-pressed') !== 'true';
     zetVink(ritme, sleutel, persoon.id, nieuw);
