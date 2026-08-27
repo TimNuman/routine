@@ -72,6 +72,13 @@ Antwoord met één van drie dingen.
 
 Ga alleen af op wat er staat. Verzin geen data, tijden of namen die er niet in staan.`;
 
+// De api zet zijn uitleg in error.message; err.message zelf heeft de status en
+// de hele json er nog omheen staan.
+function reden(err){
+  const uitLijf = err && err.error && err.error.error && err.error.error.message;
+  return String(uitLijf || (err && err.message) || err).slice(0, 400);
+}
+
 function antwoord(inhoud, status){
   return new Response(JSON.stringify(inhoud), {
     status: status || 200,
@@ -167,12 +174,15 @@ async function lees(request, env){
     if(err instanceof Anthropic.RateLimitError){
       return antwoord({ fout: 'Even te druk, probeer het zo nog eens.' }, 429);
     }
+    // De reden gaat mee terug. Dit is een gezinsapp, geen dienst voor vreemden:
+    // 'het lukte niet' laat je met lege handen staan, en de api zet zijn eigen
+    // sleutel niet in een foutmelding.
     if(err instanceof Anthropic.APIError){
       console.error('api gaf', err.status, err.message);
-      return antwoord({ fout: 'Het uitlezen lukte niet.' }, 502);
+      return antwoord({ fout: `De Claude-api gaf ${err.status}: ${reden(err)}` }, 502);
     }
     console.error('onverwacht:', err);
-    return antwoord({ fout: 'Het uitlezen lukte niet.' }, 500);
+    return antwoord({ fout: 'Er ging iets mis in de uitlezer: ' + (err && err.message || err) }, 500);
   }
 }
 

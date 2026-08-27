@@ -2310,7 +2310,9 @@ async function leesUit(){
     if(!assi) return;
     assi.stap = 'plakken';
     tekenAssistent();
-    return toonAssiMelding('Het uitlezen lukte niet (' + err.message + ').');
+    return toonAssiMelding(err.vanServer
+      ? err.message
+      : 'Het uitlezen lukte niet (' + err.message + ').');
   }
   if(!assi) return;
   assi.ronde += 1;
@@ -2418,7 +2420,13 @@ async function vraagAssistent(lading){
   if(assistentSleutel) kopjes['X-Routine-Sleutel'] = assistentSleutel;
   const res = await fetch(assistentUrl, { method:'POST', headers: kopjes, body: JSON.stringify(lading) });
   const uit = await res.json().catch(() => null);
-  if(!res.ok) throw new Error(tekst(uit && uit.fout, 'HTTP ' + res.status));
+  if(!res.ok){
+    // Zegt de uitlezer zelf wat er mis is, dan is dat de melding — er hoeft
+    // geen 'het lukte niet' omheen.
+    const err = new Error(tekst(uit && uit.fout, 'HTTP ' + res.status));
+    err.vanServer = Boolean(uit && uit.fout);
+    throw err;
+  }
   return uit || { type:'niets' };
 }
 
