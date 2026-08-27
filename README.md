@@ -9,14 +9,21 @@ afvinkbare stappen, één per kind, gedeeld tussen alle telefoons in huis.
 
 Onderin zweeft een menubalk met drie plekken:
 
-- **Ritme** — de stappen van vandaag, per groep. Bovenin schakel je tussen
-  **Ochtend** en **Avond**; de app opent zelf op het ritme dat bij de klok hoort
-  en kleurt 's avonds donker. Elke stap heeft een rond gezichtje per kind: tik het
-  aan en het staat binnen een seconde ook op de andere telefoon. Daarboven staat
-  per kind hoever het is. Elke dag begint vanzelf leeg.
-- **Overzicht** — wat er die dag verder is: school, BSO, sport. Bovenin kies je
-  een dag van de week; op vandaag zie je ook *Vanavond* en *Morgen*.
+- **Ritme** — de stappen van vandaag als kaartjes, per groep. Bovenin schakel je
+  tussen **Ochtend** en **Avond**; de app opent zelf op het ritme dat bij de klok
+  hoort en kleurt 's avonds donker. Elk kaartje heeft een rond gezichtje per kind
+  dat meedoet: tik het aan en het staat binnen een seconde ook op de andere
+  telefoon. Daarboven staat per kind hoever het is. Elke dag begint vanzelf leeg.
+  Wat er die dag verder is staat er meteen bij: 's ochtends *Vandaag*, 's avonds
+  *Vanavond* en *Morgen*.
+- **Overzicht** — de hele week: bovenin kies je een dag, daaronder staat wat er
+  die dag speelt.
 - **Instellingen** — hier bewerk je alles wat in de app staat.
+
+De kaartjes zijn overal even breed: drie op een rij op een telefoon, vijf zodra
+er ruimte is. Op een breed scherm (laptop, iPad in liggende stand) staan de
+titel, de schakelaar en het menu op één regel en schuift het dagoverzicht naar
+een kolom naast de stappen.
 
 ## Bewerken
 

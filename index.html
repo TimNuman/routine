@@ -98,10 +98,15 @@
   }
 
   /* ------------------------------------------------------------- kader --- */
+  /* Alle tekst springt evenveel in als de inhoud van een kaart, zodat titels,
+     kopjes en de eerste emoji op één lijn staan. */
+  :root{ --insprong: 16px; --gootje: 22px; }
   .app{
-    max-width:520px; margin:0 auto;
-    padding: calc(env(safe-area-inset-top) + 42px) 22px 132px;
+    max-width:1280px; margin:0 auto; position:relative;
+    padding: calc(env(safe-area-inset-top) + 42px) var(--gootje) 132px;
   }
+  .kop{ display:block; position:relative; }
+  .koptekst{ padding-left: var(--insprong); }
   .kop h1{
     font-family: var(--baloo); font-weight:800;
     font-size:36px; line-height:1.06; letter-spacing:-.5px; margin:0;
@@ -113,6 +118,7 @@
   .segment{
     display:flex; gap:4px; padding:4px; border-radius:19px; margin-top:16px;
   }
+  .segment[hidden]{ display:none; }
   .segment button{
     flex:1; padding:9px 0; border-radius:15px; border:1px solid transparent;
     background:none; cursor:pointer;
@@ -146,40 +152,66 @@
   .vbalk span{ display:block; height:100%; border-radius:99px; transition: width .3s ease; }
 
   /* ------------------------------------------------------------ groepen --- */
+  /* De ritmepagina is één kolom op een telefoon en twee op een breed scherm;
+     display:contents laat de blokken van het overzicht dan tussen de stappen
+     zakken (Vandaag erboven, Morgen eronder). */
+  .ritmelijf{ display:flex; flex-direction:column; }
+  .ritmehoofd, .ritmezij{ display:contents; }
+  .voortgang{ order:1; }
+  .agendablok{ order:2; }
+  /* Morgen zakt onder de stappen, met een streep ertussen. */
+  .agendablok.later{
+    order:4; margin-top:26px; padding-top:22px;
+    border-top:1px dashed var(--scheiding);
+  }
+  #groepen{ order:3; }
+  .opnieuw{ order:5; }
+
   .groepkop{
-    display:flex; align-items:baseline; justify-content:space-between;
-    padding:0 8px 8px; margin-top:22px;
+    display:flex; align-items:baseline; gap:12px;
+    padding:0 var(--insprong) 10px; margin-top:20px;
   }
   .groepnaam{ font-family: var(--baloo); font-weight:800; font-size:17px; }
   .groeptijd{ font-weight:700; font-size:13px; color: var(--inkt-zacht); }
   .kaart{ border-radius:26px; overflow:hidden; }
-  .streep{ height:1px; background: var(--scheiding); margin-left:70px; }
+  .streep{ height:1px; background: var(--scheiding); margin:0 var(--insprong); }
 
-  .taak{
-    display:flex; align-items:center; gap:12px;
-    padding:8px 10px 8px 12px; min-height:64px;
+  /* Overal even brede kaartjes: drie op een rij op een telefoon, vijf zodra er
+     ruimte is. Een groep met minder stappen laat de rij verder leeg. */
+  .kaartraster{ display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:10px; }
+  .taakkaart{
+    display:flex; flex-direction:column; align-items:center; gap:7px;
+    padding:12px 6px 10px; border-radius:22px; min-height:142px;
   }
   .tegel{
     width:46px; height:46px; border-radius:15px; flex:none;
     background: var(--tegel); border:1px solid var(--tegelrand);
     display:flex; align-items:center; justify-content:center; font-size:24px;
   }
+  .taakkaart .taaknaam{
+    font-family: var(--baloo); font-weight:700; font-size:13px; line-height:1.2;
+    text-align:center; text-wrap:pretty;
+  }
   .taaknaam{
     flex:1; min-width:0;
     font-family: var(--baloo); font-weight:700; font-size:16.5px; line-height:1.2;
   }
-  .rondjes{ display:flex; gap:2px; flex:none; }
+  .rondjes{
+    display:flex; gap:2px; flex:none; margin-top:auto;
+    --rond:34px; --gezicht:28px; --teken:16px; --vinkmaat:14px;
+  }
   .rondje{
-    width:44px; height:44px; flex:none; position:relative; cursor:pointer;
+    width: var(--rond); height: var(--rond);
+    flex:none; position:relative; cursor:pointer;
     display:flex; align-items:center; justify-content:center;
     background:none; border:none; padding:0;
   }
   .rondje .ring{ border-radius:50%; box-shadow: inset 0 0 0 1.5px rgba(43,45,66,.14); }
   body.nacht .rondje .ring{ box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.18); }
   .rondje .gezicht{
-    width:40px; height:40px; border-radius:50%;
+    width: var(--gezicht); height: var(--gezicht); border-radius:50%;
     display:flex; align-items:center; justify-content:center;
-    font-size:22px; line-height:1;
+    font-size: var(--teken); line-height:1;
     filter: grayscale(1); opacity:.40;
     transition: filter .2s ease, opacity .2s ease;
   }
@@ -188,7 +220,8 @@
   }
   .rondje[aria-pressed="true"] .gezicht{ filter:none; opacity:1; }
   .vink{
-    position:absolute; right:0; bottom:0; width:18px; height:18px; border-radius:50%;
+    position:absolute; right:0; bottom:0;
+    width: var(--vinkmaat); height: var(--vinkmaat); border-radius:50%;
     background: var(--groen); border:2px solid #fff;
     display:none; align-items:center; justify-content:center;
   }
@@ -220,20 +253,29 @@
   .weekstrip button.aan .wdag{ background: var(--oranje); color:#fff; }
   .weekstrip button.vandaag:not(.aan) .wdag{ box-shadow: inset 0 0 0 2px rgba(242,153,74,.5); }
 
-  .blokkop{ font-family: var(--baloo); font-weight:800; font-size:17px; padding:0 8px 8px; margin-top:22px; }
-  .agendarij{ display:flex; align-items:center; gap:12px; padding:12px 14px; min-height:58px; }
-  .agendaicoon{ font-size:26px; flex:none; width:34px; text-align:center; }
-  .agendatekst{ flex:1; min-width:0; font-family: var(--baloo); font-weight:700; font-size:16.5px; }
-  .agendatijd{ font-weight:800; font-size:13.5px; color: var(--inkt-zacht); flex:none; }
-  .merken{ display:flex; gap:4px; flex:none; }
+  /* De hoogte van een blokkop staat vast, zodat het kinderblok er op een breed
+     scherm precies evenveel voor kan zakken en gelijk ligt met de kaart ernaast. */
+  .blokkop{
+    font-family: var(--baloo); font-weight:800; font-size:16px; line-height:22px;
+    padding:0 var(--insprong) 9px; margin-top:22px;
+  }
+  .agendarij{
+    display:flex; align-items:flex-start; gap:12px;
+    padding:12px var(--insprong); min-height:54px;
+  }
+  .agendaicoon{ font-size:24px; flex:none; width:30px; text-align:center; line-height:1.2; }
+  .agendatekst{ flex:1; min-width:0; }
+  .agendanaam{ font-family: var(--baloo); font-weight:700; font-size:15.5px; }
+  .agendameta{ display:flex; align-items:center; gap:7px; flex-wrap:wrap; margin-top:5px; }
+  .agendatijd{ font-weight:800; font-size:12.5px; color: var(--inkt-zacht); }
   .merk{
-    display:flex; align-items:center; gap:4px;
-    padding:4px 10px 4px 4px; border-radius:999px; color:#fff;
+    display:inline-flex; align-items:center; gap:4px;
+    padding:3px 9px 3px 3px; border-radius:999px; color:#fff;
     font-family: var(--baloo); font-weight:800; font-size:12.5px;
   }
   .merk i{
-    width:20px; height:20px; border-radius:50%; background: rgba(255,255,255,.28);
-    display:flex; align-items:center; justify-content:center; font-size:12px; font-style:normal;
+    width:19px; height:19px; border-radius:50%; background: rgba(255,255,255,.28);
+    display:flex; align-items:center; justify-content:center; font-size:11px; font-style:normal;
   }
 
   /* ------------------------------------------------------- instellingen --- */
@@ -439,28 +481,90 @@
   .trek.bezig .trekicoon{ animation: draai .8s linear infinite; }
   @keyframes draai{ to{ transform: rotate(360deg); } }
 
-  @media (max-width:380px){
-    .app{ padding-left:16px; padding-right:16px; }
-    .rondje{ width:40px; height:40px; }
-    .rondje .gezicht{ width:36px; height:36px; font-size:20px; }
+  @media (max-width:360px){
+    :root{ --gootje: 16px; }
+    .rondjes{ --rond:30px; --gezicht:26px; --teken:15px; --vinkmaat:13px; }
+  }
+
+  /* Zodra er ruimte is: vijf kaartjes op een rij, en alles een maatje groter. */
+  @media (min-width:700px){
+    .kaartraster{ grid-template-columns: repeat(5, minmax(0, 1fr)); gap:14px; }
+    .taakkaart{ gap:9px; padding:16px 10px 13px; min-height:172px; }
+    .taakkaart .tegel{ width:56px; height:56px; border-radius:18px; font-size:30px; }
+    .taakkaart .taaknaam{ font-size:15px; }
+    .rondjes{ --rond:42px; --gezicht:34px; --teken:20px; --vinkmaat:16px; }
+  }
+
+  /* Breed: de titel, de schakelaar en het menu op één regel, en het dagoverzicht
+     als kolom ernaast — even breed als het menu en er precies onder. */
+  @media (min-width:1000px){
+    :root{ --gootje: 26px; }
+    .app{ padding-top: calc(env(safe-area-inset-top) + 22px); padding-bottom:40px; }
+    .kop{ display:flex; align-items:center; gap:24px; padding-bottom:4px; }
+    .koptekst{ flex:1; min-width:0; }
+    .kop .segment{
+      position:absolute; left:50%; top:50%; transform:translate(-50%, -50%);
+      width:250px; margin:0;
+    }
+    .pagina{ max-width:640px; }
+    #pg-ritme{ max-width:none; }
+    .ritmelijf{ flex-direction:row; align-items:flex-start; gap:26px; }
+    .ritmehoofd{ display:block; flex:1; min-width:0; }
+    .ritmezij{ display:block; width:372px; flex:none; }
+    /* Staat er niets in de agenda, dan verdwijnt de kolom en krijgen de
+       kaartjes de volle breedte. */
+    .ritmelijf:not(.met-zij) .ritmezij{ display:none; }
+    .ritmelijf.met-zij .ritmehoofd{ padding-top:31px; }
+    .ritmezij .blokkop{ margin-top:0; }
+    .ritmezij .agendablok.later{
+      margin-top:22px; padding-top:0; border-top:none;
+    }
+    .voortgang{ margin-top:0; }
+    .tabbalk{
+      position:static; width:372px; flex:none; max-width:none; margin:0;
+      border-radius:26px; padding:4px;
+    }
+    .tabbalk button{ flex-direction:row; gap:7px; padding:8px 0; font-size:13.5px; }
+    .tabbalk svg{ width:19px; height:19px; }
   }
 </style>
 </head>
 <body>
   <div class="app">
     <header class="kop">
-      <h1 id="paginatitel">Ochtend</h1>
-      <div class="kopdatum" id="paginadatum"></div>
-    </header>
-
-    <section class="pagina" id="pg-ritme">
+      <div class="koptekst">
+        <h1 id="paginatitel">Ochtend</h1>
+        <div class="kopdatum" id="paginadatum"></div>
+      </div>
       <div class="segment glas" id="segment">
         <button type="button" data-ritme="dag">Ochtend</button>
         <button type="button" data-ritme="nacht">Avond</button>
       </div>
-      <div class="voortgang glas" id="voortgang" hidden></div>
-      <div id="groepen"></div>
-      <button class="opnieuw" id="opnieuwKnop" type="button">opnieuw beginnen</button>
+      <nav class="tabbalk glas glas-zwevend" id="tabbalk">
+        <button type="button" data-pagina="ritme" class="aan">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h2.5M4 12h2.5M4 18h2.5"/><path d="M10.5 6H20M10.5 12H20M10.5 18H20"/></svg>
+          <span>Ritme</span>
+        </button>
+        <button type="button" data-pagina="overzicht">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="4"/><path d="M3.5 10h17M8.5 3.2v3.4M15.5 3.2v3.4"/></svg>
+          <span>Overzicht</span>
+        </button>
+        <button type="button" data-pagina="instellingen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3.2v2.2M12 18.6V20.8M20.8 12h-2.2M5.4 12H3.2M17.3 6.7l-1.5 1.5M8.2 15.8l-1.5 1.5M17.3 17.3l-1.5-1.5M8.2 8.2 6.7 6.7"/></svg>
+          <span>Instellingen</span>
+        </button>
+      </nav>
+    </header>
+
+    <section class="pagina" id="pg-ritme">
+      <div class="ritmelijf" id="ritmelijf">
+        <div class="ritmehoofd">
+          <div class="voortgang glas" id="voortgang" hidden></div>
+          <div id="groepen"></div>
+          <button class="opnieuw" id="opnieuwKnop" type="button">opnieuw beginnen</button>
+        </div>
+        <aside class="ritmezij" id="ritmeagenda"></aside>
+      </div>
     </section>
 
     <section class="pagina" id="pg-overzicht" hidden>
@@ -474,20 +578,6 @@
     </section>
   </div>
 
-  <nav class="tabbalk glas glas-zwevend" id="tabbalk">
-    <button type="button" data-pagina="ritme" class="aan">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h2.5M4 12h2.5M4 18h2.5"/><path d="M10.5 6H20M10.5 12H20M10.5 18H20"/></svg>
-      <span>Ritme</span>
-    </button>
-    <button type="button" data-pagina="overzicht">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="4"/><path d="M3.5 10h17M8.5 3.2v3.4M15.5 3.2v3.4"/></svg>
-      <span>Overzicht</span>
-    </button>
-    <button type="button" data-pagina="instellingen">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 3.2v2.2M12 18.6V20.8M20.8 12h-2.2M5.4 12H3.2M17.3 6.7l-1.5 1.5M8.2 15.8l-1.5 1.5M17.3 17.3l-1.5-1.5M8.2 8.2 6.7 6.7"/></svg>
-      <span>Instellingen</span>
-    </button>
-  </nav>
 
   <div class="scrim" id="scrim" hidden></div>
   <section class="vel" id="vel" hidden>
@@ -712,6 +802,8 @@ const paginadatumEl = $('paginadatum');
 const segmentEl = $('segment');
 const voortgangEl = $('voortgang');
 const groepenEl = $('groepen');
+const ritmelijfEl = $('ritmelijf');
+const ritmeagendaEl = $('ritmeagenda');
 const weekstripEl = $('weekstrip');
 const agendaEl = $('agenda');
 const instellijstEl = $('instellijst');
@@ -1111,18 +1203,41 @@ function tekenRitme(){
       kop.append(el('div', 'groepnaam', groep.groep), el('div', 'groeptijd', groep.tijd));
       groepenEl.appendChild(kop);
     }
-    const kaart = el('div', 'kaart glas');
-    groep.stappen.forEach((stap, i) => {
-      if(i) kaart.appendChild(el('div', 'streep'));
-      const rij = el('div', 'taak');
-      rij.append(el('div', 'tegel', stap.icoon), el('div', 'taaknaam', stap.label));
+    const raster = el('div', 'kaartraster');
+    groep.stappen.forEach(stap => {
+      const kaart = el('div', 'taakkaart glas');
+      kaart.append(el('div', 'tegel', stap.icoon), el('div', 'taaknaam', stap.label));
       const rondjes = el('div', 'rondjes');
       wieDoetMee(stap).forEach(p => rondjes.appendChild(maakRondje(stap, p)));
-      rij.appendChild(rondjes);
-      kaart.appendChild(rij);
+      kaart.appendChild(rondjes);
+      raster.appendChild(kaart);
     });
-    groepenEl.appendChild(kaart);
+    groepenEl.appendChild(raster);
   });
+  tekenRitmeAgenda();
+}
+
+// Naast de stappen (of eronder op een telefoon) staat wat er die dag verder is:
+// 's ochtends vandaag, 's avonds wat er vanavond nog komt en wat morgen wacht.
+function ritmeBlokken(){
+  const nu = new Date();
+  const van = d => itemsVan(d).filter(i => !i.avond);
+  if(ritme !== 'nacht'){
+    return [{ kop:'Vandaag', items: van(nu) }];
+  }
+  const morgen = new Date(nu);
+  morgen.setDate(morgen.getDate() + 1);
+  return [
+    { kop:'Vanavond', items: itemsVan(nu).filter(i => i.avond) },
+    { kop:'Morgen', items: van(morgen), later:true },
+  ];
+}
+
+function tekenRitmeAgenda(){
+  const blokken = ritmeBlokken().filter(b => b.items.length);
+  ritmeagendaEl.innerHTML = '';
+  blokken.forEach(b => ritmeagendaEl.appendChild(maakAgendaBlok(b)));
+  ritmelijfEl.classList.toggle('met-zij', blokken.length > 0);
 }
 
 // ------------------------------------------------------------- overzicht ---
@@ -1182,21 +1297,39 @@ function agendaBlokken(){
 
 function maakAgendaRij(item){
   const rij = el('div', 'agendarij');
-  rij.append(el('div', 'agendaicoon', item.icoon), el('div', 'agendatekst', item.tekst));
+  const tekstvak = el('div', 'agendatekst');
+  tekstvak.appendChild(el('div', 'agendanaam', item.tekst));
 
+  const meta = el('div', 'agendameta');
   const gekozen = lijstVan(item.wie).map(id => persoonById(id)).filter(Boolean);
   if(gekozen.length && gekozen.length < config.mensen.length){
-    const merken = el('div', 'merken');
     gekozen.forEach(p => {
       const merk = el('span', 'merk');
       merk.style.background = p.kleur;
       merk.append(el('i', '', p.emoji), document.createTextNode(p.naam));
-      merken.appendChild(merk);
+      meta.appendChild(merk);
     });
-    rij.appendChild(merken);
   }
-  if(item.tijd) rij.appendChild(el('div', 'agendatijd', item.tijd));
+  if(item.tijd) meta.appendChild(el('div', 'agendatijd', item.tijd));
+  if(meta.childNodes.length) tekstvak.appendChild(meta);
+
+  rij.append(el('div', 'agendaicoon', item.icoon), tekstvak);
   return rij;
+}
+
+// Eén blok met een kopje en een kaart eronder — zowel naast de stappen als op
+// de overzichtpagina. 'later' zet Morgen op een telefoon onder de stappen.
+function maakAgendaBlok(blok){
+  const vak = document.createElement('section');
+  vak.className = 'agendablok' + (blok.later ? ' later' : '');
+  vak.appendChild(el('div', 'blokkop', blok.kop));
+  const kaart = el('div', 'kaart glas');
+  blok.items.forEach((item, i) => {
+    if(i) kaart.appendChild(el('div', 'streep'));
+    kaart.appendChild(maakAgendaRij(item));
+  });
+  vak.appendChild(kaart);
+  return vak;
 }
 
 function tekenOverzicht(){
@@ -1208,15 +1341,7 @@ function tekenOverzicht(){
     agendaEl.appendChild(el('div', 'leegkaart glas', 'Deze dag staat er niets in de agenda.'));
     return;
   }
-  blokken.forEach(blok => {
-    agendaEl.appendChild(el('div', 'blokkop', blok.kop));
-    const kaart = el('div', 'kaart glas');
-    blok.items.forEach((item, i) => {
-      if(i) kaart.appendChild(el('div', 'streep'));
-      kaart.appendChild(maakAgendaRij(item));
-    });
-    agendaEl.appendChild(kaart);
-  });
+  blokken.forEach(blok => agendaEl.appendChild(maakAgendaBlok(blok)));
 }
 
 // ----------------------------------------------------------- instellingen ---
@@ -1283,6 +1408,7 @@ function toepassen(){
     paginadatumEl.textContent = config.titel;
   }
 
+  segmentEl.hidden = pagina !== 'ritme';
   $('pg-ritme').hidden = pagina !== 'ritme';
   $('pg-overzicht').hidden = pagina !== 'overzicht';
   $('pg-instellingen').hidden = pagina !== 'instellingen';
