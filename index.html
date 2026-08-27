@@ -1435,20 +1435,14 @@ function itemsVan(d){
   return bijzonder.concat(week);
 }
 
+// Alleen de gekozen dag; morgen is hier één tik verder in de strip.
 function agendaBlokken(){
-  const nu = new Date();
   const gekozen = overzichtDatum();
-  const isVandaag = datumVan(gekozen) === datumVan(nu);
-  const blokken = [
+  const isVandaag = datumVan(gekozen) === vandaag();
+  return [
     { kop:'Overdag', items: itemsVan(gekozen).filter(i => !i.avond) },
     { kop: isVandaag ? 'Vanavond' : "'s Avonds", items: itemsVan(gekozen).filter(i => i.avond) },
-  ];
-  if(isVandaag){
-    const morgen = new Date(nu);
-    morgen.setDate(morgen.getDate() + 1);
-    blokken.push({ kop:'Morgen', items: itemsVan(morgen).filter(i => !i.avond) });
-  }
-  return blokken.filter(b => b.items.length);
+  ].filter(b => b.items.length);
 }
 
 function maakAgendaRij(item, opOpenen){
