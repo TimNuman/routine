@@ -26,6 +26,24 @@ npx wrangler deploy
 Meer is het niet: `SLEUTEL` heb je pas nodig als er een client van buiten de
 browser bij komt (zie onder).
 
+### Zonder laptop
+
+Het kan ook helemaal vanuit de browser, zonder `wrangler`. In het Cloudflare-
+dashboard: **Workers & Pages → Create application → Import a repository**, koppel
+GitHub, kies deze repo. Bij de instellingen:
+
+| Veld | Waarde |
+|---|---|
+| Build command | `npm install && node stempel.mjs` |
+| Deploy command | `npx wrangler deploy` |
+
+Daarna **Save and Deploy**. Cloudflare bouwt vanaf dat moment bij elke push naar
+`main` zelf, dus de Cloudflare-baan in de GitHub-workflow heb je dan niet meer
+nodig.
+
+De sleutel zet je er in dezelfde webpagina bij: **je Worker → Settings →
+Variables and Secrets → Add**, type *Secret*, naam `ANTHROPIC_API_KEY`.
+
 ### Vanzelf uitrollen
 
 `.github/workflows/deploy.yml` doet `wrangler deploy` bij elke push naar `main`,

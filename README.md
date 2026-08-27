@@ -195,7 +195,9 @@ wrangler.toml
 ```
 
 Nog steeds geen build voor de app zelf: `public/index.html` is één bestand met de
-hele boel erin. De Worker heeft wel `npm install` nodig, voor de Claude-sdk.
+hele boel erin. De Worker heeft wel `npm install` nodig, voor de Claude-sdk, en
+`stempel.mjs` zet vlak voor het uitrollen het commit-nummer in de pagina — dat is
+hoe de app merkt dat er iets nieuwers staat.
 
 ## Publiceren
 
