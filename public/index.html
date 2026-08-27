@@ -1647,7 +1647,7 @@ function tekenOverzicht(){
   agendaEl.appendChild(erbij);
 
   const uitBericht = knop('kaartknop glas');
-  uitBericht.append(el('span', 'knopicoon', '✨'), document.createTextNode('Uit een bericht overnemen'));
+  uitBericht.append(el('span', 'knopicoon', '✨'), document.createTextNode('Typ of plak iets'));
   uitBericht.addEventListener('click', openAssistent);
   agendaEl.appendChild(uitBericht);
 }
@@ -2352,20 +2352,22 @@ function tekenAssistent(){
   if(assi.stap === 'niets'){
     assiTitelEl.textContent = 'Niets gevonden';
     assiInhoudEl.appendChild(el('div', 'bezigvak',
-      'Hier kon ik geen datum of afspraak in vinden. Plak eventueel wat meer van het bericht.'));
+      'Hier kon ik niets uithalen dat in de app hoort. Probeer het wat concreter, of plak er meer bij.'));
     assiKnopEl.textContent = 'Opnieuw proberen';
     return;
   }
 
-  assiTitelEl.textContent = 'Uit een bericht';
+  assiTitelEl.textContent = 'Typ of plak iets';
   const vak = document.createElement('textarea');
   vak.className = 'plakvak';
-  vak.placeholder = 'Plak hier de mail of het appje van school, de club of de bso…';
+  vak.placeholder = 'Plak een mail of appje, of typ het gewoon:\n\niedere dinsdag om 18:00 tennis Emma';
   vak.value = assi.bericht;
   vak.addEventListener('input', () => { assi.bericht = vak.value; });
-  assiInhoudEl.append(formKop('Het bericht'), vak);
+  assiInhoudEl.append(formKop('De tekst'), vak);
   assiInhoudEl.appendChild(el('div', 'notitie',
-    'Alleen wat je hier plakt gaat mee. De namen van de kinderen blijven in de app.'));
+    'Wat elke week terugkomt gaat naar het weekritme, wat één dag geldt naar Eenmalig. '
+    + 'Er wordt ook meegedacht: bij een verjaardag hoort een cadeautje op tijd. '
+    + 'Alleen wat je hier typt gaat mee, plus de voornamen van de kinderen.'));
   assiKnopEl.textContent = 'Lees uit';
 }
 
@@ -2409,7 +2411,10 @@ function tekenAssiVoorstellen(){
     const rij = knop('vondst' + (aan ? ' aan' : ''));
     const tekstvak = el('div', 'vondsttekst');
     tekstvak.appendChild(el('div', 'vondstnaam', item.tekst));
-    const meta = [langeDatum(item.datum), tijdTekst(item), assiWieTekst(item.wie), assiSoortTekst(item)]
+    const wanneer = item.soort === 'weekritme'
+      ? (dagenTekst(item.dagen) || 'elke dag')
+      : langeDatum(item.datum);
+    const meta = [wanneer, tijdTekst(item), assiWieTekst(item.wie), assiSoortTekst(item)]
       .filter(Boolean).join(' · ');
     if(meta) tekstvak.appendChild(el('div', 'vondstmeta', meta));
     if(tekst(item.bron)) tekstvak.appendChild(el('div', 'vondstbron', '„' + tekst(item.bron) + '”'));
@@ -2431,8 +2436,9 @@ function assiWieTekst(wie){
 }
 
 function assiSoortTekst(item){
+  if(item.soort === 'weekritme') return 'elke week';
   if(item.soort !== 'stap') return '';
-  return 'bij het ' + (item.ritme === 'nacht' ? 'avondritme' : 'ochtendritme');
+  return 'om af te vinken bij het ' + (item.ritme === 'nacht' ? 'avondritme' : 'ochtendritme');
 }
 
 async function assiVerder(){
@@ -2496,8 +2502,10 @@ async function leesUit(){
 }
 
 // Wat er terugkomt is van buiten: alleen wat we snappen komt erdoor.
+const SOORTEN = ['bijzonderheid', 'stap', 'weekritme'];
+
 function schoonVoorstel(ruw){
-  const soort = tekst(ruw && ruw.soort) === 'stap' ? 'stap' : 'bijzonderheid';
+  const soort = SOORTEN.includes(tekst(ruw && ruw.soort)) ? tekst(ruw.soort) : 'bijzonderheid';
   const bekend = new Set(config.mensen.map(p => p.id));
   const uit = {
     soort,
@@ -2506,12 +2514,16 @@ function schoonVoorstel(ruw){
     tijd: tekst(ruw && ruw.tijd),
     tot: tekst(ruw && ruw.tot),
     datum: isDatum(ruw && ruw.datum) ? tekst(ruw.datum) : '',
+    dagen: dagenVan(ruw && ruw.dagen),
     wie: lijstVan(ruw && ruw.wie).map(String).filter(id => bekend.has(id)),
     bron: tekst(ruw && ruw.bron).slice(0, 200),
     ritme: tekst(ruw && ruw.ritme) === 'nacht' ? 'nacht' : 'dag',
     groep: tekst(ruw && ruw.groep),
   };
-  return uit.tekst && uit.datum ? uit : null;
+  if(!uit.tekst) return null;
+  // Wat elke week terugkomt heeft dagen in plaats van een datum; leeg betekent
+  // daar elke dag, dus dat mag.
+  return uit.soort === 'weekritme' || uit.datum ? uit : null;
 }
 
 // Het antwoord op een vraag is een kenmerk van het kind en gaat meteen mee de
@@ -2534,6 +2546,7 @@ async function zetVoorstellenIn(items){
   ruw.events = lijstVan(ruw.events);
   items.forEach(item => {
     if(item.soort === 'stap') return zetStapIn(ruw, item);
+    if(item.soort === 'weekritme') return zetWeekIn(ruw, item);
     // Hetzelfde bericht twee keer plakken hoort niet twee regels op te leveren.
     if(ruw.events.some(e => zelfde(e, item))) return;
     ruw.events.push({
@@ -2542,6 +2555,19 @@ async function zetVoorstellenIn(items){
     });
   });
   return await bewaarInhoud(ruw, toonAssiMelding);
+}
+
+// Iets dat elke week terugkomt hoort bij het weekritme, niet bij eenmalig.
+function zetWeekIn(ruw, item){
+  ruw.overzicht = lijstVan(ruw.overzicht);
+  const sleutel = i => [tekst(i.tekst).toLowerCase(), dagenVan(i.dagen).join('+'),
+                        lijstVan(i.wie).join('+')].join('|');
+  if(ruw.overzicht.some(i => sleutel(i) === sleutel(item))) return;
+  ruw.overzicht.push({
+    icoon: item.icoon, tekst: item.tekst,
+    tijd: item.tijd, tot: item.tot,
+    dagen: item.dagen, wie: item.wie,
+  });
 }
 
 function zelfde(bestaand, item){
@@ -2735,14 +2761,61 @@ function nepMeeNemen(zin, bericht){
   return woorden.charAt(0).toUpperCase() + woorden.slice(1) + ' mee';
 }
 
+const NEP_VULWOORDEN = new Set(['elke','iedere','elk','ieder','wekelijks','altijd','om','op',
+  'van','tot','uur','en','de','het','een','is','zijn','gaat','naar','met','heeft','in','bij',
+  'voor','ook','dan','er','we','ik','moet','moeten','s','avonds','ochtends','middags','dag']);
+
+// Wat er overblijft als je de dag, de tijd, de namen en de vulwoorden weghaalt,
+// is meestal waar het over gaat: 'iedere dinsdag om 18:00 tennis Emma' → tennis.
+function nepLosseNaam(bericht, kinderen){
+  const namen = new Set(lijstVan(kinderen).map(k => tekst(k.naam).toLowerCase()));
+  const woorden = String(bericht).replace(/\d{1,2}\s*[:.]\s*\d{2}/g, ' ')
+    .split(/[^A-Za-zÀ-ÿ]+/).filter(Boolean)
+    .filter(w => {
+      const laag = w.toLowerCase();
+      return !DAGNAMEN.includes(laag) && !namen.has(laag) && !NEP_VULWOORDEN.has(laag);
+    });
+  if(!woorden.length) return '';
+  const zin = woorden.join(' ');
+  return zin.charAt(0).toUpperCase() + zin.slice(1);
+}
+
+// Een getypte regel zonder datum maar met een weekdag erin hoort bij het
+// weekritme. De echte uitlezer doet dit beter; dit is genoeg om het te proberen.
+function nepWeek(bericht, kinderen){
+  const laag = String(bericht).toLowerCase();
+  const dagen = DAGNAMEN.map((naam, i) => laag.includes(naam) ? DAGEN[i] : null).filter(Boolean);
+  if(!dagen.length) return null;
+  const naam = nepLosseNaam(bericht, kinderen);
+  if(!naam) return null;
+  const tijden = (String(bericht).match(/\d{1,2}\s*[:.]\s*\d{2}/g) || [])
+    .map(t => t.replace(/\s+/g, '').replace('.', ':'));
+  return {
+    soort: 'weekritme',
+    icoon: nepIcoon(bericht, '📅'),
+    tekst: naam,
+    dagen,
+    tijd: tijden[0] || '',
+    tot: tijden[1] || '',
+    wie: lijstVan(kinderen)
+      .filter(k => tekst(k.naam) && laag.includes(tekst(k.naam).toLowerCase()))
+      .map(k => k.id),
+    bron: String(bericht).trim().slice(0, 120),
+  };
+}
+
 function nepAssistent(lading){
   const nu = tekst(lading.vandaag, vandaag());
   const bericht = tekst(lading.tekst);
+  const kinderen = lijstVan(lading.kinderen);
   const regels = nepZinnen(bericht)
     .map(zin => ({ zin, datums: nepDatums(zin, nu), groepen: nepGroepen(zin) }));
 
   let bruikbaar = regels.filter(r => r.datums.length);
-  if(!bruikbaar.length) return { type:'niets' };
+  if(!bruikbaar.length){
+    const week = nepWeek(bericht, kinderen);
+    return week ? { type:'voorstellen', items:[week] } : { type:'niets' };
+  }
   // 'Op vrijdag 4 of vrijdag 11 september' zegt nog niet wie wanneer moet. Staan
   // er zinnen bij die één dag noemen, dan is dit de inleiding en telt hij niet.
   const enkel = bruikbaar.filter(r => r.datums.length === 1);
@@ -2750,7 +2823,6 @@ function nepAssistent(lading){
 
   const alleGroepen = [];
   bruikbaar.forEach(r => r.groepen.forEach(g => { if(!alleGroepen.includes(g)) alleGroepen.push(g); }));
-  const kinderen = lijstVan(lading.kinderen);
   const kent = kinderen.some(kind => nepWaarden(kind).some(w => alleGroepen.includes(w)));
 
   if(alleGroepen.length && !kent && Number(lading.ronde) < 2){

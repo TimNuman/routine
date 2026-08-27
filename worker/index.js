@@ -33,12 +33,18 @@ const SCHEMA = {
       items: {
         type: 'object',
         additionalProperties: false,
-        required: ['soort', 'icoon', 'tekst', 'datum', 'wie', 'bron'],
+        required: ['soort', 'icoon', 'tekst', 'wie', 'bron'],
         properties: {
-          soort: { type: 'string', enum: ['bijzonderheid', 'stap'] },
+          soort: { type: 'string', enum: ['bijzonderheid', 'stap', 'weekritme'] },
           icoon: { type: 'string' },
           tekst: { type: 'string' },
+          // bij bijzonderheid en stap: de dag zelf
           datum: { type: 'string', format: 'date' },
+          // bij weekritme: op welke weekdagen, leeg is elke dag
+          dagen: {
+            type: 'array',
+            items: { type: 'string', enum: ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'] },
+          },
           tijd: { type: 'string' },
           tot: { type: 'string' },
           wie: { type: 'array', items: { type: 'string' } },
@@ -51,27 +57,36 @@ const SCHEMA = {
   },
 };
 
-const SYSTEEM = `Je haalt afspraken uit berichten van school, sportclub en bso, voor een gezinsapp met een dagritme per kind.
+const SYSTEEM = `Je vult een gezinsapp met een dagritme per kind. Je krijgt tekst van een ouder: een doorgestuurde mail van school of de club, een appje, of gewoon een zin die die ouder zelf typt ("iedere dinsdag om 18:00 tennis Emma"). Behandel allebei hetzelfde — het gaat erom wat er in de app moet komen.
 
-Je krijgt het bericht, de datum van vandaag, en de kinderen die in de app staan met wat er van ze bekend is (schoolgroep, team, en wat er verder aan kenmerken bij ze staat).
+Je krijgt verder de datum van vandaag en de kinderen die in de app staan met wat er van ze bekend is (schoolgroep, team, en wat er verder aan kenmerken bij ze staat).
 
 Antwoord met één van drie dingen.
 
-1. "vraag" — alleen als het bericht onderscheid maakt dat je met de bekende kenmerken niet kunt maken. Bijvoorbeeld: het noemt per schoolgroep (1-2A tot en met 1-2D) een andere dag, en van geen van de kinderen is de schoolgroep bekend. Stel dan precies één vraag, met de mogelijke waarden als "opties", en een korte "sleutel" waaronder het antwoord bij het kind bewaard wordt: schoolgroep, team, bsogroep. Kun je het ook zonder, vraag dan niets — een voorstel voor iedereen is beter dan een vraag. Bij ronde 2 of hoger stel je geen vraag meer, maar doe je het met wat je hebt.
+1. "vraag" — alleen als de tekst onderscheid maakt dat je met de bekende kenmerken niet kunt maken. Bijvoorbeeld: er staat per schoolgroep (1-2A tot en met 1-2D) een andere dag, en van geen van de kinderen is de schoolgroep bekend. Stel dan precies één vraag, met de mogelijke waarden als "opties", en een korte "sleutel" waaronder het antwoord bij het kind bewaard wordt: schoolgroep, team, bsogroep. Kun je het ook zonder, vraag dan niets — een voorstel voor iedereen is beter dan een vraag. Bij ronde 2 of hoger stel je geen vraag meer, maar doe je het met wat je hebt.
 
-2. "voorstellen" — wat er in de app moet komen. Per voorstel:
-   - "soort": "bijzonderheid" voor iets dat op één dag speelt en in de weekagenda hoort (een uitje, een ouderavond, een verkeersles, een wedstrijd). "stap" voor iets dat een kind die dag zelf moet dóén en tussen de afvinkbare stappen hoort — meestal iets meenemen. Zet bij een stap ook "ritme" ("dag" voor de ochtend, "nacht" voor de avond) en "groep": de naam van de groep waar hij hoort, meestal "Weggaan".
-   - "tekst": kort, zoals je het tegen een kind zegt. "Verkeersles", "Fiets mee", "Gymspullen mee". Geen hele zinnen.
-   - "datum": jjjj-mm-dd, uitgerekend vanaf vandaag. Staat er geen jaartal bij, dan is het de eerstvolgende keer.
-   - "tijd": de begintijd, alleen als het bericht die noemt, anders leeg. "tot" is de eindtijd, ook alleen als die er staat.
-   - "wie": de ids van de kinderen die het betreft, uit de meegegeven lijst. Leeg betekent iedereen; gebruik dat als het bericht geen onderscheid maakt. Gaat een dag over een groep waar geen van de kinderen in zit, laat dat voorstel dan helemaal weg.
-   - "bron": de zin uit het bericht waar dit vandaan komt, letterlijk overgenomen, zodat de ouder het kan nakijken.
+2. "voorstellen" — wat er in de app moet komen. Er zijn drie soorten, en de keuze daartussen is het belangrijkste dat je doet:
+
+   - "weekritme": iets dat elke week terugkomt. "Iedere dinsdag tennis", "school", "woensdag naar oma". Zet "dagen" op de weekdagen waarop het valt (ma di wo do vr za zo); laat "dagen" leeg als het echt elke dag is. Geen "datum".
+   - "bijzonderheid": iets dat op één dag valt en verder niets van je vraagt. Een uitje, een ouderavond, een verjaardag, een wedstrijd. Zet "datum".
+   - "stap": iets dat een kind die ene dag zelf moet dóén, en dat je afvinkt — meestal iets meenemen of klaarzetten. Zet "datum", plus "ritme" ("dag" voor de ochtend, "nacht" voor de avond) en "groep": de naam van het onderdeel waar het hoort, meestal "Weggaan".
+
+   Komt iets elke week terug, kies dan weekritme, ook als de tekst één datum noemt als voorbeeld. Gaat het over één keer, kies bijzonderheid of stap.
+
+   Verder per voorstel:
+   - "tekst": kort, zoals je het tegen een kind zegt. "Tennis", "Verkeersles", "Fiets mee". Geen hele zinnen.
+   - "tijd" is de begintijd en "tot" de eindtijd, allebei alleen als ze er staan. Een stap krijgt geen tijd; die hoort bij het onderdeel waar hij in staat.
+   - "wie": de ids van de kinderen die het betreft, uit de meegegeven lijst. Leeg betekent iedereen; gebruik dat als de tekst geen onderscheid maakt. Gaat iets over een groep waar geen van de kinderen in zit, laat dat voorstel dan helemaal weg.
    - "icoon": één emoji die erbij past.
+   - "bron": waar dit vandaan komt. Staat het er letterlijk, neem dan die zin over. Heb je het zelf bedacht (zie hieronder), schrijf dan in één korte zin waarom.
+
+   Denk mee. Wat er staat is vaak niet alles wat er moet gebeuren: bij een verjaardag hoort een cadeau dat op tijd in huis is, bij een sportdag horen gymspullen, bij een uitje hoort soms een lunchpakket. Stel dat er gerust bij, als eigen voorstel op een dag die klopt — een cadeautje voor een verjaardag op woensdag koop je in het weekend ervoor, niet die ochtend. Zeg in "bron" dat jij het bedacht hebt, zodat de ouder het kan wegklikken. Houd het bij wat een ouder ook echt zou willen: één of twee vooruitdenkers, geen lijstje van tien.
+
    Eén regel per ding per dag; geen dubbele voorstellen.
 
-3. "niets" — er staat geen afspraak of datum in het bericht.
+3. "niets" — er valt niets uit te halen dat in de app hoort.
 
-Ga alleen af op wat er staat. Verzin geen data, tijden of namen die er niet in staan.`;
+Ga af op wat er staat en wat daar redelijkerwijs uit volgt. Verzin geen data, tijden of namen die nergens op slaan.`;
 
 // De api zet zijn uitleg in error.message; err.message zelf heeft de status en
 // de hele json er nog omheen staan.

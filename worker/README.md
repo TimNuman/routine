@@ -98,7 +98,8 @@ die de app openmaakt. Echt dichtzetten is inloggen — zie *Straks* hieronder.
 
 ## `POST /api/lees`
 
-Erin:
+Erin: het bericht dat de ouder plakt óf zelf typt — allebei gaat door dezelfde
+weg.
 
 ```json
 {
@@ -120,14 +121,24 @@ een JSON-schema afgedwongen (`output_config.format`):
   "opties": ["1-2A", "1-2B"], "meerkeuze": false }
 
 { "type": "voorstellen", "items": [
+  // elke week terug → het weekritme; dagen in plaats van een datum
+  { "soort": "weekritme", "icoon": "🎾", "tekst": "Tennis", "dagen": ["di"],
+    "tijd": "18:00", "tot": "19:00", "wie": ["emma"], "bron": "iedere dinsdag tennis Emma" },
+  // één dag, en verder niets te doen → Eenmalig, als agendaregel
   { "soort": "bijzonderheid", "icoon": "🚸", "tekst": "Verkeersles",
     "datum": "2026-09-04", "tijd": "", "wie": ["emma"], "bron": "de zin uit de mail" },
+  // één dag, en er moet iets gebeuren → Eenmalig, als kaartje om af te vinken
   { "soort": "stap", "ritme": "dag", "groep": "Weggaan", "icoon": "🚲",
     "tekst": "Fiets mee", "datum": "2026-09-04", "wie": ["emma"],
     "bron": "de zin uit de mail" } ] }
 
 { "type": "niets" }
 ```
+
+De systeemprompt vraagt ook om vooruitdenken: bij een verjaardag hoort een
+cadeau dat op tijd in huis is, bij een sportdag horen gymspullen. Zulke
+voorstellen zetten in `bron` dat ze zelf bedacht zijn, zodat de ouder ziet wat er
+letterlijk stond en wat erbij verzonnen is.
 
 Gaat er iets mis, dan komt er `{ "fout": "..." }` met een leesbare reden; de app
 laat die letterlijk zien.

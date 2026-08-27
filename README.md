@@ -22,8 +22,8 @@ Onderin zweeft een menubalk met drie plekken:
   toe: een verjaardag, een uitje, de tandarts. Zo'n regel staat op één datum en
   krijgt een oranje randje, en verschijnt ook bij *Vandaag* en *Morgen* op de
   ritmepagina. Wat geweest is verdwijnt vanzelf bij het eerstvolgende bewaren.
-  Daaronder staat **Uit een bericht overnemen**: daar plak je een mail of appje
-  in en hoef je niets over te tikken.
+  Daaronder staat **Typ of plak iets**: daar plak je een mail of appje in, of
+  typ je gewoon wat er moet komen.
 - **Instellingen** — hier bewerk je alles wat in de app staat.
 
 De kaartjes zijn overal even breed: drie op een rij op een telefoon, vijf zodra
@@ -92,15 +92,26 @@ nooit stilletjes iets half opgeslagen.
 app een lege database vindt, zet hij die inhoud erin. Daarna is de database de
 baas en hoef je dit bestand niet meer aan te raken.
 
-## Uit een bericht
+## Typ of plak iets
 
 School, voetbal, judo en de bso sturen mail. In plaats van die over te tikken
-plak je hem op **Deze week** onder *Uit een bericht overnemen*. Wat eruit komt is
-een lijstje voorstellen — een bijzonderheid op een datum, of een eenmalige stap
-in het ochtendritme (*fiets mee*) — met de zin uit het bericht eronder waar het
-vandaan komt. Tik weg wat je niet wilt en zet de rest in één keer in de app. Wat er al staat
-komt er niet nog eens bij: dezelfde mail twee keer plakken levert niets dubbels
-op.
+plak je hem op **Deze week** onder *Typ of plak iets*. Zelf typen mag net zo
+goed: *iedere dinsdag om 18:00 tennis Emma* werkt precies zo.
+
+Wat eruit komt is een lijstje voorstellen, elk met de zin eronder waar het
+vandaan komt. Er zijn drie soorten, en de keuze daartussen wordt voor je gemaakt:
+
+| | komt terecht bij |
+|---|---|
+| iets dat elke week terugkomt | **Weekritme**, met de dagen erbij |
+| iets op één dag | **Eenmalig**, als regel in de agenda |
+| iets dat een kind die dag moet dóén | **Eenmalig**, als kaartje om af te vinken |
+
+Er wordt ook meegedacht. Plak je *Julia is woensdag jarig*, dan komt er naast
+die verjaardag een voorstel om zaterdag een cadeautje te halen — met in de bron
+dat het zelf bedacht is, zodat je het kunt wegklikken. Tik weg wat je niet wilt
+en zet de rest in één keer in de app. Wat er al staat komt er niet nog eens bij:
+dezelfde mail twee keer plakken levert niets dubbels op.
 
 Weet de app iets niet, dan vraagt hij het eerst. Een schoolmail die het over
 groep 1-2 A tot en met D heeft is pas te plaatsen als bekend is wie waarin zit;
