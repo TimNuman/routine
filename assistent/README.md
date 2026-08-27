@@ -30,7 +30,9 @@ Zet in `wrangler.toml` bij `HERKOMST` de url waar de app draait
 met komma's ertussen — handig als je hem ook lokaal wilt proberen.
 
 Zelf uitproberen voordat je hem publiceert: `npx wrangler dev` draait hem op
-`http://localhost:8787`, met de secrets uit een `.dev.vars`-bestand ernaast.
+`http://localhost:8787`, met de secrets uit een `.dev.vars`-bestand ernaast. Dat
+bestand staat in `.gitignore` en hoort daar te blijven — het is het enige plekje
+in deze repo waar een echte sleutel zou kunnen belanden.
 
 ## Over die sleutel
 
