@@ -1,10 +1,12 @@
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text } from 'react-native';
 import Animated, {
   useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming,
 } from 'react-native-reanimated';
 import { useEffect, useRef } from 'react';
 import { zacht } from './inhoud';
 import { SNEL, VEER, WIP } from './beweging';
+import { useNachtKleur } from './nacht';
+import { L } from './letters';
 import type { Persoon } from './soorten';
 
 const GROEN = '#34C759';
@@ -87,15 +89,7 @@ export function Rondje({ persoon, aan, avond, maat = 40, opTik }: {
   );
 }
 
-export function Naampje({ persoon, avond }: { persoon: Persoon; avond?: boolean }) {
-  return (
-    <View>
-      <Text
-        className={`font-tekstdik text-[11px] ${avond ? 'text-white/60' : 'text-inkt-zacht'}`}
-        numberOfLines={1}
-      >
-        {persoon.naam}
-      </Text>
-    </View>
-  );
+export function Naampje({ persoon }: { persoon: Persoon }) {
+  const kleur = useNachtKleur('#5C5F7A', 'rgba(255,255,255,0.6)');
+  return <Animated.Text style={[L.kindnaam, kleur]} numberOfLines={1}>{persoon.naam}</Animated.Text>;
 }

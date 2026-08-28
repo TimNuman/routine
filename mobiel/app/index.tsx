@@ -2,8 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
+import Animated, {
+  FadeInDown, FadeOut, LinearTransition, useAnimatedStyle, useSharedValue, withTiming, Easing,
+} from 'react-native-reanimated';
 import { KORT, SNEL, natikken } from '../onderdelen/beweging';
+import { Glas } from '../onderdelen/Glas';
+import { Nacht, useNachtKleur } from '../onderdelen/nacht';
+import { L } from '../onderdelen/letters';
 import { Rondje, Naampje } from '../onderdelen/Rondje';
 import { Segment } from '../onderdelen/Segment';
 import { Voortgang } from '../onderdelen/Voortgang';
@@ -26,6 +31,13 @@ export default function Ritmescherm() {
 
   const nu = useMemo(() => new Date(), []);
   const datum = datumVan(nu);
+
+  // Het hele scherm verschiet in één beweging van ochtend naar avond.
+  const nacht = useSharedValue(0);
+  useEffect(() => {
+    nacht.value = withTiming(ritme === 'nacht' ? 1 : 0, { duration: 420, easing: Easing.inOut(Easing.quad) });
+  }, [ritme]);
+  const donker = useAnimatedStyle(() => ({ opacity: nacht.value }));
 
   useEffect(() => {
     let weg = false;
@@ -77,25 +89,23 @@ export default function Ritmescherm() {
   }, [inhoud, groepen, vinkjes, ritme]);
 
   const avond = ritme === 'nacht';
+  const vul = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 } as const;
 
   return (
+    <Nacht.Provider value={nacht}>
     <View className="flex-1">
-      <LinearGradient
-        colors={avond ? ['#3B3F70', '#232645', '#171a33'] : ['#FFE3B8', '#FFD9CE', '#D9E8F5']}
-        style={{ position: 'absolute', inset: 0 as any, top: 0, left: 0, right: 0, bottom: 0 }}
-      />
+      <LinearGradient colors={['#FFE3B8', '#FFD9CE', '#D9E8F5']} style={vul} />
+      <Animated.View style={[vul, donker]} pointerEvents="none">
+        <LinearGradient colors={['#3B3F70', '#232645', '#171a33']} style={vul} />
+      </Animated.View>
       <ScrollView
         contentContainerStyle={{ paddingTop: rand.top + 18, paddingBottom: rand.bottom + 40, paddingHorizontal: 16 }}
         contentInsetAdjustmentBehavior="automatic"
       >
-        <Text className={`font-rond text-[40px] leading-[46px] ${avond ? 'text-white' : 'text-inkt'}`}>
-          {avond ? 'Avond' : 'Ochtend'}
-        </Text>
-        <Text className={`font-tekstdik text-[15px] ${avond ? 'text-white/70' : 'text-inkt-zacht'}`}>
-          {DAGNAMEN[nu.getDay()]} {nu.getDate()} {MAANDEN[nu.getMonth()]}
-        </Text>
+        <Titel>{avond ? 'Avond' : 'Ochtend'}</Titel>
+        <Onder>{`${DAGNAMEN[nu.getDay()]} ${nu.getDate()} ${MAANDEN[nu.getMonth()]}`}</Onder>
 
-        <Segment ritme={ritme} avond={avond} opKies={zetRitme} />
+        <Segment ritme={ritme} opKies={zetRitme} />
 
         {!inhoud && !fout && <ActivityIndicator className="mt-10" color="#F2994A" />}
         {!!fout && (
@@ -104,7 +114,7 @@ export default function Ritmescherm() {
           </Text>
         )}
 
-        {inhoud && <Voortgang mensen={inhoud.mensen} deel={deel} avond={avond} />}
+        {inhoud && <Voortgang mensen={inhoud.mensen} deel={deel} />}
 
         {groepen.map((groep, gi) => (
           <Animated.View
@@ -115,12 +125,8 @@ export default function Ritmescherm() {
             className="mt-6"
           >
             <View className="mb-2 flex-row items-baseline gap-2 px-1">
-              <Text className={`font-rond text-[19px] ${avond ? 'text-white' : 'text-inkt'}`}>{groep.groep}</Text>
-              {!!groep.tijd && (
-                <Text className={`font-tekstdik text-[13px] ${avond ? 'text-white/60' : 'text-inkt-zacht'}`}>
-                  {groep.tijd}
-                </Text>
-              )}
+              <Groepkop>{groep.groep}</Groepkop>
+              {!!groep.tijd && <Groeptijd>{groep.tijd}</Groeptijd>}
             </View>
             <View className="flex-row flex-wrap" style={{ marginHorizontal: -5 }}>
               {groep.stappen.map((stap, si) => (
@@ -141,7 +147,28 @@ export default function Ritmescherm() {
         ))}
       </ScrollView>
     </View>
+    </Nacht.Provider>
   );
+}
+
+function Titel({ children }: { children: string }) {
+  const kleur = useNachtKleur('#2B2D42', '#ffffff');
+  return <Animated.Text style={[L.titel, kleur]}>{children}</Animated.Text>;
+}
+
+function Onder({ children }: { children: string }) {
+  const kleur = useNachtKleur('#5C5F7A', 'rgba(255,255,255,0.7)');
+  return <Animated.Text style={[L.onder, kleur]}>{children}</Animated.Text>;
+}
+
+function Groepkop({ children }: { children: string }) {
+  const kleur = useNachtKleur('#2B2D42', '#ffffff');
+  return <Animated.Text style={[L.groep, kleur]}>{children}</Animated.Text>;
+}
+
+function Groeptijd({ children }: { children: string }) {
+  const kleur = useNachtKleur('#5C5F7A', 'rgba(255,255,255,0.6)');
+  return <Animated.Text style={[L.groeptijd, kleur]}>{children}</Animated.Text>;
 }
 
 function Kaartje({ stap, inhoud, ritme, vinkjes, opTik, avond, breed, vertraag }: {
@@ -156,14 +183,9 @@ function Kaartje({ stap, inhoud, ritme, vinkjes, opTik, avond, breed, vertraag }
       layout={LinearTransition.duration(KORT.duration)}
       style={{ width: `${breed}%`, paddingHorizontal: 5, paddingBottom: 10 }}
     >
-      <View className={`items-center rounded-[26px] px-2 pb-3 pt-4 ${avond ? 'bg-white/[0.10]' : 'bg-white/60'}`}>
+      <Glas radius={22} inhoudStijl={{ alignItems: 'center', paddingHorizontal: 8, paddingTop: 14, paddingBottom: 12 }}>
         <Text style={{ fontSize: 34, lineHeight: 40 }}>{stap.icoon}</Text>
-        <Text
-          className={`mt-1 text-center font-rondje text-[13px] leading-[16px] ${avond ? 'text-white' : 'text-inkt'}`}
-          numberOfLines={2}
-        >
-          {stap.label}
-        </Text>
+        <Taaknaam>{stap.label}</Taaknaam>
         <View className="mt-3 flex-row flex-wrap items-center justify-center gap-x-1.5 gap-y-1.5">
           {meedoen.map((persoon) => (
             <View key={persoon.id} className="items-center">
@@ -173,11 +195,18 @@ function Kaartje({ stap, inhoud, ritme, vinkjes, opTik, avond, breed, vertraag }
                 avond={avond}
                 opTik={() => opTik(vinkSleutel(ritme, sleutel, persoon.id))}
               />
-              {meedoen.length <= 2 && <Naampje persoon={persoon} avond={avond} />}
+              {meedoen.length <= 2 && <Naampje persoon={persoon} />}
             </View>
           ))}
         </View>
-      </View>
+      </Glas>
     </Animated.View>
+  );
+}
+
+function Taaknaam({ children }: { children: string }) {
+  const kleur = useNachtKleur('#2B2D42', '#ffffff');
+  return (
+    <Animated.Text style={[L.taaknaam, kleur]} numberOfLines={2}>{children}</Animated.Text>
   );
 }

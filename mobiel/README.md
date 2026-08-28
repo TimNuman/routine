@@ -17,6 +17,19 @@ Geen componentenbibliotheek. De vormtaal is eigen werk en Tamagui of gluestack
 zou je die laten terugvechten; wat je nodig hebt is een styling-systeem en goede
 animaties.
 
+## Het glas
+
+`onderdelen/Glas.tsx` is de vertaling van `.glas` uit de webversie. Dat is niet
+alleen een doorzichtig vlak: het randje dat oplicht en de glans langs de boven-
+en onderkant zijn wat het glas maakt. Zonder die twee is het een grijs vlak.
+
+| css | hier |
+|---|---|
+| `backdrop-filter: blur(44px)` | `BlurView` uit expo-blur |
+| `border: 1px rgba(255,255,255,.75)` | `borderWidth` + `borderColor`, verschiet mee |
+| `inset 0 1px 0` / `inset 0 -1px 0` | `boxShadow` met `inset`, sinds de nieuwe architectuur ook op een telefoon |
+| `0 16px 38px rgba(126,84,42,.16)` | `boxShadow` op een laag eromheen |
+
 ## Hoe het beweegt
 
 Alle timing staat in `onderdelen/beweging.ts`, want anders loopt het uit elkaar.
@@ -33,6 +46,13 @@ traag, ook als hij kort is — het oog wacht tot hij stilstaat.
 
 Eén plek mag wippen: het pop-je als jij iets afvinkt. Dat is het moment waar het
 leuk mag zijn; de rest hoort onzichtbaar te zijn.
+
+Ochtend naar avond gaat in 420 ms, en alles gaat tegelijk mee: twee verlopen die
+over elkaar heen vervagen, en elke tekst- en glaskleur hangt aan dezelfde
+gedeelde waarde (`onderdelen/nacht.tsx`). Eén ding om te onthouden: NativeWind
+zet zijn klassen niet om op `Animated.Text`, dus alles wat van kleur verschiet
+krijgt een echte stijl uit `onderdelen/letters.ts`. Vergeet je dat, dan valt het
+lettertype stilletjes terug op het systeem.
 
 ## Draaien
 
@@ -60,8 +80,6 @@ echte build. Dat is nog niet geprobeerd — er is hier geen Mac en geen toestel.
   andere telefoon komt hier pas binnen na herladen. Dit is de reden dat de opslag
   achter `/api` moet — zie `worker/README.md`.
 - **De andere schermen.** Deze week, Instellingen, het formulier, de assistent.
-- **Melkglas.** De kaarten zijn nu halfdoorzichtig wit; echte blur vraagt om
-  `expo-blur` (BlurView), dat op web `backdrop-filter` gebruikt.
 
 ## Lettertypes
 

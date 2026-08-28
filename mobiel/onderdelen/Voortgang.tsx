@@ -1,20 +1,18 @@
 import { Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
+import Animated, { interpolateColor, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import { zacht } from './inhoud';
 import { RUSTIG } from './beweging';
+import { Glas } from './Glas';
+import { useNacht, useNachtKleur } from './nacht';
+import { L } from './letters';
 import type { Persoon } from './soorten';
 
 // Eén balkje per kind dat meeloopt met wat er af is.
-export function Voortgang({ mensen, deel, avond }: {
-  mensen: Persoon[]; deel: Record<string, number>; avond?: boolean;
-}) {
+export function Voortgang({ mensen, deel }: { mensen: Persoon[]; deel: Record<string, number> }) {
   return (
-    <View className={`mt-4 flex-row overflow-hidden rounded-[26px] ${avond ? 'bg-white/10' : 'bg-white/45'}`}>
+    <Glas radius={26} style={{ marginTop: 16 }} inhoudStijl={{ flexDirection: 'row' }}>
       {mensen.map((persoon, i) => (
-        <View
-          key={persoon.id}
-          className={`flex-1 flex-row items-center gap-2 p-3 ${i ? (avond ? 'border-l border-white/10' : 'border-l border-black/5') : ''}`}
-        >
+        <Scheiding key={persoon.id} eerste={i === 0}>
           <View
             className="h-9 w-9 items-center justify-center rounded-full"
             style={{ backgroundColor: zacht(persoon.kleur, 0.18) }}
@@ -22,19 +20,46 @@ export function Voortgang({ mensen, deel, avond }: {
             <Text style={{ fontSize: 19 }}>{persoon.emoji}</Text>
           </View>
           <View className="min-w-0 flex-1">
-            <Text
-              className={`font-rondje text-[13px] ${avond ? 'text-white' : 'text-inkt'}`}
-              numberOfLines={1}
-            >
-              {persoon.naam}
-            </Text>
-            <View className={`mt-1 h-[6px] overflow-hidden rounded-full ${avond ? 'bg-white/15' : 'bg-black/[0.07]'}`}>
+            <Naam>{persoon.naam}</Naam>
+            <Goot>
               <Balk deel={deel[persoon.id] ?? 0} kleur={persoon.kleur} />
-            </View>
+            </Goot>
           </View>
-        </View>
+        </Scheiding>
       ))}
-    </View>
+    </Glas>
+  );
+}
+
+function Scheiding({ eerste, children }: { eerste: boolean; children: React.ReactNode }) {
+  const nacht = useNacht();
+  const rand = useAnimatedStyle(() => ({
+    borderLeftColor: interpolateColor(nacht.value, [0, 1], ['rgba(0,0,0,0.05)', 'rgba(255,255,255,0.10)']),
+  }));
+  return (
+    <Animated.View
+      style={[{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8, padding: 12,
+                borderLeftWidth: eerste ? 0 : 1 }, eerste ? null : rand]}
+    >
+      {children}
+    </Animated.View>
+  );
+}
+
+function Naam({ children }: { children: string }) {
+  const kleur = useNachtKleur('#2B2D42', '#ffffff');
+  return <Animated.Text style={[L.naam, kleur]} numberOfLines={1}>{children}</Animated.Text>;
+}
+
+function Goot({ children }: { children: React.ReactNode }) {
+  const nacht = useNacht();
+  const vlak = useAnimatedStyle(() => ({
+    backgroundColor: interpolateColor(nacht.value, [0, 1], ['rgba(0,0,0,0.07)', 'rgba(255,255,255,0.15)']),
+  }));
+  return (
+    <Animated.View style={[{ marginTop: 4, height: 6, borderRadius: 3, overflow: 'hidden' }, vlak]}>
+      {children}
+    </Animated.View>
   );
 }
 

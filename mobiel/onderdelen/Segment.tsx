@@ -1,36 +1,44 @@
-import { Pressable, Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import { Pressable, View } from 'react-native';
+import Animated, { interpolateColor, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useState } from 'react';
 import { VEER } from './beweging';
+import { Glas } from './Glas';
+import { useNacht, useNachtKleur } from './nacht';
+import { L } from './letters';
 import type { Ritme } from './soorten';
 
 // De pil schuift naar de gekozen kant in plaats van te knipperen.
-export function Segment({ ritme, avond, opKies }: {
-  ritme: Ritme; avond?: boolean; opKies: (r: Ritme) => void;
-}) {
+export function Segment({ ritme, opKies }: { ritme: Ritme; opKies: (r: Ritme) => void }) {
   const [breedte, zetBreedte] = useState(0);
+  const nacht = useNacht();
+
   const pil = useAnimatedStyle(() => ({
     transform: [{ translateX: withSpring(ritme === 'nacht' ? breedte / 2 : 0, VEER) }],
+    backgroundColor: interpolateColor(nacht.value, [0, 1], ['#ffffff', 'rgba(255,255,255,0.92)']),
   }));
 
   return (
-    <View
-      onLayout={(e) => zetBreedte(e.nativeEvent.layout.width - 8)}
-      className={`mt-4 flex-row rounded-[22px] p-1 ${avond ? 'bg-white/10' : 'bg-white/45'}`}
-    >
+    <Glas radius={22} style={{ marginTop: 16 }} inhoudStijl={{ flexDirection: 'row', padding: 4 }}>
+      <View
+        onLayout={(e) => zetBreedte(e.nativeEvent.layout.width)}
+        style={{ position: 'absolute', left: 4, right: 4, top: 4, bottom: 4 }}
+      />
       {breedte > 0 && (
         <Animated.View
           style={[{ position: 'absolute', top: 4, left: 4, width: breedte / 2, height: 42, borderRadius: 19,
-                    backgroundColor: avond ? 'rgba(255,255,255,0.92)' : '#fff' }, pil]}
+                    boxShadow: '0px 2px 6px rgba(0,0,0,0.10)' }, pil]}
         />
       )}
       {([['dag', 'ochtend'], ['nacht', 'avond']] as const).map(([waarde, label]) => (
         <Pressable key={waarde} onPress={() => opKies(waarde)} className="h-[42px] flex-1 items-center justify-center">
-          <Text className={`font-rondje text-[15px] ${ritme === waarde ? 'text-inkt' : 'text-inkt-zacht'}`}>
-            {label}
-          </Text>
+          <Knop actief={ritme === waarde}>{label}</Knop>
         </Pressable>
       ))}
-    </View>
+    </Glas>
   );
+}
+
+function Knop({ actief, children }: { actief: boolean; children: string }) {
+  const kleur = useNachtKleur(actief ? '#2B2D42' : '#5C5F7A', actief ? '#2B2D42' : 'rgba(255,255,255,0.62)');
+  return <Animated.Text style={[L.knop, kleur]}>{children}</Animated.Text>;
 }
