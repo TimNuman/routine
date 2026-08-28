@@ -1,4 +1,9 @@
-node_modules/
+# Alleen de echte node_modules, niet elk pad waar dat woord in voorkomt: de
+# web-export zet lettertypes onder public/nieuw/assets/node_modules/.
+/node_modules/
+/mobiel/node_modules/
+/mobiel/.expo/
+/mobiel/dist/
 .wrangler/
 
 # wrangler leest hier lokale secrets uit; die horen nergens heen

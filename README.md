@@ -240,7 +240,9 @@ uit snijdt).
 
 ```
 public/     de app: index.html met alles erin, de iconen, routine.json
+public/nieuw/  de web-export van mobiel/, op /nieuw
 worker/     de achterkant: /api/*, en hij serveert public/ uit
+mobiel/     een proef in React Native — zie mobiel/README.md
 wrangler.toml
 ```
 
