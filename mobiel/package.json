@@ -37,7 +37,7 @@
     "start": "expo start",
     "web": "expo start --web",
     "ios": "expo start --ios",
-    "bouw": "expo export --platform web --output-dir ../public/nieuw",
+    "bouw": "expo export --clear --platform web --output-dir ../public/nieuw && node bouwcontrole.mjs",
     "lettertypes": "node lettertypes.mjs"
   },
   "private": true
