@@ -6,7 +6,9 @@ import { useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 import { usePathname } from 'expo-router';
 import { Nacht } from './nacht';
 import { datumVan } from './inhoud';
-import { haalInhoud, haalVinkjes, schrijfVink, vinkSleutel, type Vinkjes } from './opslag';
+import { bewaarConfig, haalInhoud, haalVinkjes, schrijfVink, vinkSleutel, type Vinkjes } from './opslag';
+import { normaliseer } from './inhoud';
+import { opgeschoond, type Ruw } from './schoon';
 import type { Inhoud, Ritme } from './soorten';
 
 type Gezinswaarde = {
@@ -16,6 +18,8 @@ type Gezinswaarde = {
   ritme: Ritme;
   zetRitme: (r: Ritme) => void;
   tik: (sleutel: string) => void;
+  // Bewaart de hele inhoud; geeft een reden terug als het misging, anders null.
+  bewaar: (ruw: Ruw) => Promise<string | null>;
   nu: Date;
   datum: string;
 };
@@ -73,9 +77,20 @@ export function Gezinshuis({ children }: { children: React.ReactNode }) {
     });
   }, [datum]);
 
+  const bewaar = useCallback(async (ruw: Ruw): Promise<string | null> => {
+    const nieuw = opgeschoond(ruw);
+    try {
+      await bewaarConfig(nieuw);
+    } catch (err: any) {
+      return `Opslaan in de database lukte niet (${err?.message || 'onbekend'}).`;
+    }
+    zetInhoud(normaliseer(nieuw));
+    return null;
+  }, []);
+
   const waarde = useMemo(
-    () => ({ inhoud, fout, vinkjes, ritme, zetRitme, tik, nu, datum }),
-    [inhoud, fout, vinkjes, ritme, tik, nu, datum],
+    () => ({ inhoud, fout, vinkjes, ritme, zetRitme, tik, bewaar, nu, datum }),
+    [inhoud, fout, vinkjes, ritme, tik, bewaar, nu, datum],
   );
 
   return (

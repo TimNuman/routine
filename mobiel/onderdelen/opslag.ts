@@ -16,6 +16,15 @@ export async function haalInhoud(): Promise<Inhoud> {
   return normaliseer(await res.json());
 }
 
+// De hele inhoud gaat in één keer terug: de database bewaart hem als één stuk.
+export async function bewaarConfig(ruw: unknown): Promise<void> {
+  const res = await fetch(`${basis}/config.json`, {
+    method: 'PUT',
+    body: JSON.stringify(ruw),
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+}
+
 export type Vinkjes = Record<string, boolean>;
 
 // Alles van vandaag in één keer; de sleutel is '<ritme>/<stap>/<persoon>'.

@@ -26,6 +26,16 @@ export function weekVan(d: Date, weken = 0): Date[] {
   });
 }
 
+// Alleen paren waar allebei de kanten iets zeggen tellen mee.
+export function kenmerkenVan(waarde: unknown): Record<string, string> {
+  const uit: Record<string, string> = {};
+  Object.entries((waarde || {}) as object).forEach(([k, v]) => {
+    const sleutel = tekst(k), inhoud = tekst(v);
+    if (sleutel && inhoud) uit[sleutel] = inhoud;
+  });
+  return uit;
+}
+
 export function lijstVan<T>(waarde: unknown): T[] {
   if (Array.isArray(waarde)) return waarde.filter((x) => x != null) as T[];
   if (waarde && typeof waarde === 'object') {
@@ -172,6 +182,7 @@ export function normaliseer(ruw: any): Inhoud {
       naam: tekst(p?.naam, 'Naamloos'),
       emoji: tekst(p?.emoji, '🙂'),
       kleur: tekst(p?.kleur, KLEUREN[i % KLEUREN.length]),
+      kenmerken: kenmerkenVan(p?.kenmerken),
     }),
   );
   const uit: Inhoud = {
