@@ -8,7 +8,9 @@ import { L } from './letters';
 import type { Ritme } from './soorten';
 
 // De pil schuift naar de gekozen kant in plaats van te knipperen.
-export function Segment({ ritme, opKies }: { ritme: Ritme; opKies: (r: Ritme) => void }) {
+export function Segment({ ritme, opKies, marge = 16 }: {
+  ritme: Ritme; opKies: (r: Ritme) => void; marge?: number;
+}) {
   const [breedte, zetBreedte] = useState(0);
   const nacht = useNacht();
 
@@ -18,15 +20,15 @@ export function Segment({ ritme, opKies }: { ritme: Ritme; opKies: (r: Ritme) =>
   }));
 
   return (
-    <Glas radius={22} style={{ marginTop: 16 }} inhoudStijl={{ flexDirection: 'row', padding: 4 }}>
+    <Glas radius={19} style={{ marginTop: marge }} inhoudStijl={{ flexDirection: 'row', padding: 4 }}>
       <View
         onLayout={(e) => zetBreedte(e.nativeEvent.layout.width)}
         style={{ position: 'absolute', left: 4, right: 4, top: 4, bottom: 4 }}
       />
       {breedte > 0 && (
         <Animated.View
-          style={[{ position: 'absolute', top: 4, left: 4, width: breedte / 2, height: 42, borderRadius: 19,
-                    boxShadow: '0px 2px 6px rgba(0,0,0,0.10)' }, pil]}
+          style={[{ position: 'absolute', top: 4, left: 4, width: breedte / 2, height: 42, borderRadius: 15,
+                    boxShadow: '0px 3px 10px rgba(0,0,0,0.10)' }, pil]}
         />
       )}
       {([['dag', 'ochtend'], ['nacht', 'avond']] as const).map(([waarde, label]) => (

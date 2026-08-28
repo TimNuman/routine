@@ -14,11 +14,9 @@ const GROEN = '#34C759';
 // Precies zoals de webversie: het gezichtje staat er altijd, maar grijs en
 // flauw zolang het niet af is. Afvinken geeft het zijn kleur terug en zet er
 // een groene ring omheen. Geen vinkje dat het gezicht wegduwt.
-export function Rondje({ persoon, aan, maat = 40, opTik }: {
-  persoon: Persoon; aan: boolean; maat?: number; opTik: () => void;
+export function Rondje({ persoon, aan, maat = 40, gezicht: gezichtMaat = 34, teken = 21, opTik }: {
+  persoon: Persoon; aan: boolean; maat?: number; gezicht?: number; teken?: number; opTik: () => void;
 }) {
-  const gezichtMaat = Math.round(maat * 0.85);
-  const teken = Math.round(maat * 0.525);
 
   const nacht = useNacht();
   const vol = useSharedValue(aan ? 1 : 0);
@@ -72,6 +70,7 @@ export function Rondje({ persoon, aan, maat = 40, opTik }: {
             position: 'absolute',
             width: gezichtMaat + 5, height: gezichtMaat + 5, borderRadius: (gezichtMaat + 5) / 2,
             borderWidth: 2.5, borderColor: GROEN,
+            boxShadow: '0px 4px 10px rgba(0,0,0,0.16)',
           }, ring]}
         />
         <Animated.View

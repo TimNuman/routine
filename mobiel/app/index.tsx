@@ -1,19 +1,20 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, {
-  FadeInDown, FadeOut, LinearTransition, useAnimatedStyle, useSharedValue, withTiming, Easing,
+  FadeInDown, FadeOut, useAnimatedStyle, useSharedValue, withTiming, Easing,
 } from 'react-native-reanimated';
 import { KORT, SNEL, natikken } from '../onderdelen/beweging';
 import { Glas } from '../onderdelen/Glas';
 import { Nacht, useNachtKleur } from '../onderdelen/nacht';
 import { L } from '../onderdelen/letters';
-import { maten } from '../onderdelen/maten';
-import { Rondje, Naampje } from '../onderdelen/Rondje';
+import { maten, useMaten } from '../onderdelen/maten';
+import { Rondje } from '../onderdelen/Rondje';
 import { Segment } from '../onderdelen/Segment';
 import { Voortgang } from '../onderdelen/Voortgang';
-import { datumVan, opDeze, stapSleutel, wieDoetMee } from '../onderdelen/inhoud';
+import { datumVan, opDeze, ritmeBlokken, stapSleutel, wieDoetMee } from '../onderdelen/inhoud';
+import { Agenda } from '../onderdelen/Agenda';
 import { haalInhoud, haalVinkjes, schrijfVink, vinkSleutel, type Vinkjes } from '../onderdelen/opslag';
 import type { Inhoud, Ritme, Stap } from '../onderdelen/soorten';
 
@@ -22,8 +23,7 @@ const DAGNAMEN = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag',
 
 export default function Ritmescherm() {
   const rand = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
-  const m = maten(width);
+  const m = useMaten();
 
   const [inhoud, zetInhoud] = useState<Inhoud | null>(null);
   const [fout, zetFout] = useState('');
@@ -67,6 +67,11 @@ export default function Ritmescherm() {
     });
   }, [datum]);
 
+  const blokken = useMemo(
+    () => (inhoud ? ritmeBlokken(inhoud, ritme, nu).filter((b) => b.items.length) : []),
+    [inhoud, ritme, nu],
+  );
+
   const groepen = useMemo(() => {
     if (!inhoud) return [];
     return inhoud[ritme]
@@ -75,7 +80,7 @@ export default function Ritmescherm() {
   }, [inhoud, ritme, nu]);
 
   const deel = useMemo(() => {
-    const uit: Record<string, number> = {};
+    const uit: Record<string, { af: number; totaal: number }> = {};
     if (!inhoud) return uit;
     inhoud.mensen.forEach((p) => {
       let totaal = 0, af = 0;
@@ -84,12 +89,15 @@ export default function Ritmescherm() {
         totaal += 1;
         if (vinkjes[vinkSleutel(ritme, stapSleutel(s), p.id)]) af += 1;
       }));
-      uit[p.id] = totaal ? af / totaal : 0;
+      uit[p.id] = { af, totaal };
     });
     return uit;
   }, [inhoud, groepen, vinkjes, ritme]);
 
   const avond = ritme === 'nacht';
+  // Staat er niets in de agenda, dan vervalt de kolom en krijgen de kaartjes
+  // de volle breedte.
+  const metZij = m.breed && blokken.length > 0;
   const vul = { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 } as const;
 
   return (
@@ -101,53 +109,87 @@ export default function Ritmescherm() {
       </Animated.View>
       <ScrollView
         contentContainerStyle={{
-          paddingTop: rand.top + 18, paddingBottom: rand.bottom + 40,
+          paddingTop: rand.top + m.bovenaan, paddingBottom: rand.bottom + m.onderaan,
           paddingHorizontal: m.gootje, maxWidth: m.maxBreed, width: '100%', alignSelf: 'center',
         }}
         contentInsetAdjustmentBehavior="automatic"
       >
-        <Titel>{avond ? 'Avond' : 'Ochtend'}</Titel>
-        <Onder>{`${DAGNAMEN[nu.getDay()]} ${nu.getDate()} ${MAANDEN[nu.getMonth()]}`}</Onder>
+        {/* Alle tekst springt evenveel in als de inhoud van een kaart, zodat
+            titel, kopjes en de eerste emoji op één lijn staan. Is er ruimte,
+            dan staat de schakelaar naast de titel in plaats van eronder. */}
+        <View style={m.breed ? { flexDirection: 'row', alignItems: 'center', paddingBottom: 4 } : undefined}>
+          <View style={{ paddingLeft: m.insprong, flex: m.breed ? 1 : undefined, minWidth: 0 }}>
+            <Titel>{avond ? 'Avond' : 'Ochtend'}</Titel>
+            <Onder>{`${DAGNAMEN[nu.getDay()]} ${nu.getDate()} ${MAANDEN[nu.getMonth()]}`}</Onder>
+          </View>
+          <View style={m.breed ? { position: 'absolute', left: '50%', width: 250, marginLeft: -125 } : undefined}>
+            <Segment ritme={ritme} opKies={zetRitme} marge={m.breed ? 0 : 16} />
+          </View>
+        </View>
 
-        <Segment ritme={ritme} opKies={zetRitme} />
-
-        {!inhoud && !fout && <ActivityIndicator className="mt-10" color="#F2994A" />}
+        {!inhoud && !fout && <ActivityIndicator style={{ marginTop: 40 }} color="#F2994A" />}
         {!!fout && (
-          <Text className="mt-8 font-tekstdik text-[14px] text-rood">
+          <Text style={{ marginTop: 32, fontFamily: 'Nunito_800ExtraBold', fontSize: 14, color: '#E5484D' }}>
             De inhoud laden lukte niet ({fout}).
           </Text>
         )}
 
-        {inhoud && <Voortgang mensen={inhoud.mensen} deel={deel} />}
+        {/* Eén kolom op een telefoon — voortgang, Vandaag, de stappen, Morgen —
+            en twee zodra er ruimte is, met het weekritme ernaast. */}
+        <View style={m.breed ? { flexDirection: 'row', alignItems: 'flex-start', gap: m.naast } : undefined}>
+          <View style={m.breed ? { flex: 1, minWidth: 0, paddingTop: metZij ? 31 : 0 } : undefined}>
+            {inhoud && <Voortgang mensen={inhoud.mensen} deel={deel} marge={m.breed ? 0 : 14} />}
 
-        {groepen.map((groep, gi) => (
-          <Animated.View
-            key={groep.groep + gi}
-            entering={FadeInDown.duration(KORT.duration).delay(natikken(gi, 40))}
-            exiting={FadeOut.duration(SNEL.duration)}
-            layout={LinearTransition.duration(KORT.duration)}
-            className="mt-6"
-          >
-            <View className="mb-2 flex-row items-baseline gap-2 px-1">
-              <Groepkop>{groep.groep}</Groepkop>
-              {!!groep.tijd && <Groeptijd>{groep.tijd}</Groeptijd>}
-            </View>
-            <View className="flex-row flex-wrap" style={{ marginHorizontal: -5 }}>
-              {groep.stappen.map((stap, si) => (
-                <Kaartje
-                  key={stap.label + si}
-                  stap={stap}
-                  inhoud={inhoud!}
-                  ritme={ritme}
-                  vinkjes={vinkjes}
-                  opTik={tik}
-                  maten={m}
-                  vertraag={natikken(gi * 3 + si)}
-                />
+            {!m.breed && inhoud && blokken.filter((b) => !b.later)
+              .map((blok) => <Agenda key={blok.kop} blok={blok} mensen={inhoud.mensen} />)}
+
+            {groepen.map((groep, gi) => (
+              <Animated.View
+                key={groep.groep + gi}
+                entering={FadeInDown.duration(KORT.duration).delay(natikken(gi, 40))}
+                exiting={FadeOut.duration(SNEL.duration)}
+              >
+                <View
+                  style={{ flexDirection: 'row', alignItems: 'baseline', gap: 12,
+                           marginTop: 20, paddingHorizontal: m.insprong, paddingBottom: 10 }}
+                >
+                  <Groepkop>{groep.groep}</Groepkop>
+                  {!!groep.tijd && <Groeptijd>{groep.tijd}</Groeptijd>}
+                </View>
+                {/* De ruimte tussen de kaartjes zit in de kaartjes zelf; de
+                    rand eromheen wordt er weer afgehaald. */}
+                <View
+                  style={{ flexDirection: 'row', flexWrap: 'wrap',
+                           marginHorizontal: -m.tussen / 2, marginBottom: -m.tussen }}
+                >
+                  {groep.stappen.map((stap, si) => (
+                    <Kaartje
+                      key={stap.label + si}
+                      stap={stap}
+                      inhoud={inhoud!}
+                      ritme={ritme}
+                      vinkjes={vinkjes}
+                      opTik={tik}
+                      maten={m}
+                      vertraag={natikken(gi * 3 + si)}
+                    />
+                  ))}
+                </View>
+              </Animated.View>
+            ))}
+
+            {!m.breed && inhoud && blokken.filter((b) => b.later)
+              .map((blok) => <Agenda key={blok.kop} blok={blok} mensen={inhoud.mensen} />)}
+          </View>
+
+          {metZij && inhoud && (
+            <View style={{ width: m.zijkolom, flexShrink: 0 }}>
+              {blokken.map((blok) => (
+                <Agenda key={blok.kop} blok={blok} mensen={inhoud.mensen} zij />
               ))}
             </View>
-          </Animated.View>
-        ))}
+          )}
+        </View>
       </ScrollView>
     </View>
     </Nacht.Provider>
@@ -183,32 +225,34 @@ function Kaartje({ stap, inhoud, ritme, vinkjes, opTik, maten: m, vertraag }: {
   return (
     <Animated.View
       entering={FadeInDown.duration(KORT.duration).delay(vertraag)}
-      layout={LinearTransition.duration(KORT.duration)}
-      style={{ width: `${100 / m.perRij}%`, paddingHorizontal: 5, paddingBottom: 10 }}
+      style={{ width: `${100 / m.perRij}%`, paddingHorizontal: m.tussen / 2, paddingBottom: m.tussen }}
     >
       <Glas
         radius={22}
         inhoudStijl={{
-          alignItems: 'center', paddingHorizontal: 8, paddingTop: 12, paddingBottom: 10,
+          alignItems: 'center', gap: m.kaartGat,
+          paddingHorizontal: m.kaartX, paddingVertical: m.kaartY,
           minHeight: m.hoog,
         }}
       >
-        <Text style={{ fontSize: m.icoon, lineHeight: m.icoon * 1.18 }}>{stap.icoon}</Text>
+        {/* Emoji en naam staan samen midden in de kaart: de vrije ruimte valt
+            boven de emoji en onder de naam, want de rondjes staan vast. */}
+        <Text style={{ fontSize: m.icoon, lineHeight: m.icoon * 1.15, marginTop: 'auto' }}>{stap.icoon}</Text>
         <Taaknaam maat={m.naam}>{stap.label}</Taaknaam>
         {/* De rondjes zakken naar de onderkant, zodat elk kaartje er hetzelfde
             uitziet ongeacht hoe lang de naam is. */}
-        <View style={{ marginTop: 'auto', paddingTop: 10, flexDirection: 'row', flexWrap: 'wrap',
-                       alignItems: 'center', justifyContent: 'center', columnGap: 4, rowGap: 4 }}>
+        <View style={{ marginTop: 'auto', alignSelf: 'stretch', flexDirection: 'row', flexWrap: 'wrap',
+                       alignItems: 'center', justifyContent: 'center', columnGap: 2, rowGap: 2 }}>
           {meedoen.map((persoon) => (
-            <View key={persoon.id} className="items-center">
-              <Rondje
-                persoon={persoon}
-                aan={Boolean(vinkjes[vinkSleutel(ritme, sleutel, persoon.id)])}
-                maat={m.rondje}
-                opTik={() => opTik(vinkSleutel(ritme, sleutel, persoon.id))}
-              />
-              {meedoen.length <= 2 && <Naampje persoon={persoon} />}
-            </View>
+            <Rondje
+              key={persoon.id}
+              persoon={persoon}
+              aan={Boolean(vinkjes[vinkSleutel(ritme, sleutel, persoon.id)])}
+              maat={m.rondje}
+              gezicht={m.gezicht}
+              teken={m.teken}
+              opTik={() => opTik(vinkSleutel(ritme, sleutel, persoon.id))}
+            />
           ))}
         </View>
       </Glas>
@@ -219,7 +263,7 @@ function Kaartje({ stap, inhoud, ritme, vinkjes, opTik, maten: m, vertraag }: {
 function Taaknaam({ children, maat }: { children: string; maat: number }) {
   const kleur = useNachtKleur('#2B2D42', '#ffffff');
   return (
-    <Animated.Text style={[L.taaknaam, { fontSize: maat, lineHeight: maat + 3 }, kleur]} numberOfLines={2}>
+    <Animated.Text style={[L.taaknaam, { fontSize: maat, lineHeight: maat * 1.2 }, kleur]} numberOfLines={2}>
       {children}
     </Animated.Text>
   );
