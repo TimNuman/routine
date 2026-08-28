@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import Svg, { Line } from 'react-native-svg';
 import Animated, { interpolateColor, useAnimatedStyle } from 'react-native-reanimated';
 
 const AnimatedDruk = Animated.createAnimatedComponent(Pressable);
@@ -6,6 +8,7 @@ import { Glas } from './Glas';
 import { useNacht, useNachtKleur } from './nacht';
 import { L } from './letters';
 import { tijdTekst, type Blok } from './inhoud';
+import { useGezin } from './gezin';
 import type { Agendaitem, Persoon } from './soorten';
 
 // Het weekritme naast de stappen: wat er die dag verder nog is. Een eenmalig
@@ -120,14 +123,23 @@ function Streep() {
 }
 
 // Morgen zakt op een telefoon onder de stappen, met een streep ertussen.
+// iOS tekent geen gestreepte rand — daar komt alleen een waarschuwing van en een
+// doorgetrokken lijn — dus tekenen we de streepjes zelf. De kleur klapt om in
+// plaats van mee te verschieten; die rand doet dat op web ook.
 function Stippellijn() {
-  const nacht = useNacht();
-  const stijl = useAnimatedStyle(() => ({
-    borderTopColor: interpolateColor(nacht.value, [0, 1], ['rgba(43,45,66,0.12)', 'rgba(255,255,255,0.14)']),
-  }));
+  const { avond } = useGezin();
+  const [breed, zetBreed] = useState(0);
+  const kleur = avond ? 'rgba(255,255,255,0.14)' : 'rgba(43,45,66,0.12)';
   return (
-    <Animated.View
-      style={[{ position: 'absolute', left: 0, right: 0, top: 0, borderTopWidth: 1, borderStyle: 'dashed' }, stijl]}
-    />
+    <View
+      onLayout={(e) => zetBreed(e.nativeEvent.layout.width)}
+      style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 1 }}
+    >
+      {breed > 0 && (
+        <Svg width={breed} height={1}>
+          <Line x1={0} y1={0.5} x2={breed} y2={0.5} stroke={kleur} strokeWidth={1} strokeDasharray={[4, 4]} />
+        </Svg>
+      )}
+    </View>
   );
 }

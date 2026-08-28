@@ -191,7 +191,7 @@ function Kaartje({ stap, inhoud, ritme, vinkjes, opTik, maten: m, vertraag }: {
 function Taaknaam({ children, maat }: { children: string; maat: number }) {
   const kleur = useNachtKleur('#2B2D42', '#ffffff');
   return (
-    <Animated.Text style={[L.taaknaam, { fontSize: maat, lineHeight: maat * 1.2 }, kleur]} numberOfLines={2}>
+    <Animated.Text style={[L.taaknaam, { fontSize: maat, lineHeight: maat * 1.28 }, kleur]} numberOfLines={2}>
       {children}
     </Animated.Text>
   );

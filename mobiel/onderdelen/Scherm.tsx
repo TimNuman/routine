@@ -30,12 +30,15 @@ export function Scherm({ titel, onder, midden, smal = false, children }: {
         <LinearGradient colors={['#3B3F70', '#232645', '#171a33']} style={vul} />
       </Animated.View>
 
+      {/* De insprong boven en onder rekenen we zelf. Staat de scrollweergave op
+          'automatic', dan telt iOS de veilige rand er nog een keer bij op en
+          begint de titel een statusbalk te laag; op web merk je daar niets van. */}
       <ScrollView
         contentContainerStyle={{
           paddingTop: rand.top + m.bovenaan, paddingBottom: rand.bottom + m.onderaan,
           paddingHorizontal: m.gootje, maxWidth: m.maxBreed, width: '100%', alignSelf: 'center',
         }}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior="never"
       >
         {/* Alle tekst springt evenveel in als de inhoud van een kaart, zodat
             titel, kopjes en de eerste emoji op één lijn staan. Is er ruimte,

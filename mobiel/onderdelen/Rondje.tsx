@@ -45,13 +45,20 @@ export function Rondje({ persoon, aan, maat = 40, gezicht: gezichtMaat = 34, tek
   }));
 
   // Het randje in de uit-stand verschiet mee met de avond, net als het glas.
-  const gezicht = useAnimatedStyle(() => ({
-    opacity: 0.4 + vol.value * 0.6,
-    borderColor: interpolateColor(
-      nacht.value, [0, 1],
-      [`rgba(43,45,66,${0.14 * (1 - vol.value)})`, `rgba(255,255,255,${0.18 * (1 - vol.value)})`],
-    ),
-  }));
+  // De doorzichtigheid moet als gewoon getal in de kleur staan: vlak voor nul
+  // schrijft JavaScript hem anders als 7.9e-7, en daar maakt de kleurenlezer
+  // niets van.
+  const gezicht = useAnimatedStyle(() => {
+    const weg = (1 - vol.value).toFixed(3);
+    return {
+      opacity: 0.4 + vol.value * 0.6,
+      borderColor: interpolateColor(
+        nacht.value, [0, 1],
+        [`rgba(43,45,66,${(0.14 * Number(weg)).toFixed(4)})`,
+         `rgba(255,255,255,${(0.18 * Number(weg)).toFixed(4)})`],
+      ),
+    };
+  });
 
   return (
     <Pressable

@@ -2,8 +2,14 @@
 // Animated-varianten van Reanimated. Alles wat van kleur verschiet is er zo een,
 // dus die krijgen hier een echte stijl in plaats van een className. De maten
 // komen één op één uit de webversie.
+//
+// Eén ding wijkt wél af: een regelhoogte krapper dan 1.28 × de lettergrootte.
+// Baloo 2 heeft hoge stokken (1.078 em boven de basislijn, 0.524 eronder), en
+// een browser laat die gerust buiten de regel steken. iOS knipt ze eraf. De
+// grens is dus inkt + onderlengte = 0.752 + 0.524 ≈ 1.28 em; daaronder gaan de
+// stokken van de d, h en t eraf.
 export const L = {
-  titel: { fontFamily: 'Baloo2_800ExtraBold', fontSize: 36, lineHeight: 38, letterSpacing: -0.5 },
+  titel: { fontFamily: 'Baloo2_800ExtraBold', fontSize: 36, lineHeight: 46, letterSpacing: -0.5 },
   onder: { fontFamily: 'Nunito_700Bold', fontSize: 15, marginTop: 3 },
   groep: { fontFamily: 'Baloo2_800ExtraBold', fontSize: 17 },
   groeptijd: { fontFamily: 'Nunito_700Bold', fontSize: 13 },
