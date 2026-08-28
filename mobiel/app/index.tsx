@@ -9,6 +9,7 @@ import { KORT, SNEL, natikken } from '../onderdelen/beweging';
 import { Glas } from '../onderdelen/Glas';
 import { Nacht, useNachtKleur } from '../onderdelen/nacht';
 import { L } from '../onderdelen/letters';
+import { maten } from '../onderdelen/maten';
 import { Rondje, Naampje } from '../onderdelen/Rondje';
 import { Segment } from '../onderdelen/Segment';
 import { Voortgang } from '../onderdelen/Voortgang';
@@ -22,7 +23,7 @@ const DAGNAMEN = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag',
 export default function Ritmescherm() {
   const rand = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const perRij = width >= 1000 ? 5 : width >= 700 ? 4 : 3;
+  const m = maten(width);
 
   const [inhoud, zetInhoud] = useState<Inhoud | null>(null);
   const [fout, zetFout] = useState('');
@@ -99,7 +100,10 @@ export default function Ritmescherm() {
         <LinearGradient colors={['#3B3F70', '#232645', '#171a33']} style={vul} />
       </Animated.View>
       <ScrollView
-        contentContainerStyle={{ paddingTop: rand.top + 18, paddingBottom: rand.bottom + 40, paddingHorizontal: 16 }}
+        contentContainerStyle={{
+          paddingTop: rand.top + 18, paddingBottom: rand.bottom + 40,
+          paddingHorizontal: m.gootje, maxWidth: m.maxBreed, width: '100%', alignSelf: 'center',
+        }}
         contentInsetAdjustmentBehavior="automatic"
       >
         <Titel>{avond ? 'Avond' : 'Ochtend'}</Titel>
@@ -137,8 +141,7 @@ export default function Ritmescherm() {
                   ritme={ritme}
                   vinkjes={vinkjes}
                   opTik={tik}
-                  avond={avond}
-                  breed={100 / perRij}
+                  maten={m}
                   vertraag={natikken(gi * 3 + si)}
                 />
               ))}
@@ -171,9 +174,9 @@ function Groeptijd({ children }: { children: string }) {
   return <Animated.Text style={[L.groeptijd, kleur]}>{children}</Animated.Text>;
 }
 
-function Kaartje({ stap, inhoud, ritme, vinkjes, opTik, avond, breed, vertraag }: {
+function Kaartje({ stap, inhoud, ritme, vinkjes, opTik, maten: m, vertraag }: {
   stap: Stap; inhoud: Inhoud; ritme: Ritme; vinkjes: Vinkjes;
-  opTik: (sleutel: string) => void; avond: boolean; breed: number; vertraag: number;
+  opTik: (sleutel: string) => void; maten: ReturnType<typeof maten>; vertraag: number;
 }) {
   const sleutel = stapSleutel(stap);
   const meedoen = wieDoetMee(stap, inhoud.mensen);
@@ -181,18 +184,27 @@ function Kaartje({ stap, inhoud, ritme, vinkjes, opTik, avond, breed, vertraag }
     <Animated.View
       entering={FadeInDown.duration(KORT.duration).delay(vertraag)}
       layout={LinearTransition.duration(KORT.duration)}
-      style={{ width: `${breed}%`, paddingHorizontal: 5, paddingBottom: 10 }}
+      style={{ width: `${100 / m.perRij}%`, paddingHorizontal: 5, paddingBottom: 10 }}
     >
-      <Glas radius={22} inhoudStijl={{ alignItems: 'center', paddingHorizontal: 8, paddingTop: 14, paddingBottom: 12 }}>
-        <Text style={{ fontSize: 34, lineHeight: 40 }}>{stap.icoon}</Text>
-        <Taaknaam>{stap.label}</Taaknaam>
-        <View className="mt-3 flex-row flex-wrap items-center justify-center gap-x-1.5 gap-y-1.5">
+      <Glas
+        radius={22}
+        inhoudStijl={{
+          alignItems: 'center', paddingHorizontal: 8, paddingTop: 12, paddingBottom: 10,
+          minHeight: m.hoog,
+        }}
+      >
+        <Text style={{ fontSize: m.icoon, lineHeight: m.icoon * 1.18 }}>{stap.icoon}</Text>
+        <Taaknaam maat={m.naam}>{stap.label}</Taaknaam>
+        {/* De rondjes zakken naar de onderkant, zodat elk kaartje er hetzelfde
+            uitziet ongeacht hoe lang de naam is. */}
+        <View style={{ marginTop: 'auto', paddingTop: 10, flexDirection: 'row', flexWrap: 'wrap',
+                       alignItems: 'center', justifyContent: 'center', columnGap: 4, rowGap: 4 }}>
           {meedoen.map((persoon) => (
             <View key={persoon.id} className="items-center">
               <Rondje
                 persoon={persoon}
                 aan={Boolean(vinkjes[vinkSleutel(ritme, sleutel, persoon.id)])}
-                avond={avond}
+                maat={m.rondje}
                 opTik={() => opTik(vinkSleutel(ritme, sleutel, persoon.id))}
               />
               {meedoen.length <= 2 && <Naampje persoon={persoon} />}
@@ -204,9 +216,11 @@ function Kaartje({ stap, inhoud, ritme, vinkjes, opTik, avond, breed, vertraag }
   );
 }
 
-function Taaknaam({ children }: { children: string }) {
+function Taaknaam({ children, maat }: { children: string; maat: number }) {
   const kleur = useNachtKleur('#2B2D42', '#ffffff');
   return (
-    <Animated.Text style={[L.taaknaam, kleur]} numberOfLines={2}>{children}</Animated.Text>
+    <Animated.Text style={[L.taaknaam, { fontSize: maat, lineHeight: maat + 3 }, kleur]} numberOfLines={2}>
+      {children}
+    </Animated.Text>
   );
 }

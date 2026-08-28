@@ -25,10 +25,20 @@ en onderkant zijn wat het glas maakt. Zonder die twee is het een grijs vlak.
 
 | css | hier |
 |---|---|
-| `backdrop-filter: blur(44px)` | `BlurView` uit expo-blur |
+| `backdrop-filter: blur(44px)` | op web dezelfde regel; op een telefoon `BlurView` |
 | `border: 1px rgba(255,255,255,.75)` | `borderWidth` + `borderColor`, verschiet mee |
 | `inset 0 1px 0` / `inset 0 -1px 0` | `boxShadow` met `inset`, sinds de nieuwe architectuur ook op een telefoon |
 | `0 16px 38px rgba(126,84,42,.16)` | `boxShadow` op een laag eromheen |
+
+Let op met `BlurView`: die zet zijn eigen achtergrond neer — bij `tint="light"`
+een bijna dekkende `rgba(249,249,249,.78)`, bij `tint="dark"` hetzelfde in het
+donker. Gebruik je hem voor de kleur, dan is er van glas niets meer over en
+worden de kaartjes vlakke grijze dozen. De kleur hoort uit de laag eronder te
+komen; de blur doet alleen de blur.
+
+De maten groeien mee met het scherm (`onderdelen/maten.ts`), net als in de
+webversie: grotere gezichtjes en iconen zodra er ruimte is, en de hele app blijft
+op 1280 breed.
 
 ## Hoe het beweegt
 

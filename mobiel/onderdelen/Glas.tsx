@@ -1,12 +1,27 @@
 import { BlurView } from 'expo-blur';
-import { View, type ViewStyle } from 'react-native';
+import { Platform, View, type ViewStyle } from 'react-native';
 import Animated, { interpolateColor, useAnimatedStyle } from 'react-native-reanimated';
 import { useNacht } from './nacht';
 
-// Het melkglas uit de webversie: een doorschijnend vlak met blur erachter, een
-// oplichtend randje, een glans langs de boven- en onderkant, en een zachte
-// schaduw eronder. Dat randje en die glans zijn wat het glas maakt — zonder
-// die twee is het gewoon een grijs vlak.
+// Het melkglas uit de webversie: blur erachter, een oplichtend randje, een glans
+// langs de boven- en onderkant, en een zachte schaduw eronder. Dat randje en die
+// glans zijn wat het glas maakt; zonder die twee is het een grijs vlak.
+//
+// De kleur komt uit de laag hieronder en niet uit de blur. BlurView zet namelijk
+// zijn eigen achtergrond neer — bij tint 'light' een bijna dekkende
+// rgba(249,249,249,.78) — en dan is er van glas niets meer over. Op web zetten
+// we daarom de backdrop-filter zelf, precies zoals de css doet.
+const vullend = { position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 } as const;
+
+function Waas() {
+  if (Platform.OS === 'web') {
+    return <View style={[vullend, { backdropFilter: 'blur(44px) saturate(200%)' } as any]} />;
+  }
+  // Op een telefoon kan dat niet zelf; daar doet BlurView het, met een tint die
+  // zo min mogelijk eigen kleur meebrengt. Niet op een toestel geprobeerd.
+  return <BlurView intensity={40} tint="systemUltraThinMaterial" style={vullend} />;
+}
+
 export function Glas({ radius = 22, zwevend = false, style, inhoudStijl, children }: {
   radius?: number; zwevend?: boolean;
   style?: ViewStyle; inhoudStijl?: ViewStyle; children?: React.ReactNode;
@@ -40,9 +55,7 @@ export function Glas({ radius = 22, zwevend = false, style, inhoudStijl, childre
   return (
     <Animated.View style={[{ borderRadius: radius }, schaduw, style]}>
       <View style={{ borderRadius: radius, overflow: 'hidden' }}>
-        {/* intensity is 0-100 en komt op web uit op ongeveer een vijfde in px;
-            de webversie blurt 44px, dus hier zo hoog als het kan. */}
-        <BlurView intensity={100} tint="light" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0 }} />
+        <Waas />
         <Animated.View style={[{ borderRadius: radius, borderWidth: 1 }, vlak, inhoudStijl]}>
           {children}
         </Animated.View>

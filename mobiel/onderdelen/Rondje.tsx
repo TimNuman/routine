@@ -1,11 +1,11 @@
 import { Pressable, Text } from 'react-native';
 import Animated, {
-  useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming,
+  interpolateColor, useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming,
 } from 'react-native-reanimated';
 import { useEffect, useRef } from 'react';
 import { zacht } from './inhoud';
 import { SNEL, VEER, WIP } from './beweging';
-import { useNachtKleur } from './nacht';
+import { useNacht, useNachtKleur } from './nacht';
 import { L } from './letters';
 import type { Persoon } from './soorten';
 
@@ -14,12 +14,13 @@ const GROEN = '#34C759';
 // Precies zoals de webversie: het gezichtje staat er altijd, maar grijs en
 // flauw zolang het niet af is. Afvinken geeft het zijn kleur terug en zet er
 // een groene ring omheen. Geen vinkje dat het gezicht wegduwt.
-export function Rondje({ persoon, aan, avond, maat = 40, opTik }: {
-  persoon: Persoon; aan: boolean; avond?: boolean; maat?: number; opTik: () => void;
+export function Rondje({ persoon, aan, maat = 40, opTik }: {
+  persoon: Persoon; aan: boolean; maat?: number; opTik: () => void;
 }) {
   const gezichtMaat = Math.round(maat * 0.85);
   const teken = Math.round(maat * 0.525);
 
+  const nacht = useNacht();
   const vol = useSharedValue(aan ? 1 : 0);
   const ingedrukt = useSharedValue(0);
   const pop = useSharedValue(1);
@@ -45,11 +46,13 @@ export function Rondje({ persoon, aan, avond, maat = 40, opTik }: {
     transform: [{ scale: 0.9 + vol.value * 0.1 }],
   }));
 
+  // Het randje in de uit-stand verschiet mee met de avond, net als het glas.
   const gezicht = useAnimatedStyle(() => ({
     opacity: 0.4 + vol.value * 0.6,
-    borderColor: avond
-      ? `rgba(255,255,255,${0.18 * (1 - vol.value)})`
-      : `rgba(43,45,66,${0.14 * (1 - vol.value)})`,
+    borderColor: interpolateColor(
+      nacht.value, [0, 1],
+      [`rgba(43,45,66,${0.14 * (1 - vol.value)})`, `rgba(255,255,255,${0.18 * (1 - vol.value)})`],
+    ),
   }));
 
   return (
