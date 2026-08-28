@@ -86,7 +86,7 @@ struct Veld: View {
             .padding(.vertical, 9)
             .padding(.horizontal, soort == .tijd ? 6 : 12)
             .frame(width: breedte)
-            .frame(maxWidth: soort == .tekst ? .infinity : nil)
+            .frame(maxWidth: maxBreedte)
             .background(RoundedRectangle(cornerRadius: 13, style: .continuous).fill(palet.veld))
             .overlay(RoundedRectangle(cornerRadius: 13, style: .continuous)
                 .strokeBorder(palet.veldRand, lineWidth: 1))
@@ -94,12 +94,18 @@ struct Veld: View {
             .autocorrectionDisabled(soort != .tekst)
     }
 
+    // Een tijd en een getal staan vast; de rest neemt wat er over is.
     private var breedte: CGFloat? {
         switch soort {
         case .tekst: return nil
         case .tijd: return 126
         case .getal: return 84
         }
+    }
+
+    private var maxBreedte: CGFloat? {
+        guard soort == .tekst else { return nil }
+        return CGFloat.infinity
     }
 }
 

@@ -215,8 +215,8 @@ struct Velscherm: View {
 
     // Anders wijst een stap naar iemand die er niet meer is.
     private func losmaken(_ id: String) {
-        for ritme in [Ritme.dag, .nacht] {
-            for groep in concept[ritme] {
+        for welk in [Ritme.dag, .nacht] {
+            for groep in concept[welk] {
                 for stap in groep.stappen { stap.wie.removeAll { $0 == id } }
             }
         }
