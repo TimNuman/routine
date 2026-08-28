@@ -1,0 +1,126 @@
+# De iOS-versie
+
+Dezelfde app in Swift en SwiftUI: dezelfde drie schermen, dezelfde vormtaal en
+dezelfde achterkant. Niets is nagebouwd op een eigen server — hij praat met
+`/api/opslag` en `/api/lees` op de Worker uit deze repo, dus wat je op de
+telefoon afvinkt staat een seconde later ook in de browser.
+
+Naast `mobiel/` (React Native) is dit de tweede proef, om te zien wat het glas,
+het ritme en de stroom doen als er geen laag javascript meer tussen zit.
+
+## Draaien
+
+Je hebt een Mac met Xcode 16 of nieuwer nodig; het project gebruikt de
+gesynchroniseerde mappen die Xcode 16 introduceerde, zodat er niets in het
+projectbestand hoeft bij te werken als er een bestand bij komt.
+
+1. Zet in [`Dagritme/Configuratie.swift`](Dagritme/Configuratie.swift) het adres
+   van je eigen Worker:
+
+   ```swift
+   static let standaardAdres = "https://routine.jouwnaam.workers.dev"
+   ```
+
+   Liever niet in de code? Vul dan `ROUTINE_ADRES` in [`Info.plist`](Info.plist);
+   die wint als hij gevuld is.
+2. Open `ios/Dagritme.xcodeproj`, kies bij *Signing & Capabilities* je eigen team
+   (het bundel-id `app.dagritme` is hetzelfde als in `mobiel/app.json`) en druk
+   op ⌘R.
+
+Tegen `wrangler dev` op de laptop draaien kan ook: zet dan
+`http://<het-ip-van-je-laptop>:8787` als adres. `localhost` werkt niet op een
+toestel, en op de simulator alleen omdat die dezelfde machine is.
+`NSAllowsLocalNetworking` staat daarvoor al in `Info.plist`.
+
+Staat er een `SLEUTEL` als secret bij de Worker, zet hem dan bij
+`standaardSleutel` of in `ROUTINE_SLEUTEL`. Hij gaat mee als
+`X-Routine-Sleutel`-kopje — ook bij de WebSocket, want buiten een browser mag dat
+gewoon.
+
+## Hoe het in elkaar zit
+
+```
+Dagritme/
+  Configuratie.swift   waar de Worker staat
+  Kern/                de logica, één op één uit mobiel/onderdelen
+  Vorm/                kleuren, letters, maten, timing, het glas
+  Onderdelen/          de losse stukken van de schermen
+  Schermen/            ritme, week, instellingen
+  Lettertypes/         Baloo 2 en Nunito, bijgeknipt tot Latijn
+```
+
+`Kern/` kent geen SwiftUI: dat is dezelfde bewerking als in de react
+native-versie, alleen dan in Swift. Wat eruit komt is `Inhoud` — de gladgestreken
+vorm waar de schermen mee werken.
+
+| | keuze |
+|---|---|
+| schermen | SwiftUI, iOS 17 en hoger |
+| toestand | één `@Observable` klasse (`Kern/Gezin.swift`) in de omgeving |
+| opslag | `URLSession` naar `/api/opslag`, met `URLSessionWebSocketTask` voor de stroom |
+| animatie | gewone SwiftUI-animaties, timing in `Vorm/Beweging.swift` |
+
+### Twee dingen die anders moesten
+
+**Los zand wordt eerst een `Json`.** Javascript kan zomaar in een object kijken;
+Swift niet. `Kern/Json.swift` is die tussenstap: een waarde die opneemt wat er
+uit het huis komt — een lijst die eigenlijk een woordenboek is, een getal dat als
+tekst is bewaard — zodat `Inhoud.swift` daarna precies dezelfde regels kan
+toepassen als de webversie.
+
+**Het concept bestaat uit klassen, de rest uit structs.** Een bewerkscherm werkt
+op een losse kopie en moet één regel kunnen aanwijzen — *deze stap, in deze
+groep* — om hem daarna ergens anders neer te zetten. Met waarden zou dat een
+rijtje volgnummers worden dat bij elke wijziging verschuift; met verwijzingen
+(`Kern/Schoon.swift`) blijft het gewoon dat ene ding, net als in javascript. Wat
+de schermen tonen is wél gewone waarde-code.
+
+## Het glas
+
+`Vorm/Glas.swift` is de vertaling van `.glas` uit de webversie, met dezelfde val
+erin als bij React Native: **het materiaal is voor de blur, niet voor de kleur.**
+`.ultraThinMaterial` brengt zijn eigen grijs mee; gebruik je dat als vulling, dan
+worden de kaartjes vlakke dozen. De kleur komt daarom uit het palet eronder.
+
+| css | hier |
+|---|---|
+| `backdrop-filter: blur(44px)` | `RoundedRectangle().fill(.ultraThinMaterial)` |
+| `background: rgba(255,255,255,.62)` | een tweede vlak in de kleur uit `Palet` |
+| `border: 1px rgba(255,255,255,.75)` | `strokeBorder`, met een verloop erin |
+| `inset 0 1px 0` / `inset 0 -1px 0` | boven- en onderkant van datzelfde verloop |
+| `0 16px 38px rgba(126,84,42,.16)` | `.shadow(radius: 19, y: 16)` |
+
+De overgang van ochtend naar avond is één vlag in het palet. SwiftUI kan kleuren
+zelf tussenstanden geven, dus één `.animation(Beweging.nacht, value: avond)`
+bovenin `Hoofdscherm` laat het hele scherm in dezelfde 420 ms omgaan — daar is
+geen gedeelde waarde per onderdeel voor nodig zoals in Reanimated.
+
+De maten groeien mee met het scherm (`Vorm/Maten.swift`), met dezelfde drie
+grenzen als op web: krapper onder 360, een maatje groter vanaf 700, en vanaf 1000
+komt het weekritme als kolom ernaast — dat is een iPad in liggende stand.
+
+## Lettertypes
+
+`Lettertypes/` bevat dezelfde bijgeknipte bestanden als `mobiel/assets/fonts/`,
+gemaakt door `mobiel/lettertypes.mjs`. Ze staan in `UIAppFonts` in `Info.plist`;
+in de code gaan ze op hun PostScript-naam (`Baloo2-ExtraBold`, niet de
+bestandsnaam).
+
+De maten staan vast in plaats van mee te groeien met de tekstinstelling van de
+telefoon: de kaartjes zijn krap, en een naam die twee keer zo groot wordt valt er
+uit. Dat is dezelfde keuze als op web, en het is wel iets om te weten.
+
+## Wat er nog niet is
+
+- **Op een toestel geprobeerd.** Er is hier geen Mac en geen iPhone; dit is
+  geschreven, niet gedraaid. Reken erop dat de eerste build nog een paar dingen
+  rechtzet.
+- **Verslepen** om de volgorde van stappen te wijzigen — net als in de react
+  native-versie. Daarom staat er ook geen greep naast een regel: die zou iets
+  beloven wat niet gebeurt.
+- **Aanmelden.** Wie het adres kent, kan meelezen en meeschrijven; `SLEUTEL` is
+  een drempel, geen slot. Voor een app in een store is dat te weinig — zie
+  *Straks* in [`worker/README.md`](../worker/README.md).
+
+Wat er wél is en in `mobiel/` niet: een echte datumkiezer, trek-om-te-verversen,
+en een app-icoon dat uit dezelfde `icon.svg` komt als de webversie.

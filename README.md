@@ -261,6 +261,7 @@ public/     de app: index.html met alles erin, de iconen, routine.json
 public/nieuw/  de web-export van mobiel/, op /nieuw
 worker/     de achterkant: /api/*, en hij serveert public/ uit
 mobiel/     een proef in React Native — zie mobiel/README.md
+ios/        dezelfde app in Swift, voor de iPhone — zie ios/README.md
 wrangler.toml
 ```
 
@@ -281,7 +282,7 @@ Zelf uitrollen kan ook: `npm run deploy`.
 Actions doet; bouwt Cloudflare zelf, dan mag dat bestand weg.
 
 Zie [`worker/README.md`](worker/README.md) voor het opzetten, en voor waar dit
-heen gaat als er een React Native app bij komt.
+heen gaat nu er apps naast de webversie staan.
 
 ## Ontwerpen
 

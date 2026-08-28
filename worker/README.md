@@ -5,8 +5,9 @@ in `public/`) en `/api/*` afhandelen. Statische bestanden zijn bij Cloudflare
 gratis en ongemeten, dus de app kost niets; alleen `/api` draait code.
 
 Dat het één ding is, is de bedoeling. De app en de api staan op hetzelfde adres,
-dus er is geen CORS nodig en niets om te configureren — en straks kan een React
-Native app dezelfde adressen gebruiken.
+dus er is geen CORS nodig en niets om te configureren — en de proeven ernaast
+(`mobiel/` in React Native, `ios/` in Swift) praten met precies dezelfde
+adressen.
 
 ```
 routine.<jij>.workers.dev/            → public/index.html
