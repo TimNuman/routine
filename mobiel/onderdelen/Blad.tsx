@@ -49,6 +49,7 @@ export function Blad({ titel, melding, knop, opAf, opKnop, bezig, children }: {
             {!!knop && (
               <Pressable
                 onPress={opKnop}
+                accessibilityRole="button"
                 disabled={bezig}
                 style={{ marginTop: 14, paddingVertical: 15, borderRadius: 20,
                          backgroundColor: ORANJE, alignItems: 'center', opacity: bezig ? 0.45 : 1 }}
@@ -104,7 +105,7 @@ function Tekstknop({ children, opTik, uitlijn, dik = false }: {
   children: string; opTik: () => void; uitlijn: 'flex-start' | 'flex-end'; dik?: boolean;
 }) {
   return (
-    <Pressable onPress={opTik} style={{ flex: 1, alignItems: uitlijn, paddingVertical: 4 }}>
+    <Pressable onPress={opTik} accessibilityRole="button" style={{ flex: 1, alignItems: uitlijn, paddingVertical: 4 }}>
       <Text style={[L.tekstknop, dik ? { fontFamily: 'Baloo2_800ExtraBold' } : null]}>{children}</Text>
     </Pressable>
   );

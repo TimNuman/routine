@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated';
 import { KORT, SNEL, natikken } from '../onderdelen/beweging';
 import { Glas } from '../onderdelen/Glas';
@@ -18,7 +18,7 @@ import type { Inhoud, Ritme, Stap } from '../onderdelen/soorten';
 
 export default function Ritmescherm() {
   const m = useMaten();
-  const { inhoud, vinkjes, ritme, zetRitme, tik, nu } = useGezin();
+  const { inhoud, vinkjes, ritme, zetRitme, tik, wis, nu } = useGezin();
 
   const blokken = useMemo(
     () => (inhoud ? ritmeBlokken(inhoud, ritme, nu).filter((b) => b.items.length) : []),
@@ -103,6 +103,8 @@ export default function Ritmescherm() {
 
           {!m.breed && inhoud && blokken.filter((b) => b.later)
             .map((blok) => <Agenda key={blok.kop} blok={blok} mensen={inhoud.mensen} />)}
+
+          {!!groepen.length && <Opnieuw opTik={wis} />}
         </View>
 
         {metZij && inhoud && (
@@ -114,6 +116,21 @@ export default function Ritmescherm() {
         )}
       </View>
     </Scherm>
+  );
+}
+
+// Alle vinkjes van dit ritme in één keer weg, voor als je van voren af aan wilt.
+function Opnieuw({ opTik }: { opTik: () => void }) {
+  const kleur = useNachtKleur('#5C5F7A', 'rgba(255,255,255,0.6)');
+  return (
+    <Pressable
+      onPress={opTik}
+      accessibilityRole="button"
+      style={{ alignSelf: 'center', marginTop: 22, paddingVertical: 10, paddingHorizontal: 18,
+               borderRadius: 999, borderWidth: 1, borderColor: 'rgba(43,45,66,0.14)' }}
+    >
+      <Animated.Text style={[L.opnieuw, kleur]}>opnieuw beginnen</Animated.Text>
+    </Pressable>
   );
 }
 

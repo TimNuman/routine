@@ -46,7 +46,7 @@ export function Emojikiezer({ titel, huidig, opAf, opKlaar }: {
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -4 }}>
         {(EMOJI[groep] || []).map((teken, i) => (
           <View key={teken + i} style={{ width: '16.666%', padding: 4 }}>
-            <Pressable onPress={() => zetWaarde(teken)} accessibilityLabel={teken}>
+            <Pressable onPress={() => zetWaarde(teken)} accessibilityRole="button" accessibilityLabel={teken}>
               <Animated.View
                 style={[{ aspectRatio: 1, borderRadius: 999, borderWidth: 1,
                           alignItems: 'center', justifyContent: 'center',

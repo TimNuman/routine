@@ -6,7 +6,7 @@ import { useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 import { usePathname } from 'expo-router';
 import { Nacht } from './nacht';
 import { datumVan } from './inhoud';
-import { bewaarConfig, haalInhoud, haalVinkjes, schrijfVink, vinkSleutel, type Vinkjes } from './opslag';
+import { bewaarConfig, haalInhoud, haalVinkjes, schrijfVink, vinkSleutel, wisRitme, type Vinkjes } from './opslag';
 import { normaliseer } from './inhoud';
 import { opgeschoond, type Ruw } from './schoon';
 import type { Inhoud, Ritme } from './soorten';
@@ -20,6 +20,8 @@ type Gezinswaarde = {
   tik: (sleutel: string) => void;
   // Bewaart de hele inhoud; geeft een reden terug als het misging, anders null.
   bewaar: (ruw: Ruw) => Promise<string | null>;
+  // Alle vinkjes van dit ritme weg — opnieuw beginnen.
+  wis: () => void;
   nu: Date;
   datum: string;
 };
@@ -77,6 +79,15 @@ export function Gezinshuis({ children }: { children: React.ReactNode }) {
     });
   }, [datum]);
 
+  const wis = useCallback(() => {
+    zetVinkjes((was) => {
+      const uit: Vinkjes = {};
+      Object.keys(was).forEach((s) => { if (!s.startsWith(ritme + '/')) uit[s] = was[s]; });
+      return uit;
+    });
+    wisRitme(datum, ritme).catch(() => {});
+  }, [datum, ritme]);
+
   const bewaar = useCallback(async (ruw: Ruw): Promise<string | null> => {
     const nieuw = opgeschoond(ruw);
     try {
@@ -89,8 +100,8 @@ export function Gezinshuis({ children }: { children: React.ReactNode }) {
   }, []);
 
   const waarde = useMemo(
-    () => ({ inhoud, fout, vinkjes, ritme, zetRitme, tik, bewaar, nu, datum }),
-    [inhoud, fout, vinkjes, ritme, tik, bewaar, nu, datum],
+    () => ({ inhoud, fout, vinkjes, ritme, zetRitme, tik, bewaar, wis, nu, datum }),
+    [inhoud, fout, vinkjes, ritme, tik, bewaar, wis, nu, datum],
   );
 
   return (

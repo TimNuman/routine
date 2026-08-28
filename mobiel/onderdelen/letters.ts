@@ -37,6 +37,7 @@ export const L = {
   bladkop: { fontFamily: 'Baloo2_800ExtraBold', fontSize: 18, textAlign: 'center' },
   tekstknop: { fontFamily: 'Nunito_800ExtraBold', fontSize: 16, color: '#F2994A' },
   grootknop: { fontFamily: 'Baloo2_800ExtraBold', fontSize: 16 },
+  opnieuw: { fontFamily: 'Nunito_800ExtraBold', fontSize: 13 },
   bezig: { fontFamily: 'Baloo2_800ExtraBold', fontSize: 16, lineHeight: 22,
            textAlign: 'center', paddingVertical: 34, paddingHorizontal: 12 },
   vraagnaam: { fontFamily: 'Baloo2_800ExtraBold', fontSize: 15.5 },

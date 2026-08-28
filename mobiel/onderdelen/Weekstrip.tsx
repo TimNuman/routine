@@ -58,6 +58,7 @@ function Pijl({ richting, titel, opTik }: { richting: number; titel: string; opT
   return (
     <Pressable
       onPress={opTik}
+      accessibilityRole="button"
       accessibilityLabel={titel}
       style={{ width: 26, alignItems: 'center', justifyContent: 'center', opacity: 0.65,
                transform: [{ scaleX: richting < 0 ? -1 : 1 }] }}

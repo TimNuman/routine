@@ -125,7 +125,7 @@ export function Emojiknop({ waarde, maat = 42, opTik }: {
     borderColor: interpolateColor(nacht.value, [0, 1], ['rgba(255,255,255,0.9)', 'rgba(255,255,255,0.16)']),
   }));
   return (
-    <Pressable onPress={opTik} accessibilityLabel="Icoon">
+    <Pressable onPress={opTik} accessibilityRole="button" accessibilityLabel="Icoon">
       <Animated.View
         style={[{ width: maat, height: maat, borderRadius: maat / 2.9, borderWidth: 1,
                   alignItems: 'center', justifyContent: 'center' }, vlak]}
@@ -140,6 +140,7 @@ export function Minknop({ titel, opTik }: { titel: string; opTik: () => void }) 
   return (
     <Pressable
       onPress={opTik}
+      accessibilityRole="button"
       accessibilityLabel={titel}
       style={{ width: 28, height: 28, borderRadius: 14, backgroundColor: '#E5484D',
                alignItems: 'center', justifyContent: 'center' }}
@@ -168,6 +169,7 @@ export function Toevoegrij({ children, opTik }: { children: string; opTik: () =>
       <Streepje />
       <Pressable
         onPress={opTik}
+        accessibilityRole="button"
         style={{ flexDirection: 'row', alignItems: 'center', gap: 10,
                  paddingVertical: 11, paddingHorizontal: 12 }}
       >
@@ -199,6 +201,7 @@ export function Bewerkrij({ icoon, label, leeg, tijd, dagen, extra, wie, kleur, 
         <Minknop titel={wegTitel} opTik={opWeg} />
         <Pressable
           onPress={opOpenen}
+          accessibilityRole="button"
           style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'center',
                    gap: 10, flexWrap: tweeregels ? 'wrap' : 'nowrap',
                    paddingVertical: 6, rowGap: 3 }}

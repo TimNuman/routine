@@ -27,6 +27,7 @@ export function Lijstrij({ icoon, titel, uitleg, eerste, rechts, opTik }: {
     <Animated.View style={[{ borderTopWidth: eerste ? 0 : 1 }, eerste ? null : streep]}>
       <Pressable
         onPress={opTik}
+        accessibilityRole="button"
         style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, minHeight: 62 }}
       >
         <Animated.View

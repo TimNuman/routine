@@ -318,6 +318,8 @@ function Vondst({ item, aan, mensen, opVink, opOpen }: {
     <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
       <Pressable
         onPress={opVink}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: aan }}
         accessibilityLabel={aan ? 'Niet overnemen' : 'Wel overnemen'}
         style={{ paddingTop: 12, paddingBottom: 12, paddingLeft: 13, paddingRight: 4 }}
       >
@@ -330,6 +332,7 @@ function Vondst({ item, aan, mensen, opVink, opOpen }: {
       </Pressable>
       <Pressable
         onPress={opOpen}
+        accessibilityRole="button"
         style={{ flex: 1, minWidth: 0, flexDirection: 'row', alignItems: 'flex-start', gap: 11,
                  paddingVertical: 12, paddingRight: 13, paddingLeft: 9 }}
       >

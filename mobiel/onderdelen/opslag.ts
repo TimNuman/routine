@@ -25,6 +25,12 @@ export async function bewaarConfig(ruw: unknown): Promise<void> {
   if (!res.ok) throw new Error('HTTP ' + res.status);
 }
 
+// Alles van vandaag in dit ritme in één keer weg: opnieuw beginnen.
+export async function wisRitme(datum: string, ritme: Ritme): Promise<void> {
+  const res = await fetch(`${basis}/${datum}/${ritme}.json`, { method: 'DELETE' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+}
+
 export type Vinkjes = Record<string, boolean>;
 
 // Alles van vandaag in één keer; de sleutel is '<ritme>/<stap>/<persoon>'.

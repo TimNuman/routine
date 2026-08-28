@@ -174,6 +174,7 @@ export function Dingblad({ titel, ding, plek, bron, mensen, bezig, opAf, opBewaa
         {!!opWeg && (
           <Pressable
             onPress={opWeg}
+            accessibilityRole="button"
             style={{ marginTop: 18, paddingVertical: 13, borderRadius: 18, alignItems: 'center',
                      borderWidth: 1, borderColor: 'rgba(229,72,77,0.35)',
                      backgroundColor: 'rgba(229,72,77,0.10)' }}

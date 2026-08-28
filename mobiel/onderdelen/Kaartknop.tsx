@@ -12,6 +12,7 @@ export function Kaartknop({ teken, plus = false, children, opTik }: {
     <Glas radius={22} style={{ marginTop: 14 }}>
       <Pressable
         onPress={opTik}
+        accessibilityRole="button"
         style={{ flexDirection: 'row', alignItems: 'center', gap: 10,
                  paddingVertical: 15, paddingHorizontal: 16 }}
       >
