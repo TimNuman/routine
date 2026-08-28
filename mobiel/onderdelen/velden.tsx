@@ -77,8 +77,10 @@ export function Chips({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function Chip({ label, aan, kleur, breed = true, opTik }: {
-  label: string; aan: boolean; kleur?: string; breed?: boolean; opTik: () => void;
+// 'stil' is voor een antwoord dat geen keuze is om naar toe te trekken, zoals
+// 'geen van deze': wel gekozen, maar niet oranje.
+export function Chip({ label, aan, kleur, breed = true, stil = false, opTik }: {
+  label: string; aan: boolean; kleur?: string; breed?: boolean; stil?: boolean; opTik: () => void;
 }) {
   const nacht = useNacht();
   const vlak = useAnimatedStyle(() => ({
@@ -86,7 +88,12 @@ export function Chip({ label, aan, kleur, breed = true, opTik }: {
     borderColor: interpolateColor(nacht.value, [0, 1], ['rgba(255,255,255,0.7)', 'rgba(255,255,255,0.14)']),
   }));
   const uit = useNachtKleur(ZACHT, 'rgba(255,255,255,0.6)');
-  const vast = aan ? { backgroundColor: kleur || ORANJE, borderColor: kleur || ORANJE } : null;
+  const donker = useNachtKleur(INKT, '#ffffff');
+  const vast = aan
+    ? stil
+      ? { backgroundColor: 'rgba(43,45,66,0.14)', borderColor: 'transparent' }
+      : { backgroundColor: kleur || ORANJE, borderColor: kleur || ORANJE }
+    : null;
   return (
     <Pressable
       onPress={opTik}
@@ -101,9 +108,9 @@ export function Chip({ label, aan, kleur, breed = true, opTik }: {
           aan ? null : vlak, vast,
         ]}
       >
-        {aan
+        {aan && !stil
           ? <Text style={[L.chip, { color: '#fff' }]} numberOfLines={1}>{label}</Text>
-          : <Animated.Text style={[L.chip, uit]} numberOfLines={1}>{label}</Animated.Text>}
+          : <Animated.Text style={[L.chip, aan ? donker : uit]} numberOfLines={1}>{label}</Animated.Text>}
       </Animated.View>
     </Pressable>
   );

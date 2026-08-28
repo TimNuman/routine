@@ -37,4 +37,11 @@ export const L = {
   bladkop: { fontFamily: 'Baloo2_800ExtraBold', fontSize: 18, textAlign: 'center' },
   tekstknop: { fontFamily: 'Nunito_800ExtraBold', fontSize: 16, color: '#F2994A' },
   grootknop: { fontFamily: 'Baloo2_800ExtraBold', fontSize: 16 },
+  bezig: { fontFamily: 'Baloo2_800ExtraBold', fontSize: 16, lineHeight: 22,
+           textAlign: 'center', paddingVertical: 34, paddingHorizontal: 12 },
+  vraagnaam: { fontFamily: 'Baloo2_800ExtraBold', fontSize: 15.5 },
+  vondstnaam: { fontFamily: 'Baloo2_800ExtraBold', fontSize: 15.5 },
+  vondstmeta: { fontFamily: 'Nunito_800ExtraBold', fontSize: 12.5, paddingTop: 2 },
+  vondstbron: { fontFamily: 'Nunito_700Bold', fontSize: 12, fontStyle: 'italic',
+                lineHeight: 16, paddingTop: 5, opacity: 0.85 },
 } as const;

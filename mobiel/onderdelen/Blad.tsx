@@ -39,7 +39,7 @@ export function Blad({ titel, melding, knop, opAf, opKnop, bezig, children }: {
                            marginBottom: 10, backgroundColor: 'rgba(43,45,66,0.22)' }} />
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
               <Tekstknop opTik={opAf} uitlijn="flex-start">Annuleer</Tekstknop>
-              <Text style={[L.bladkop, { flex: 1 }]} numberOfLines={1}>{titel}</Text>
+              <Text style={[L.bladkop, { flexShrink: 1 }]} numberOfLines={1}>{titel}</Text>
               <View style={{ flex: 1 }} />
             </View>
             {!!melding && <View style={{ marginTop: 12 }}><Melding>{melding}</Melding></View>}
@@ -86,7 +86,7 @@ export function Vel({ titel, melding, opAf, opGereed, bezig, children }: {
                              paddingVertical: 14, paddingHorizontal: 18 }}
             >
               <Tekstknop opTik={opAf} uitlijn="flex-start">Annuleer</Tekstknop>
-              <Text style={[L.bladkop, { flex: 1 }]} numberOfLines={1}>{titel}</Text>
+              <Text style={[L.bladkop, { flexShrink: 1 }]} numberOfLines={1}>{titel}</Text>
               <Tekstknop opTik={opGereed} uitlijn="flex-end" dik>{bezig ? 'Bezig…' : 'Gereed'}</Tekstknop>
             </Glas>
           </View>

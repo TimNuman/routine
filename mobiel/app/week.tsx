@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { Agenda, Blokkop } from '../onderdelen/Agenda';
+import { Assistentblad } from '../onderdelen/Assistentblad';
 import { Dingblad } from '../onderdelen/Dingblad';
 import { Glas } from '../onderdelen/Glas';
 import { Kaartknop } from '../onderdelen/Kaartknop';
@@ -53,6 +54,7 @@ export default function Weekscherm() {
   const werk = useRef<Ruw | null>(null);
   const [blad, zetBlad] = useState<{ titel: string; plek: Plek | null; ding: Ding } | null>(null);
   const [bezig, zetBezig] = useState(false);
+  const [assistent, zetAssistent] = useState(false);
 
   const openDing = (item: Agendaitem | null) => {
     if (!inhoud) return;
@@ -114,6 +116,11 @@ export default function Weekscherm() {
       ))}
 
       {inhoud && <Kaartknop plus opTik={() => openDing(null)}>Iets bijzonders toevoegen</Kaartknop>}
+      {inhoud && <Kaartknop teken="✨" opTik={() => zetAssistent(true)}>Typ of plak iets</Kaartknop>}
+
+      {assistent && inhoud && (
+        <Assistentblad inhoud={inhoud} opAf={() => zetAssistent(false)} opBewaar={bewaar} />
+      )}
 
       {!!blad && inhoud && (
         <Dingblad
