@@ -1,14 +1,19 @@
 // Alles wat elk scherm nodig heeft staat hier één keer: de inhoud, de vinkjes
 // van vandaag en of het ochtend of avond is. Zo blijft de kleurovergang doorlopen
 // als je van tabblad wisselt, en wordt de inhoud niet per scherm opnieuw gehaald.
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+//
+// De stroom blijft openstaan zolang de app open is: wat er op een andere telefoon
+// gebeurt komt hier binnen en staat meteen in beeld.
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useSharedValue, withTiming, Easing } from 'react-native-reanimated';
 import { usePathname } from 'expo-router';
 import { Nacht } from './nacht';
-import { datumVan } from './inhoud';
-import { bewaarConfig, haalInhoud, haalVinkjes, schrijfVink, vinkSleutel, wisRitme, type Vinkjes } from './opslag';
-import { normaliseer } from './inhoud';
+import { datumVan, normaliseer } from './inhoud';
 import { opgeschoond, type Ruw } from './schoon';
+import {
+  bewaarConfig, haalInhoud, haalVinkjes, schrijfVink, vinkSleutel, volg, wisRitme,
+  type Bericht, type Vinkjes,
+} from './opslag';
 import type { Inhoud, Ritme } from './soorten';
 
 type Gezinswaarde = {
@@ -42,9 +47,11 @@ export function Gezinshuis({ children }: { children: React.ReactNode }) {
   const [fout, zetFout] = useState('');
   const [vinkjes, zetVinkjes] = useState<Vinkjes>({});
   const [ritme, zetRitme] = useState<Ritme>('dag');
-
-  const nu = useMemo(() => new Date(), []);
+  // Blijft de app een nacht openstaan, dan hoort hij morgen de volgende dag te
+  // laten zien. De datum is genoeg; op de minuut hoeft niets bij te werken.
+  const [nu, zetNu] = useState(() => new Date());
   const datum = datumVan(nu);
+  const gekozen = useRef(false);   // heeft iemand zelf al ochtend/avond gekozen?
 
   // Het hele scherm verschiet in één beweging van ochtend naar avond, maar
   // alleen op de ritmepagina: de week en de instellingen blijven licht.
@@ -56,6 +63,15 @@ export function Gezinshuis({ children }: { children: React.ReactNode }) {
   }, [avond]);
 
   useEffect(() => {
+    const klok = setInterval(() => {
+      const straks = new Date();
+      if (datumVan(straks) !== datumVan(nu)) zetNu(straks);
+    }, 30000);
+    return () => clearInterval(klok);
+  }, [nu]);
+
+  // Eerst ophalen zodat er meteen iets staat, en daarna meeluisteren.
+  useEffect(() => {
     let weg = false;
     (async () => {
       try {
@@ -63,7 +79,7 @@ export function Gezinshuis({ children }: { children: React.ReactNode }) {
         if (weg) return;
         zetInhoud(c);
         zetVinkjes(v);
-        zetRitme(nu.getHours() >= c.avondVanaf ? 'nacht' : 'dag');
+        if (!gekozen.current) zetRitme(new Date().getHours() >= c.avondVanaf ? 'nacht' : 'dag');
       } catch (err: any) {
         if (!weg) zetFout(err?.message || 'onbekend');
       }
@@ -71,14 +87,49 @@ export function Gezinshuis({ children }: { children: React.ReactNode }) {
     return () => { weg = true; };
   }, [datum]);
 
+  const stroom = useRef<ReturnType<typeof volg> | null>(null);
+  useEffect(() => {
+    const s = volg(datum, (b: Bericht) => {
+      if (b.soort === 'begin') {
+        zetFout('');
+        if (b.inhoud) zetInhoud(normaliseer(b.inhoud));
+        zetVinkjes(b.vinkjes || {});
+      } else if (b.soort === 'inhoud') {
+        if (b.inhoud) zetInhoud(normaliseer(b.inhoud));
+      } else if (b.soort === 'vink') {
+        zetVinkjes((was) => {
+          const uit = { ...was };
+          if (b.aan) uit[b.sleutel] = true; else delete uit[b.sleutel];
+          return uit;
+        });
+      } else if (b.soort === 'ritme') {
+        zetVinkjes((was) => {
+          const uit: Vinkjes = {};
+          Object.keys(was).forEach((s) => { if (!s.startsWith(b.ritme + '/')) uit[s] = was[s]; });
+          return uit;
+        });
+      }
+    });
+    stroom.current = s;
+    return () => { s.stop(); stroom.current = null; };
+  }, []);
+
+  useEffect(() => { stroom.current?.kijkNaar(datum); }, [datum]);
+
   // Meteen omzetten en pas daarna schrijven; mislukt dat, dan gaat hij terug.
   const tik = useCallback((sleutel: string) => {
     zetVinkjes((was) => {
       const aan = !was[sleutel];
       schrijfVink(datum, sleutel, aan).catch(() => {
-        zetVinkjes((nu2) => ({ ...nu2, [sleutel]: !aan }));
+        zetVinkjes((nu2) => {
+          const uit = { ...nu2 };
+          if (!aan) uit[sleutel] = true; else delete uit[sleutel];
+          return uit;
+        });
       });
-      return { ...was, [sleutel]: aan };
+      const uit = { ...was };
+      if (aan) uit[sleutel] = true; else delete uit[sleutel];
+      return uit;
     });
   }, [datum]);
 
@@ -96,15 +147,17 @@ export function Gezinshuis({ children }: { children: React.ReactNode }) {
     try {
       await bewaarConfig(nieuw);
     } catch (err: any) {
-      return `Opslaan in de database lukte niet (${err?.message || 'onbekend'}).`;
+      return `Opslaan lukte niet (${err?.message || 'onbekend'}).`;
     }
     zetInhoud(normaliseer(nieuw));
     return null;
   }, []);
 
+  const kies = useCallback((r: Ritme) => { gekozen.current = true; zetRitme(r); }, []);
+
   const waarde = useMemo(
-    () => ({ inhoud, fout, vinkjes, ritme, avond, zetRitme, tik, bewaar, wis, nu, datum }),
-    [inhoud, fout, vinkjes, ritme, avond, tik, bewaar, wis, nu, datum],
+    () => ({ inhoud, fout, vinkjes, ritme, avond, zetRitme: kies, tik, bewaar, wis, nu, datum }),
+    [inhoud, fout, vinkjes, ritme, avond, kies, tik, bewaar, wis, nu, datum],
   );
 
   return (

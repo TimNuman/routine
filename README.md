@@ -98,12 +98,12 @@ onder **Wie doet mee** wie het betreft; alleen die kinderen krijgen dan een
 rondje bij die stap, en hun teller telt hem mee. Hetzelfde geldt voor een regel
 in het weekritme — daar verschijnt de naam als gekleurd label.
 
-**Gereed** schrijft alles naar de database, en de andere telefoons zien het
+**Gereed** schrijft alles naar het huis, en de andere telefoons zien het
 meteen. Lukt dat niet, dan blijft het scherm open staan met de reden — er wordt
 nooit stilletjes iets half opgeslagen.
 
 `routine.json` in deze repo is alleen nog het **zaadje**: de eerste keer dat de
-app een lege database vindt, zet hij die inhoud erin. Daarna is de database de
+app een leeg huis vindt, zet hij die inhoud erin. Daarna is het huis de
 baas en hoef je dit bestand niet meer aan te raken.
 
 ## Typ of plak iets
@@ -164,57 +164,75 @@ woorden — genoeg om de schermen te proberen zonder achterkant.
 
 ## Opslag
 
-Alles staat in een Firebase Realtime Database, onder één tak per gezin:
+Alles staat achter `/api/opslag` op dezelfde Worker die de app uitserveert. Daar
+zit één *huis* — een Durable Object — met twee soorten gegevens:
 
 ```
-<gezin>/config                              de inhoud die je in de app bewerkt
-<gezin>/<jjjj-mm-dd>/<dag|nacht>/<stap>/<persoon> = true
+inhoud                de inhoud die je in de app bewerkt
+dag:<jjjj-mm-dd>      { "<dag|nacht>/<stap>/<persoon>": true, ... }
 ```
 
-Een eigen tak per dag betekent dat het ritme 's ochtends vanzelf leeg is; takken
-ouder dan een week ruimt de app bij het laden op. Aan- en afvinken schrijft
-precies één persoon bij één stap, dus twee telefoons die tegelijk iets aantikken
+Een eigen sleutel per dag betekent dat het ritme 's ochtends vanzelf leeg is;
+dagen ouder dan een week ruimt het huis zelf op. Aan- en afvinken schrijft precies
+één persoon bij één stap, dus twee telefoons die tegelijk iets aantikken
 overschrijven elkaar niet.
+
+### Live, op elke telefoon tegelijk
+
+Naast lezen en schrijven is er `/api/opslag/stroom`: een WebSocket die openblijft
+zolang de app openstaat. Wie iets afvinkt schrijft het naar het huis, en dat huis
+vertelt het meteen aan iedereen die verbonden is — dus geen gepoll, en binnen een
+seconde staat het ook op de andere telefoon.
+
+Een Durable Object is de enige plek in het verhaal die twee dingen tegelijk kan:
+gegevens bewaren en weten wie er op dat moment meekijkt. Vandaar dat het daar
+staat en niet in een losse database.
+
+Dat het een WebSocket is en geen EventSource heeft één reden: `EventSource`
+bestaat niet in React Native. Een WebSocket kennen de browser en de app allebei,
+dus is het één stuk code voor allebei.
+
+Berichten die over de stroom komen:
+
+| soort    | wanneer                          | wat erin zit                    |
+| -------- | -------------------------------- | ------------------------------- |
+| `begin`  | zodra je verbindt, en na een dagwissel | de hele inhoud en de vinkjes van die dag |
+| `inhoud` | iemand heeft iets bewerkt        | de hele nieuwe inhoud           |
+| `vink`   | iemand vinkt aan of af           | `datum`, `sleutel`, `aan`       |
+| `ritme`  | iemand begint opnieuw            | `datum`, `ritme`                |
+
+De verbinding maakt zichzelf opnieuw als hij wegvalt, met een pauze die oploopt
+tot een halve minuut. Een telefoon die uit zijn slaap komt heeft geen verbinding
+meer, en dat merk je pas als je het probeert.
 
 ### Eenmalig opzetten
 
-1. Maak op [console.firebase.google.com](https://console.firebase.google.com) een
-   project en daarin een **Realtime Database** (regio `europe-west1`).
-2. Zet bij **Rules** deze regels neer en publiceer ze:
+Er is niets op te zetten: het huis wordt vanzelf gemaakt bij het eerste bezoek.
+Twee dingen staan in `wrangler.toml`:
 
-   ```json
-   {
-     "rules": {
-       "$gezin": {
-         ".read": true,
-         "config": { ".write": true },
-         "$datum": {
-           ".write": "$datum.matches(/^\\d{4}-\\d{2}-\\d{2}$/)",
-           "$ritme": {
-             "$stap": {
-               "$persoon": { ".validate": "newData.isBoolean()" }
-             }
-           }
-         }
-       }
-     }
-   }
-   ```
+```toml
+[vars]
+GEZIN = "een-eigen-woord"          # welk huis; de naam staat op de server
+OVERNEMEN = ""                     # eenmalig, om te verhuizen — zie hieronder
+```
 
-3. Zet de database-url in `routine.json`:
+`GEZIN` staat met opzet op de server en niet in de app: de app hoeft niet te weten
+in welk huis hij kijkt, dus hoeft er ook niets over de lijn dat je zou moeten
+raden.
 
-   ```json
-   "opslag": {
-     "url": "https://jouw-project-default-rtdb.europe-west1.firebasedatabase.app",
-     "gezin": "een-eigen-woord"
-   }
-   ```
+**Verhuizen vanaf een oude database.** Zet in `OVERNEMEN` het adres waar de oude
+inhoud staat (bijvoorbeeld de `config.json` van een Firebase Realtime Database).
+De eerste keer dat het huis leeg blijkt haalt hij die er één keer bij en bewaart
+hem. Daarna wordt er niet meer gekeken en mag de regel weg. De vinkjes van vandaag
+verhuizen niet mee; die zijn morgen toch weg.
 
-**Let op:** met deze regels kan iedereen die de url kent meelezen en meeschrijven.
-Voor een afvinklijstje thuis is dat prima, maar zet er geen gevoelige dingen in,
-en kies voor `gezin` liever een woord dat niet te raden is.
+**Let op:** iedereen die het adres van de app kent, kan meelezen en meeschrijven.
+Voor een afvinklijstje thuis is dat prima, maar zet er geen gevoelige dingen in.
+Wil je het dicht, zet dan `SLEUTEL` als secret — dan moet elk verzoek
+`X-Routine-Sleutel` meesturen (of `?sleutel=` bij de WebSocket, want daar kan een
+browser geen kopjes meegeven).
 
-Werkt de database even niet, dan blijft de pagina gewoon werken: de laatst bekende
+Werkt het huis even niet, dan blijft de pagina gewoon werken: de laatst bekende
 inhoud en de vinkjes van vandaag staan ook in de browser zelf.
 
 ## Op je telefoon zetten

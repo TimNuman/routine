@@ -1,10 +1,6 @@
 {
   "titel": "Ons dagritme",
   "avondVanaf": 15,
-  "opslag": {
-    "url": "https://routine-35aaa-default-rtdb.europe-west1.firebasedatabase.app",
-    "gezin": "huis-9f3k2a"
-  },
   "assistent": "/api/lees",
   "assistentSleutel": "",
   "mensen": [

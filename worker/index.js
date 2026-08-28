@@ -1,11 +1,14 @@
 // De achterkant. Eén Worker die twee dingen doet: de app uitserveren (dat zijn
 // de bestanden in public/, en dat kost niets) en /api/* afhandelen.
 //
-// Nu zit er één ding onder /api: de uitlezer achter 'Uit een bericht overnemen'.
-// Die staat hier en niet in de pagina, zodat de sleutel van de Claude-api op de
-// server blijft. Alles wat er later bij komt — inloggen, het ritme zelf — hoort
-// hier ook, want dan kan een React Native app dezelfde adressen gebruiken.
+// Onder /api zitten twee dingen. De uitlezer achter 'Typ of plak iets' staat
+// hier en niet in de pagina, zodat de sleutel van de Claude-api op de server
+// blijft. En de opslag: het ritme zelf, met een WebSocket erbij zodat elke
+// telefoon meteen ziet wat er op een andere is afgevinkt. Dat laatste is de
+// reden dat het hierheen is verhuisd — een browser heeft EventSource, een
+// React Native app niet, en een WebSocket kennen ze allebei.
 import Anthropic from '@anthropic-ai/sdk';
+export { Huis } from './huis.js';
 
 const MODEL = 'claude-opus-5';
 const MOEITE = 'low';            // low | medium | high — uitlezen is licht werk
@@ -107,7 +110,10 @@ function antwoord(inhoud, status){
 // dus daarvoor is er SLEUTEL — zie de README.
 function magErbij(request, env){
   if(!env.SLEUTEL) return true;
-  return request.headers.get('X-Routine-Sleutel') === env.SLEUTEL;
+  if(request.headers.get('X-Routine-Sleutel') === env.SLEUTEL) return true;
+  // Een browser kan bij een WebSocket geen kopjes meesturen, dus daar mag de
+  // sleutel in het adres.
+  return new URL(request.url).searchParams.get('sleutel') === env.SLEUTEL;
 }
 
 function kindregel(kind){
@@ -202,6 +208,23 @@ async function lees(request, env){
   }
 }
 
+// Alles van dit gezin zit in één Durable Object. De naam ervan is het enige
+// wat een huis van een ander huis scheidt; die staat op de server, niet in de
+// app, zodat er niets over de lijn hoeft dat je moet raden.
+function huisVan(env){
+  const naam = env.GEZIN || 'huis';
+  return env.HUIS.get(env.HUIS.idFromName(naam));
+}
+
+// Alles onder /api/opslag/ gaat rechtstreeks door naar het huis. De Worker
+// controleert alleen of je erbij mag.
+async function opslag(request, env){
+  const url = new URL(request.url);
+  const rest = url.pathname.slice('/api/opslag'.length) || '/';
+  const naar = new URL(rest + url.search, 'https://huis');
+  return await huisVan(env).fetch(new Request(naar, request));
+}
+
 const ROUTES = {
   '/api/lees': lees,
 };
@@ -209,6 +232,12 @@ const ROUTES = {
 export default {
   async fetch(request, env){
     const pad = new URL(request.url).pathname;
+
+    if(pad.startsWith('/api/opslag')){
+      if(!magErbij(request, env)) return antwoord({ fout: 'Verkeerde of ontbrekende sleutel.' }, 401);
+      return await opslag(request, env);
+    }
+
     const route = ROUTES[pad];
     if(route) return await route(request, env);
     if(pad.startsWith('/api/')) return antwoord({ fout: 'Onbekend adres.' }, 404);

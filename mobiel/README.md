@@ -11,7 +11,7 @@ vormtaal en het gevoel overeind blijven voordat de rest volgt. De webversie in
 | framework | Expo + Expo Router, `output: static` voor web |
 | styling | NativeWind (Tailwind), tokens in `tailwind.config.js` |
 | animatie | Reanimated 4, timings in `onderdelen/beweging.ts` |
-| opslag | dezelfde Firebase-REST als de webversie, in `onderdelen/opslag.ts` |
+| opslag | `/api/opslag` op de eigen Worker, met een WebSocket voor live updates, in `onderdelen/opslag.ts` |
 
 Geen componentenbibliotheek. De vormtaal is eigen werk en Tamagui of gluestack
 zou je die laten terugvechten; wat je nodig hebt is een styling-systeem en goede
@@ -73,11 +73,13 @@ npm run web          # http://localhost:8081
 npm run bouw         # exporteert naar ../public/nieuw
 ```
 
-Wijs hem naar een andere database met een `.env` ernaast:
+`npm run web` draait op zichzelf en heeft dus een adres nodig voor de achterkant;
+`npm run bouw` niet, want die komt op dezelfde Worker terecht. Zet het in een
+`.env` ernaast:
 
 ```
-EXPO_PUBLIC_OPSLAG_URL=http://127.0.0.1:8899
-EXPO_PUBLIC_GEZIN=proef
+EXPO_PUBLIC_API=http://127.0.0.1:8890/api/opslag
+EXPO_PUBLIC_ASSISTENT_URL=http://127.0.0.1:8890/api/lees
 ```
 
 Later op een iPhone: `npx expo start` en de Expo Go-app, of `eas build` voor een
@@ -85,11 +87,10 @@ echte build. Dat is nog niet geprobeerd — er is hier geen Mac en geen toestel.
 
 ## Wat er nog niet is
 
-- **Live-sync.** De webversie luistert met `EventSource` naar Firebase; dat
-  bestaat niet in React Native. Lezen en schrijven werkt, maar een vinkje van de
-  andere telefoon komt hier pas binnen na herladen. Dit is de reden dat de opslag
-  achter `/api` moet — zie `worker/README.md`.
-- **De andere schermen.** Deze week, Instellingen, het formulier, de assistent.
+- **Verslepen** om de volgorde van stappen te wijzigen. Daarom staat er ook geen
+  greep naast een regel: die zou iets beloven wat niet gebeurt.
+- **Trek-om-te-verversen**, en een echte datumkiezer op een telefoon — op web is
+  dat de gewone datumkiezer van de browser.
 
 ## Lettertypes
 

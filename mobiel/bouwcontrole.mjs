@@ -24,7 +24,7 @@ for (const pad of alleBestanden(MAP)) {
 if (gevonden.length) {
   console.error('De uitgave wijst naar deze machine:');
   gevonden.forEach(([pad, adressen]) => console.error(`  ${pad}: ${adressen}`));
-  console.error('Bouw opnieuw zonder EXPO_PUBLIC_OPSLAG_URL of EXPO_PUBLIC_GEZIN.');
+  console.error('Bouw opnieuw zonder EXPO_PUBLIC_API of EXPO_PUBLIC_ASSISTENT_URL.');
   process.exit(1);
 }
 console.log('Uitgave gecontroleerd: geen adressen van deze machine.');

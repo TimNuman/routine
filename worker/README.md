@@ -164,35 +164,57 @@ MODEL = "claude-sonnet-5"
 MOEITE = "medium"
 ```
 
-## Straks: dezelfde achterkant voor een app
+## De opslag
 
-`/api` is nu al de goede vorm voor een React Native app: gewoon HTTP en JSON,
-niets browser-eigens. Een native client die `/api/lees` aanroept met een
-`X-Routine-Sleutel` werkt vandaag.
+Naast de uitlezer staat hier de opslag: `/api/opslag/*`. Alles van dit gezin zit
+in één *huis* — een Durable Object, klasse `Huis` in `huis.js` — en de Worker doet
+er niets anders mee dan de sleutel controleren en het verzoek doorgeven.
 
-Wat er nog niet klopt, is de opslag. De app praat rechtstreeks met Firebase, en
-een native app zou dat ook kunnen — maar dan erft hij hetzelfde probleem: het pad
-`<gezin>` is het enige wat de database beschermt, en dat staat openbaar in
-`routine.json`. Zolang er één web-app is valt daarmee te leven; met een app in
-een store niet meer.
+```
+GET    /api/opslag/inhoud            wat er nu in de app staat
+PUT    /api/opslag/inhoud            het bewerkte geheel
+GET    /api/opslag/dag?datum=…       de vinkjes van die dag
+PUT    /api/opslag/vink              { datum, sleutel, aan }
+DELETE /api/opslag/ritme             { datum, ritme } — opnieuw beginnen
+GET    /api/opslag/stroom?datum=…    WebSocket: alles wat er verandert
+```
 
-De weg daarheen is de opslag ook achter deze Worker zetten:
+Welk huis staat in `GEZIN` in `wrangler.toml`, op de server dus. De app hoeft dat
+niet te weten, en er hoeft ook niets over de lijn dat je zou moeten raden.
+
+**Waarom een Durable Object en geen D1.** Het gaat om de stroom. Een database kan
+bewaren maar niet vertellen; een Durable Object kan allebei, want het weet wie er
+op dat moment verbonden is. Daarmee is `PUT /vink` één schrijfactie die meteen bij
+alle open telefoons terechtkomt, zonder pollen. Dat was precies wat de oude
+Firebase-opzet gaf en wat D1 niet kan.
+
+Het is een SQLite-Durable-Object (`new_sqlite_classes` in de migratie), en die
+horen bij het gratis plan. De verbindingen gebruiken de hibernation-api:
+`ctx.acceptWebSocket`, niet een handler die wakker moet blijven. Een huis waar
+niemand iets doet kost dus niets.
+
+**Vinkjes zijn platte sleutels**, `<ritme>/<stap>/<persoon>`. Eén tik schrijft
+precies één sleutel, dus twee telefoons die tegelijk iets aantikken overschrijven
+elkaar niet. Dagen ouder dan een week ruimt het huis zelf op, bij het eerstvolgende
+vinkje.
+
+**Verhuizen.** Staat er `OVERNEMEN` in de vars, dan haalt een leeg huis die inhoud
+er één keer bij en bewaart hem. Daarna wordt er niet meer gekeken.
+
+## Straks: wie mag erbij
+
+`/api` is nu de goede vorm voor een app in een store: gewoon HTTP, JSON en een
+WebSocket, niets browser-eigens. Beide clients praten met dezelfde adressen en de
+gegevens zijn alleen nog via de Worker te bereiken.
+
+Wat er nog niet is, is wie erbij mag. Nu geldt: wie het adres van de app kent, kan
+meelezen en meeschrijven — `SLEUTEL` maakt daar één gedeeld wachtwoord van, meer
+niet. Voor een afvinklijstje thuis is dat genoeg; met een app in een store niet
+meer. De volgende stap is dus aanmelden:
 
 ```
 POST /api/aanmelden          → een token voor dit gezin
-GET  /api/config             → wat er nu in de app staat
-PUT  /api/config             → het bewerkte geheel
-PUT  /api/vink/<datum>/<ritme>/<stap>/<persoon>
-GET  /api/dag/<datum>        → de vinkjes van die dag
 ```
 
-Beide clients praten dan met dezelfde vijf adressen, en de database is alleen
-nog vanaf de Worker bereikbaar. Cloudflare D1 past er ruim in (5 GB, 5 miljoen
-regels lezen per dag op het gratis plan).
-
-Eén ding om van tevoren te weten, want het is de echte beslissing: **Firebase
-geeft nu live-sync**. Vink je iets af, dan staat het binnen een seconde op de
-andere telefoon, via een open SSE-verbinding. D1 kan dat niet — dat is een
-database, geen kanaal. Je hebt dan de keuze tussen pollen (simpel, voelt trager)
-of Durable Objects met websockets (doet wat Firebase nu doet, maar is echt werk).
-Daarom is dit geen verhuizing voor tussendoor.
+en `GEZIN` uit de vars halen: het huis volgt dan uit het token in plaats van uit
+de configuratie. Dat is werk voor als er een tweede gezin bijkomt.

@@ -11,5 +11,23 @@ binding = "ASSETS"
 
 # ANTHROPIC_API_KEY en SLEUTEL zijn geheimen, geen vars:
 #   npx wrangler secret put ANTHROPIC_API_KEY
-#   npx wrangler secret put SLEUTEL      (alleen nodig voor clients van buiten,
-#                                         zoals straks een React Native app)
+#   npx wrangler secret put SLEUTEL      (optioneel: dan moet elk verzoek aan
+#                                         /api hem meesturen)
+
+# Het huis: alle gegevens van dit gezin bij elkaar, met de telefoons die
+# meekijken. Een Durable Object is de enige plek die tegelijk kan bewaren en
+# weten wie er verbonden is, dus daar hoeft niemand te pollen.
+[[durable_objects.bindings]]
+name = "HUIS"
+class_name = "Huis"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Huis"]
+
+[vars]
+# Welk huis. Eén naam, hier op de server: dan hoeft de app hem niet te kennen.
+GEZIN = "huis-9f3k2a"
+# Eenmalig, om te verhuizen: hier staat de oude inhoud. Zodra het huis eenmaal
+# gevuld is wordt hier niet meer gekeken en mag deze regel weg.
+OVERNEMEN = "https://routine-35aaa-default-rtdb.europe-west1.firebasedatabase.app/huis-9f3k2a/config.json"

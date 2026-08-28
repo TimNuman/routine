@@ -769,8 +769,8 @@
 
 <script>
 'use strict';
-// Ons dagritme — een enkele pagina, met de inhoud in een Firebase Realtime
-// Database. routine.json is alleen het zaadje voor een lege database; daarna
+// Ons dagritme — een enkele pagina, met de inhoud achter /api/opslag op de
+// eigen Worker. routine.json is alleen het zaadje voor een leeg huis; daarna
 // bewerk je alles in de app zelf, onder Instellingen.
 const VERSIE = '__VERSIE__';                     // gestempeld door de workflow
 
@@ -1077,7 +1077,6 @@ function normaliseer(ruw){
 }
 
 let config = normaliseer(STANDAARD);
-let instelling = null;          // { url, gezin } uit routine.json
 let assistentUrl = '';          // waar een bericht heen mag om uitgelezen te worden
 let assistentSleutel = '';      // meegestuurd woord, zodat niet iedereen erbij kan
 let ritme = 'dag';              // 'dag' of 'nacht'
@@ -1131,10 +1130,16 @@ function datumTekst(d){
 }
 
 // ---------------------------------------------------------------- opslag ---
-// Twee takken onder <gezin>: 'config' is de inhoud die je in de app bewerkt, en
-// per datum staat wie welke stap heeft afgevinkt. Een eigen tak per dag betekent
-// dat het ritme 's ochtends vanzelf leeg begint.
-const opslag = { basis:'', datum:'', datumStroom:null, configStroom:null };
+// Alles loopt via /api/opslag op dezelfde Worker die deze pagina uitserveert.
+// Daar staat één huis met twee soorten gegevens: 'inhoud' is wat je in de app
+// bewerkt, en per datum staat wie welke stap heeft afgevinkt. Een eigen sleutel
+// per dag betekent dat het ritme 's ochtends vanzelf leeg begint.
+//
+// En er blijft een WebSocket open. Wie iets afvinkt schrijft het naar het huis,
+// en iedereen die openstaat hoort het meteen — geen gepoll, en geen verschil
+// meer tussen de browser en de app op een telefoon.
+const API = '/api/opslag';
+const opslag = { datum:'', stroom:null, pogingen:0, wachten:null };
 
 function datumVan(d){
   const p = n => String(n).padStart(2, '0');
@@ -1142,13 +1147,25 @@ function datumVan(d){
 }
 function vandaag(){ return datumVan(new Date()); }
 
-function padConfig(){ return `${opslag.basis}/config.json`; }
-function padVink(r, stap, persoon){
-  const delen = [opslag.basis, opslag.datum];
-  if(r) delen.push(r);
-  if(stap) delen.push(stap);
-  if(persoon) delen.push(persoon);
-  return delen.join('/') + '.json';
+// De sleutel waaronder een vinkje staat: '<ritme>/<stap>/<persoon>'.
+function vinkSleutel(r, stap, persoon){ return `${r}/${stap}/${persoon}`; }
+
+async function apiHaal(pad, vragen){
+  const u = new URL(API + pad, location.href);
+  Object.entries(vragen || {}).forEach(([k, v]) => u.searchParams.set(k, v));
+  const res = await fetch(u, { cache:'no-store' });
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  return await res.json();
+}
+
+async function apiStuur(pad, wijze, lijf){
+  const res = await fetch(API + pad, {
+    method: wijze,
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify(lijf),
+  });
+  if(!res.ok) throw new Error('HTTP ' + res.status);
+  return await res.json().catch(() => null);
 }
 
 function alsPlat(){
@@ -1187,55 +1204,31 @@ function laadLokaalConfig(){
 
 async function schrijfVink(r, stap, persoon, aan){
   bewaarLokaal();
-  if(!opslag.basis) return;
   try{
-    await fetch(padVink(r, stap, persoon), aan
-      ? { method:'PUT', body:'true' }
-      : { method:'DELETE' });
+    await apiStuur('/vink', 'PUT',
+      { datum: opslag.datum, sleutel: vinkSleutel(r, stap, persoon), aan });
   }catch(err){ console.warn('opslaan mislukt:', err); }
 }
 
 async function wisRitme(r){
   bewaarLokaal();
-  if(!opslag.basis) return;
-  try{ await fetch(padVink(r), { method:'DELETE' }); }
+  try{ await apiStuur('/ritme', 'DELETE', { datum: opslag.datum, ritme: r }); }
   catch(err){ console.warn('wissen mislukt:', err); }
 }
 
 async function bewaarConfigOpAfstand(ruw){
-  const res = await fetch(padConfig(), { method:'PUT', body: JSON.stringify(ruw) });
-  if(!res.ok) throw new Error('HTTP ' + res.status);
+  await apiStuur('/inhoud', 'PUT', ruw);
 }
 
-function vulRitme(r, obj){
-  const kaart = new Map();
-  Object.entries(obj || {}).forEach(([stap, personen]) => {
-    const set = new Set(Object.keys(personen || {}).filter(p => personen[p]));
-    if(set.size) kaart.set(stap, set);
+// De vinkjes komen als platte sleutels binnen; hier worden het weer de kaarten
+// waar de rest van de app mee werkt.
+function vulVinkjes(vinkjes){
+  done = { dag: new Map(), nacht: new Map() };
+  Object.keys(vinkjes || {}).forEach(sleutel => {
+    const [r, stap, persoon] = String(sleutel).split('/');
+    if(done[r] && stap && persoon) zetVink(r, stap, persoon, true);
   });
-  done[r] = kaart;
-}
-
-// Firebase stuurt bij het openen de hele tak, en daarna per wijziging het pad
-// dat veranderd is. Alle vier de dieptes komen hier binnen.
-function verwerkDatum(padTekst, data){
-  const delen = String(padTekst || '/').split('/').filter(Boolean);
-  if(delen.length === 0){
-    ['dag','nacht'].forEach(r => vulRitme(r, (data || {})[r]));
-  }else if(delen.length === 1){
-    if(done[delen[0]]) vulRitme(delen[0], data);
-  }else if(delen.length === 2){
-    const [r, stap] = delen;
-    if(!done[r]) return;
-    const set = new Set(Object.keys(data || {}).filter(p => data[p]));
-    if(set.size) done[r].set(stap, set); else done[r].delete(stap);
-  }else{
-    const [r, stap, persoon] = delen;
-    if(!done[r]) return;
-    zetVink(r, stap, persoon, Boolean(data));
-  }
   bewaarLokaal();
-  render();
 }
 
 function pasConfigToe(ruw){
@@ -1246,64 +1239,80 @@ function pasConfigToe(ruw){
   return true;
 }
 
-function luister(url, opPut, opPatch){
-  if(!opslag.basis || typeof EventSource === 'undefined') return null;
-  try{
-    const bron = new EventSource(url);
-    const lees = handler => e => {
-      try{
-        const bericht = JSON.parse(e.data);
-        if(bericht && bericht.path !== undefined) handler(bericht.path, bericht.data);
-      }catch(err){ /* keep-alive-regels bevatten geen json */ }
-    };
-    bron.addEventListener('put', lees(opPut));
-    if(opPatch) bron.addEventListener('patch', lees(opPatch));
-    bron.onerror = () => console.warn('verbinding met de opslag hapert');
-    return bron;
-  }catch(err){ console.warn('luisteren mislukt:', err); return null; }
-}
-
-function luisterDatum(){
-  if(opslag.datumStroom) opslag.datumStroom.close();
-  opslag.datumStroom = luister(padVink(), verwerkDatum, (pad, data) => {
-    Object.entries(data || {}).forEach(([k, v]) =>
-      verwerkDatum((pad === '/' ? '' : pad) + '/' + k, v));
-  });
-}
-
-function luisterConfig(){
-  if(opslag.configStroom) opslag.configStroom.close();
-  opslag.configStroom = luister(padConfig(), (pad, data) => {
-    // Alleen de hele tak is meteen bruikbaar; bij een deelwijziging even
-    // helemaal ophalen — bewerken gebeurt zelden genoeg.
-    if(pad === '/') pasConfigToe(data);
-    else haalConfig().then(ruw => { if(ruw) pasConfigToe(ruw); });
-  });
-}
-
 async function haalConfig(){
-  if(!opslag.basis) return null;
   try{
-    const res = await fetch(padConfig(), { cache:'no-store' });
-    if(!res.ok) return null;
-    return await res.json();
+    const uit = await apiHaal('/inhoud');
+    return (uit && uit.inhoud) || null;
   }catch(err){ return null; }
 }
 
-// Oude dagen blijven anders voor altijd staan. Alles ouder dan een week weg —
-// 'config' valt buiten dat patroon en blijft dus staan.
-async function ruimOp(){
-  if(!opslag.basis) return;
+async function haalVinkjes(){
   try{
-    const grens = new Date();
-    grens.setDate(grens.getDate() - 7);
-    const oudste = datumVan(grens);
-    const res = await fetch(`${opslag.basis}.json?shallow=true`);
-    if(!res.ok) return;
-    Object.keys(await res.json() || {})
-      .filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d) && d < oudste)
-      .forEach(d => fetch(`${opslag.basis}/${d}.json`, { method:'DELETE' }).catch(() => {}));
-  }catch(err){ /* opruimen is nooit belangrijk genoeg om iets te laten mislukken */ }
+    const uit = await apiHaal('/dag', { datum: opslag.datum });
+    return (uit && uit.vinkjes) || null;
+  }catch(err){ return null; }
+}
+
+// ----------------------------------------------------------------- stroom ---
+function stroomAdres(){
+  const u = new URL(API + '/stroom', location.href);
+  u.protocol = u.protocol === 'https:' ? 'wss:' : 'ws:';
+  u.searchParams.set('datum', opslag.datum);
+  return u.toString();
+}
+
+function verwerkBericht(b){
+  if(!b || typeof b !== 'object') return;
+  if(b.soort === 'begin'){
+    if(b.inhoud) pasConfigToe(b.inhoud);
+    vulVinkjes(b.vinkjes);
+    render();
+    return;
+  }
+  if(b.soort === 'inhoud'){
+    if(b.inhoud) pasConfigToe(b.inhoud);
+    return;
+  }
+  if(b.soort === 'vink'){
+    const [r, stap, persoon] = String(b.sleutel || '').split('/');
+    if(!done[r] || !stap || !persoon) return;
+    zetVink(r, stap, persoon, Boolean(b.aan));
+    bewaarLokaal();
+    render();
+    return;
+  }
+  if(b.soort === 'ritme'){
+    if(!done[b.ritme]) return;
+    done[b.ritme] = new Map();
+    bewaarLokaal();
+    render();
+  }
+}
+
+// Blijft zichzelf opnieuw verbinden zolang de pagina openstaat: een telefoon die
+// uit zijn slaap komt heeft geen verbinding meer, en dat merk je pas als je het
+// probeert.
+function luister(){
+  if(typeof WebSocket === 'undefined') return;
+  let ws;
+  try{ ws = new WebSocket(stroomAdres()); }
+  catch(err){ return opnieuwVerbinden(); }
+  opslag.stroom = ws;
+  ws.onopen = () => { opslag.pogingen = 0; };
+  ws.onmessage = e => {
+    try{ verwerkBericht(JSON.parse(e.data)); }
+    catch(err){ /* geen json */ }
+  };
+  ws.onclose = () => { if(opslag.stroom === ws) opslag.stroom = null; opnieuwVerbinden(); };
+  ws.onerror = () => { /* onclose komt erachteraan */ };
+}
+
+function opnieuwVerbinden(){
+  if(opslag.wachten) return;
+  // Rustig aan als het blijft mislukken, maar nooit langer dan een halve minuut.
+  const pauze = Math.min(1000 * 2 ** opslag.pogingen, 30000);
+  opslag.pogingen += 1;
+  opslag.wachten = setTimeout(() => { opslag.wachten = null; luister(); }, pauze);
 }
 
 function bewaakDatum(){
@@ -1313,31 +1322,29 @@ function bewaakDatum(){
     done = { dag: new Map(), nacht: new Map() };
     bewaarLokaal();
     toepassen();
-    luisterDatum();
-    ruimOp();
+    // De stroom kijkt mee naar de nieuwe dag.
+    if(opslag.stroom && opslag.stroom.readyState === 1){
+      opslag.stroom.send(JSON.stringify({ soort:'dag', datum: opslag.datum }));
+    }
   }, 30000);
 }
 
 async function startOpslag(){
   opslag.datum = vandaag();
-  const url = tekst(instelling && instelling.url).replace(/\/+$/, '');
-  const gezin = tekst(instelling && instelling.gezin, 'gezin');
-  if(url) opslag.basis = `${url}/${encodeURIComponent(gezin)}`;
-
   laadLokaal();
   render();
-  if(!opslag.basis) return;
 
   const ruw = await haalConfig();
   if(ruw) pasConfigToe(ruw);
   else {
-    // Nog niets in de database: het huidige ritme wordt het zaadje.
+    // Nog niets in het huis: het huidige ritme wordt het zaadje.
     try{ await bewaarConfigOpAfstand(opgeschoond(alsRuweConfig())); }
-    catch(err){ console.warn('kon de inhoud niet in de database zetten:', err); }
+    catch(err){ console.warn('kon de inhoud niet bewaren:', err); }
   }
-  luisterConfig();
-  luisterDatum();
-  ruimOp();
+  const vinkjes = await haalVinkjes();
+  if(vinkjes) { vulVinkjes(vinkjes); render(); }
+
+  luister();
   bewaakDatum();
 }
 
@@ -2283,13 +2290,11 @@ async function verwijderEvent(id){
 async function bewaarInhoud(ruw, meld){
   const zeg = meld || toonFormMelding;
   const nieuw = opgeschoond(ruw);
-  if(opslag.basis){
-    try{
-      await bewaarConfigOpAfstand(nieuw);
-    }catch(err){
-      zeg('Opslaan in de database lukte niet (' + err.message + ').');
-      return false;
-    }
+  try{
+    await bewaarConfigOpAfstand(nieuw);
+  }catch(err){
+    zeg('Opslaan lukte niet (' + err.message + ').');
+    return false;
   }
   config = normaliseer(nieuw);
   bewaarLokaalConfig(nieuw);
@@ -3361,13 +3366,10 @@ async function bewaarVel(){
   if(!aantalStappen(maakGroepen(nieuw.dag)) && !aantalStappen(maakGroepen(nieuw.nacht))){
     return toonMelding('Er moet minstens één stap overblijven.');
   }
-  if(opslag.basis){
-    try{
-      await bewaarConfigOpAfstand(nieuw);
-    }catch(err){
-      return toonMelding('Opslaan in de database lukte niet (' + err.message
-        + '). Controleer de regels in Firebase — schrijven onder "config" moet toegestaan zijn.');
-    }
+  try{
+    await bewaarConfigOpAfstand(nieuw);
+  }catch(err){
+    return toonMelding('Opslaan lukte niet (' + err.message + ').');
   }
   config = normaliseer(nieuw);
   bewaarLokaalConfig(nieuw);
@@ -3490,7 +3492,6 @@ async function laden(){
     const res = await fetch('routine.json', { cache:'no-cache' });
     if(res.ok) ruw = await res.json();
   }catch(err){ console.warn('routine.json niet geladen:', err); }
-  instelling = (ruw && ruw.opslag) || null;
   assistentUrl = tekst(ruw && ruw.assistent);
   assistentSleutel = tekst(ruw && ruw.assistentSleutel);
   // De laatst bekende inhoud staat lokaal en schildert meteen; de database
