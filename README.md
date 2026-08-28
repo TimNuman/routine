@@ -109,9 +109,16 @@ vandaan komt. Er zijn drie soorten, en de keuze daartussen wordt voor je gemaakt
 
 Er wordt ook meegedacht. Plak je *Julia is woensdag jarig*, dan komt er naast
 die verjaardag een voorstel om zaterdag een cadeautje te halen — met in de bron
-dat het zelf bedacht is, zodat je het kunt wegklikken. Tik weg wat je niet wilt
-en zet de rest in één keer in de app. Wat er al staat komt er niet nog eens bij:
-dezelfde mail twee keer plakken levert niets dubbels op.
+dat het zelf bedacht is, zodat je het kunt wegklikken.
+
+Elk voorstel heeft een vinkje links en de regel zelf ernaast. Het vinkje bepaalt
+of het meegaat; de regel aanraken opent een formulier waarin je alles nog kunt
+omgooien — naam, icoon, dag of dagen, tijd, wie het betreft, en of het een
+agendaregel is of iets om af te vinken. Ook van *één dag* naar *elke week* en
+terug. **Bewaar** brengt je terug in de lijst, zodat je de volgende kunt
+nalopen; pas de knop onderaan zet alles in één keer in de app. Wat er al staat
+komt er niet nog eens bij: dezelfde mail twee keer plakken levert niets dubbels
+op.
 
 Weet de app iets niet, dan vraagt hij het eerst. Een schoolmail die het over
 groep 1-2 A tot en met D heeft is pas te plaatsen als bekend is wie waarin zit;

@@ -515,8 +515,10 @@
     border-radius:30px 30px 0 0; padding:10px 18px calc(env(safe-area-inset-bottom) + 18px);
     display:flex; flex-direction:column; max-height:84vh;
   }
-  #formulier{ z-index:71; }
-  #formScrim{ z-index:70; }
+  /* Het formulier komt ook vanuit het assistentieblad omhoog, dus het ligt
+     daarboven; de emoji-kiezer blijft weer bovenop het formulier. */
+  #formulier{ z-index:77; }
+  #formScrim{ z-index:76; }
   #kiesScrim{ z-index:80; }
   .kiezer{ z-index:81; }
   .bladkop2{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:10px; }
@@ -574,10 +576,16 @@
   }
   .vraagnaam i{ font-style:normal; font-size:19px; }
   .vondstlijst{ border-radius:22px; overflow:hidden; margin-top:4px; }
-  .vondst{
-    display:flex; align-items:flex-start; gap:11px; width:100%; text-align:left;
-    padding:12px 13px; background:none; border:none; cursor:pointer; color: var(--inkt);
+  .vondst{ display:flex; align-items:flex-start; width:100%; color: var(--inkt); }
+  .vinkknop{
+    flex:none; padding:12px 4px 12px 13px; background:none; border:none; cursor:pointer;
   }
+  .vondstvlak{
+    flex:1; min-width:0; display:flex; align-items:flex-start; gap:11px; text-align:left;
+    padding:12px 13px 12px 9px; background:none; border:none; cursor:pointer;
+    color:inherit; font-family:inherit;
+  }
+  .vondstpijl{ flex:none; align-self:center; color: var(--inkt-zacht); opacity:.5; }
   .vondst + .vondst{ border-top:1px solid var(--scheiding); }
   .vinkvak{
     width:23px; height:23px; border-radius:8px; flex:none; margin-top:2px;
@@ -2408,7 +2416,7 @@ function tekenAssiVoorstellen(){
   const kaart = el('div', 'vondstlijst glas');
   assi.items.forEach((item, i) => {
     const aan = Boolean(assi.keuze[i]);
-    const rij = knop('vondst' + (aan ? ' aan' : ''));
+    const rij = el('div', 'vondst' + (aan ? ' aan' : ''));
     const tekstvak = el('div', 'vondsttekst');
     tekstvak.appendChild(el('div', 'vondstnaam', item.tekst));
     const wanneer = item.soort === 'weekritme'
@@ -2418,16 +2426,134 @@ function tekenAssiVoorstellen(){
       .filter(Boolean).join(' · ');
     if(meta) tekstvak.appendChild(el('div', 'vondstmeta', meta));
     if(tekst(item.bron)) tekstvak.appendChild(el('div', 'vondstbron', '„' + tekst(item.bron) + '”'));
-    rij.append(el('div', 'vinkvak', aan ? '✓' : ''), el('div', 'vondsticoon', item.icoon), tekstvak);
-    rij.addEventListener('click', () => { assi.keuze[i] = !assi.keuze[i]; tekenAssistent(); });
+    const vink = knop('vinkknop');
+    vink.setAttribute('aria-label', aan ? 'Niet overnemen' : 'Wel overnemen');
+    vink.appendChild(el('div', 'vinkvak', aan ? '✓' : ''));
+    vink.addEventListener('click', () => { assi.keuze[i] = !assi.keuze[i]; tekenAssistent(); });
+
+    const vlak = knop('vondstvlak');
+    vlak.append(el('div', 'vondsticoon', item.icoon), tekstvak);
+    const pijl = el('div', 'vondstpijl');
+    pijl.appendChild(svgPijl());
+    vlak.appendChild(pijl);
+    vlak.addEventListener('click', () => bewerkVoorstel(i));
+
+    rij.append(vink, vlak);
     kaart.appendChild(rij);
   });
   assiInhoudEl.append(formKop('Voorstellen'), kaart);
   assiInhoudEl.appendChild(el('div', 'notitie',
-    'Tik weg wat je niet wilt. De rest komt in de app te staan; aanpassen kan daarna gewoon.'));
+    'Tik het vinkje weg wat je niet wilt, en de regel zelf om hem aan te passen. '
+    + 'Wat aangevinkt blijft staan gaat in één keer de app in.'));
   const aantal = assi.keuze.filter(Boolean).length;
   assiKnopEl.textContent = aantal === 1 ? 'Zet er 1 in de app' : `Zet er ${aantal} in de app`;
   assiKnopEl.disabled = !aantal;
+}
+
+// Een voorstel is nog niets; je kunt het hier nog helemaal omgooien — ook van
+// eenmalig naar elke week, of van een regel naar iets om af te vinken.
+function bewerkVoorstel(i){
+  const item = assi.items[i];
+  openFormulier(item.tekst || 'Voorstel', {
+    ...item,
+    wekelijks: item.soort === 'weekritme',
+    actie: item.soort === 'stap',
+    dagen: lijstVan(item.dagen),
+    wie: lijstVan(item.wie),
+    groep: tekst(item.groep) || eersteGroepnaam(config, item.ritme || 'dag'),
+  }, voorstelFormulier, g => {
+    if(!tekst(g.tekst)){
+      toonFormMelding('Vul een naam in.');
+      return false;
+    }
+    if(!g.wekelijks && !isDatum(g.datum)){
+      toonFormMelding('Vul een datum in, of zet hem op elke week.');
+      return false;
+    }
+    const soort = g.wekelijks ? 'weekritme' : (g.actie ? 'stap' : 'bijzonderheid');
+    assi.items[i] = {
+      soort,
+      icoon: tekst(g.icoon, '🎉'),
+      tekst: tekst(g.tekst),
+      tijd: soort === 'stap' ? '' : tekst(g.tijd),
+      tot: soort === 'stap' ? '' : tekst(g.tot),
+      datum: g.wekelijks ? '' : tekst(g.datum),
+      dagen: g.wekelijks ? dagenVan(g.dagen) : [],
+      wie: lijstVan(g.wie),
+      bron: tekst(item.bron),
+      ritme: g.ritme === 'nacht' ? 'nacht' : 'dag',
+      groep: tekst(g.groep),
+    };
+    assi.keuze[i] = true;
+    tekenAssistent();
+  });
+}
+
+// Alles wat een voorstel kan zijn in één formulier, want welke van de drie het
+// wordt is juist wat je hier nog wilt kunnen omzetten.
+function voorstelFormulier(gegevens){
+  const stuk = document.createDocumentFragment();
+  const regel = el('div', 'formregel');
+  regel.append(
+    emojiKnop(gegevens.icoon, 'Icoon', v => { gegevens.icoon = v; tekenFormulier(); }),
+    veld(gegevens.tekst, 'Wat is er', '', v => { gegevens.tekst = v; }),
+  );
+  stuk.append(formKop('Icoon en naam'), regel);
+
+  const vaak = el('div', 'chips glas');
+  [[true, '🔁 elke week'], [false, '📌 één dag']].forEach(([waarde, label]) => {
+    vaak.appendChild(chip(label, gegevens.wekelijks === waarde, () => {
+      gegevens.wekelijks = waarde;
+      tekenFormulier();
+    }));
+  });
+  stuk.append(formKop('Hoe vaak'), vaak);
+
+  if(gegevens.wekelijks){
+    stuk.append(formKop('Op welke dagen'), dagenKiezer(gegevens));
+    stuk.appendChild(el('div', 'notitie', gegevens.dagen.length
+      ? 'Komt bij het weekritme te staan.' : 'Geen dag gekozen betekent: elke dag.'));
+  }else{
+    const wanneer = el('div', 'formregel');
+    const datum = veld(gegevens.datum, '', 'datum', v => { gegevens.datum = v; });
+    datum.type = 'date';
+    wanneer.appendChild(datum);
+    stuk.append(formKop('Op welke dag'), wanneer);
+
+    const knopje = el('div', 'chips glas');
+    knopje.appendChild(chip('✅ afvinken die dag', Boolean(gegevens.actie), () => {
+      gegevens.actie = !gegevens.actie;
+      tekenFormulier();
+    }));
+    stuk.append(formKop('Wat voor iets'), knopje);
+  }
+
+  if(!gegevens.wekelijks && gegevens.actie){
+    const welk = el('div', 'chips glas');
+    [['dag','☀️ Ochtend'], ['nacht','🌙 Avond']].forEach(([waarde, label]) => {
+      welk.appendChild(chip(label, gegevens.ritme === waarde, () => {
+        gegevens.ritme = waarde;
+        gegevens.groep = eersteGroepnaam(config, waarde);
+        tekenFormulier();
+      }));
+    });
+    stuk.append(formKop('In welk ritme'), welk);
+
+    const kiezer = el('div', 'chips glas');
+    lijstVan(config[gegevens.ritme]).filter(g => tekst(g.groep)).forEach(g =>
+      kiezer.appendChild(chip(g.groep, gegevens.groep === g.groep, () => {
+        gegevens.groep = g.groep;
+        tekenFormulier();
+      })));
+    stuk.append(formKop('Bij welk onderdeel'), kiezer);
+    stuk.appendChild(el('div', 'notitie',
+      'Komt die dag als kaartje tussen de stappen te staan. Een stap heeft geen tijd.'));
+  }else{
+    stuk.append(formKop('Hoe laat'), tijdregel(gegevens, null));
+  }
+
+  stuk.append(formKop('Voor wie'), wieKiezer(gegevens));
+  return stuk;
 }
 
 function assiWieTekst(wie){
