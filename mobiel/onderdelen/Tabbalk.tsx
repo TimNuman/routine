@@ -24,8 +24,10 @@ export function Tabbalk({ breed }: { breed: boolean }) {
   const rand = useSafeAreaInsets();
   const router = useRouter();
   const hier = usePathname();
-  const { ritme } = useGezin();
-  const rustig = ritme === 'nacht' ? 'rgba(255,255,255,0.55)' : 'rgba(43,45,66,0.52)';
+  // Niet naar het ritme kijken maar naar het scherm: op de week en de
+  // instellingen is het licht, ook als het avondritme aanstaat.
+  const { avond } = useGezin();
+  const rustig = avond ? 'rgba(255,255,255,0.55)' : 'rgba(43,45,66,0.52)';
 
   const balk = (
     <Glas radius={breed ? 26 : 34} zwevend inhoudStijl={{ flexDirection: 'row', gap: 4, padding: breed ? 4 : 5 }}>

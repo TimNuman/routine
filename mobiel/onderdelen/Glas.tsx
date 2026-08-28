@@ -43,7 +43,9 @@ export function Glas({ radius = 22, zwevend = false, style, inhoudStijl, childre
     return {
       backgroundColor: interpolateColor(
         n, [0, 1],
-        [zwevend ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.62)', 'rgba(255,255,255,0.09)'],
+        zwevend
+          ? ['rgba(255,255,255,0.82)', 'rgba(255,255,255,0.13)']
+          : ['rgba(255,255,255,0.62)', 'rgba(255,255,255,0.09)'],
       ),
       borderColor: interpolateColor(
         n, [0, 1], ['rgba(255,255,255,0.75)', 'rgba(255,255,255,0.14)'],

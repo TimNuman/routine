@@ -32,7 +32,13 @@ export function Segment({ ritme, opKies, marge = 16 }: {
         />
       )}
       {([['dag', 'ochtend'], ['nacht', 'avond']] as const).map(([waarde, label]) => (
-        <Pressable key={waarde} onPress={() => opKies(waarde)} className="h-[42px] flex-1 items-center justify-center">
+        <Pressable
+          key={waarde}
+          onPress={() => opKies(waarde)}
+          accessibilityRole="button"
+          accessibilityState={{ selected: ritme === waarde }}
+          className="h-[42px] flex-1 items-center justify-center"
+        >
           <Knop actief={ritme === waarde}>{label}</Knop>
         </Pressable>
       ))}

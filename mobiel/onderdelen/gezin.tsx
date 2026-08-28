@@ -16,6 +16,9 @@ type Gezinswaarde = {
   fout: string;
   vinkjes: Vinkjes;
   ritme: Ritme;
+  // Of het scherm nú donker is. Dat is niet hetzelfde als ritme: het avondritme
+  // kleurt alleen die pagina, de week en de instellingen blijven licht.
+  avond: boolean;
   zetRitme: (r: Ritme) => void;
   tik: (sleutel: string) => void;
   // Bewaart de hele inhoud; geeft een reden terug als het misging, anders null.
@@ -100,8 +103,8 @@ export function Gezinshuis({ children }: { children: React.ReactNode }) {
   }, []);
 
   const waarde = useMemo(
-    () => ({ inhoud, fout, vinkjes, ritme, zetRitme, tik, bewaar, wis, nu, datum }),
-    [inhoud, fout, vinkjes, ritme, tik, bewaar, wis, nu, datum],
+    () => ({ inhoud, fout, vinkjes, ritme, avond, zetRitme, tik, bewaar, wis, nu, datum }),
+    [inhoud, fout, vinkjes, ritme, avond, tik, bewaar, wis, nu, datum],
   );
 
   return (
