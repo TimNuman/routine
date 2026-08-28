@@ -1,5 +1,7 @@
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import Animated, { interpolateColor, useAnimatedStyle } from 'react-native-reanimated';
+
+const AnimatedDruk = Animated.createAnimatedComponent(Pressable);
 import { Glas } from './Glas';
 import { useNacht, useNachtKleur } from './nacht';
 import { L } from './letters';
@@ -11,8 +13,9 @@ import type { Agendaitem, Persoon } from './soorten';
 // In de kolom ernaast staan ze gewoon onder elkaar: de eerste ligt gelijk met
 // de kaartjes, wat erna komt krijgt er ruimte boven. De streep boven Morgen is
 // daar niet nodig, die scheidt op een telefoon de stappen van wat er morgen is.
-export function Agenda({ blok, mensen, zij = false, eerste = false }: {
+export function Agenda({ blok, mensen, zij = false, eerste = false, opOpen }: {
   blok: Blok; mensen: Persoon[]; zij?: boolean; eerste?: boolean;
+  opOpen?: (item: Agendaitem) => void;
 }) {
   if (!blok.items.length) return null;
   const later = !!blok.later && !zij;
@@ -24,7 +27,7 @@ export function Agenda({ blok, mensen, zij = false, eerste = false }: {
         {blok.items.map((item, i) => (
           <View key={item.tekst + i}>
             {i > 0 && <Streep />}
-            <Rij item={item} mensen={mensen} />
+            <Rij item={item} mensen={mensen} opOpen={item.bijzonder ? opOpen : undefined} />
           </View>
         ))}
       </Glas>
@@ -32,7 +35,9 @@ export function Agenda({ blok, mensen, zij = false, eerste = false }: {
   );
 }
 
-function Rij({ item, mensen }: { item: Agendaitem; mensen: Persoon[] }) {
+function Rij({ item, mensen, opOpen }: {
+  item: Agendaitem; mensen: Persoon[]; opOpen?: (item: Agendaitem) => void;
+}) {
   const nacht = useNacht();
   const gekozen = item.wie.map((id) => mensen.find((p) => p.id === id)).filter(Boolean) as Persoon[];
   const wanneer = tijdTekst(item);
@@ -41,8 +46,10 @@ function Rij({ item, mensen }: { item: Agendaitem; mensen: Persoon[] }) {
     backgroundColor: interpolateColor(nacht.value, [0, 1], ['rgba(242,153,74,0.13)', 'rgba(242,153,74,0.16)']),
   }));
 
+  const Vak = opOpen ? AnimatedDruk : Animated.View;
   return (
-    <Animated.View
+    <Vak
+      onPress={opOpen ? () => opOpen(item) : undefined}
       style={[
         { flexDirection: 'row', alignItems: 'flex-start', gap: 12, paddingVertical: 12,
           paddingHorizontal: 16, minHeight: 54 },
@@ -61,7 +68,7 @@ function Rij({ item, mensen }: { item: Agendaitem; mensen: Persoon[] }) {
           </View>
         ) : null}
       </View>
-    </Animated.View>
+    </Vak>
   );
 }
 
@@ -83,7 +90,7 @@ function Merk({ persoon }: { persoon: Persoon }) {
   );
 }
 
-function Blokkop({ children, marge }: { children: string; marge: number }) {
+export function Blokkop({ children, marge = 22 }: { children: string; marge?: number }) {
   const kleur = useNachtKleur('#2B2D42', '#ffffff');
   return (
     <Animated.Text

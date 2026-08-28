@@ -1,9 +1,30 @@
 // Dezelfde vorm als de webversie: alles wat uit de database komt wordt hier
 // eerst gladgestreken, zodat de schermen niets meer hoeven te controleren.
-import type { Agendaitem, Eenmalig, Groep, Inhoud, Persoon, Stap, Weekitem } from './soorten';
+import type { Agendaitem, Eenmalig, Groep, Inhoud, Persoon, Ritme, Stap, Weekitem } from './soorten';
 
 export const DAGEN = ['zo', 'ma', 'di', 'wo', 'do', 'vr', 'za'];
 export const KLEUREN = ['#2FA37C', '#7C6BD6', '#D9724F', '#3B82C4', '#C2417E', '#E0A33E'];
+export const DAGNAMEN = ['zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag'];
+export const WEEKDAGEN = ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'];
+export const DAGLETTERS: Record<string, string> = { ma: 'M', di: 'D', wo: 'W', do: 'D', vr: 'V', za: 'Z', zo: 'Z' };
+export const MAANDEN = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli',
+  'augustus', 'september', 'oktober', 'november', 'december'];
+
+export function datumTekst(d: Date): string {
+  return `${DAGNAMEN[d.getDay()]} ${d.getDate()} ${MAANDEN[d.getMonth()]}`;
+}
+
+// De week waar een dag in valt, met maandag vooraan.
+export function weekVan(d: Date, weken = 0): Date[] {
+  const begin = new Date(d);
+  begin.setDate(begin.getDate() - ((begin.getDay() + 6) % 7) + weken * 7);
+  begin.setHours(0, 0, 0, 0);
+  return Array.from({ length: 7 }, (_, i) => {
+    const dag = new Date(begin);
+    dag.setDate(begin.getDate() + i);
+    return dag;
+  });
+}
 
 export function lijstVan<T>(waarde: unknown): T[] {
   if (Array.isArray(waarde)) return waarde.filter((x) => x != null) as T[];
@@ -219,6 +240,30 @@ export function opDeze(stap: Stap, d: Date): boolean {
 
 export function datumVan(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+export function aantalStappen(groepen: Groep[]): number {
+  return groepen.reduce((n, g) => n + g.stappen.length, 0);
+}
+
+// Alles wat op één datum staat, bij elkaar: het bijzondere uit de agenda en een
+// stap die maar één ochtend meedoet. Op datum, want zo kijk je ernaar — niet
+// per lijst waar het toevallig in bewaard wordt.
+export type EenmaligDing =
+  | { soort: 'event'; datum: string; item: Eenmalig }
+  | { soort: 'stap'; datum: string; ritme: Ritme; groep: Groep; stap: Stap };
+
+export function eenmaligeDingen(inhoud: Inhoud): EenmaligDing[] {
+  const uit: EenmaligDing[] = inhoud.events
+    .filter((e) => e.datum)
+    .map((item) => ({ soort: 'event', datum: item.datum, item }));
+  (['dag', 'nacht'] as Ritme[]).forEach((ritme) =>
+    inhoud[ritme].forEach((groep) =>
+      groep.stappen.forEach((stap) => {
+        if (stap.datum) uit.push({ soort: 'stap', datum: stap.datum, ritme, groep, stap });
+      })));
+  return uit.sort((a, b) => a.datum.localeCompare(b.datum)
+    || (a.soort === 'event' ? a.item.tijd : '').localeCompare(b.soort === 'event' ? b.item.tijd : ''));
 }
 
 export function wieDoetMee(stap: Stap, mensen: Persoon[]): Persoon[] {

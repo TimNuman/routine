@@ -16,4 +16,13 @@ export const L = {
   agendanaam: { fontFamily: 'Baloo2_700Bold', fontSize: 15.5 },
   agendatijd: { fontFamily: 'Nunito_800ExtraBold', fontSize: 12.5 },
   merk: { fontFamily: 'Baloo2_800ExtraBold', fontSize: 12.5 },
+  tab: { fontFamily: 'Nunito_800ExtraBold', fontSize: 10.5 },
+  tabbreed: { fontFamily: 'Nunito_800ExtraBold', fontSize: 13.5 },
+  wletter: { fontFamily: 'Baloo2_800ExtraBold', fontSize: 12 },
+  wdag: { fontFamily: 'Baloo2_800ExtraBold', fontSize: 17 },
+  kaartknop: { fontFamily: 'Baloo2_800ExtraBold', fontSize: 15.5 },
+  lijsttitel: { fontFamily: 'Baloo2_800ExtraBold', fontSize: 16 },
+  lijstuitleg: { fontFamily: 'Nunito_700Bold', fontSize: 12.5, marginTop: 1 },
+  leeg: { fontFamily: 'Nunito_700Bold', fontSize: 16, textAlign: 'center' },
+  voetnoot: { fontFamily: 'Nunito_700Bold', fontSize: 12, textAlign: 'center', marginTop: 20 },
 } as const;

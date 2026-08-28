@@ -10,7 +10,7 @@ export type Eenmalig = {
   id: string; icoon: string; tekst: string; tijd: string; tot: string;
   datum: string; wie: string[];
 };
-export type Agendaitem = Weekitem & { bijzonder?: boolean };
+export type Agendaitem = Weekitem & { id?: string; datum?: string; bijzonder?: boolean };
 
 export type Inhoud = {
   titel: string;
