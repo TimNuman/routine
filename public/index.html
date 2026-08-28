@@ -2048,11 +2048,13 @@ function dingFormulier(gegevens, opWeg){
   }
 
   const soort = el('div', 'chips glas');
-  soort.appendChild(chip('✅ afvinken', Boolean(gegevens.taak), () => {
-    gegevens.taak = !gegevens.taak;
-    if(gegevens.taak && !tekst(gegevens.groep)) gegevens.groep = eersteGroepnaam(bewerkBron(), gegevens.ritme);
-    tekenFormulier();
-  }));
+  [[true, '✅ taak'], [false, '🔔 reminder']].forEach(([waarde, label]) => {
+    soort.appendChild(chip(label, Boolean(gegevens.taak) === waarde, () => {
+      gegevens.taak = waarde;
+      if(waarde && !tekst(gegevens.groep)) gegevens.groep = eersteGroepnaam(bewerkBron(), gegevens.ritme);
+      tekenFormulier();
+    }));
+  });
   stuk.append(formKop('Wat voor iets'), soort);
 
   if(gegevens.taak){
@@ -2075,8 +2077,8 @@ function dingFormulier(gegevens, opWeg){
       })));
     stuk.append(formKop('Bij welk onderdeel'), kiezer);
     stuk.appendChild(el('div', 'notitie',
-      'Wordt een kaartje tussen de stappen, met een rondje per kind. Een kaartje heeft geen '
-      + 'eigen tijd — die hoort bij het onderdeel waar hij in staat.'));
+      'Een taak wordt een kaartje tussen de stappen, met een rondje per kind om af te vinken. '
+      + 'Een taak heeft geen eigen tijd — die hoort bij het onderdeel waar hij in staat.'));
   }else{
     // De uitleg loopt mee met wat je typt: de tijd bepaalt Overdag of Vanavond.
     const tijdnotitie = el('div', 'notitie', tijduitleg(gegevens));
@@ -3218,9 +3220,9 @@ function velEenmalig(){
   stuk.appendChild(erbij);
 
   stuk.appendChild(el('div', 'notitie',
-    'Alles wat maar één dag geldt staat hier, en alleen hier. Zet je ✅ afvinken aan, dan wordt het '
-    + 'die dag een kaartje tussen de stappen, in het onderdeel dat je kiest; anders is het een regel '
-    + 'bij Vandaag en Deze week. Wat geweest is verdwijnt vanzelf bij het eerstvolgende bewaren.'));
+    'Alles wat maar één dag geldt staat hier, en alleen hier. Een taak wordt die dag een kaartje '
+    + 'tussen de stappen, in het onderdeel dat je kiest; een reminder is een regel bij Vandaag en '
+    + 'Deze week. Wat geweest is verdwijnt vanzelf bij het eerstvolgende bewaren.'));
   return stuk;
 }
 
