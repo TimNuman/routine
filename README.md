@@ -67,14 +67,28 @@ Overdag.
 - **Naam en tijden** — hoe de app heet en vanaf welk uur hij op de avond opent.
 
 Elke regel werkt hetzelfde: rood rondje weghalen, met de greep rechts verslepen,
-en de regel zelf aanraken opent een blad met alles wat erbij hoort — icoon, naam,
-op welke dagen, en wie meedoet (bij het weekritme ook een tijd). **Bewaar** zet
-het terug in de lijst; annuleren laat alles zoals het was. In de lijst zie je per regel al staan op welke dagen hij valt en
-voor wie hij is.
+en de regel zelf aanraken opent **hetzelfde blad**, waar je ook vandaan komt.
+**Bewaar** zet het terug in de lijst; annuleren laat alles zoals het was. In de
+lijst zie je per regel al staan wanneer hij valt en voor wie hij is.
 
-Een stap hoort bij vaste weekdagen óf bij één datum. Zet de assistent er een op
-één dag neer, dan staat er **Alleen op** met die datum in het blad, en een knopje
-om hem alsnog elke week te laten terugkomen.
+Dat ene blad kan het omdat alles in deze app hetzelfde ding is met twee
+schakelaars: komt het **elke week** terug of geldt het **één dag**, en **vink je
+het af** of niet. Die vier combinaties zijn precies de vier plekken waar iets kan
+staan:
+
+| | elke week | één dag |
+|---|---|---|
+| **geen taak** | weekritme | een regel bij Vandaag |
+| **taak** | kaartje in een onderdeel | kaartje op één dag |
+
+Zet je *afvinken* aan, dan kies je erbij in welk ritme en bij welk onderdeel het
+hoort; staat het uit, dan vul je een tijd in. Omzetten mag altijd, en dan
+verhuist het ding echt: een stap uit het ochtendritme die je op *één dag* zet
+verdwijnt daar en duikt op bij **Eenmalig**.
+
+Elk scherm opent dat blad alleen met een andere beginstand — bij *Stap
+toevoegen* staat *elke week* en *afvinken* al aan met de juiste groep, bij *Item
+toevoegen* alleen *elke week*, bij *Eenmalig* staat het op *één dag*.
 
 Iconen typ je niet; overal waar er één staat opent een **kiezer** met emoji per
 onderwerp — dagritme, eten, spelen, huis, dieren, mensen, dingen.
