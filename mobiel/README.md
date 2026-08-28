@@ -46,13 +46,37 @@ echte build. Dat is nog niet geprobeerd — er is hier geen Mac en geen toestel.
 - **Melkglas.** De kaarten zijn nu halfdoorzichtig wit; echte blur vraagt om
   `expo-blur` (BlurView), dat op web `backdrop-filter` gebruikt.
 
+## Lettertypes
+
+`assets/fonts/` bevat bijgeknipte versies, gemaakt door `lettertypes.mjs`:
+
+```bash
+npm run lettertypes
+```
+
+Dat is nodig omdat Google de complete familie levert. Baloo 2 heeft het hele
+Devanagari-schrift aan boord (1585 glyphs), Nunito het Cyrillische (1098); deze
+app schrijft alleen Latijn. Bijknippen scheelt bijna een megabyte:
+
+| | van Google | bijgeknipt |
+|---|---|---|
+| Baloo 2 Bold | 410 KB | 43 KB |
+| Baloo 2 ExtraBold | 410 KB | 43 KB |
+| Nunito Bold | 129 KB | 35 KB |
+| Nunito ExtraBold | 129 KB | 35 KB |
+| **totaal** | **1,1 MB** | **155 KB** |
+
+Op web doet Google dit zelf — de `<link>` in `public/index.html` levert een woff2
+met alleen de latin-slice. Een app op een telefoon heeft een echt bestand nodig
+en kan dat niet, dus doen we het hier.
+
+Twee dingen die makkelijk misgaan: importeer per gewicht en niet via de
+pakket-index, anders bundelt Metro alle gewichten mee; en de pakketten zelf zijn
+`devDependencies`, want alleen het knipscript heeft ze nodig.
+
 ## Wat het kost
 
-De export is ongeveer 3,5 MB: 2,2 MB javascript en 1,2 MB lettertypes. De
-webversie is één bestand van 120 KB. Dat is de prijs van React Native op web, en
-het is goed om die te kennen voordat je verder gaat.
-
-Let op bij de lettertypes: importeer ze per gewicht
-(`@expo-google-fonts/baloo-2/700Bold/Baloo2_700Bold.ttf`) en niet via de
-pakket-index, anders bundelt Metro alle gewichten van de hele familie mee. Dat
-scheelde hier 3 MB.
+De export is ongeveer 2,6 MB, waarvan 2,2 MB javascript. De webversie is één
+bestand van 120 KB — plus lettertypes van Google, die daar niet in meetellen.
+Dat verschil is de prijs van React Native op web, en het is goed om die te kennen
+voordat je verder gaat.
