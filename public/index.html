@@ -2009,13 +2009,13 @@ function wieKiezer(gegevens){
 function bewerkBron(){ return concept || config; }
 
 // ---------------------------------------------------------------- één ding ---
-// Alles in deze app is hetzelfde ding met twee schakelaars: komt het elke week
-// terug of geldt het één dag, en vink je het af of niet. Die vier combinaties
-// zijn precies de vier plekken waar iets kan staan:
+// Alles in deze app is hetzelfde ding met twee schakelaars: herhaalt het zich of
+// geldt het één dag, en is het een taak of iets voor de agenda. Die vier
+// combinaties zijn precies de vier plekken waar iets kan staan:
 //
-//              elke week            één dag
-//   geen taak  weekritme            een regel bij Vandaag
-//   taak       stap met dagen       stap met een datum
+//            herhalen             één dag
+//   agenda   weekritme            een regel bij Vandaag
+//   taak     stap met dagen       stap met een datum
 //
 // Eén formulier dus, en elk scherm opent het met een andere beginstand.
 function dingFormulier(gegevens, opWeg){
@@ -2028,7 +2028,7 @@ function dingFormulier(gegevens, opWeg){
   stuk.append(formKop('Icoon en naam'), regel);
 
   const vaak = el('div', 'chips glas');
-  [[true, '🔁 elke week'], [false, '📌 één dag']].forEach(([waarde, label]) => {
+  [[true, '🔁 herhalen'], [false, '📌 één dag']].forEach(([waarde, label]) => {
     vaak.appendChild(chip(label, Boolean(gegevens.wekelijks) === waarde, () => {
       gegevens.wekelijks = waarde;
       tekenFormulier();
@@ -2048,7 +2048,7 @@ function dingFormulier(gegevens, opWeg){
   }
 
   const soort = el('div', 'chips glas');
-  [[true, '✅ taak'], [false, '🔔 reminder']].forEach(([waarde, label]) => {
+  [[true, '✅ taak'], [false, '🗓️ agenda']].forEach(([waarde, label]) => {
     soort.appendChild(chip(label, Boolean(gegevens.taak) === waarde, () => {
       gegevens.taak = waarde;
       if(waarde && !tekst(gegevens.groep)) gegevens.groep = eersteGroepnaam(bewerkBron(), gegevens.ritme);
@@ -2203,7 +2203,7 @@ function verplaatsDing(bron, plek, g){
     return false;
   }
   if(!g.wekelijks && !isDatum(g.datum)){
-    toonFormMelding('Vul een datum in, of zet hem op elke week.');
+    toonFormMelding('Vul een datum in, of zet hem op herhalen.');
     return false;
   }
   const id = plek && plek.waar === 'event' ? plek.item.id : nieuwId();
@@ -2506,7 +2506,7 @@ function tekenAssiVoorstellen(){
 }
 
 // Een voorstel is nog niets; je kunt het hier nog helemaal omgooien — ook van
-// eenmalig naar elke week, of van een regel naar iets om af te vinken.
+// eenmalig naar herhalend, of van agenda naar taak.
 function bewerkVoorstel(i){
   const item = assi.items[i];
   openFormulier(item.tekst || 'Voorstel', {
@@ -2518,7 +2518,7 @@ function bewerkVoorstel(i){
       return false;
     }
     if(!g.wekelijks && !isDatum(g.datum)){
-      toonFormMelding('Vul een datum in, of zet hem op elke week.');
+      toonFormMelding('Vul een datum in, of zet hem op herhalen.');
       return false;
     }
     assi.items[i] = { ...g, bron: tekst(item.bron) };
@@ -3221,8 +3221,8 @@ function velEenmalig(){
 
   stuk.appendChild(el('div', 'notitie',
     'Alles wat maar één dag geldt staat hier, en alleen hier. Een taak wordt die dag een kaartje '
-    + 'tussen de stappen, in het onderdeel dat je kiest; een reminder is een regel bij Vandaag en '
-    + 'Deze week. Wat geweest is verdwijnt vanzelf bij het eerstvolgende bewaren.'));
+    + 'tussen de stappen, in het onderdeel dat je kiest; agenda is een regel bij Vandaag en Deze '
+    + 'week. Wat geweest is verdwijnt vanzelf bij het eerstvolgende bewaren.'));
   return stuk;
 }
 

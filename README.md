@@ -55,11 +55,11 @@ alleen een eindtijd, dan telt die; is er helemaal geen tijd, dan staat het bij
 Overdag.
 
 - **Eenmalig** — alles wat maar één dag geldt, op datum bij elkaar, en alleen
-  hier. Elk zo'n ding is een **taak** of een **reminder**: een reminder is een
-  regel bij Vandaag en Deze week met een tijd, een taak wordt die dag een kaartje
-  tussen de stappen — en dan kies je erbij in welk ritme en bij welk onderdeel het
-  hoort. In de lijst staat ✅ voor de taken. Wat geweest is verdwijnt vanzelf bij
-  het eerstvolgende bewaren.
+  hier. Elk zo'n ding is een **taak** of **agenda**: agenda is een regel bij
+  Vandaag en Deze week met een tijd, een taak wordt die dag een kaartje tussen de
+  stappen — en dan kies je erbij in welk ritme en bij welk onderdeel het hoort. In
+  de lijst staat ✅ voor de taken. Wat geweest is verdwijnt vanzelf bij het
+  eerstvolgende bewaren.
 
   Bij *Ochtendritme* en *Avondritme* staan die eenmalige kaartjes bewust niet
   tussen de vaste stappen; daar meldt de kaart alleen dat ze er zijn.
@@ -71,24 +71,24 @@ en de regel zelf aanraken opent **hetzelfde blad**, waar je ook vandaan komt.
 lijst zie je per regel al staan wanneer hij valt en voor wie hij is.
 
 Dat ene blad kan het omdat alles in deze app hetzelfde ding is met twee
-schakelaars: komt het **elke week** terug of geldt het **één dag**, en is het een
-**taak** of een **reminder**. Een taak vink je af; een reminder staat er alleen.
-Die vier combinaties zijn precies de vier plekken waar iets kan staan:
+schakelaars: **herhalen** of **één dag**, en **taak** of **agenda**. Een taak
+vink je af; agenda staat er alleen. Die vier combinaties zijn precies de vier
+plekken waar iets kan staan:
 
-| | elke week | één dag |
+| | herhalen | één dag |
 |---|---|---|
-| **reminder** | weekritme | een regel bij Vandaag |
+| **agenda** | weekritme | een regel bij Vandaag |
 | **taak** | kaartje in een onderdeel | kaartje op één dag |
 
-Bij een taak kies je erbij in welk ritme en bij welk onderdeel hij hoort; bij een
-reminder vul je een tijd in. Omzetten mag altijd, en dan verhuist het ding echt:
+Bij een taak kies je erbij in welk ritme en bij welk onderdeel hij hoort; bij
+agenda vul je een tijd in. Omzetten mag altijd, en dan verhuist het ding echt:
 een stap uit het ochtendritme die je op *één dag* zet verdwijnt daar en duikt op
 bij **Eenmalig**.
 
 Elk scherm opent dat blad alleen met een andere beginstand — bij *Stap
-toevoegen* staat *elke week* en *taak* al aan met de juiste groep, bij *Item
-toevoegen* staat het op *elke week* en *reminder*, bij *Eenmalig* op *één dag* en
-*reminder*.
+toevoegen* staat *herhalen* en *taak* al aan met de juiste groep, bij *Item
+toevoegen* staat het op *herhalen* en *agenda*, bij *Eenmalig* op *één dag* en
+*agenda*.
 
 Iconen typ je niet; overal waar er één staat opent een **kiezer** met emoji per
 onderwerp — dagritme, eten, spelen, huis, dieren, mensen, dingen.
