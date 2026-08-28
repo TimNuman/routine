@@ -3,6 +3,7 @@ import { ActivityIndicator, ScrollView, Text, View, useWindowDimensions } from '
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeOut, LinearTransition } from 'react-native-reanimated';
+import { KORT, SNEL, natikken } from '../onderdelen/beweging';
 import { Rondje, Naampje } from '../onderdelen/Rondje';
 import { Segment } from '../onderdelen/Segment';
 import { Voortgang } from '../onderdelen/Voortgang';
@@ -108,9 +109,9 @@ export default function Ritmescherm() {
         {groepen.map((groep, gi) => (
           <Animated.View
             key={groep.groep + gi}
-            entering={FadeInDown.delay(60 + gi * 70).springify().damping(18)}
-            exiting={FadeOut.duration(140)}
-            layout={LinearTransition.springify().damping(20)}
+            entering={FadeInDown.duration(KORT.duration).delay(natikken(gi, 40))}
+            exiting={FadeOut.duration(SNEL.duration)}
+            layout={LinearTransition.duration(KORT.duration)}
             className="mt-6"
           >
             <View className="mb-2 flex-row items-baseline gap-2 px-1">
@@ -132,7 +133,7 @@ export default function Ritmescherm() {
                   opTik={tik}
                   avond={avond}
                   breed={100 / perRij}
-                  vertraag={80 + gi * 70 + si * 35}
+                  vertraag={natikken(gi * 3 + si)}
                 />
               ))}
             </View>
@@ -151,8 +152,8 @@ function Kaartje({ stap, inhoud, ritme, vinkjes, opTik, avond, breed, vertraag }
   const meedoen = wieDoetMee(stap, inhoud.mensen);
   return (
     <Animated.View
-      entering={FadeInDown.delay(vertraag).springify().damping(16)}
-      layout={LinearTransition.springify().damping(20)}
+      entering={FadeInDown.duration(KORT.duration).delay(vertraag)}
+      layout={LinearTransition.duration(KORT.duration)}
       style={{ width: `${breed}%`, paddingHorizontal: 5, paddingBottom: 10 }}
     >
       <View className={`items-center rounded-[26px] px-2 pb-3 pt-4 ${avond ? 'bg-white/[0.10]' : 'bg-white/60'}`}>

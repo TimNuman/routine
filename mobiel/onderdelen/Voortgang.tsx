@@ -1,6 +1,7 @@
 import { Text, View } from 'react-native';
-import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import { zacht } from './inhoud';
+import { RUSTIG } from './beweging';
 import type { Persoon } from './soorten';
 
 // Eén balkje per kind dat meeloopt met wat er af is.
@@ -38,8 +39,9 @@ export function Voortgang({ mensen, deel, avond }: {
 }
 
 function Balk({ deel, kleur }: { deel: number; kleur: string }) {
+  // Een balk die naveert leest als 'bijna klaar, toch niet'; dus gewoon lopen.
   const stijl = useAnimatedStyle(() => ({
-    width: withSpring(`${Math.round(deel * 100)}%`, { damping: 20, stiffness: 140 }),
+    width: withTiming(`${Math.round(deel * 100)}%`, { ...RUSTIG, easing: Easing.out(Easing.cubic) }),
   }));
   return <Animated.View style={[{ height: 6, borderRadius: 3, backgroundColor: kleur }, stijl]} />;
 }

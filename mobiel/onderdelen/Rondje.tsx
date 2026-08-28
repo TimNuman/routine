@@ -2,67 +2,85 @@ import { Pressable, Text, View } from 'react-native';
 import Animated, {
   useAnimatedStyle, useSharedValue, withSequence, withSpring, withTiming,
 } from 'react-native-reanimated';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { zacht } from './inhoud';
+import { SNEL, VEER, WIP } from './beweging';
 import type { Persoon } from './soorten';
 
-const VEER = { damping: 13, stiffness: 220, mass: 0.6 };
+const GROEN = '#34C759';
 
-// Het gezichtje dat je aantikt. Aanzetten geeft een kort zwelletje en de ring
-// vult zich; uitzetten loopt dezelfde weg terug. Alles op de ui-draad, dus het
-// blijft soepel terwijl de schrijfactie nog onderweg is.
-export function Rondje({ persoon, aan, avond, opTik }: {
-  persoon: Persoon; aan: boolean; avond?: boolean; opTik: () => void;
+// Precies zoals de webversie: het gezichtje staat er altijd, maar grijs en
+// flauw zolang het niet af is. Afvinken geeft het zijn kleur terug en zet er
+// een groene ring omheen. Geen vinkje dat het gezicht wegduwt.
+export function Rondje({ persoon, aan, avond, maat = 40, opTik }: {
+  persoon: Persoon; aan: boolean; avond?: boolean; maat?: number; opTik: () => void;
 }) {
-  const vulling = useSharedValue(aan ? 1 : 0);
-  const maat = useSharedValue(1);
+  const gezichtMaat = Math.round(maat * 0.85);
+  const teken = Math.round(maat * 0.525);
+
+  const vol = useSharedValue(aan ? 1 : 0);
   const ingedrukt = useSharedValue(0);
+  const pop = useSharedValue(1);
+  const eerste = useRef(true);
 
   useEffect(() => {
-    vulling.value = withSpring(aan ? 1 : 0, VEER);
-    if (aan) maat.value = withSequence(withSpring(1.18, { damping: 8, stiffness: 300 }), withSpring(1, VEER));
+    vol.value = withTiming(aan ? 1 : 0, SNEL);
+    // Alleen bij het aanzetten een wipje, en alleen als jij het aanzet — niet
+    // bij het eerste tekenen van het scherm.
+    if (aan && !eerste.current) {
+      pop.value = withSequence(withSpring(1.16, WIP), withSpring(1, VEER));
+    }
+    eerste.current = false;
   }, [aan]);
 
+  const heel = useAnimatedStyle(() => ({
+    transform: [{ scale: pop.value * (1 - ingedrukt.value * 0.1) }],
+  }));
+
+  // De ring ligt eromheen en zet zich er in één beweging omheen.
   const ring = useAnimatedStyle(() => ({
-    transform: [{ scale: maat.value * (1 - ingedrukt.value * 0.08) }],
-    borderColor: vulling.value > 0.5
-      ? persoon.kleur
-      : (avond ? 'rgba(255,255,255,0.18)' : 'rgba(43,45,66,0.14)'),
-    borderWidth: 2 + vulling.value,
+    opacity: vol.value,
+    transform: [{ scale: 0.9 + vol.value * 0.1 }],
   }));
 
   const gezicht = useAnimatedStyle(() => ({
-    opacity: 1 - vulling.value,
-    transform: [{ scale: 1 - vulling.value * 0.35 }, { rotate: `${vulling.value * -25}deg` }],
-  }));
-
-  const vink = useAnimatedStyle(() => ({
-    opacity: vulling.value,
-    transform: [{ scale: 0.5 + vulling.value * 0.5 }],
+    opacity: 0.4 + vol.value * 0.6,
+    borderColor: avond
+      ? `rgba(255,255,255,${0.18 * (1 - vol.value)})`
+      : `rgba(43,45,66,${0.14 * (1 - vol.value)})`,
   }));
 
   return (
     <Pressable
-      onPressIn={() => { ingedrukt.value = withTiming(1, { duration: 90 }); }}
-      onPressOut={() => { ingedrukt.value = withTiming(0, { duration: 160 }); }}
+      onPressIn={() => { ingedrukt.value = withTiming(1, { duration: 60 }); }}
+      onPressOut={() => { ingedrukt.value = withSpring(0, VEER); }}
       onPress={opTik}
-      hitSlop={6}
+      hitSlop={4}
       accessibilityRole="checkbox"
       accessibilityState={{ checked: aan }}
       accessibilityLabel={persoon.naam}
     >
-      <Animated.View
-        style={[{ width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center',
-                  backgroundColor: zacht(persoon.kleur, 0.16) }, ring]}
-      >
-        <Animated.View style={[{ position: 'absolute' }, gezicht]}>
-          <Text style={{ fontSize: 21 }}>{persoon.emoji}</Text>
-        </Animated.View>
+      <Animated.View style={[{ width: maat, height: maat, alignItems: 'center', justifyContent: 'center' }, heel]}>
         <Animated.View
-          style={[{ position: 'absolute', width: 26, height: 26, borderRadius: 13,
-                    alignItems: 'center', justifyContent: 'center', backgroundColor: persoon.kleur }, vink]}
+          pointerEvents="none"
+          style={[{
+            position: 'absolute',
+            width: gezichtMaat + 5, height: gezichtMaat + 5, borderRadius: (gezichtMaat + 5) / 2,
+            borderWidth: 2.5, borderColor: GROEN,
+          }, ring]}
+        />
+        <Animated.View
+          style={[{
+            width: gezichtMaat, height: gezichtMaat, borderRadius: gezichtMaat / 2,
+            alignItems: 'center', justifyContent: 'center', borderWidth: 1.5,
+            backgroundColor: zacht(persoon.kleur, 0.16),
+          }, gezicht]}
         >
-          <Text style={{ color: '#fff', fontSize: 15, fontWeight: '900', lineHeight: 18 }}>✓</Text>
+          {/* filter bestaat sinds de nieuwe architectuur ook op een telefoon;
+              valt hij weg, dan blijft de doorzichtigheid het verschil dragen. */}
+          <Text style={{ fontSize: teken, lineHeight: teken * 1.15, filter: aan ? undefined : 'grayscale(1)' } as any}>
+            {persoon.emoji}
+          </Text>
         </Animated.View>
       </Animated.View>
     </Pressable>

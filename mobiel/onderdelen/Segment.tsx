@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
 import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import { useState } from 'react';
+import { VEER } from './beweging';
 import type { Ritme } from './soorten';
 
 // De pil schuift naar de gekozen kant in plaats van te knipperen.
@@ -9,7 +10,7 @@ export function Segment({ ritme, avond, opKies }: {
 }) {
   const [breedte, zetBreedte] = useState(0);
   const pil = useAnimatedStyle(() => ({
-    transform: [{ translateX: withSpring(ritme === 'nacht' ? breedte / 2 : 0, { damping: 18, stiffness: 190 }) }],
+    transform: [{ translateX: withSpring(ritme === 'nacht' ? breedte / 2 : 0, VEER) }],
   }));
 
   return (
