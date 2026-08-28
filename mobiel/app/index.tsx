@@ -184,8 +184,8 @@ export default function Ritmescherm() {
 
           {metZij && inhoud && (
             <View style={{ width: m.zijkolom, flexShrink: 0 }}>
-              {blokken.map((blok) => (
-                <Agenda key={blok.kop} blok={blok} mensen={inhoud.mensen} zij />
+              {blokken.map((blok, i) => (
+                <Agenda key={blok.kop} blok={blok} mensen={inhoud.mensen} zij eerste={i === 0} />
               ))}
             </View>
           )}

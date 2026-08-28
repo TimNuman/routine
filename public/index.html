@@ -653,9 +653,11 @@
     .ritmelijf:not(.met-zij) .ritmezij{ display:none; }
     .ritmelijf.met-zij .ritmehoofd{ padding-top:31px; }
     .ritmezij .blokkop{ margin-top:0; }
-    .ritmezij .agendablok.later{
-      margin-top:22px; padding-top:0; border-top:none;
-    }
+    /* In de kolom staan de blokken gewoon onder elkaar: de eerste ligt gelijk
+       met de kaartjes ernaast, wat erna komt krijgt er ruimte boven. Morgen
+       heeft daar geen streep nodig, die scheidt op een telefoon de stappen. */
+    .ritmezij .agendablok.later{ padding-top:0; border-top:none; }
+    .ritmezij .agendablok + .agendablok{ margin-top:22px; }
     .voortgang{ margin-top:0; }
     .tabbalk{
       position:static; width:372px; flex:none; max-width:none; margin:0;

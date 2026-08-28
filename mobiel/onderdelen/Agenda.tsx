@@ -8,15 +8,16 @@ import type { Agendaitem, Persoon } from './soorten';
 
 // Het weekritme naast de stappen: wat er die dag verder nog is. Een eenmalig
 // ding krijgt een oranje randje links, zodat het opvalt tussen het vaste.
-// In de kolom ernaast staat het bovenaan gelijk met de kaartjes, dus daar
-// vervalt de marge boven de kop en de streep boven Morgen.
-export function Agenda({ blok, mensen, zij = false }: {
-  blok: Blok; mensen: Persoon[]; zij?: boolean;
+// In de kolom ernaast staan ze gewoon onder elkaar: de eerste ligt gelijk met
+// de kaartjes, wat erna komt krijgt er ruimte boven. De streep boven Morgen is
+// daar niet nodig, die scheidt op een telefoon de stappen van wat er morgen is.
+export function Agenda({ blok, mensen, zij = false, eerste = false }: {
+  blok: Blok; mensen: Persoon[]; zij?: boolean; eerste?: boolean;
 }) {
   if (!blok.items.length) return null;
   const later = !!blok.later && !zij;
   return (
-    <View style={{ marginTop: blok.later ? (zij ? 22 : 26) : 0, paddingTop: later ? 22 : 0 }}>
+    <View style={{ marginTop: zij ? (eerste ? 0 : 22) : blok.later ? 26 : 0, paddingTop: later ? 22 : 0 }}>
       {later && <Stippellijn />}
       <Blokkop marge={zij ? 0 : 22}>{blok.kop}</Blokkop>
       <Glas radius={26} inhoudStijl={{ overflow: 'hidden' }}>
