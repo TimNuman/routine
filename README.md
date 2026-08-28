@@ -71,23 +71,23 @@ en de regel zelf aanraken opent **hetzelfde blad**, waar je ook vandaan komt.
 lijst zie je per regel al staan wanneer hij valt en voor wie hij is.
 
 Dat ene blad kan het omdat alles in deze app hetzelfde ding is met twee
-schakelaars: **herhalen** of **één dag**, en **taak** of **agenda**. Een taak
+schakelaars: **herhalen** of **één keer**, en **taak** of **agenda**. Een taak
 vink je af; agenda staat er alleen. Die vier combinaties zijn precies de vier
 plekken waar iets kan staan:
 
-| | herhalen | één dag |
+| | herhalen | één keer |
 |---|---|---|
 | **agenda** | weekritme | een regel bij Vandaag |
 | **taak** | kaartje in een onderdeel | kaartje op één dag |
 
 Bij een taak kies je erbij in welk ritme en bij welk onderdeel hij hoort; bij
 agenda vul je een tijd in. Omzetten mag altijd, en dan verhuist het ding echt:
-een stap uit het ochtendritme die je op *één dag* zet verdwijnt daar en duikt op
-bij **Eenmalig**.
+een stap uit het ochtendritme die je op *één keer* zet verdwijnt daar en duikt
+op bij **Eenmalig**.
 
 Elk scherm opent dat blad alleen met een andere beginstand — bij *Stap
 toevoegen* staat *herhalen* en *taak* al aan met de juiste groep, bij *Item
-toevoegen* staat het op *herhalen* en *agenda*, bij *Eenmalig* op *één dag* en
+toevoegen* staat het op *herhalen* en *agenda*, bij *Eenmalig* op *één keer* en
 *agenda*.
 
 Iconen typ je niet; overal waar er één staat opent een **kiezer** met emoji per

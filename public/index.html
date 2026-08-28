@@ -2013,7 +2013,7 @@ function bewerkBron(){ return concept || config; }
 // geldt het één dag, en is het een taak of iets voor de agenda. Die vier
 // combinaties zijn precies de vier plekken waar iets kan staan:
 //
-//            herhalen             één dag
+//            herhalen             één keer
 //   agenda   weekritme            een regel bij Vandaag
 //   taak     stap met dagen       stap met een datum
 //
@@ -2028,7 +2028,7 @@ function dingFormulier(gegevens, opWeg){
   stuk.append(formKop('Icoon en naam'), regel);
 
   const vaak = el('div', 'chips glas');
-  [[true, '🔁 herhalen'], [false, '📌 één dag']].forEach(([waarde, label]) => {
+  [[true, '🔁 herhalen'], [false, '📌 één keer']].forEach(([waarde, label]) => {
     vaak.appendChild(chip(label, Boolean(gegevens.wekelijks) === waarde, () => {
       gegevens.wekelijks = waarde;
       tekenFormulier();
@@ -2060,7 +2060,7 @@ function dingFormulier(gegevens, opWeg){
   if(gegevens.taak){
     const bron = bewerkBron();
     const welk = el('div', 'chips glas');
-    [['dag','☀️ Ochtend'], ['nacht','🌙 Avond']].forEach(([waarde, label]) => {
+    [['dag','☀️ ochtend'], ['nacht','🌙 avond']].forEach(([waarde, label]) => {
       welk.appendChild(chip(label, gegevens.ritme === waarde, () => {
         gegevens.ritme = waarde;
         gegevens.groep = eersteGroepnaam(bron, waarde);
