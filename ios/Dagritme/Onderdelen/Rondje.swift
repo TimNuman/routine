@@ -37,7 +37,7 @@ struct Rondje: View {
     var body: some View {
         ZStack {
             if feest > 0 {
-                Vonken(kleur: GROEN, straal: gezicht * 0.78)
+                Vonken(kleur: GROEN, van: gezicht * 0.66, naar: gezicht * 1.15)
                     .id(feest)
             }
 
@@ -115,26 +115,52 @@ struct Rondje: View {
 // doen, omdat de waarde dan al op zijn eindstand staat.
 private struct Vonken: View {
     let kleur: Color
-    let straal: CGFloat
+    /// Waar de stipjes vandaan komen en waar ze heen gaan, vanaf het midden.
+    let van: CGFloat
+    let naar: CGFloat
+
+    private let aantal = 5
 
     @State private var uit: CGFloat = 0
 
     var body: some View {
         ZStack {
-            ForEach(0..<6, id: \.self) { i in
-                let hoek = Double(i) / 6 * 2 * .pi - .pi / 2
-                Circle()
-                    .fill(kleur)
-                    .frame(width: 5, height: 5)
-                    .scaleEffect(1 - uit * 0.65)
-                    // In het eerste stukje opkomen en daarna uitdoven, zodat er
-                    // in de ruststand niets te zien is.
-                    .opacity(Double(min(1, uit * 7) * (1 - uit)))
-                    .offset(x: CGFloat(cos(hoek)) * straal * uit,
-                            y: CGFloat(sin(hoek)) * straal * uit)
+            ForEach(0..<aantal, id: \.self) { i in
+                vonkje(i)
             }
         }
         .allowsHitTesting(false)
-        .onAppear { withAnimation(Beweging.vonk) { uit = 1 } }
+        // Eén tel wachten voor we beginnen. Zet je 'uit' meteen in onAppear op 1,
+        // dan valt dat samen met het invoegen van deze view en kan SwiftUI 1 als
+        // beginwaarde nemen; dan zie je alleen de eindstand.
+        .onAppear {
+            DispatchQueue.main.async {
+                withAnimation(Beweging.vonk) { uit = 1 }
+            }
+        }
+    }
+
+    // Los, en met alles uitgeschreven: als één uitdrukking was dit te zwaar voor
+    // de typecontrole.
+    //
+    // Twee dingen die eerst fout waren. Ze vertrokken vanuit het middelpunt, en
+    // daar zit het gezichtje overheen — tegen de tijd dat een stipje eronderuit
+    // kwam was het al bijna weggedoofd, dus was er nooit iets te zien. Ze beginnen
+    // nu net buiten de ring. En ze vlogen alle kanten op, ook recht naar beneden,
+    // waar de kaartrand ze afknipt; het is nu een waaier over de bovenkant.
+    private func vonkje(_ i: Int) -> some View {
+        let deel: Double = aantal > 1 ? Double(i) / Double(aantal - 1) : 0.5
+        let hoek: Double = -Double.pi * (0.19 + 0.62 * deel)
+        let afstand: CGFloat = van + (naar - van) * uit
+        let x: CGFloat = CGFloat(cos(hoek)) * afstand
+        let y: CGFloat = CGFloat(sin(hoek)) * afstand
+        // Vol blijven zolang hij onderweg is, en pas op het eind doven.
+        let sterkte: CGFloat = min(1.0, (1.0 - uit) * 1.8)
+        return Circle()
+            .fill(kleur)
+            .frame(width: 6, height: 6)
+            .scaleEffect(1.0 - uit * 0.45)
+            .opacity(Double(sterkte))
+            .offset(x: x, y: y)
     }
 }
