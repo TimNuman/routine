@@ -11,17 +11,21 @@ struct Scherm<Inhoudje: View>: View {
     let titel: String
     let onder: String
     var midden: AnyView? = nil
+    /// Komt naast de datum te staan, op dezelfde regel.
+    var naast: AnyView? = nil
     var smal: Bool = false
     @ViewBuilder var inhoud: () -> Inhoudje
 
     @Environment(Gezin.self) private var gezin
     @Environment(\.maten) private var m
     @Environment(\.palet) private var palet
+    @Environment(\.veegt) private var veegt
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            Lucht(donker: gezin.avond)
-
+            // De lucht staat in Hoofdscherm en niet hier: zou elk scherm zijn
+            // eigen achtergrond meebrengen, dan schuift die mee bij het wisselen.
+            // De kaartjes bewegen, de lucht verschiet alleen van kleur.
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     kopregel
@@ -50,6 +54,7 @@ struct Scherm<Inhoudje: View>: View {
                 .frame(maxWidth: m.maxBreed)
                 .frame(maxWidth: .infinity)
             }
+            .scrollDisabled(veegt)
             .refreshable { await gezin.herlaad() }
 
             // De zwevende menubalk staat niet hier maar in Hoofdscherm — zie
@@ -62,9 +67,15 @@ struct Scherm<Inhoudje: View>: View {
     // Is er ruimte, dan staan de schakelaar en het menu naast de titel.
     @ViewBuilder
     private var kopregel: some View {
-        let namen = VStack(alignment: .leading, spacing: 3) {
+        // Baloo heeft hoge stokken en diepe staarten, dus de regels staan al ver
+        // uit elkaar voordat er ruimte tussen zit; vandaar de negatieve maat.
+        let namen = VStack(alignment: .leading, spacing: -3) {
             Text(titel).letter(L.titel).foregroundStyle(palet.inkt)
-            Text(onder).letter(L.onder).foregroundStyle(palet.onder)
+            HStack(spacing: 10) {
+                Text(onder).letter(L.onder).foregroundStyle(palet.onder)
+                if let naast { naast }
+                Spacer(minLength: 0)
+            }
         }
         .padding(.leading, m.insprong)
 
@@ -125,10 +136,18 @@ struct Hoofdscherm: View {
                 // scherm opnieuw gemaakt worden, dan is er niets om vandaan te
                 // komen en verspringt hij toch.
                 if !m.breed {
+                    // Overal even ver van de rand, en dus met een hoek die
+                    // concentrisch meeloopt met die van het toestel. Hij loopt
+                    // door tot onder de veilige zone; de balk houdt zijn eigen
+                    // inhoud daar boven (zie Tabbalk).
                     Tabbalk(breed: false)
                         .frame(maxWidth: 492)
-                        .padding(.horizontal, 14)
-                        .padding(.bottom, 18)
+                        .padding(.horizontal, Tabbalk.rand)
+                        // Negatief, want de ZStack zet hem boven de veilige zone
+                        // neer en daar moet hij juist doorheen: 8 punten van de
+                        // echte schermrand, net als links en rechts.
+                        .padding(.bottom, Tabbalk.rand - Randen.onder)
+                        .ignoresSafeArea(.container, edges: .bottom)
                         // Komt er een blad omhoog, dan gaat de balk mee naar
                         // beneden — hij hoort bij de schermen, niet bij wat
                         // eroverheen staat.
@@ -140,6 +159,7 @@ struct Hoofdscherm: View {
             }
             .environment(\.maten, m)
             .environment(\.palet, Palet(donker: gezin.avond))
+            .environment(\.veegt, veeg != 0)
             .animation(Beweging.nacht, value: gezin.avond)
             // Naast de rol in plaats van eroverheen: een veeg omhoog blijft
             // scrollen, en pas als je duidelijk opzij gaat doen wij iets.

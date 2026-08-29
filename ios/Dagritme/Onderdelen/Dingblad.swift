@@ -30,7 +30,6 @@ struct Dingblad: View {
         _g = State(initialValue: ding)
     }
 
-    private var avondVanaf: Int { bron().uur }
 
     var body: some View {
         ZStack {
@@ -78,7 +77,6 @@ struct Dingblad: View {
                     }
                 }
             }
-            if g.dagen.isEmpty { Notitie("Geen dag gekozen betekent: elke dag.") }
         } else {
             Formkop("Op welke dag")
             DatePicker("Datum", selection: datum, displayedComponents: [.date])
@@ -121,11 +119,6 @@ struct Dingblad: View {
                     Chip(label: naam, aan: g.groep == naam) { g.groep = naam }
                 }
             }
-            Notitie("""
-                Een taak wordt een kaartje tussen de stappen, met een rondje per kind om \
-                af te vinken. Een taak heeft geen eigen tijd — die hoort bij het \
-                onderdeel waar hij in staat.
-                """)
         } else {
             Formkop("Hoe laat")
             HStack(spacing: 10) {
@@ -134,7 +127,6 @@ struct Dingblad: View {
                 Veld(waarde: $g.tot, plaatshouder: "tot", soort: .tijd)
                 Spacer(minLength: 0)
             }
-            Notitie(tijduitleg)
         }
     }
 
@@ -197,7 +189,7 @@ struct Dingblad: View {
     // De tijd bepaalt of iets bij Overdag of bij Vanavond komt te staan; dat is
     // beter uit te leggen dan het te laten zien nadat je hebt bewaard.
     private var tijduitleg: String {
-        let vanaf = avondVanaf
+        let vanaf = AVONDVANAF
         guard let uur = uurUitTijd(g.tijd) else {
             return g.avond
                 ? "Zonder tijd blijft dit bij Vanavond staan, zoals het was. Vul een tijd in vanaf \(vanaf):00 om dat zo te houden."

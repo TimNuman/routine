@@ -59,6 +59,7 @@ enum L {
     static let tekstknop = Letter(font: nunitoZwaar(16))
     static let grootknop = Letter(font: balooZwaar(16))
     static let opnieuw = Letter(font: nunitoZwaar(13))
+    static let veegweg = Letter(font: nunitoZwaar(12.5))
     static let bezig = Letter(font: balooZwaar(16))
     static let vraagnaam = Letter(font: balooZwaar(15.5))
     static let vondstnaam = Letter(font: balooZwaar(15.5))

@@ -13,7 +13,7 @@ enum Velsoort: String, Identifiable {
         case .nacht: return "Avondritme"
         case .overzicht: return "Weekritme"
         case .eenmalig: return "Eenmalig"
-        case .algemeen: return "Naam en tijden"
+        case .algemeen: return "Naam"
         }
     }
 }
@@ -207,10 +207,6 @@ struct Velscherm: View {
                 )
             }
         }
-        Notitie("""
-            Iedereen hier krijgt een eigen rondje bij elke stap. Namen wijzigen mag: de vinkjes \
-            blijven bij de juiste persoon.
-            """)
     }
 
     // Anders wijst een stap naar iemand die er niet meer is.
@@ -235,16 +231,21 @@ struct Velscherm: View {
             let vast = groep.stappen.filter { $0.datum.isEmpty }
             let eenmalig = groep.stappen.count - vast.count
             Bewerkkaart {
-                HStack(spacing: 8) {
-                    Minknop(titel: "Groep verwijderen") {
-                        concept[ritme].remove(at: gi)
-                        opnieuw()
+                // Een groep met stappen erin weghalen zou die stappen stilletjes
+                // meenemen. Eerst leeghalen, dan pas de groep.
+                Veegweg(titel: "Groep weg",
+                        beletsel: groep.stappen.isEmpty ? nil : "eerst de stappen",
+                        opWeg: {
+                            concept[ritme].removeAll { $0 === groep }
+                            opnieuw()
+                        }) {
+                    HStack(spacing: 8) {
+                        Veld(waarde: band(groep, \.groep), plaatshouder: "Groep")
+                        Veld(waarde: band(groep, \.tijd), plaatshouder: "tijd", soort: .tijd)
                     }
-                    Veld(waarde: band(groep, \.groep), plaatshouder: "Groep")
-                    Veld(waarde: band(groep, \.tijd), plaatshouder: "tijd", soort: .tijd)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 12)
                 }
-                .padding(.vertical, 10)
-                .padding(.horizontal, 12)
                 Streepje()
 
                 ForEach(Array(vast.enumerated()), id: \.element.id) { (i, stap) in
@@ -294,7 +295,7 @@ struct Velscherm: View {
 
     @ViewBuilder
     private var weekvel: some View {
-        let vanaf = concept.uur
+        let vanaf = AVONDVANAF
         Bewerkkaart {
             ForEach(Array(concept.overzicht.enumerated()), id: \.element.id) { (i, item) in
                 Bewerkrij(
@@ -376,12 +377,7 @@ struct Velscherm: View {
             }
         }
 
-        Notitie("""
-            Alles wat maar één dag geldt staat hier, en alleen hier. Een taak wordt die dag een \
-            kaartje tussen de stappen, in het onderdeel dat je kiest; agenda is een regel bij \
-            Vandaag en Deze week. Wat geweest is verdwijnt vanzelf bij het eerstvolgende bewaren.
-            """)
-    }
+            }
 
     private struct Eenmaligrij {
         var icoon: String
@@ -436,20 +432,7 @@ struct Velscherm: View {
             .padding(.vertical, 8)
             .padding(.horizontal, 12)
             .frame(minHeight: 58)
-            Streepje()
-            HStack(spacing: 10) {
-                Text("🌙").font(.system(size: 24)).frame(width: 46)
-                Text("Avond begint om")
-                    .letter(L.rijlabel)
-                    .foregroundStyle(INKT)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Veld(waarde: band(concept, \.avondVanaf), plaatshouder: "15", soort: .getal)
-            }
-            .padding(.vertical, 8)
-            .padding(.horizontal, 12)
-            .frame(minHeight: 58)
         }
-        Notitie("Open je de app na dit uur, dan staat het avondritme meteen klaar.")
     }
 }
 

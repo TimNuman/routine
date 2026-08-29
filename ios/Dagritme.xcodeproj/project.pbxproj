@@ -6,6 +6,16 @@
 	objectVersion = 70;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		D1A00000000000000000AA02 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D1A0000000000000000000E0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D1A0000000000000000000E1;
+			remoteInfo = Dagritme;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		D1A0000000000000000000A1 /* Dagritme.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dagritme.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D1A0000000000000000000A2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -184,16 +194,6 @@
 			targetProxy = D1A00000000000000000AA02 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
-
-/* Begin PBXContainerItemProxy section */
-		D1A00000000000000000AA02 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = D1A0000000000000000000E0 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = D1A0000000000000000000E1;
-			remoteInfo = Dagritme;
-		};
-/* End PBXContainerItemProxy section */
 
 /* Begin XCBuildConfiguration section */
 		D1A00000000000000000FF01 /* Debug */ = {

@@ -59,6 +59,20 @@ enum Trilling {
     static func tik() { licht.impactOccurred(intensity: 0.6) }
 }
 
+// Wordt er op dit moment tussen schermen geveegd? De rol eronder moet dan
+// stilstaan: anders scrol je verticaal weg terwijl je al horizontaal onderweg
+// bent, en komt het nieuwe scherm binnen op een plek waar je niet om vroeg.
+private struct VeegtSleutel: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    var veegt: Bool {
+        get { self[VeegtSleutel.self] }
+        set { self[VeegtSleutel.self] = newValue }
+    }
+}
+
 // Binnenkomen: iets glijdt op zijn plek, met een vertraging naar zijn volgorde.
 // Bovenste eerst, onderste laatst.
 //

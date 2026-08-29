@@ -272,19 +272,20 @@ struct Bewerkrij: View {
     // Een tijdvak, de dagen én wie het betreft passen niet naast de naam.
     var tweeregels: Bool = false
     let wegTitel: String
+    /// Staat hier iets in, dan mag deze regel niet weg en zegt de veegstrook waarom.
+    var beletsel: String? = nil
     let opWeg: () -> Void
     let opOpenen: () -> Void
 
     @Environment(\.palet) private var palet
 
     private var meta: [String] { [tijd, dagen, extra].filter { !$0.isEmpty } }
-    private var heeftMeta: Bool { !meta.isEmpty || !wie.isEmpty || !kleur.isEmpty }
+    private var heeftMeta: Bool { !meta.isEmpty || !wie.isEmpty }
 
     var body: some View {
         VStack(spacing: 0) {
             if !eerste { Streepje() }
-            HStack(spacing: 10) {
-                Minknop(titel: wegTitel, opTik: opWeg)
+            Veegweg(titel: wegTitel, beletsel: beletsel, opWeg: opWeg) {
                 Button(action: opOpenen) {
                     if tweeregels {
                         VStack(alignment: .leading, spacing: 3) {
@@ -305,10 +306,10 @@ struct Bewerkrij: View {
                     }
                 }
                 .buttonStyle(.druk)
+                .padding(.vertical, 8)
+                .padding(.horizontal, 12)
+                .frame(minHeight: 58)
             }
-            .padding(.vertical, 8)
-            .padding(.horizontal, 12)
-            .frame(minHeight: 58)
         }
     }
 
@@ -319,7 +320,13 @@ struct Bewerkrij: View {
             .letter(L.rijlabel)
             .foregroundStyle(label.isEmpty ? palet.zacht : palet.inkt)
             .lineLimit(1)
-            .frame(maxWidth: .infinity, alignment: .leading)
+        // Het bolletje hoort bij de naam en niet bij de rand van de kaart: als
+        // het helemaal rechts staat moet je twee keer kijken om te zien van wie
+        // het is.
+        if !kleur.isEmpty {
+            Circle().fill(Color(hex: kleur)).frame(width: 16, height: 16)
+        }
+        Spacer(minLength: 0)
     }
 
     @ViewBuilder
@@ -329,9 +336,6 @@ struct Bewerkrij: View {
                 Text(t).letter(L.rijdagen).foregroundStyle(palet.zacht).lineLimit(1)
             }
             if !wie.isEmpty { Gezichten(mensen: wie, maat: 24) }
-            if !kleur.isEmpty {
-                Circle().fill(Color(hex: kleur)).frame(width: 16, height: 16)
-            }
         }
     }
 }

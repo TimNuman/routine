@@ -11,6 +11,12 @@ import SwiftUI
 struct Tabbalk: View {
     var breed: Bool
 
+    /// Hoe ver de balk overal van de schermrand blijft. De hoek van het toestel
+    /// is ongeveer 55; even ver inspringen en dan 55 min die maat aanhouden
+    /// geeft een hoek die netjes meeloopt in plaats van er los in te liggen.
+    static let rand: CGFloat = 8
+    private static let toestelhoek: CGFloat = 55
+
     @Environment(Gezin.self) private var gezin
     @Environment(\.palet) private var palet
     @Namespace private var ruimte
@@ -28,7 +34,9 @@ struct Tabbalk: View {
     ]
 
     var body: some View {
-        Glas(radius: breed ? 26 : 34, zwevend: true) {
+        Glas(radius: breed ? 26 : 30,
+             onderRadius: breed ? 26 : Self.toestelhoek - Self.rand,
+             zwevend: true) {
             HStack(spacing: 4) {
                 ForEach(knoppen, id: \.tab) { knop in
                     let aan = gezin.tab == knop.tab
@@ -40,6 +48,9 @@ struct Tabbalk: View {
                 }
             }
             .padding(breed ? 4 : 5)
+            // De balk loopt door tot onderaan het scherm, maar wat erin staat
+            // blijft boven de streep van de thuisknop.
+            .padding(.bottom, breed ? 0 : max(0, Randen.onder - Self.rand - 5))
         }
     }
 

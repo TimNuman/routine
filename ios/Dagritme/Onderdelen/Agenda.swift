@@ -36,6 +36,7 @@ struct Agenda: View {
                         ForEach(Array(blok.items.enumerated()), id: \.offset) { (i, item) in
                             if i > 0 { Rectangle().fill(palet.streep).frame(height: 1).padding(.horizontal, 16) }
                             Rij(item: item, mensen: mensen,
+                                eerste: i == 0, laatste: i == blok.items.count - 1,
                                 opOpen: item.bijzonder ? opOpen : nil)
                                 .trapje(vanaf, i + 1, richting)
                         }
@@ -50,6 +51,8 @@ struct Agenda: View {
 private struct Rij: View {
     let item: Agendaitem
     let mensen: [Persoon]
+    var eerste: Bool = false
+    var laatste: Bool = false
     var opOpen: ((Agendaitem) -> Void)?
 
     @Environment(\.palet) private var palet
@@ -89,7 +92,11 @@ private struct Rij: View {
         .frame(minHeight: 54, alignment: .leading)
         .background(item.bijzonder ? palet.bijzonder : .clear)
         .overlay(alignment: .leading) {
-            if item.bijzonder { Rectangle().fill(ORANJE).frame(width: 3) }
+            if item.bijzonder {
+                Randje(boven: eerste ? 24.5 : 0, onder: laatste ? 24.5 : 0)
+                    .stroke(ORANJE, style: StrokeStyle(lineWidth: 3, lineCap: .butt))
+                    .padding(.leading, 1.5)
+            }
         }
         .contentShape(Rectangle())
 
@@ -174,5 +181,35 @@ private extension View {
         } else {
             self
         }
+    }
+}
+
+// Het oranje randje links bij iets eenmaligs. Bovenaan en onderaan de kaart buigt
+// het mee met de ronde hoek in plaats van er vierkant tegenaan te stoppen — een
+// rechte streep wordt daar door het glas afgeknipt, en dat zie je.
+private struct Randje: Shape {
+    var boven: CGFloat
+    var onder: CGFloat
+
+    func path(in r: CGRect) -> Path {
+        var pad = Path()
+        let b = min(boven, r.height / 2)
+        let o = min(onder, r.height / 2)
+
+        if b > 0 {
+            pad.move(to: CGPoint(x: r.minX + b, y: r.minY))
+            pad.addQuadCurve(to: CGPoint(x: r.minX, y: r.minY + b),
+                             control: CGPoint(x: r.minX, y: r.minY))
+        } else {
+            pad.move(to: CGPoint(x: r.minX, y: r.minY))
+        }
+
+        pad.addLine(to: CGPoint(x: r.minX, y: r.maxY - o))
+
+        if o > 0 {
+            pad.addQuadCurve(to: CGPoint(x: r.minX + o, y: r.maxY),
+                             control: CGPoint(x: r.minX, y: r.maxY))
+        }
+        return pad
     }
 }

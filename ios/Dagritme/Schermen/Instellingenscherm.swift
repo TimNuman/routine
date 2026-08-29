@@ -26,8 +26,7 @@ struct Instellingenscherm: View {
                              uitleg: "school, sport en wat er verder is") { vel = .overzicht }
                     Lijstrij(icoon: "📌", titel: "Eenmalig",
                              uitleg: eenmaligTekst(inhoud)) { vel = .eenmalig }
-                    Lijstrij(icoon: "⚙️", titel: "Naam en tijden",
-                             uitleg: "\(inhoud.titel) · avond vanaf \(inhoud.avondVanaf):00") {
+                    Lijstrij(icoon: "⚙️", titel: "Naam", uitleg: inhoud.titel) {
                         vel = .algemeen
                     }
                 }

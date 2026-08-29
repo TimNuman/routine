@@ -96,17 +96,15 @@ final class RuwEvent: Identifiable {
 
 final class Ruw {
     var titel: String
-    var avondVanaf: String
     var mensen: [RuwPersoon]
     var dag: [RuwGroep]
     var nacht: [RuwGroep]
     var overzicht: [RuwItem]
     var events: [RuwEvent]
 
-    init(titel: String, avondVanaf: String, mensen: [RuwPersoon], dag: [RuwGroep],
+    init(titel: String, mensen: [RuwPersoon], dag: [RuwGroep],
          nacht: [RuwGroep], overzicht: [RuwItem], events: [RuwEvent]) {
         self.titel = titel
-        self.avondVanaf = avondVanaf
         self.mensen = mensen
         self.dag = dag
         self.nacht = nacht
@@ -119,7 +117,6 @@ final class Ruw {
         set { if ritme == .dag { dag = newValue } else { nacht = newValue } }
     }
 
-    var uur: Int { uurOf(avondVanaf, 15) }
 }
 
 // ------------------------------------------------------------------- datums ---
@@ -146,9 +143,16 @@ func kortDatum(_ waarde: String) -> String {
     return "\(dag) \(delen.day ?? 0) \(MAANDEN[(delen.month ?? 1) - 1].prefix(3))"
 }
 
+// 'ma, di, wo, do, vr' is een rijtje dat je moet lezen; 'weekdagen' is een woord
+// dat je herkent. Alleen bij precies die vijf, en bij precies za en zo — een
+// bijna-week blijft gewoon zijn dagen opnoemen, want daar zit de uitzondering in
+// en die wil je juist zien.
 func dagenTekst(_ dagen: [String]) -> String {
     if dagen.isEmpty || dagen.count >= WEEKDAGEN.count { return "" }
-    return WEEKDAGEN.filter { dagen.contains($0) }.joined(separator: ", ")
+    let gekozen = Set(dagen)
+    if gekozen == DOORDEWEEKS { return "weekdagen" }
+    if gekozen == WEEKEND { return "weekend" }
+    return WEEKDAGEN.filter { gekozen.contains($0) }.joined(separator: ", ")
 }
 
 func dagenVan(_ waarde: [String]) -> [String] {
@@ -173,7 +177,6 @@ func uurOf(_ waarde: String, _ terugval: Int) -> Int {
 func alsRuw(_ inhoud: Inhoud) -> Ruw {
     Ruw(
         titel: inhoud.titel,
-        avondVanaf: String(inhoud.avondVanaf),
         mensen: inhoud.mensen.map {
             RuwPersoon(id: $0.id, naam: $0.naam, emoji: $0.emoji, kleur: $0.kleur,
                        kenmerken: $0.kenmerken)
@@ -270,7 +273,7 @@ private func schoonEvents(_ bron: [RuwEvent]) -> [[String: Any]] {
 }
 
 func opgeschoond(_ c: Ruw) -> [String: Any] {
-    let vanaf = uurOf(c.avondVanaf, 15)
+    let vanaf = AVONDVANAF
     let titel = c.titel.trimmingCharacters(in: .whitespacesAndNewlines)
     return [
         "titel": titel.isEmpty ? "Ons dagritme" : titel,

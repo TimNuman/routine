@@ -69,7 +69,7 @@ final class Gezin {
             vinkjes = v
             fout = ""
             if !gekozen {
-                ritme = kalender.component(.hour, from: Date()) >= c.avondVanaf ? .nacht : .dag
+                ritme = kalender.component(.hour, from: Date()) >= AVONDVANAF ? .nacht : .dag
             }
         } catch {
             fout = error.localizedDescription

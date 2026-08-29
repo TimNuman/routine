@@ -19,6 +19,7 @@ struct Blad<Inhoudje: View>: View {
     @Environment(\.palet) private var palet
     @State private var zichtbaar = false
     @State private var inhoudHoogte: CGFloat = 0
+    @State private var sleep: CGFloat = 0
 
     var body: some View {
         GeometryReader { ruimte in
@@ -29,11 +30,11 @@ struct Blad<Inhoudje: View>: View {
                     .onTapGesture { sluit(opAf) }
                     .accessibilityLabel("Sluiten")
 
-                kaart
+                kaart(ruimte.size.height)
                     .frame(maxWidth: 520)
                     .frame(maxHeight: ruimte.size.height * 0.86, alignment: .bottom)
                     .frame(maxWidth: .infinity)
-                    .offset(y: zichtbaar ? 0 : ruimte.size.height)
+                    .offset(y: (zichtbaar ? 0 : ruimte.size.height) + sleep)
             }
         }
         // Alleen de rand van het toestel negeren, niet die van het toetsenbord:
@@ -45,21 +46,34 @@ struct Blad<Inhoudje: View>: View {
         }
     }
 
-    private var kaart: some View {
+    private func kaart(_ hoog: CGFloat) -> some View {
         Glas(radius: 30, zwevend: true) {
             VStack(spacing: 0) {
-                Capsule()
-                    .fill(INKT.opacity(0.22))
-                    .frame(width: 44, height: 5)
-                    .padding(.top, 10)
-                    .padding(.bottom, 10)
+                // De greep en de kopregel zijn samen het handvat. Alleen daar,
+                // en niet over de hele kaart: eronder zit een rol, en die twee
+                // zouden om dezelfde vinger vechten.
+                VStack(spacing: 0) {
+                    Capsule()
+                        .fill(INKT.opacity(0.22))
+                        .frame(width: 44, height: 5)
+                        .padding(.top, 10)
+                        .padding(.bottom, 10)
 
-                HStack(spacing: 10) {
+                // De titel ligt eroverheen in plaats van ertussen. Er stond hier
+                // een `Color.clear` als tegenwicht om hem te centreren, maar een
+                // Color is ook in de hoogte onbegrensd: die rekte de hele
+                // kopregel uit tot wat er over was, en duwde zo het blad open
+                // met de titel zwevend in het midden.
+                HStack {
                     Tekstknop("Annuleer") { sluit(opAf) }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Text(titel).letter(L.bladkop).foregroundStyle(palet.inkt).lineLimit(1)
-                    Color.clear.frame(maxWidth: .infinity)
+                    Spacer(minLength: 0)
                 }
+                .overlay {
+                    Text(titel).letter(L.bladkop).foregroundStyle(palet.inkt).lineLimit(1)
+                }
+                }
+                .contentShape(Rectangle())
+                .gesture(sleepGebaar(hoog))
 
                 if !melding.isEmpty {
                     Melding(melding).padding(.top, 12)
@@ -101,6 +115,22 @@ struct Blad<Inhoudje: View>: View {
             .padding(.horizontal, 18)
             .padding(.bottom, Randen.onder + 18)
         }
+    }
+
+    // Meegeven met de vinger, en voorbij een derde van het blad — of met genoeg
+    // vaart — laten gaan. Omhoog trekken doet niets: er zit niets boven.
+    private func sleepGebaar(_ hoog: CGFloat) -> some Gesture {
+        DragGesture(minimumDistance: 10)
+            .onChanged { g in sleep = max(0, g.translation.height) }
+            .onEnded { g in
+                let ver = g.predictedEndTranslation.height
+                if g.translation.height > 120 || ver > 300 {
+                    withAnimation(Beweging.bladAf) { sleep = hoog }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.20, execute: opAf)
+                } else {
+                    withAnimation(Beweging.veer) { sleep = 0 }
+                }
+            }
     }
 
     // Dichtdoen mag korter dan opengaan: je weet al wat er weggaat.

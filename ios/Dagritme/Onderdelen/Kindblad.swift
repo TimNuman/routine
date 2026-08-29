@@ -75,7 +75,6 @@ struct Kindblad: View {
                         .accessibilityLabel("Kleur")
                     }
                 }
-                Notitie("Naam wijzigen mag: de vinkjes blijven bij de juiste persoon.")
 
                 // Wat een bericht van school of de club nodig heeft om bij het
                 // juiste kind uit te komen. Meestal vult dit zich vanzelf: de
@@ -84,24 +83,19 @@ struct Kindblad: View {
                 Bewerkkaart {
                     ForEach(Array(g.paren.enumerated()), id: \.element.id) { (i, _) in
                         if i > 0 { Streepje() }
-                        HStack(spacing: 10) {
-                            Minknop(titel: "Kenmerk verwijderen") {
-                                g.paren.remove(at: i)
+                        Veegweg(titel: "Weg", opWeg: { g.paren.remove(at: i) }) {
+                            HStack(spacing: 10) {
+                                Veld(waarde: $g.paren[i].sleutel, plaatshouder: "waarvan")
+                                Veld(waarde: $g.paren[i].waarde, plaatshouder: "welke")
                             }
-                            Veld(waarde: $g.paren[i].sleutel, plaatshouder: "waarvan")
-                            Veld(waarde: $g.paren[i].waarde, plaatshouder: "welke")
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 12)
+                            .frame(minHeight: 58)
                         }
-                        .padding(.vertical, 8)
-                        .padding(.horizontal, 12)
-                        .frame(minHeight: 58)
                     }
                     Toevoegrij("Kenmerk toevoegen") { g.paren.append(Kenmerkpaar()) }
                 }
-                Notitie("""
-                    Bijvoorbeeld schoolgroep 1-2B, of team JO9-3. Daarmee weet de app bij wie \
-                    een bericht van school of de club hoort.
-                    """)
-            }
+                            }
 
             if kiezer {
                 Emojikiezer(titel: "Kies een gezicht", huidig: g.emoji,

@@ -7,6 +7,14 @@ let DAGEN = ["zo", "ma", "di", "wo", "do", "vr", "za"]
 let KLEUREN = ["#2FA37C", "#7C6BD6", "#D9724F", "#3B82C4", "#C2417E", "#E0A33E"]
 let DAGNAMEN = ["zondag", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag"]
 let WEEKDAGEN = ["ma", "di", "wo", "do", "vr", "za", "zo"]
+let DOORDEWEEKS: Set<String> = ["ma", "di", "wo", "do", "vr"]
+let WEEKEND: Set<String> = ["za", "zo"]
+
+// De avond begint om vijf uur. Dit stond als instelling in de app, maar een
+// getal dat uitleg nodig heeft kost meer dan het oplevert; niemand zette hem ooit
+// anders. Wat er in het huis bewaard staat blijft staan — de webversie leest hem
+// nog — deze app kijkt er alleen niet meer naar.
+let AVONDVANAF = 17
 let DAGLETTERS = ["ma": "M", "di": "D", "wo": "W", "do": "D", "vr": "V", "za": "Z", "zo": "Z"]
 let MAANDEN = ["januari", "februari", "maart", "april", "mei", "juni", "juli",
                "augustus", "september", "oktober", "november", "december"]
@@ -230,7 +238,6 @@ func normaliseer(_ ruw: Json) -> Inhoud {
     }
     var uit = Inhoud(
         titel: ruw["titel"].tekst("Ons dagritme"),
-        avondVanaf: ruw["avondVanaf"].getal.map { Int(floor($0)) } ?? 15,
         mensen: mensen,
         dag: maakGroepen(ruw["dag"]),
         nacht: maakGroepen(ruw["nacht"]),
@@ -277,7 +284,7 @@ func itemsVan(_ inhoud: Inhoud, _ d: Date) -> [Agendaitem] {
 // Morgen blijft compleet — daar is nog niets voorbij.
 func ritmeBlokken(_ inhoud: Inhoud, _ ritme: Ritme, _ nu: Date) -> [Blok] {
     let klok = minuutVanDeDag(nu)
-    let overdag = { (d: Date) in itemsVan(inhoud, d).filter { !isAvond($0, inhoud.avondVanaf) } }
+    let overdag = { (d: Date) in itemsVan(inhoud, d).filter { !isAvond($0, AVONDVANAF) } }
 
     if ritme != .nacht {
         return [Blok(kop: "Vandaag", items: opTijd(overdag(nu), voorbij: klok))]
@@ -285,7 +292,7 @@ func ritmeBlokken(_ inhoud: Inhoud, _ ritme: Ritme, _ nu: Date) -> [Blok] {
     let morgen = kalender.date(byAdding: .day, value: 1, to: nu) ?? nu
     return [
         Blok(kop: "Vanavond",
-             items: opTijd(itemsVan(inhoud, nu).filter { isAvond($0, inhoud.avondVanaf) },
+             items: opTijd(itemsVan(inhoud, nu).filter { isAvond($0, AVONDVANAF) },
                            voorbij: klok)),
         Blok(kop: "Morgen", items: opTijd(overdag(morgen), voorbij: nil), later: true),
     ]

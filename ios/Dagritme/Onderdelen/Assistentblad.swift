@@ -57,11 +57,6 @@ struct Assistentblad: View {
                 case .plakken:
                     Formkop("De tekst", eerste: true)
                     Plakvak(waarde: $bericht)
-                    Notitie("""
-                        Wat elke week terugkomt gaat naar het weekritme, wat één dag geldt naar \
-                        Eenmalig. Er wordt ook meegedacht: bij een verjaardag hoort een cadeautje \
-                        op tijd. Alleen wat je hier typt gaat mee, plus de voornamen van de kinderen.
-                        """)
 
                 case .bezig:
                     Bezig("Even kijken wat erin staat…")
@@ -85,7 +80,6 @@ struct Assistentblad: View {
                                 opGeen: { antwoord[persoon.id] = [] }
                             )
                         }
-                        Notitie("Wat je kiest blijft bij het kind staan, dus dit hoeft maar één keer.")
                     }
 
                 case .voorstellen:
@@ -105,10 +99,6 @@ struct Assistentblad: View {
                         }
                     }
                     .padding(.top, 4)
-                    Notitie("""
-                        Tik het vinkje weg wat je niet wilt, en de regel zelf om hem aan te passen. \
-                        Wat aangevinkt blijft staan gaat in één keer de app in.
-                        """)
                 }
             }
 

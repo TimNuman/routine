@@ -10,12 +10,24 @@ import SwiftUI
 
 struct Glas<Inhoudje: View>: View {
     var radius: CGFloat = 22
+    /// Voor wie per hoek iets anders wil. De menubalk onderaan heeft dat nodig:
+    /// zijn onderkant loopt mee met de hoek van het toestel, zijn bovenkant zou
+    /// met diezelfde maat een pil worden.
+    var onderRadius: CGFloat? = nil
     var zwevend: Bool = false
     @ViewBuilder var inhoud: () -> Inhoudje
 
     @Environment(\.palet) private var palet
 
-    private var vorm: RoundedRectangle { RoundedRectangle(cornerRadius: radius, style: .continuous) }
+    private var vorm: UnevenRoundedRectangle {
+        UnevenRoundedRectangle(
+            topLeadingRadius: radius,
+            bottomLeadingRadius: onderRadius ?? radius,
+            bottomTrailingRadius: onderRadius ?? radius,
+            topTrailingRadius: radius,
+            style: .continuous
+        )
+    }
 
     var body: some View {
         inhoud()

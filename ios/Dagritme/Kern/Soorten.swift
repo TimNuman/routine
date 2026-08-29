@@ -95,7 +95,6 @@ struct Agendaitem: Hashable {
 
 struct Inhoud: Hashable {
     var titel: String
-    var avondVanaf: Int
     var mensen: [Persoon]
     var dag: [Groep]
     var nacht: [Groep]

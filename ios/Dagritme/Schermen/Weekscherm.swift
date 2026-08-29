@@ -18,6 +18,32 @@ struct Weekscherm: View {
     // inhoud in één keer terug het huis in.
     @State private var werk: Ruw?
 
+    // Hoe ver je van deze week af zit, als woord. 'Over 3 weken' zegt meer dan
+    // een datum die je zelf moet natellen.
+    private var weektitel: String {
+        switch verschuiving {
+        case 0: return "Deze week"
+        case 1: return "Volgende week"
+        case -1: return "Vorige week"
+        case let n where n > 1: return "Over \(n) weken"
+        default: return "\(-verschuiving) weken terug"
+        }
+    }
+
+    // Sta je al op vandaag, dan heeft de knop niets te doen en hoort hij er niet.
+    private var opVandaag: Bool {
+        verschuiving == 0 && datumVan(gekozen) == datumVan(gezin.nu)
+    }
+
+    private func naarVandaag() {
+        richting = gekozen > gezin.nu ? -1 : 1
+        Trilling.keuze()
+        withAnimation(Beweging.schuif) {
+            verschuiving = 0
+            gekozenDag = nil
+        }
+    }
+
     // De gekozen dag, of anders vandaag zolang die in beeld is; in een andere
     // week de maandag.
     private var gekozen: Date {
@@ -33,16 +59,21 @@ struct Weekscherm: View {
         guard let inhoud = gezin.inhoud else { return [] }
         let items = itemsVan(inhoud, gekozen)
         let vandaag = datumVan(gekozen) == datumVan(gezin.nu)
+        // Op tijd, met wat geen tijd heeft bovenaan. Niets valt hier weg: je
+        // bladert door een dag en wil hem heel zien, ook het stuk dat geweest is.
         return [
-            Blok(kop: "Overdag", items: items.filter { !isAvond($0, inhoud.avondVanaf) }),
+            Blok(kop: "Overdag",
+                 items: opTijd(items.filter { !isAvond($0, AVONDVANAF) }, voorbij: nil)),
             Blok(kop: vandaag ? "Vanavond" : "'s Avonds",
-                 items: items.filter { isAvond($0, inhoud.avondVanaf) }),
+                 items: opTijd(items.filter { isAvond($0, AVONDVANAF) }, voorbij: nil)),
         ].filter { !$0.items.isEmpty }
     }
 
     var body: some View {
         ZStack {
-            Scherm(titel: "Deze week", onder: datumTekst(gekozen), smal: true) {
+            Scherm(titel: weektitel, onder: datumTekst(gekozen),
+                   naast: opVandaag ? nil : AnyView(Vandaagknop(opTik: naarVandaag)),
+                   smal: true) {
                 Weekstrip(
                     nu: gezin.nu,
                     verschuiving: verschuiving,
@@ -189,5 +220,27 @@ struct Weekscherm: View {
             bezig = false
             if fout == nil { blad = nil }
         }
+    }
+}
+
+// Terug naar nu, naast de datum. Komt alleen op als je ergens anders staat —
+// een knop die niets doet is er een te veel.
+private struct Vandaagknop: View {
+    let opTik: () -> Void
+
+    @Environment(\.palet) private var palet
+
+    var body: some View {
+        Button(action: opTik) {
+            Text("vandaag")
+                .letter(L.opnieuw)
+                .foregroundStyle(ORANJE)
+                .padding(.vertical, 5)
+                .padding(.horizontal, 12)
+                .background(Capsule().fill(ORANJE.opacity(0.14)))
+                .overlay(Capsule().strokeBorder(ORANJE.opacity(0.30), lineWidth: 1))
+        }
+        .buttonStyle(.druk(0.94))
+        .transition(.scale.combined(with: .opacity))
     }
 }
