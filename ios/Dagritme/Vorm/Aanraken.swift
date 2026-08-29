@@ -59,20 +59,6 @@ enum Trilling {
     static func tik() { licht.impactOccurred(intensity: 0.6) }
 }
 
-// Wordt er op dit moment tussen schermen geveegd? De rol eronder moet dan
-// stilstaan: anders scrol je verticaal weg terwijl je al horizontaal onderweg
-// bent, en komt het nieuwe scherm binnen op een plek waar je niet om vroeg.
-private struct VeegtSleutel: EnvironmentKey {
-    static let defaultValue = false
-}
-
-extension EnvironmentValues {
-    var veegt: Bool {
-        get { self[VeegtSleutel.self] }
-        set { self[VeegtSleutel.self] = newValue }
-    }
-}
-
 // Binnenkomen: iets glijdt op zijn plek, met een vertraging naar zijn volgorde.
 // Bovenste eerst, onderste laatst.
 //
@@ -107,17 +93,6 @@ extension View {
     func komtBinnen(_ index: Int = 0, vanaf: CGFloat = 0,
                     afstand: CGFloat = 22, animatie: Animation = Beweging.kort) -> some View {
         modifier(Binnenkomst(index: index, vanaf: vanaf, afstand: afstand, animatie: animatie))
-    }
-
-    /// Van tabblad wisselen. Bewust een klein zetje in plaats van een hele
-    /// schuif: elk scherm brengt zijn eigen lucht en zijn eigen menubalk mee, en
-    /// die staan tijdens de overgang even allebei in beeld. Een halve slag over
-    /// het scherm zou dat laten zien; 34 punten en een overvloeier niet.
-    func wisseltMee(_ richting: CGFloat) -> some View {
-        transition(.asymmetric(
-            insertion: .offset(x: 34 * richting).combined(with: .opacity),
-            removal: .offset(x: -34 * richting).combined(with: .opacity)
-        ))
     }
 
     /// Oud gaat de ene kant uit, nieuw komt van de andere. `richting` is 1 als je

@@ -19,7 +19,6 @@ struct Scherm<Inhoudje: View>: View {
     @Environment(Gezin.self) private var gezin
     @Environment(\.maten) private var m
     @Environment(\.palet) private var palet
-    @Environment(\.veegt) private var veegt
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -54,7 +53,6 @@ struct Scherm<Inhoudje: View>: View {
                 .frame(maxWidth: m.maxBreed)
                 .frame(maxWidth: .infinity)
             }
-            .scrollDisabled(veegt)
             .refreshable { await gezin.herlaad() }
 
             // De zwevende menubalk staat niet hier maar in Hoofdscherm — zie
@@ -99,47 +97,25 @@ struct Scherm<Inhoudje: View>: View {
 
 // Welk scherm er openstaat, met de maten en de kleuren eromheen. Alles wat
 // daaronder hangt — ook de bladen die eroverheen komen — leest ze hier uit.
-//
-// Hier zit ook het vegen tussen de schermen. Het scherm volgt je vinger een
-// stukje mee — genoeg om te voelen dat er iets achter zit — en laat aan het eind
-// van de rij merken dat het ophoudt door nog maar een derde zo ver mee te geven.
-// Loslaten doet hetzelfde als op de balk drukken.
 struct Hoofdscherm: View {
     @Environment(Gezin.self) private var gezin
-
-    @State private var veeg: CGFloat = 0
 
     var body: some View {
         GeometryReader { ruimte in
             let m = Maten(breedte: ruimte.size.width)
 
             ZStack(alignment: .bottom) {
-                // De lucht van de app zelf, achter het scherm dat meeschuift.
-                // Zonder deze zou je onder je vinger het kale venster zien: elk
-                // scherm brengt zijn eigen lucht mee, en die schuift mee weg.
+                // De lucht van de app zelf. Elk scherm bracht er eerst een eigen
+                // mee, en die schoof dan mee weg bij het wisselen.
                 Lucht(donker: gezin.avond)
 
-                Group {
-                    switch gezin.tab {
-                    case .ritme: Ritmescherm()
-                    case .week: Weekscherm()
-                    case .instellingen: Instellingenscherm()
-                    }
-                }
-                .id(gezin.tab)
-                .wisseltMee(CGFloat(gezin.tabRichting))
-                .offset(x: veeg)
+                Tabinhoud(tab: gezin.tab)
 
                 // De menubalk blijft staan terwijl het scherm eronder wisselt.
-                // Dat is niet alleen rustiger — het is de voorwaarde voor het
-                // oranje vlak dat van knop naar knop schuift: zou de balk per
-                // scherm opnieuw gemaakt worden, dan is er niets om vandaan te
-                // komen en verspringt hij toch.
+                // Dat is de voorwaarde voor het oranje vlak dat van knop naar knop
+                // schuift: zou de balk per scherm opnieuw gemaakt worden, dan is
+                // er niets om vandaan te komen.
                 if !m.breed {
-                    // Overal even ver van de rand, en dus met een hoek die
-                    // concentrisch meeloopt met die van het toestel. Hij loopt
-                    // door tot onder de veilige zone; de balk houdt zijn eigen
-                    // inhoud daar boven (zie Tabbalk).
                     Tabbalk(breed: false)
                         .frame(maxWidth: 492)
                         .padding(.horizontal, Tabbalk.rand)
@@ -159,69 +135,41 @@ struct Hoofdscherm: View {
             }
             .environment(\.maten, m)
             .environment(\.palet, Palet(donker: gezin.avond))
-            .environment(\.veegt, veeg != 0)
             .animation(Beweging.nacht, value: gezin.avond)
-            // Naast de rol in plaats van eroverheen: een veeg omhoog blijft
-            // scrollen, en pas als je duidelijk opzij gaat doen wij iets.
-            .simultaneousGesture(veegbeweging)
         }
-    }
-
-    private var veegbeweging: some Gesture {
-        DragGesture(minimumDistance: 18)
-            .onChanged { g in
-                guard mag(g.translation) else { return }
-                veeg = rek(g.translation.width)
-            }
-            .onEnded(klaar)
-    }
-
-    // Alleen als het duidelijk opzij is, en niet terwijl er een blad overheen
-    // staat — daar veeg je in het blad zelf.
-    private func mag(_ verzet: CGSize) -> Bool {
-        !gezin.bladOpen && abs(verzet.width) > abs(verzet.height)
-    }
-
-    // Meegeven met je vinger, maar niet één op één: dat leest als een pagina die
-    // al om is terwijl je nog vasthoudt. Aan het eind van de rij is er niets om
-    // heen te gaan, en dan voelt het als een muur.
-    private func rek(_ dx: CGFloat) -> CGFloat {
-        let kan = gezin.buur(dx < 0 ? 1 : -1) != nil
-        return dx * (kan ? 0.42 : 0.12)
-    }
-
-    private func klaar(_ g: DragGesture.Value) {
-        let dx = g.translation.width
-        let doorschot = g.predictedEndTranslation.width
-        // Een korte tik met vaart telt net zo goed als een lange trage haal.
-        let genoeg = abs(dx) > 70 || abs(doorschot) > 190
-        let heen = gezin.buur(doorschot < 0 ? 1 : -1)
-
-        // Allebei met dezelfde beweging, zodat het teruggeven van de veeg en het
-        // schuiven van het scherm één geheel zijn.
-        withAnimation(Beweging.schuif) { veeg = 0 }
-        guard mag(g.translation), genoeg, let heen else { return }
-        gezin.gaNaar(heen)
     }
 }
 
-// Van tabblad wisselen — of je nu op de balk drukt of veegt. Op één plek, zodat
-// de richting waarin het scherm vertrekt altijd klopt met de volgorde van de
-// knoppen.
+// Welk scherm er openstaat. Krijgt de tab als gewone waarde mee in plaats van
+// hem zelf uit Gezin te lezen: dan is het een nieuwe view zodra hij verandert,
+// en hoeft er niets van SwiftUI verwacht te worden over het omwisselen van een
+// tak binnen één body.
+private struct Tabinhoud: View {
+    let tab: Tab
+
+    var body: some View {
+        // De ZStack om de switch is geen opmaak maar een noodverband. Is de
+        // switch zelf de hele body, dan vraagt SwiftUI (iOS 26) deze body bij
+        // een tabwissel niet opnieuw op: de balk kleurt om, de lucht verschiet,
+        // maar het oude scherm blijft staan. Een .id op deze view eromheen
+        // helpt daar niet eens tegen. Met een container om de switch heen wordt
+        // de body wél opnieuw gevraagd, en wisselt het scherm gewoon.
+        ZStack {
+            switch tab {
+            case .ritme: Ritmescherm()
+            case .week: Weekscherm()
+            case .instellingen: Instellingenscherm()
+            }
+        }
+    }
+}
+
+// Van tabblad wisselen — op één plek, zodat de menubalk en al het andere
+// hetzelfde doen.
 extension Gezin {
     func gaNaar(_ nieuw: Tab) {
         guard nieuw != tab else { return }
-        let heen = Tab.allCases.firstIndex(of: nieuw) ?? 0
-        let vandaan = Tab.allCases.firstIndex(of: tab) ?? 0
-        tabRichting = heen > vandaan ? 1 : -1
         Trilling.keuze()
-        withAnimation(Beweging.schuif) { tab = nieuw }
-    }
-
-    /// Het tabblad `stap` plekken verderop, of nil als je aan het eind zit.
-    func buur(_ stap: Int) -> Tab? {
-        guard let nu = Tab.allCases.firstIndex(of: tab) else { return nil }
-        let i = nu + stap
-        return Tab.allCases.indices.contains(i) ? Tab.allCases[i] : nil
+        withAnimation(Beweging.kort) { tab = nieuw }
     }
 }

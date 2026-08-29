@@ -25,10 +25,6 @@ final class Gezin {
     var vinkjes: Vinkjes = [:]
     var ritme: Ritme = .dag
     var tab: Tab = .ritme
-    // Welke kant het volgende scherm vandaan komt: 1 van rechts, -1 van links.
-    // De menubalk zet hem voordat hij `tab` omzet, zodat het scherm dezelfde
-    // kant op schuift als waar je in de balk heen gaat.
-    var tabRichting: Int = 1
     // Staat er een blad overheen? De menubalk zweeft boven de schermen en zou
     // anders over dat blad heen komen te liggen.
     var bladOpen = false
