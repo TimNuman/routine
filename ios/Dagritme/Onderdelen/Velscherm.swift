@@ -48,6 +48,10 @@ struct Velscherm: View {
     @State private var ritme: Ritme
     @State private var blad: Bladstand?
     @State private var kindblad: Kindstand?
+    // Slepen om te sorteren kan in SwiftUI alleen in de bewerkstand van een List;
+    // zonder die stand doet .onMove niets. Vandaar een eigen knop, en niet altijd
+    // aan: dan zouden de sleepgrepen er permanent bij staan.
+    @State private var ordenen = false
 
     init(soort: Velsoort, inhoud: Inhoud, opAf: @escaping () -> Void,
          opBewaar: @escaping (Ruw) async -> String?) {
@@ -85,7 +89,9 @@ struct Velscherm: View {
         let _ = herteken
 
         ZStack {
-            Vel(titel: soort.titel, melding: melding, bezig: bezig, opAf: opAf, opGereed: gereed) {
+            Vel(titel: soort.titel, melding: melding, bezig: bezig,
+                eigenRol: soort != .algemeen,
+                opAf: opAf, opGereed: gereed) {
                 switch soort {
                 case .kinderen:
                     kinderen
@@ -168,45 +174,65 @@ struct Velscherm: View {
 
     @ViewBuilder
     private var kinderen: some View {
-        Bewerkkaart {
-            ForEach(Array(concept.mensen.enumerated()), id: \.element.id) { (i, persoon) in
-                Bewerkrij(
-                    icoon: persoon.emoji.isEmpty ? "🙂" : persoon.emoji,
-                    label: persoon.naam,
-                    leeg: "Naamloos",
-                    kleur: persoon.kleur,
-                    eerste: i == 0,
-                    wegTitel: "Kind verwijderen",
-                    opWeg: {
-                        if concept.mensen.count <= 1 {
-                            melding = "Er moet minstens één kind overblijven."
-                            return
+        Ordenknop(aan: $ordenen)
+        List {
+            Section {
+                ForEach(concept.mensen) { persoon in
+                    Kindrij(persoon: persoon, opOpenen: { openKind(persoon) })
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) { haalKindWeg(persoon) } label: {
+                                Label("Weg", systemImage: "trash")
+                            }
                         }
-                        losmaken(persoon.id)
-                        concept.mensen.removeAll { $0 === persoon }
-                        melding = ""
-                        opnieuw()
-                    },
-                    opOpenen: {
-                        kindblad = Kindstand(
-                            titel: persoon.naam.isEmpty ? "Kind" : persoon.naam,
-                            kind: Kindgegevens(id: persoon.id, naam: persoon.naam,
-                                               emoji: persoon.emoji.isEmpty ? "🙂" : persoon.emoji,
-                                               kleur: persoon.kleur,
-                                               kenmerken: persoon.kenmerken)
-                        )
-                    }
-                )
+                }
+                .onMove { van, naar in
+                    concept.mensen.move(fromOffsets: van, toOffset: naar)
+                    opnieuw()
+                }
+
+                Toevoegrij("Kind toevoegen") {
+                    kindblad = Kindstand(
+                        titel: "Nieuw kind",
+                        kind: Kindgegevens(id: nieuwId(), naam: "", emoji: "🙂",
+                                           kleur: KLEUREN[concept.mensen.count % KLEUREN.count],
+                                           kenmerken: [:])
+                    )
+                }
+                .listRowInsets(EdgeInsets())
             }
-            Toevoegrij("Kind toevoegen") {
-                kindblad = Kindstand(
-                    titel: "Nieuw kind",
-                    kind: Kindgegevens(id: nieuwId(), naam: "", emoji: "🙂",
-                                       kleur: KLEUREN[concept.mensen.count % KLEUREN.count],
-                                       kenmerken: [:])
-                )
-            }
+            .listRowBackground(rijvlak)
         }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .environment(\.editMode, .constant(ordenen ? .active : .inactive))
+    }
+
+    // Het melkglas onder een lijstregel: de blur en daaroverheen de kleur uit het
+    // palet, net als in Glas. De afgeronde hoek doet insetGrouped zelf.
+    private var rijvlak: some View {
+        Rectangle().fill(.ultraThinMaterial)
+            .overlay(Rectangle().fill(Palet(donker: false).glas))
+    }
+
+    private func openKind(_ persoon: RuwPersoon) {
+        kindblad = Kindstand(
+            titel: persoon.naam.isEmpty ? "Kind" : persoon.naam,
+            kind: Kindgegevens(id: persoon.id, naam: persoon.naam,
+                               emoji: persoon.emoji.isEmpty ? "🙂" : persoon.emoji,
+                               kleur: persoon.kleur,
+                               kenmerken: persoon.kenmerken)
+        )
+    }
+
+    private func haalKindWeg(_ persoon: RuwPersoon) {
+        if concept.mensen.count <= 1 {
+            melding = "Er moet minstens één kind overblijven."
+            return
+        }
+        losmaken(persoon.id)
+        concept.mensen.removeAll { $0 === persoon }
+        melding = ""
+        opnieuw()
     }
 
     // Anders wijst een stap naar iemand die er niet meer is.
@@ -224,160 +250,230 @@ struct Velscherm: View {
 
     @ViewBuilder
     private var ritmevel: some View {
-        Segment(ritme: ritme, opKies: { ritme = $0 }, marge: 0)
+        Ordenknop(aan: $ordenen)
+        List {
+            Section {
+                Segment(ritme: ritme, opKies: { ritme = $0 }, marge: 0)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
+            }
+            .listRowBackground(Color.clear)
 
-        ForEach(Array(concept[ritme].enumerated()), id: \.element.id) { (gi, groep) in
-            // Een stap met een datum hoort maar op één plek thuis: bij Eenmalig.
-            let vast = groep.stappen.filter { $0.datum.isEmpty }
-            let eenmalig = groep.stappen.count - vast.count
-            Bewerkkaart {
-                // Een groep met stappen erin weghalen zou die stappen stilletjes
-                // meenemen. Eerst leeghalen, dan pas de groep.
-                Veegweg(titel: "Groep weg",
-                        beletsel: groep.stappen.isEmpty ? nil : "eerst de stappen",
-                        opWeg: {
-                            concept[ritme].removeAll { $0 === groep }
-                            opnieuw()
-                        }) {
+            ForEach(concept[ritme]) { groep in
+                // Een stap met een datum hoort maar op één plek thuis: bij Eenmalig.
+                let vast = groep.stappen.filter { $0.datum.isEmpty }
+                let eenmalig = groep.stappen.count - vast.count
+
+                Section {
                     HStack(spacing: 8) {
                         Veld(waarde: band(groep, \.groep), plaatshouder: "Groep")
                         Veld(waarde: band(groep, \.tijd), plaatshouder: "tijd", soort: .tijd)
                     }
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 12)
-                }
-                Streepje()
-
-                ForEach(Array(vast.enumerated()), id: \.element.id) { (i, stap) in
-                    Bewerkrij(
-                        icoon: stap.icoon.isEmpty ? "⭐" : stap.icoon,
-                        label: stap.label,
-                        leeg: "Naamloze stap",
-                        dagen: dagenTekst(stap.dagen),
-                        wie: wieVoorRij(stap.wie),
-                        eerste: i == 0,
-                        wegTitel: "Stap verwijderen",
-                        opWeg: {
-                            groep.stappen.removeAll { $0 === stap }
-                            opnieuw()
-                        },
-                        opOpenen: {
-                            openDing(stap.label.isEmpty ? "Stap" : stap.label,
-                                     .stap(ritme: ritme, groep: groep, stap: stap)) { _ in }
+                    .padding(.vertical, 4)
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) { haalGroepWeg(groep) } label: {
+                            Label("Weg", systemImage: "trash")
                         }
-                    )
-                }
-
-                if eenmalig > 0 {
-                    Kaartnoot(eenmalig == 1
-                        ? "Hier staat ook één ding voor één dag; dat bewerk je bij Eenmalig."
-                        : "Hier staan ook \(eenmalig) dingen voor één dag; die bewerk je bij Eenmalig.")
-                }
-
-                Toevoegrij("Stap toevoegen") {
-                    openDing("Nieuwe stap", nil) { ding in
-                        ding.icoon = "⭐"
-                        ding.taak = true
-                        ding.ritme = ritme
-                        ding.groep = groep.groep.trimmingCharacters(in: .whitespacesAndNewlines)
                     }
-                }
-            }
-        }
+                    .moveDisabled(true)
 
-        Kaartknop("Groep toevoegen", plus: true) {
-            concept[ritme].append(RuwGroep(groep: "Nieuwe groep", tijd: "", stappen: []))
-            opnieuw()
+                    ForEach(vast) { stap in
+                        Bewerkrij(
+                            icoon: stap.icoon.isEmpty ? "⭐" : stap.icoon,
+                            label: stap.label,
+                            leeg: "Naamloze stap",
+                            dagen: dagenTekst(stap.dagen),
+                            wie: wieVoorRij(stap.wie),
+                            opOpenen: {
+                                openDing(stap.label.isEmpty ? "Stap" : stap.label,
+                                         .stap(ritme: ritme, groep: groep, stap: stap)) { _ in }
+                            }
+                        )
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) {
+                                groep.stappen.removeAll { $0 === stap }
+                                opnieuw()
+                            } label: { Label("Weg", systemImage: "trash") }
+                        }
+                    }
+                    .onMove { van, naar in
+                        verzetStap(groep, vast, van, naar)
+                    }
+
+                    if eenmalig > 0 {
+                        Kaartnoot(eenmalig == 1
+                            ? "Hier staat ook één ding voor één dag; dat bewerk je bij Eenmalig."
+                            : "Hier staan ook \(eenmalig) dingen voor één dag; die bewerk je bij Eenmalig.")
+                            .moveDisabled(true)
+                    }
+
+                    Toevoegrij("Stap toevoegen") {
+                        openDing("Nieuwe stap", nil) { ding in
+                            ding.icoon = "⭐"
+                            ding.taak = true
+                            ding.ritme = ritme
+                            ding.groep = groep.groep.trimmingCharacters(in: .whitespacesAndNewlines)
+                        }
+                    }
+                    .listRowInsets(EdgeInsets())
+                    .moveDisabled(true)
+                }
+                .listRowBackground(rijvlak)
+            }
+
+            Section {
+                Kaartknop("Groep toevoegen", plus: true) {
+                    concept[ritme].append(RuwGroep(groep: "Nieuwe groep", tijd: "", stappen: []))
+                    opnieuw()
+                }
+                .padding(.top, 0)
+                .listRowInsets(EdgeInsets())
+            }
+            .listRowBackground(Color.clear)
         }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .environment(\.editMode, .constant(ordenen ? .active : .inactive))
+    }
+
+    // Een groep met stappen erin weghalen zou die stappen stilletjes meenemen.
+    private func haalGroepWeg(_ groep: RuwGroep) {
+        guard groep.stappen.isEmpty else {
+            melding = "Haal eerst de stappen uit '\(groep.groep)'."
+            return
+        }
+        concept[ritme].removeAll { $0 === groep }
+        melding = ""
+        opnieuw()
+    }
+
+    // `vast` is een uitsnede van groep.stappen — wat een datum heeft hoort bij
+    // Eenmalig — dus de plek in beeld moet eerst terug naar de echte lijst.
+    private func verzetStap(_ groep: RuwGroep, _ vast: [RuwStap], _ van: IndexSet, _ naar: Int) {
+        guard let bron = van.first, vast.indices.contains(bron) else { return }
+        let stap = vast[bron]
+        guard let a = groep.stappen.firstIndex(where: { $0 === stap }) else { return }
+        let doel: Int
+        if naar >= vast.count {
+            doel = groep.stappen.count
+        } else if let b = groep.stappen.firstIndex(where: { $0 === vast[naar] }) {
+            doel = b
+        } else {
+            return
+        }
+        let ding = groep.stappen.remove(at: a)
+        groep.stappen.insert(ding, at: min(max(0, a < doel ? doel - 1 : doel), groep.stappen.count))
+        opnieuw()
     }
 
     // ----------------------------------------------------------- weekritme ---
 
     @ViewBuilder
     private var weekvel: some View {
-        let vanaf = AVONDVANAF
-        Bewerkkaart {
-            ForEach(Array(concept.overzicht.enumerated()), id: \.element.id) { (i, item) in
-                Bewerkrij(
-                    icoon: item.icoon.isEmpty ? "📅" : item.icoon,
-                    label: item.tekst,
-                    leeg: "Naamloos",
-                    tijd: (naAvond(tijd: item.tijd, tot: item.tot, avond: item.avond, vanaf: vanaf)
-                           ? "🌙 " : "") + tijdTekst(tijd: item.tijd, tot: item.tot),
-                    dagen: dagenTekst(item.dagen),
-                    wie: wieVoorRij(item.wie),
-                    eerste: i == 0,
-                    tweeregels: true,
-                    wegTitel: "Verwijderen",
-                    opWeg: {
-                        concept.overzicht.removeAll { $0 === item }
-                        opnieuw()
-                    },
-                    opOpenen: {
-                        openDing(item.tekst.isEmpty ? "Item" : item.tekst, .overzicht(item)) { _ in }
+        Ordenknop(aan: $ordenen)
+        List {
+            Section {
+                ForEach(concept.overzicht) { item in
+                    Bewerkrij(
+                        icoon: item.icoon.isEmpty ? "📅" : item.icoon,
+                        label: item.tekst,
+                        leeg: "Naamloos",
+                        tijd: (naAvond(tijd: item.tijd, tot: item.tot,
+                                       avond: item.avond, vanaf: AVONDVANAF) ? "🌙 " : "")
+                            + tijdTekst(tijd: item.tijd, tot: item.tot),
+                        dagen: dagenTekst(item.dagen),
+                        wie: wieVoorRij(item.wie),
+                        tweeregels: true,
+                        opOpenen: {
+                            openDing(item.tekst.isEmpty ? "Item" : item.tekst, .overzicht(item)) { _ in }
+                        }
+                    )
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) {
+                            concept.overzicht.removeAll { $0 === item }
+                            opnieuw()
+                        } label: { Label("Weg", systemImage: "trash") }
                     }
-                )
-            }
-            Toevoegrij("Item toevoegen") {
-                openDing("Nieuw item", nil) { ding in
-                    ding.icoon = "📅"
-                    ding.wekelijks = true
-                    ding.taak = false
                 }
+                .onMove { van, naar in
+                    concept.overzicht.move(fromOffsets: van, toOffset: naar)
+                    opnieuw()
+                }
+
+                Toevoegrij("Item toevoegen") {
+                    openDing("Nieuw item", nil) { ding in
+                        ding.icoon = "📅"
+                        ding.wekelijks = true
+                        ding.taak = false
+                    }
+                }
+                .listRowInsets(EdgeInsets())
+                .moveDisabled(true)
             }
+            .listRowBackground(rijvlak)
         }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .environment(\.editMode, .constant(ordenen ? .active : .inactive))
     }
 
     // ------------------------------------------------------------ eenmalig ---
+    // Geen ordenknop: deze lijst staat op datum, en die volgorde is niet aan jou.
 
     @ViewBuilder
     private var eenmaligvel: some View {
         let dingen = eenmaligeUitConcept()
-        if dingen.isEmpty {
-            Glas(radius: 26) {
-                Text("Er staat niets op een datum.")
-                    .letter(L.leeg)
-                    .foregroundStyle(ZACHTINKT)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 28)
-                    .padding(.horizontal, 20)
-            }
-            .padding(.top, 18)
-        } else {
-            Bewerkkaart {
-                ForEach(Array(dingen.enumerated()), id: \.offset) { (i, ding) in
-                    Bewerkrij(
-                        icoon: ding.icoon,
-                        label: ding.naam,
-                        leeg: "Naamloos",
-                        tijd: kortDatum(ding.datum),
-                        extra: ding.extra,
-                        wie: wieVoorRij(ding.wie),
-                        eerste: i == 0,
-                        tweeregels: true,
-                        wegTitel: "Verwijderen",
-                        opWeg: {
-                            haalDingWeg(concept, ding.plek)
-                            opnieuw()
-                        },
-                        opOpenen: {
-                            openDing(ding.naam.isEmpty ? "Iets eenmaligs" : ding.naam,
-                                     ding.plek) { _ in }
-                        }
-                    )
+        List {
+            if dingen.isEmpty {
+                Section {
+                    Text("Er staat niets op een datum.")
+                        .letter(L.leeg)
+                        .foregroundStyle(ZACHTINKT)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 20)
                 }
+                .listRowBackground(rijvlak)
+            } else {
+                Section {
+                    ForEach(Array(dingen.enumerated()), id: \.offset) { (_, ding) in
+                        Bewerkrij(
+                            icoon: ding.icoon,
+                            label: ding.naam,
+                            leeg: "Naamloos",
+                            tijd: kortDatum(ding.datum),
+                            extra: ding.extra,
+                            wie: wieVoorRij(ding.wie),
+                            tweeregels: true,
+                            opOpenen: {
+                                openDing(ding.naam.isEmpty ? "Iets eenmaligs" : ding.naam,
+                                         ding.plek) { _ in }
+                            }
+                        )
+                        .swipeActions(edge: .trailing) {
+                            Button(role: .destructive) {
+                                haalDingWeg(concept, ding.plek)
+                                opnieuw()
+                            } label: { Label("Weg", systemImage: "trash") }
+                        }
+                    }
+                }
+                .listRowBackground(rijvlak)
             }
-        }
 
-        Kaartknop("Iets eenmaligs toevoegen", plus: true) {
-            openDing("Iets eenmaligs", nil) { ding in
-                ding.icoon = "🎉"
-                ding.wekelijks = false
-                ding.taak = false
+            Section {
+                Kaartknop("Iets eenmaligs toevoegen", plus: true) {
+                    openDing("Iets eenmaligs", nil) { ding in
+                        ding.icoon = "🎉"
+                        ding.wekelijks = false
+                        ding.taak = false
+                    }
+                }
+                .listRowInsets(EdgeInsets())
             }
+            .listRowBackground(Color.clear)
         }
-
-            }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+    }
 
     private struct Eenmaligrij {
         var icoon: String
@@ -404,7 +500,7 @@ struct Velscherm: View {
         for welk in [Ritme.dag, .nacht] {
             for groep in concept[welk] {
                 for stap in groep.stappen where !stap.datum.isEmpty {
-                    let naam = groep.groep.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let naam = groep.groep.trimmingCharacters(in: .whitespaces)
                     uit.append(Eenmaligrij(
                         icoon: stap.icoon.isEmpty ? "📌" : stap.icoon,
                         naam: stap.label,
@@ -453,5 +549,61 @@ private struct Kaartnoot: View {
                 .padding(.horizontal, 14)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+}
+
+// Eén kind in de lijst. Los van Bewerkrij omdat een lijstregel zijn eigen
+// scheiding en zijn eigen veeg meebrengt; dit is alleen nog wat erin staat.
+private struct Kindrij: View {
+    let persoon: RuwPersoon
+    let opOpenen: () -> Void
+
+    @Environment(\.palet) private var palet
+
+    var body: some View {
+        Button(action: opOpenen) {
+            HStack(spacing: 10) {
+                Emojiknop(waarde: persoon.emoji.isEmpty ? "🙂" : persoon.emoji, opTik: opOpenen)
+                Text(persoon.naam.isEmpty ? "Naamloos" : persoon.naam)
+                    .letter(L.rijlabel)
+                    .foregroundStyle(persoon.naam.isEmpty ? palet.zacht : palet.inkt)
+                    .lineLimit(1)
+                if !persoon.kleur.isEmpty {
+                    Circle().fill(Color(hex: persoon.kleur)).frame(width: 16, height: 16)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.vertical, 8)
+            .frame(minHeight: 58)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.druk)
+    }
+}
+
+// Aan of uit voor de sleepstand. Klein en rechts, zodat het geen knop is die je
+// per ongeluk raakt maar wel te vinden is als je hem zoekt.
+private struct Ordenknop: View {
+    @Binding var aan: Bool
+
+    var body: some View {
+        HStack {
+            Spacer(minLength: 0)
+            Button {
+                Trilling.keuze()
+                withAnimation(Beweging.veer) { aan.toggle() }
+            } label: {
+                Text(aan ? "klaar" : "volgorde")
+                    .letter(L.opnieuw)
+                    .foregroundStyle(ORANJE)
+                    .padding(.vertical, 6)
+                    .padding(.horizontal, 14)
+                    .background(Capsule().fill(ORANJE.opacity(aan ? 0.22 : 0.12)))
+                    .overlay(Capsule().strokeBorder(ORANJE.opacity(0.30), lineWidth: 1))
+            }
+            .buttonStyle(.druk(0.94))
+        }
+        .padding(.horizontal, 22)
+        .padding(.bottom, 6)
     }
 }

@@ -197,19 +197,6 @@ struct Emojiknop: View {
     }
 }
 
-struct Minknop: View {
-    let titel: String
-    let opTik: () -> Void
-
-    var body: some View {
-        Button(action: opTik) {
-            Rondbolletje(teken: "−", kleur: ROOD)
-        }
-        .buttonStyle(.druk)
-        .accessibilityLabel(titel)
-    }
-}
-
 struct Bewerkkaart<Inhoudje: View>: View {
     @ViewBuilder var inhoud: () -> Inhoudje
 
@@ -268,13 +255,8 @@ struct Bewerkrij: View {
     var extra: String = ""
     var wie: [Persoon] = []
     var kleur: String = ""
-    var eerste: Bool = false
     // Een tijdvak, de dagen én wie het betreft passen niet naast de naam.
     var tweeregels: Bool = false
-    let wegTitel: String
-    /// Staat hier iets in, dan mag deze regel niet weg en zegt de veegstrook waarom.
-    var beletsel: String? = nil
-    let opWeg: () -> Void
     let opOpenen: () -> Void
 
     @Environment(\.palet) private var palet
@@ -283,10 +265,8 @@ struct Bewerkrij: View {
     private var heeftMeta: Bool { !meta.isEmpty || !wie.isEmpty }
 
     var body: some View {
-        VStack(spacing: 0) {
-            if !eerste { Streepje() }
-            Veegweg(titel: wegTitel, beletsel: beletsel, opWeg: opWeg) {
-                Button(action: opOpenen) {
+        // Geen scheidingslijn en geen weg-knop: in een List regelt de lijst dat.
+        Button(action: opOpenen) {
                     if tweeregels {
                         VStack(alignment: .leading, spacing: 3) {
                             HStack(spacing: 10) { icoonEnNaam }
@@ -305,12 +285,9 @@ struct Bewerkrij: View {
                         .contentShape(Rectangle())
                     }
                 }
-                .buttonStyle(.druk)
-                .padding(.vertical, 8)
-                .padding(.horizontal, 12)
-                .frame(minHeight: 58)
-            }
-        }
+        .buttonStyle(.druk)
+        .padding(.vertical, 8)
+        .frame(minHeight: 58)
     }
 
     @ViewBuilder

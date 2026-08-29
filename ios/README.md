@@ -59,6 +59,7 @@ vorm waar de schermen mee werken.
 | schermen | SwiftUI, iOS 17 en hoger |
 | toestand | één `@Observable` klasse (`Kern/Gezin.swift`) in de omgeving |
 | opslag | `URLSession` naar `/api/opslag`, met `URLSessionWebSocketTask` voor de stroom |
+| bewerken | `List` met `.swipeActions` en `.onMove`; de rest van de app is eigen glas |
 | animatie | gewone SwiftUI-animaties, timing in `Vorm/Beweging.swift` |
 
 ### Twee dingen die anders moesten
@@ -159,9 +160,6 @@ filmstrip van die je in één keer kunt bekijken.
 - **Op een echt toestel geprobeerd.** In de simulator wel, met `Stuur/` erbij, maar
   een simulator kent geen trilling en geen trage verbinding. Reken erop dat het
   eerste kwartier op een iPhone nog een paar dingen rechtzet.
-- **Verslepen** om de volgorde van stappen te wijzigen — net als in de react
-  native-versie. Daarom staat er ook geen greep naast een regel: die zou iets
-  beloven wat niet gebeurt.
 - **Aanmelden.** Wie het adres kent, kan meelezen en meeschrijven; `SLEUTEL` is
   een drempel, geen slot. Voor een app in een store is dat te weinig — zie
   *Straks* in [`worker/README.md`](../worker/README.md).

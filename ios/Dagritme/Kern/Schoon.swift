@@ -300,3 +300,14 @@ func opgeschoond(_ c: Ruw) -> [String: Any] {
 func telStappen(_ groepen: [[String: Any]]) -> Int {
     groepen.reduce(0) { $0 + (($1["stappen"] as? [[String: Any]])?.count ?? 0) }
 }
+
+extension Array {
+    /// Verzet het ding op `van` naar plek `naar`. Na het weghalen schuift alles
+    /// erachter een plek op, en juist daardoor klopt `insert(at: naar)` allebei
+    /// de kanten op.
+    mutating func verzet(_ van: Int, _ naar: Int) {
+        guard indices.contains(van), indices.contains(naar), van != naar else { return }
+        let ding = remove(at: van)
+        insert(ding, at: naar)
+    }
+}

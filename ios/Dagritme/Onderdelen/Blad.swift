@@ -146,6 +146,9 @@ struct Vel<Inhoudje: View>: View {
     let titel: String
     var melding: String = ""
     var bezig: Bool = false
+    /// De inhoud rolt zelf — een List doet dat — dus dan hoort er hier geen rol
+    /// omheen; twee rollen in elkaar vechten om dezelfde vinger.
+    var eigenRol: Bool = false
     let opAf: () -> Void
     let opGereed: () -> Void
     @ViewBuilder var inhoud: () -> Inhoudje
@@ -161,7 +164,12 @@ struct Vel<Inhoudje: View>: View {
                     HStack(spacing: 10) {
                         Tekstknop("Annuleer") { opAf() }
                             .frame(maxWidth: .infinity, alignment: .leading)
-                        Text(titel).letter(L.bladkop).foregroundStyle(INKT).lineLimit(1)
+                        // Voorrang boven de twee knoppen ernaast: die nemen met
+                        // hun maxWidth alles wat er is, en dan wordt 'Ochtendritme'
+                        // een 'Ochtendri…'.
+                        Text(titel).letter(L.bladkop).foregroundStyle(INKT)
+                            .lineLimit(1)
+                            .layoutPriority(1)
                         Tekstknop(bezig ? "Bezig…" : "Gereed", dik: true) { opGereed() }
                             .frame(maxWidth: .infinity, alignment: .trailing)
                     }
@@ -173,15 +181,26 @@ struct Vel<Inhoudje: View>: View {
                 .padding(.bottom, 18)
                 .frame(maxWidth: 496 + 44)
 
-                ScrollView {
+                if eigenRol {
                     VStack(alignment: .leading, spacing: 0) {
-                        if !melding.isEmpty { Melding(melding) }
+                        if !melding.isEmpty {
+                            Melding(melding).padding(.horizontal, 22)
+                        }
                         inhoud()
                     }
-                    .padding(.horizontal, 22)
-                    .padding(.bottom, 30)
                     .frame(maxWidth: 520 + 44)
                     .frame(maxWidth: .infinity)
+                } else {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 0) {
+                            if !melding.isEmpty { Melding(melding) }
+                            inhoud()
+                        }
+                        .padding(.horizontal, 22)
+                        .padding(.bottom, 30)
+                        .frame(maxWidth: 520 + 44)
+                        .frame(maxWidth: .infinity)
+                    }
                 }
             }
         }
