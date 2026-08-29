@@ -76,6 +76,28 @@ ANTHROPIC_API_KEY = "sk-ant-..."
 Dat bestand staat in `.gitignore` en hoort daar te blijven; het is het enige
 plekje in deze repo waar een echte sleutel kan belanden.
 
+## Een reservekopie
+
+Er zit geen exportknop op een Durable Object en geen console waar je even in kunt
+kijken, dus dat doet [`reservekopie.mjs`](../reservekopie.mjs):
+
+```bash
+ROUTINE_ADRES=https://routine.jouwnaam.workers.dev npm run reservekopie
+```
+
+Dat zet de inhoud plus de vinkjes van de afgelopen zeven dagen als één bestand in
+`reservekopie/`. Verder terug heeft geen zin: het huis ruimt oudere dagen zelf op.
+
+Terugzetten gaat per bestand, en alleen de inhoud:
+
+```bash
+ROUTINE_ADRES=... node reservekopie.mjs --terug reservekopie/2026-08-29-2115.json
+```
+
+De vinkjes staan er wel in om te kunnen kijken wat er was, maar gaan niet terug —
+een ochtend die al geweest is opnieuw afvinken helpt niemand. Staat er een
+`SLEUTEL`, zet die dan in `ROUTINE_SLEUTEL`.
+
 ## Wie mag erbij
 
 De Worker stuurt met opzet **geen CORS-kopjes**. Daardoor kan een pagina op een

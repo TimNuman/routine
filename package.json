@@ -6,6 +6,7 @@
   "scripts": {
     "start": "wrangler dev",
     "stempel": "node stempel.mjs",
+    "reservekopie": "node reservekopie.mjs",
     "deploy": "node stempel.mjs && wrangler deploy"
   },
   "dependencies": {
