@@ -24,24 +24,15 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-
-	<!-- Waar de Worker staat. Leeg laten betekent: wat er in Configuratie.swift
-	     staat. Zo kun je het adres wisselen zonder de code aan te raken. -->
 	<key>ROUTINE_ADRES</key>
-	<string></string>
+	<string>https://routine.tim-numan.workers.dev</string>
 	<key>ROUTINE_SLEUTEL</key>
 	<string></string>
-
-	<!-- Alleen om de app tegen `wrangler dev` op de laptop te kunnen draaien:
-	     dat is http op het eigen netwerk, en dat laat iOS anders niet toe. Naar
-	     buiten blijft alles https. -->
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
-
-	<!-- Bijgeknipt tot Latijn door mobiel/lettertypes.mjs; zie Vorm/Letters.swift. -->
 	<key>UIAppFonts</key>
 	<array>
 		<string>Baloo2_700Bold.ttf</string>
@@ -49,7 +40,6 @@
 		<string>Nunito_700Bold.ttf</string>
 		<string>Nunito_800ExtraBold.ttf</string>
 	</array>
-
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>
