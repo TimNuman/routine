@@ -10,14 +10,23 @@
 		D1A0000000000000000000A1 /* Dagritme.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Dagritme.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D1A0000000000000000000A2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D1A0000000000000000000A3 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		D1A0000000000000000000A4 /* Stuur.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Stuur.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		D1A0000000000000000000B1 /* Dagritme */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Dagritme; sourceTree = "<group>"; };
+		D1A0000000000000000000B2 /* Stuur */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Stuur; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		D1A0000000000000000000C1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D1A0000000000000000000C5 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -31,6 +40,7 @@
 			isa = PBXGroup;
 			children = (
 				D1A0000000000000000000B1 /* Dagritme */,
+				D1A0000000000000000000B2 /* Stuur */,
 				D1A0000000000000000000A2 /* Info.plist */,
 				D1A0000000000000000000A3 /* README.md */,
 				D1A0000000000000000000D2 /* Products */,
@@ -41,6 +51,7 @@
 			isa = PBXGroup;
 			children = (
 				D1A0000000000000000000A1 /* Dagritme.app */,
+				D1A0000000000000000000A4 /* Stuur.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +81,29 @@
 			productReference = D1A0000000000000000000A1 /* Dagritme.app */;
 			productType = "com.apple.product-type.application";
 		};
+		D1A0000000000000000000E2 /* Stuur */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D1A0000000000000000000F2 /* Build configuration list for PBXNativeTarget "Stuur" */;
+			buildPhases = (
+				D1A0000000000000000000C4 /* Sources */,
+				D1A0000000000000000000C5 /* Frameworks */,
+				D1A0000000000000000000C6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				D1A00000000000000000AA01 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				D1A0000000000000000000B2 /* Stuur */,
+			);
+			name = Stuur;
+			packageProductDependencies = (
+			);
+			productName = Stuur;
+			productReference = D1A0000000000000000000A4 /* Stuur.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -82,6 +116,10 @@
 				TargetAttributes = {
 					D1A0000000000000000000E1 = {
 						CreatedOnToolsVersion = 16.0;
+					};
+					D1A0000000000000000000E2 = {
+						CreatedOnToolsVersion = 16.0;
+						TestTargetID = D1A0000000000000000000E1;
 					};
 				};
 			};
@@ -100,12 +138,20 @@
 			projectRoot = "";
 			targets = (
 				D1A0000000000000000000E1 /* Dagritme */,
+				D1A0000000000000000000E2 /* Stuur */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		D1A0000000000000000000C3 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D1A0000000000000000000C6 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +168,32 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D1A0000000000000000000C4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		D1A00000000000000000AA01 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D1A0000000000000000000E1 /* Dagritme */;
+			targetProxy = D1A00000000000000000AA02 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXContainerItemProxy section */
+		D1A00000000000000000AA02 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D1A0000000000000000000E0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D1A0000000000000000000E1;
+			remoteInfo = Dagritme;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin XCBuildConfiguration section */
 		D1A00000000000000000FF01 /* Debug */ = {
@@ -228,6 +299,38 @@
 			};
 			name = Release;
 		};
+		D1A00000000000000000FF05 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.dagritme.stuur;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Dagritme;
+			};
+			name = Debug;
+		};
+		D1A00000000000000000FF06 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.dagritme.stuur;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Dagritme;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -245,6 +348,15 @@
 			buildConfigurations = (
 				D1A00000000000000000FF03 /* Debug */,
 				D1A00000000000000000FF04 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D1A0000000000000000000F2 /* Build configuration list for PBXNativeTarget "Stuur" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D1A00000000000000000FF05 /* Debug */,
+				D1A00000000000000000FF06 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

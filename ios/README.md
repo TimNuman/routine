@@ -47,6 +47,7 @@ Dagritme/
   Onderdelen/          de losse stukken van de schermen
   Schermen/            ritme, week, instellingen
   Lettertypes/         Baloo 2 en Nunito, bijgeknipt tot Latijn
+Stuur/                 de app aansturen zonder handen — zie onderaan
 ```
 
 `Kern/` kent geen SwiftUI: dat is dezelfde bewerking als in de react
@@ -110,11 +111,54 @@ De maten staan vast in plaats van mee te groeien met de tekstinstelling van de
 telefoon: de kaartjes zijn krap, en een naam die twee keer zo groot wordt valt er
 uit. Dat is dezelfde keuze als op web, en het is wel iets om te weten.
 
+## De app aansturen
+
+`Stuur/` is een tweede doel in hetzelfde project: een UI-test die de app opstart
+en er tikken en vegen in doet. Niet om iets te bewijzen — er staat geen enkele
+verwachting in — maar om te kúnnen kijken. Animaties bouwen die je niet kunt zien
+is gokken, en dat bleek: de vonkjes bij het afvinken zaten verstopt achter het
+gezichtje, en dat komt uit geen compiler en geen log.
+
+```bash
+xcodebuild test -project Dagritme.xcodeproj -scheme Dagritme \
+  -destination 'id=<simulator>'
+```
+
+Zonder meer draait het plan in [`Stuur/plan.json`](Stuur/plan.json): opstarten, de
+drie schermen langs door te vegen, en van elk een afdruk. Wil je iets anders, wijs
+dan een eigen plan aan — het `TEST_RUNNER_`-voorvoegsel valt er onderweg af:
+
+```bash
+TEST_RUNNER_STUUR_PLAN=/pad/plan.json \
+TEST_RUNNER_STUUR_KIEK=/pad/naar/map xcodebuild test ...
+```
+
+De plaatsen in een plan lopen van 0 tot 1 over de breedte en de hoogte. Zo reken
+je ze uit een schermafdruk zonder de puntmaten van dat ene toestel te kennen, en
+blijft een plan kloppen op een andere simulator. De afdrukken hangen altijd aan
+de uitslag; met `STUUR_KIEK` komen ze ook als los bestand op schijf, en dan kun
+je ze met gewone gereedschappen vergelijken:
+
+```bash
+ffmpeg -i voor.png -i na.png -filter_complex psnr -f null -   # inf = gelijk
+```
+
+Bewegen zie je zo natuurlijk niet. Daarvoor loopt er een opname naast:
+
+```bash
+xcrun simctl io <simulator> recordVideo --codec h264 uit.mp4 &
+```
+
+De simulator neemt variabel op — tijdens beweging zo'n 75 beelden per seconde —
+dus een animatie van 300 ms levert twintig bruikbare frames. Met `tblend` erover
+vind je waar er iets gebeurt en hoe lang het duurt, en `tile` maakt er een
+filmstrip van die je in één keer kunt bekijken.
+
 ## Wat er nog niet is
 
-- **Op een toestel geprobeerd.** Er is hier geen Mac en geen iPhone; dit is
-  geschreven, niet gedraaid. Reken erop dat de eerste build nog een paar dingen
-  rechtzet.
+- **Op een echt toestel geprobeerd.** In de simulator wel, met `Stuur/` erbij, maar
+  een simulator kent geen trilling en geen trage verbinding. Reken erop dat het
+  eerste kwartier op een iPhone nog een paar dingen rechtzet.
 - **Verslepen** om de volgorde van stappen te wijzigen — net als in de react
   native-versie. Daarom staat er ook geen greep naast een regel: die zou iets
   beloven wat niet gebeurt.

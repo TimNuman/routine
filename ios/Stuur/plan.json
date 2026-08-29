@@ -1,0 +1,19 @@
+[
+  { "doe": "start" },
+  { "doe": "wacht", "s": 3 },
+  { "doe": "kiek",  "naam": "1-ritme" },
+
+  { "doe": "veeg",  "van": [0.85, 0.42], "naar": [0.15, 0.42] },
+  { "doe": "wacht", "s": 1.2 },
+  { "doe": "kiek",  "naam": "2-deze-week" },
+
+  { "doe": "veeg",  "van": [0.85, 0.42], "naar": [0.15, 0.42] },
+  { "doe": "wacht", "s": 1.2 },
+  { "doe": "kiek",  "naam": "3-instellingen" },
+
+  { "doe": "veeg",  "van": [0.15, 0.42], "naar": [0.85, 0.42] },
+  { "doe": "wacht", "s": 1.2 },
+  { "doe": "veeg",  "van": [0.15, 0.42], "naar": [0.85, 0.42] },
+  { "doe": "wacht", "s": 1.2 },
+  { "doe": "kiek",  "naam": "4-terug-op-ritme" }
+]
