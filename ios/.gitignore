@@ -5,4 +5,4 @@ DerivedData/
 xcuserdata/
 *.xcworkspace/xcuserdata/
 .DS_Store
-*.xcworkspace/contents.xcworkspacedata
+**/*.xcworkspace/contents.xcworkspacedata
