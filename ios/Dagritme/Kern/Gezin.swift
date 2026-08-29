@@ -8,7 +8,10 @@
 import Foundation
 import Observation
 
-enum Tab: Hashable {
+// De volgorde telt: hij bepaalt welke kant het scherm op schuift, of je nu op
+// de balk drukt of veegt. `allCases` staat in deze volgorde, en dat is meteen de
+// volgorde van links naar rechts in het menu.
+enum Tab: Hashable, CaseIterable {
     case ritme
     case week
     case instellingen
@@ -22,6 +25,16 @@ final class Gezin {
     var vinkjes: Vinkjes = [:]
     var ritme: Ritme = .dag
     var tab: Tab = .ritme
+    // Welke kant het volgende scherm vandaan komt: 1 van rechts, -1 van links.
+    // De menubalk zet hem voordat hij `tab` omzet, zodat het scherm dezelfde
+    // kant op schuift als waar je in de balk heen gaat.
+    var tabRichting: Int = 1
+    // Staat er een blad overheen? De menubalk zweeft boven de schermen en zou
+    // anders over dat blad heen komen te liggen.
+    var bladOpen = false
+    // Op welk kind het ritme gefilterd staat, of nil voor iedereen. Staat hier
+    // en niet in het scherm zelf, zodat een blik op de week hem niet wist.
+    var alleen: String?
     var nu = Date()
 
     var datum: String { datumVan(nu) }
@@ -129,14 +142,18 @@ final class Gezin {
 
     // Blijft de app een nacht openstaan, dan hoort hij morgen de volgende dag te
     // laten zien. De datum is genoeg; op de minuut hoeft niets bij te werken.
+    // De klok loopt elke halve minuut door. Dat is niet alleen voor middernacht:
+    // de agenda laat weg wat geweest is, en dan moet 'nu' ook overdag opschuiven,
+    // anders staat er tot de volgende ochtend nog iets van vanmiddag.
     private func loopMee() {
         klok = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 30_000_000_000)
                 guard let self else { return }
                 let straks = Date()
-                if datumVan(straks) != self.datum {
-                    self.nu = straks
+                let andereDag = datumVan(straks) != self.datum
+                self.nu = straks
+                if andereDag {
                     self.stroom?.kijkNaar(self.datum)
                     await self.herlaad()
                 }

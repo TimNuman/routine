@@ -168,7 +168,7 @@ struct Dingblad: View {
                     .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .strokeBorder(ROOD.opacity(0.35), lineWidth: 1))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.druk)
             .padding(.top, 18)
         }
     }

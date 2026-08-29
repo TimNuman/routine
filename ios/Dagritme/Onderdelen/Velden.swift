@@ -154,7 +154,7 @@ struct Chip: View {
                     .strokeBorder(rand, lineWidth: 1))
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.druk)
         .accessibilityAddTraits(aan ? [.isButton, .isSelected] : .isButton)
     }
 
@@ -192,7 +192,7 @@ struct Emojiknop: View {
                 .overlay(Text(waarde).font(.system(size: maat * 0.53)))
                 .frame(width: maat, height: maat)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.druk)
         .accessibilityLabel("Icoon")
     }
 }
@@ -205,7 +205,7 @@ struct Minknop: View {
         Button(action: opTik) {
             Rondbolletje(teken: "−", kleur: ROOD)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.druk)
         .accessibilityLabel(titel)
     }
 }
@@ -253,7 +253,7 @@ struct Toevoegrij: View {
                 .padding(.horizontal, 12)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.druk)
         }
     }
 }
@@ -304,7 +304,7 @@ struct Bewerkrij: View {
                         .contentShape(Rectangle())
                     }
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.druk)
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 12)

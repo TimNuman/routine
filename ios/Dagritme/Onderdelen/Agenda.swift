@@ -10,6 +10,11 @@ struct Agenda: View {
     let mensen: [Persoon]
     var zij: Bool = false
     var eerste: Bool = false
+    // Waar dit blok in de volgorde staat als de regels één voor één binnenkomen.
+    // `nil` betekent: niet nodig hier — dan animeert wie dit blok plaatst het als
+    // geheel, en zou een tweede beweging erbovenop alleen maar rommelig worden.
+    var vanaf: Int? = nil
+    var richting: CGFloat = 0
     var opOpen: ((Agendaitem) -> Void)? = nil
 
     @Environment(\.palet) private var palet
@@ -25,12 +30,14 @@ struct Agenda: View {
                         .padding(.bottom, 22)
                 }
                 Blokkop(blok.kop, marge: zij ? 0 : 22)
+                    .trapje(vanaf, 0, richting)
                 Glas(radius: 26) {
                     VStack(spacing: 0) {
                         ForEach(Array(blok.items.enumerated()), id: \.offset) { (i, item) in
                             if i > 0 { Rectangle().fill(palet.streep).frame(height: 1).padding(.horizontal, 16) }
                             Rij(item: item, mensen: mensen,
                                 opOpen: item.bijzonder ? opOpen : nil)
+                                .trapje(vanaf, i + 1, richting)
                         }
                     }
                 }
@@ -87,7 +94,11 @@ private struct Rij: View {
         .contentShape(Rectangle())
 
         if let opOpen {
-            Button { opOpen(item) } label: { vak }.buttonStyle(.plain)
+            Button {
+                Trilling.tik()
+                opOpen(item)
+            } label: { vak }
+            .buttonStyle(.druk(0.975))
         } else {
             vak
         }
@@ -151,5 +162,17 @@ private struct Stippellijn: View {
                         style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
             }
             .clipped()
+    }
+}
+
+// Alleen meedoen aan het golfje als er een plek in de volgorde is meegegeven.
+private extension View {
+    @ViewBuilder
+    func trapje(_ vanaf: Int?, _ eigen: Int, _ richting: CGFloat) -> some View {
+        if let vanaf {
+            komtBinnen(vanaf + eigen, vanaf: richting, afstand: 18)
+        } else {
+            self
+        }
     }
 }

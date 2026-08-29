@@ -1,6 +1,11 @@
 // Het zwevende menu, net als op web: op een telefoon over de inhoud heen
 // onderaan, op een breed scherm rechts in de kopregel. De kleur klapt om in
 // plaats van mee te verschieten — dat doet de webversie ook.
+//
+// Het oranje vlak eronder klapt niet om maar schuift: het is één vlak dat van
+// knop naar knop verhuist (`matchedGeometryEffect`), zodat je ziet waar je
+// vandaan komt. Welke kant het scherm op schuift bepaalt `Gezin.gaNaar` uit de
+// volgorde van `Tab.allCases`; die knoppen staan hier in dezelfde volgorde.
 import SwiftUI
 
 struct Tabbalk: View {
@@ -8,6 +13,7 @@ struct Tabbalk: View {
 
     @Environment(Gezin.self) private var gezin
     @Environment(\.palet) private var palet
+    @Namespace private var ruimte
 
     private struct Knop {
         let tab: Tab
@@ -26,12 +32,10 @@ struct Tabbalk: View {
             HStack(spacing: 4) {
                 ForEach(knoppen, id: \.tab) { knop in
                     let aan = gezin.tab == knop.tab
-                    Button {
-                        if !aan { gezin.tab = knop.tab }
-                    } label: {
+                    Button { gezin.gaNaar(knop.tab) } label: {
                         tabinhoud(knop, aan: aan)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.druk(0.94))
                     .accessibilityAddTraits(aan ? [.isButton, .isSelected] : .isButton)
                 }
             }
@@ -57,10 +61,19 @@ struct Tabbalk: View {
             }
         }
         .foregroundStyle(kleur)
+        // Het icoontje van de knop waar je heen gaat komt even op, zodat de tik
+        // zelf al antwoord geeft — nog voor het scherm eronder is omgegaan.
+        .scaleEffect(aan ? 1.06 : 1)
+        .animation(Beweging.wip, value: aan)
         .frame(maxWidth: .infinity)
         .padding(.vertical, breed ? 8 : 7)
-        .background(vorm.fill(aan ? ORANJE.opacity(0.16) : .clear))
-        .overlay(vorm.strokeBorder(aan ? ORANJE.opacity(0.28) : .clear, lineWidth: 1))
+        .background {
+            if aan {
+                vorm.fill(ORANJE.opacity(0.16))
+                    .overlay(vorm.strokeBorder(ORANJE.opacity(0.28), lineWidth: 1))
+                    .matchedGeometryEffect(id: "pil", in: ruimte)
+            }
+        }
         .contentShape(vorm)
     }
 }

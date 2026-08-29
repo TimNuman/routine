@@ -9,6 +9,8 @@ struct Weekscherm: View {
 
     @State private var verschuiving = 0
     @State private var gekozenDag: String?
+    // Welke kant het op ging bij de laatste sprong: 1 vooruit, -1 terug.
+    @State private var richting: CGFloat = 1
     @State private var blad: Bladstand?
     @State private var bezig = false
     @State private var assistent = false
@@ -45,27 +47,27 @@ struct Weekscherm: View {
                     nu: gezin.nu,
                     verschuiving: verschuiving,
                     gekozen: gekozen,
-                    opKies: { gekozenDag = datumVan($0) },
+                    richting: richting,
+                    opKies: kiesDag,
                     opSchuif: schuif
                 )
 
                 if let inhoud = gezin.inhoud {
-                    if blokken.isEmpty {
-                        Blokkop("Niks bijzonders")
-                        Glas(radius: 26) {
-                            Text("Deze dag staat er niets in de agenda.")
-                                .letter(L.leeg)
-                                .foregroundStyle(palet.zacht)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 28)
-                                .padding(.horizontal, 20)
+                    // Alles wat bij de gekozen dag hoort is één ding. Een andere
+                    // dag betekent een nieuwe `.id`, en dus schuift het oude weg
+                    // en komt het nieuwe binnen — regel voor regel, van boven
+                    // naar beneden. De ZStack laat oud en nieuw elkaar even
+                    // overlappen; in een VStack zouden ze onder elkaar komen.
+                    ZStack(alignment: .topLeading) {
+                        VStack(alignment: .leading, spacing: 0) {
+                            dagInhoud(inhoud)
                         }
+                        .id(datumVan(gekozen))
+                        .schuiftMee(richting)
                     }
 
-                    ForEach(blokken) { blok in
-                        Agenda(blok: blok, mensen: inhoud.mensen, opOpen: { openDing($0) })
-                    }
-
+                    // Deze twee horen bij het scherm en niet bij de dag, dus die
+                    // blijven staan waar ze staan.
                     Kaartknop("Iets bijzonders toevoegen", plus: true) { openDing(nil) }
                     Kaartknop("Typ of plak iets", teken: "✨") { assistent = true }
                 }
@@ -93,13 +95,60 @@ struct Weekscherm: View {
                 )
             }
         }
+        .onChange(of: blad != nil || assistent) { _, open in
+            gezin.bladOpen = open
+        }
+        .onDisappear { gezin.bladOpen = false }
+    }
+
+    // Wat er op de gekozen dag speelt. De regels tellen door over de blokken
+    // heen, zodat het golfje van boven naar beneden loopt.
+    @ViewBuilder
+    private func dagInhoud(_ inhoud: Inhoud) -> some View {
+        if blokken.isEmpty {
+            Blokkop("Niks bijzonders")
+                .komtBinnen(0, vanaf: richting)
+            Glas(radius: 26) {
+                Text("Deze dag staat er niets in de agenda.")
+                    .letter(L.leeg)
+                    .foregroundStyle(palet.zacht)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 28)
+                    .padding(.horizontal, 20)
+            }
+            .komtBinnen(1, vanaf: richting)
+        }
+
+        ForEach(Array(blokken.enumerated()), id: \.element.id) { (i, blok) in
+            Agenda(blok: blok, mensen: inhoud.mensen,
+                   vanaf: voorloop(i), richting: richting,
+                   opOpen: { openDing($0) })
+        }
+    }
+
+    // Hoeveel regels er vóór blok `i` staan: elk blok is een kopje plus zijn rijen.
+    private func voorloop(_ i: Int) -> Int {
+        blokken.prefix(i).reduce(0) { $0 + 1 + $1.items.count }
+    }
+
+    // Een andere dag in dezelfde week: het blok eronder schuift dezelfde kant op
+    // als waar je heen gaat in de tijd.
+    private func kiesDag(_ d: Date) {
+        guard datumVan(d) != datumVan(gekozen) else { return }
+        richting = d > gekozen ? 1 : -1
+        Trilling.keuze()
+        withAnimation(Beweging.schuif) { gekozenDag = datumVan(d) }
     }
 
     // Een week verder of terug, op dezelfde weekdag als waar je stond.
     private func schuif(_ weken: Int) {
         let nieuw = kalender.date(byAdding: .day, value: weken * 7, to: gekozen) ?? gekozen
-        verschuiving += weken
-        gekozenDag = datumVan(nieuw)
+        richting = weken >= 0 ? 1 : -1
+        Trilling.keuze()
+        withAnimation(Beweging.schuif) {
+            verschuiving += weken
+            gekozenDag = datumVan(nieuw)
+        }
     }
 
     private func openDing(_ item: Agendaitem?) {

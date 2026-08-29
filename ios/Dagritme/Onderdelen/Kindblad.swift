@@ -70,7 +70,7 @@ struct Kindblad: View {
                                 .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous)
                                     .strokeBorder(INKT, lineWidth: g.kleur == kleur ? 2.5 : 0))
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.druk)
                         .frame(width: 64, height: 34)
                         .accessibilityLabel("Kleur")
                     }

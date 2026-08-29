@@ -47,7 +47,7 @@ struct Lijstrij: View {
                 .frame(minHeight: 62)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.druk)
         }
     }
 }

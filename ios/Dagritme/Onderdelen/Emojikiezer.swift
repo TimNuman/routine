@@ -63,7 +63,7 @@ struct Emojikiezer: View {
                             .overlay(Text(teken).font(.system(size: 25)))
                             .aspectRatio(1, contentMode: .fit)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.drukje)
                     .accessibilityLabel(teken)
                 }
             }

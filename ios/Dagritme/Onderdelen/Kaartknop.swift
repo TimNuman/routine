@@ -18,7 +18,10 @@ struct Kaartknop: View {
     }
 
     var body: some View {
-        Button(action: opTik) {
+        Button {
+            Trilling.tik()
+            opTik()
+        } label: {
             Glas(radius: 22) {
                 HStack(spacing: 10) {
                     if plus {
@@ -38,7 +41,7 @@ struct Kaartknop: View {
                 .contentShape(Rectangle())
             }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.druk)
         .padding(.top, 14)
     }
 }

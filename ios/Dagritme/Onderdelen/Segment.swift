@@ -41,11 +41,15 @@ struct Segment: View {
                 .letter(L.knop)
                 // De pil is licht, ook 's avonds: wat erop staat blijft donker.
                 .foregroundStyle(aan ? INKT : palet.zacht)
+                // Meelopen met de pil eronder, niet ervoor uit.
+                .animation(Beweging.kort, value: aan)
+                .scaleEffect(aan ? 1.04 : 1)
+                .animation(Beweging.veer, value: aan)
                 .frame(maxWidth: .infinity)
                 .frame(height: 42)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.druk)
         .accessibilityAddTraits(aan ? [.isButton, .isSelected] : .isButton)
     }
 }

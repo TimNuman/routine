@@ -109,13 +109,36 @@ private func tijden(_ ruw: Json) -> (tijd: String, tot: String) {
     return (tijd, tot)
 }
 
-// Het uur uit een tijd zoals je hem opschrijft: '19:30', '8.00 - 8.15', '15u'.
-func uurUitTijd(_ waarde: String) -> Int? {
+// De tijd zoals je hem opschrijft — '19:30', '8.00 - 8.15', '15u' — als aantal
+// minuten na middernacht. Staat er geen aantal minuten bij, dan is het het hele
+// uur.
+func minuutUitTijd(_ waarde: String) -> Int? {
     let t = waarde.trimmingCharacters(in: .whitespacesAndNewlines)
     let vangst = t.eersteVangst(patroon: "(\\d{1,2})\\s*[:.uh]\\s*(\\d{2})?")
         ?? t.eersteVangst(patroon: "^\\s*(\\d{1,2})\\s*$")
-    guard let delen = vangst, let uur = Int(delen[1]) else { return nil }
-    return (0...23).contains(uur) ? uur : nil
+    guard let delen = vangst, let uur = Int(delen[1]), (0...23).contains(uur) else { return nil }
+    let min = delen.count > 2 ? (Int(delen[2]) ?? 0) : 0
+    return uur * 60 + ((0...59).contains(min) ? min : 0)
+}
+
+// Het uur eruit, voor wie alleen wil weten of iets voor of na de avond valt.
+func uurUitTijd(_ waarde: String) -> Int? {
+    minuutUitTijd(waarde).map { $0 / 60 }
+}
+
+// Hoe laat het is, in dezelfde eenheid.
+func minuutVanDeDag(_ d: Date) -> Int {
+    let delen = kalender.dateComponents([.hour, .minute], from: d)
+    return (delen.hour ?? 0) * 60 + (delen.minute ?? 0)
+}
+
+extension Agendaitem {
+    /// Wanneer dit begint. Niets betekent: het geldt de hele dag.
+    var begintOm: Int? { minuutUitTijd(tijd) ?? minuutUitTijd(tot) }
+
+    /// Wanneer dit voorbij is. Staat er een eindtijd, dan telt die: een wedstrijd
+    /// van 15:45 tot 16:45 is om vier uur nog bezig.
+    var eindigtOm: Int? { minuutUitTijd(tot) ?? minuutUitTijd(tijd) }
 }
 
 // De begintijd beslist of iets bij Overdag of bij Vanavond hoort; staat alleen
@@ -248,14 +271,49 @@ func itemsVan(_ inhoud: Inhoud, _ d: Date) -> [Agendaitem] {
 
 // 's Ochtends wat er vandaag is; 's avonds wat er vanavond nog komt en wat
 // morgen wacht.
+//
+// Wat vandaag speelt staat op tijd en valt weg zodra het geweest is: naast een
+// ritme dat je afwerkt wil je zien wat er nog komt, niet wat er is geweest.
+// Morgen blijft compleet — daar is nog niets voorbij.
 func ritmeBlokken(_ inhoud: Inhoud, _ ritme: Ritme, _ nu: Date) -> [Blok] {
+    let klok = minuutVanDeDag(nu)
     let overdag = { (d: Date) in itemsVan(inhoud, d).filter { !isAvond($0, inhoud.avondVanaf) } }
-    if ritme != .nacht { return [Blok(kop: "Vandaag", items: overdag(nu))] }
+
+    if ritme != .nacht {
+        return [Blok(kop: "Vandaag", items: opTijd(overdag(nu), voorbij: klok))]
+    }
     let morgen = kalender.date(byAdding: .day, value: 1, to: nu) ?? nu
     return [
-        Blok(kop: "Vanavond", items: itemsVan(inhoud, nu).filter { isAvond($0, inhoud.avondVanaf) }),
-        Blok(kop: "Morgen", items: overdag(morgen), later: true),
+        Blok(kop: "Vanavond",
+             items: opTijd(itemsVan(inhoud, nu).filter { isAvond($0, inhoud.avondVanaf) },
+                           voorbij: klok)),
+        Blok(kop: "Morgen", items: opTijd(overdag(morgen), voorbij: nil), later: true),
     ]
+}
+
+/// Op tijd, met wat geen tijd heeft bovenaan — dat geldt de hele dag, dus daar
+/// begin je mee. Staat `voorbij` op de klok van nu, dan valt weg wat toen al
+/// afgelopen was; iets zonder tijd blijft altijd staan, want daar is niets van
+/// te zeggen.
+///
+/// Het volgnummer telt mee bij gelijke tijden, zodat twee dingen om 13:00 niet
+/// elke keer van plek wisselen — `sorted` in Swift belooft dat zelf niet.
+func opTijd(_ items: [Agendaitem], voorbij klok: Int?) -> [Agendaitem] {
+    items
+        .filter { item in
+            guard let klok, let eind = item.eindigtOm else { return true }
+            return eind > klok
+        }
+        .enumerated()
+        .sorted { links, rechts in
+            switch (links.element.begintOm, rechts.element.begintOm) {
+            case let (l?, r?): return l == r ? links.offset < rechts.offset : l < r
+            case (nil, .some): return true
+            case (.some, nil): return false
+            case (nil, nil): return links.offset < rechts.offset
+            }
+        }
+        .map(\.element)
 }
 
 // De sleutel waaronder een vinkje in het huis staat: aan de tekst van de stap,

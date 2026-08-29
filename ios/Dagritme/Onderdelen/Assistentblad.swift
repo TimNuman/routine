@@ -358,7 +358,7 @@ private struct Vondst: View {
                     .padding(.trailing, 4)
                     .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.druk)
             .accessibilityLabel(aan ? "Niet overnemen" : "Wel overnemen")
 
             Button(action: opOpen) {
@@ -394,7 +394,7 @@ private struct Vondst: View {
                 .padding(.leading, 9)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.druk)
         }
     }
 

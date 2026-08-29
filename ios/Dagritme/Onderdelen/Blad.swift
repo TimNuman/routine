@@ -39,7 +39,10 @@ struct Blad<Inhoudje: View>: View {
         // Alleen de rand van het toestel negeren, niet die van het toetsenbord:
         // anders schuift het blad niet omhoog als er getypt wordt.
         .ignoresSafeArea(.container, edges: .bottom)
-        .onAppear { withAnimation(.easeOut(duration: 0.22)) { zichtbaar = true } }
+        .onAppear {
+            Trilling.tik()
+            withAnimation(Beweging.bladOp) { zichtbaar = true }
+        }
     }
 
     private var kaart: some View {
@@ -89,7 +92,7 @@ struct Blad<Inhoudje: View>: View {
                             .padding(.vertical, 15)
                             .background(RoundedRectangle(cornerRadius: 20, style: .continuous).fill(ORANJE))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.druk)
                     .disabled(bezig)
                     .opacity(bezig ? 0.45 : 1)
                     .padding(.top, 14)
@@ -100,9 +103,10 @@ struct Blad<Inhoudje: View>: View {
         }
     }
 
+    // Dichtdoen mag korter dan opengaan: je weet al wat er weggaat.
     private func sluit(_ daarna: @escaping () -> Void) {
-        withAnimation(.easeIn(duration: 0.16)) { zichtbaar = false }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.16, execute: daarna)
+        withAnimation(Beweging.bladAf) { zichtbaar = false }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.20, execute: daarna)
     }
 }
 
@@ -174,7 +178,7 @@ struct Tekstknop: View {
                 .padding(.vertical, 4)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.druk)
     }
 }
 
