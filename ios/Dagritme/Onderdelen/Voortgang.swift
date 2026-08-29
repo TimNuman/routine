@@ -6,9 +6,10 @@
 // die één keer over de volle balk loopt, en de telling in het groen. Dat is het
 // enige moment in de app dat iets echt áf is, dus het mag hier opvallen.
 //
-// De tegels zijn ook de knop om op één kind te filteren. Dat hoort hier: het is
-// de enige plek op het scherm waar de kinderen naast elkaar staan, dus het is
-// ook de plek waar je er een aanwijst. Nog een keer tikken zet het weer uit.
+// De tegels zijn ook de schakelaars per kind. Dat hoort hier: het is de enige
+// plek op het scherm waar de kinderen naast elkaar staan, dus het is ook de plek
+// waar je aanwijst wie er meedoet. Wat een tik precies doet staat bij
+// Gezin.wisselKind; hier gaat het alleen om hoe het eruitziet.
 import SwiftUI
 
 struct Deel {
@@ -22,8 +23,10 @@ struct Voortgang: View {
     let mensen: [Persoon]
     let deel: [String: Deel]
     var marge: CGFloat
-    /// Op wie er gefilterd staat, of nil voor iedereen.
-    var alleen: String? = nil
+    /// Wie er meedoen. Zonder filter zijn dat ze allemaal.
+    var zichtbaar: Set<String> = []
+    /// Staat er iemand uit? Alleen dan mag het scherm dat laten zien.
+    var gefilterd: Bool = false
     var opKies: ((String) -> Void)? = nil
 
     private var velen: Bool { mensen.count > 2 }
@@ -37,7 +40,8 @@ struct Voortgang: View {
                             ForEach(Array(paar.enumerated()), id: \.element.id) { (kolom, persoon) in
                                 Vak(persoon: persoon, mijn: deel[persoon.id] ?? Deel(),
                                     links: kolom > 0, boven: rij > 0,
-                                    alleen: alleen, opKies: opKies)
+                                    aan: !gefilterd || zichtbaar.contains(persoon.id),
+                                    gefilterd: gefilterd, opKies: opKies)
                                     .frame(maxWidth: .infinity)
                             }
                             if paar.count == 1 { Color.clear.frame(maxWidth: .infinity) }
@@ -49,7 +53,8 @@ struct Voortgang: View {
                     ForEach(Array(mensen.enumerated()), id: \.element.id) { (i, persoon) in
                         Vak(persoon: persoon, mijn: deel[persoon.id] ?? Deel(),
                             links: i > 0, boven: false,
-                            alleen: alleen, opKies: opKies)
+                            aan: !gefilterd || zichtbaar.contains(persoon.id),
+                            gefilterd: gefilterd, opKies: opKies)
                             .frame(maxWidth: .infinity)
                     }
                 }
@@ -70,29 +75,35 @@ private struct Vak: View {
     let mijn: Deel
     let links: Bool
     let boven: Bool
-    var alleen: String?
+    var aan: Bool = true
+    var gefilterd: Bool = false
     var opKies: ((String) -> Void)?
 
     @Environment(\.palet) private var palet
     @State private var pop: CGFloat = 1
     @State private var geweest = false
 
-    private var actief: Bool { alleen == persoon.id }
-    // Er staat een filter, maar niet op mij: dan sta ik er alleen nog om op
-    // teruggetikt te kunnen worden.
-    private var opzij: Bool { alleen != nil && !actief }
+    // Aangewezen: er staat iemand uit en ik hoor bij wie er over is.
+    private var uitgelicht: Bool { gefilterd && aan }
+    // Uitgezet: ik sta er nog om op teruggetikt te kunnen worden.
+    private var opzij: Bool { !aan }
 
     var body: some View {
         if let opKies {
             Button { opKies(persoon.id) } label: { vak }
                 .buttonStyle(.druk(0.96))
-                .accessibilityLabel(actief
-                    ? "Alles weer tonen"
-                    : "Alleen \(persoon.naam) tonen")
-                .accessibilityAddTraits(actief ? [.isButton, .isSelected] : .isButton)
+                // Zeggen wat de tik gaat doen, niet wat er nu staat — want dat
+                // verschilt: vanuit alles-aan is het een solo.
+                .accessibilityLabel(etiket)
+                .accessibilityAddTraits(aan ? [.isButton, .isSelected] : .isButton)
         } else {
             vak
         }
+    }
+
+    private var etiket: String {
+        if !gefilterd { return "Alleen \(persoon.naam) tonen" }
+        return aan ? "\(persoon.naam) verbergen" : "\(persoon.naam) er weer bij"
     }
 
     private var vak: some View {
@@ -110,7 +121,7 @@ private struct Vak: View {
                         .letter(L.naam)
                         // Wie aan staat draagt zijn eigen kleur: dat zegt in één
                         // oogopslag waar de kaartjes eronder over gaan.
-                        .foregroundStyle(actief ? Color(hex: persoon.kleur) : palet.inkt)
+                        .foregroundStyle(uitgelicht ? Color(hex: persoon.kleur) : palet.inkt)
                         .lineLimit(1)
                     Spacer(minLength: 0)
                     Text("\(mijn.af)/\(mijn.totaal)")
@@ -137,7 +148,8 @@ private struct Vak: View {
         .grayscale(opzij ? 0.85 : 0)
         .contentShape(Rectangle())
         .animation(Beweging.rustig, value: mijn.klaar)
-        .animation(Beweging.kort, value: alleen)
+        .animation(Beweging.kort, value: aan)
+        .animation(Beweging.kort, value: gefilterd)
         .onChange(of: mijn.klaar) { _, nieuw in
             guard geweest, nieuw else { return }
             Trilling.klaar()

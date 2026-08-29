@@ -32,9 +32,14 @@ final class Gezin {
     // Staat er een blad overheen? De menubalk zweeft boven de schermen en zou
     // anders over dat blad heen komen te liggen.
     var bladOpen = false
-    // Op welk kind het ritme gefilterd staat, of nil voor iedereen. Staat hier
-    // en niet in het scherm zelf, zodat een blik op de week hem niet wist.
-    var alleen: String?
+    // Welke kinderen even niet meedoen op het ritmescherm. Leeg is iedereen, en
+    // dat is ook de gewone stand. Staat hier en niet in het scherm zelf, zodat
+    // een blik op de week hem niet wist.
+    //
+    // Bewust bijgehouden als wie er úít staat en niet wie er aan staat: dan is
+    // 'iedereen' gewoon leeg, en hoeft dit niets te weten van wie er in het
+    // gezin zitten of erbij komen.
+    var verborgen: Set<String> = []
     var nu = Date()
 
     var datum: String { datumVan(nu) }
@@ -75,6 +80,35 @@ final class Gezin {
     func wakker() {
         Task { await herlaad() }
         stroom?.kijkNaar(datum)
+    }
+
+    // De schakelaars per kind, met één afwijking op de eerste tik.
+    //
+    // Staat alles aan, dan is dat geen keuze maar de ruststand — er valt niets
+    // uit te zetten waar je wat aan hebt. Een tik betekent dan "even alleen dit
+    // kind". Zodra er iemand uit staat is het een gewone schakelaar, en kun je er
+    // eentje bij aanzetten of nog eentje uit.
+    //
+    // Dat betekent dat dezelfde knop twee dingen doet, afhankelijk van waar je
+    // vandaan komt: vanuit alles-aan solo je ermee, vanaf daar schakel je. Dat is
+    // precies de bedoeling — de laatste die je weer aanzet brengt je terug in de
+    // ruststand, en de tik daarna is dus opnieuw een solo.
+    func wisselKind(_ id: String) {
+        let allen = Set((inhoud?.mensen ?? []).map(\.id))
+        // Een kind dat uit het gezin is gehaald telt niet meer mee; anders zou
+        // 'iedereen staat uit' nooit meer kloppen.
+        verborgen.formIntersection(allen)
+
+        if verborgen.isEmpty {
+            verborgen = allen.subtracting([id])
+        } else if verborgen.contains(id) {
+            verborgen.remove(id)
+        } else {
+            verborgen.insert(id)
+            // Niemand meer over is geen bruikbaar scherm; dan liever iedereen
+            // terug dan een lege lijst.
+            if verborgen == allen { verborgen.removeAll() }
+        }
     }
 
     func zetRitme(_ nieuw: Ritme) {

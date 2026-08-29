@@ -7,10 +7,12 @@
 // per rij. Dat golfje is wat het onderscheid maakt tussen "het scherm is
 // veranderd" en "er komt iets aan".
 //
-// Tikken op een kind in de balkjes bovenaan filtert het hele scherm op dat kind:
-// de kaartjes waar hij niet in voorkomt vallen weg, net als het agendaregeltje
-// dat over de ander gaat. De tellingen zelf blijven wél over iedereen gaan —
-// zou het andere kind op 0/0 springen, dan lijkt het alsof zijn ochtend weg is.
+// De balkjes bovenaan zijn schakelaars per kind: wie uit staat verdwijnt van de
+// kaartjes, en een agendaregel die alleen over hem gaat verdwijnt mee. Zie
+// Gezin.wisselKind voor waarom de eerste tik iets anders doet dan de rest.
+//
+// De tellingen blijven wél over iedereen gaan — zou een uitgezet kind op 0/0
+// springen, dan lijkt het alsof zijn ochtend weg is.
 import SwiftUI
 
 struct Ritmescherm: View {
@@ -21,15 +23,19 @@ struct Ritmescherm: View {
     // Welke kant het op ging bij de laatste wissel; leest de overgang uit.
     @State private var richting: CGFloat = 1
 
-    // Waar het filter op staat, of nil. Uit Gezin, maar alleen als dat kind er
-    // nog is: wie een kind weghaalt terwijl het filter erop stond zou anders naar
-    // een leeg scherm kijken.
-    private var alleen: String? {
-        guard let id = gezin.alleen, let inhoud = gezin.inhoud,
-              inhoud.mensen.contains(where: { $0.id == id })
-        else { return nil }
-        return id
+    private var allen: Set<String> {
+        Set((gezin.inhoud?.mensen ?? []).map(\.id))
     }
+
+    // Wie er meedoet. Kan nooit leeg worden: dat zou een scherm zonder kaartjes
+    // opleveren, en dan is er ook niets meer om op terug te tikken.
+    private var zichtbaar: Set<String> {
+        let over = allen.subtracting(gezin.verborgen)
+        return over.isEmpty ? allen : over
+    }
+
+    // Staat er iets uit? Dan mag het scherm laten merken dat je iets hebt gekozen.
+    private var gefilterd: Bool { zichtbaar.count < allen.count }
 
     private var blokken: [Blok] {
         guard let inhoud = gezin.inhoud else { return [] }
@@ -55,14 +61,14 @@ struct Ritmescherm: View {
             .filter { !$0.stappen.isEmpty }
     }
 
-    // Wat er in beeld komt: hetzelfde, maar dan door het filter.
+    // Wat er in beeld komt: hetzelfde, maar dan zonder de kinderen die uit staan.
     private var groepen: [Groep] {
-        guard let inhoud = gezin.inhoud, let alleen else { return alleGroepen }
+        guard let inhoud = gezin.inhoud, gefilterd else { return alleGroepen }
         return alleGroepen
             .map { groep in
                 var uit = groep
                 uit.stappen = groep.stappen.filter { stap in
-                    wieDoetMee(stap, inhoud.mensen).contains { $0.id == alleen }
+                    wieDoetMee(stap, inhoud.mensen).contains { zichtbaar.contains($0.id) }
                 }
                 return uit
             }
@@ -71,8 +77,8 @@ struct Ritmescherm: View {
 
     // Een regel zonder namen gaat over iedereen, dus die blijft altijd staan.
     private func hoortErbij(_ item: Agendaitem) -> Bool {
-        guard let alleen else { return true }
-        return item.wie.isEmpty || item.wie.contains(alleen)
+        guard gefilterd else { return true }
+        return item.wie.isEmpty || item.wie.contains { zichtbaar.contains($0) }
     }
 
     private var deel: [String: Deel] {
@@ -109,12 +115,9 @@ struct Ritmescherm: View {
     // De schakelaar zet niet alleen het ritme om, maar bepaalt ook welke kant het
     // op schuift. Allebei in dezelfde beweging, zodat de pil en het blok samen
     // vertrekken.
-    // Nog een keer op hetzelfde kind tikken zet het filter weer uit.
-    private func filter(_ id: String) {
+    private func wissel(_ id: String) {
         Trilling.keuze()
-        withAnimation(Beweging.veer) {
-            gezin.alleen = gezin.alleen == id ? nil : id
-        }
+        withAnimation(Beweging.veer) { gezin.wisselKind(id) }
     }
 
     private func kies(_ nieuw: Ritme) {
@@ -173,7 +176,7 @@ struct Ritmescherm: View {
     private var kolom: some View {
         if let inhoud = gezin.inhoud {
             Voortgang(mensen: inhoud.mensen, deel: deel, marge: m.breed ? 0 : 14,
-                      alleen: alleen, opKies: filter)
+                      zichtbaar: zichtbaar, gefilterd: gefilterd, opKies: wissel)
                 .komtBinnen(0, vanaf: richting)
 
             if !m.breed {
@@ -206,7 +209,7 @@ struct Ritmescherm: View {
                     spacing: m.tussen
                 ) {
                     ForEach(Array(groep.stappen.enumerated()), id: \.element) { (si, stap) in
-                        Kaartje(stap: stap, inhoud: inhoud, ritme: gezin.ritme, alleen: alleen,
+                        Kaartje(stap: stap, inhoud: inhoud, ritme: gezin.ritme, zichtbaar: zichtbaar,
                                 // Per rij tegelijk, niet per kaartje: drie naast
                                 // elkaar die na elkaar komen leest als haperen.
                                 volgorde: begin + 1 + si / max(1, m.perRij),
@@ -266,7 +269,7 @@ private struct Kaartje: View {
     let stap: Stap
     let inhoud: Inhoud
     let ritme: Ritme
-    let alleen: String?
+    let zichtbaar: Set<String>
     let volgorde: Int
     let richting: CGFloat
 
@@ -274,12 +277,9 @@ private struct Kaartje: View {
     @Environment(\.maten) private var m
     @Environment(\.palet) private var palet
 
-    // Wie er op dit kaartje staan. Staat het scherm op één kind, dan staat dat
-    // kind er alleen op — de ander hoort bij een kaartje dat je nu niet ziet.
+    // Wie er op dit kaartje staan: alleen de kinderen die aan staan.
     private var meedoen: [Persoon] {
-        let allen = wieDoetMee(stap, inhoud.mensen)
-        guard let alleen else { return allen }
-        return allen.filter { $0.id == alleen }
+        wieDoetMee(stap, inhoud.mensen).filter { zichtbaar.contains($0.id) }
     }
 
     // Alle gezichtjes op dit kaartje af: dan komt de kaart zelf ook even omhoog.
