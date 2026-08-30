@@ -45,7 +45,7 @@ enum Beweging {
     // De wissel van ochtend naar avond: elk element komt los van opzij binnen.
     // De reis is langer dan bij het golfje van onderen, dus iets meer tijd, en
     // een wipje aan het eind — het moet aankomen, niet aanschuiven.
-    static let entree = Animation.snappy(duration: 0.38, extraBounce: 0.18)
+    static let entree = Animation.snappy(duration: 0.48, extraBounce: 0.10)
 
     // Kaartjes komen na elkaar binnen, bovenste eerst: vijftig milliseconden per
     // plek, elk element zijn eigen tel. Het plafond vangt alleen absurd lange
