@@ -45,12 +45,12 @@ enum Beweging {
     // De wissel van ochtend naar avond: elk element komt los van opzij binnen.
     // De reis is langer dan bij het golfje van onderen, dus iets meer tijd, en
     // een wipje aan het eind — het moet aankomen, niet aanschuiven.
-    static let entree = Animation.snappy(duration: 0.48, extraBounce: 0.10)
+    static let entree = Animation.snappy(duration: 0.6, extraBounce: 0)
 
     // Kaartjes komen na elkaar binnen, bovenste eerst: vijftig milliseconden per
     // plek, elk element zijn eigen tel. Het plafond vangt alleen absurd lange
     // lijsten af; bij een gewoon ritme komt niets er tegenaan.
-    static func natikken(_ i: Int, stap: Double = 0.05, hoogste: Double = 0.80) -> Double {
+    static func natikken(_ i: Int, stap: Double = 0.01, hoogste: Double = 0.80) -> Double {
         min(Double(max(0, i)) * stap, hoogste)
     }
 }

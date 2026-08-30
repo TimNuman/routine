@@ -215,8 +215,17 @@ private struct Tabinhoud: View {
 // hetzelfde doen.
 extension Gezin {
     func gaNaar(_ nieuw: Tab) {
-        guard nieuw != tab else { return }
+        // De ritmeknop is geen 'terug naar waar je was' maar 'naar nu': overdag
+        // de ochtend, vanaf vijf uur de avond — ook als je zelf naar de andere
+        // kant was gestapt. Het telt niet als keuze (zie zetRitme), dus het
+        // meedraaien met de klok bij het herladen blijft gewoon werken. Allebei
+        // in dezelfde beweging: de camera pant in één keer naar de goede kolom.
+        let vanNu: Ritme = kalender.component(.hour, from: nu) >= AVONDVANAF ? .nacht : .dag
+        guard nieuw != tab || (nieuw == .ritme && ritme != vanNu) else { return }
         Trilling.keuze()
-        withAnimation(Beweging.kort) { tab = nieuw }
+        withAnimation(Beweging.kort) {
+            tab = nieuw
+            if nieuw == .ritme { ritme = vanNu }
+        }
     }
 }
