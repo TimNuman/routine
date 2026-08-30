@@ -7,10 +7,10 @@
 // eromheen nog niet hebben.
 import SwiftUI
 
-// Hoeveel schermen dit tabblad van het gekozen tabblad af staat: 0 is in
-// beeld, -1 één naar links, 1 één naar rechts. Alle drie de schermen bestaan
-// permanent (zie Tabinhoud); hieraan leest een scherm af waar zijn elementen
-// heen willen.
+// Hoeveel kolommen dit scherm van de camera af staat: 0 is in beeld, -1 één
+// naar links, 1 één naar rechts. De app is vier kolommen breed — ochtend,
+// avond, de week, de instellingen — en de camera staat op de gekozen kolom;
+// zie Tabinhoud. Hieraan leest een scherm af waar zijn elementen heen willen.
 private struct TabstandSleutel: EnvironmentKey {
     static let defaultValue: CGFloat = 0
 }
@@ -168,13 +168,18 @@ struct Hoofdscherm: View {
     }
 }
 
-// Alle drie de schermen bestaan permanent, naast elkaar in de volgorde van het
-// menu; alleen het gekozen scherm staat in beeld. Er wisselt dus geen tak om —
-// elk scherm leest zijn `tabstand` en verlegt daarmee per element het doel,
-// net als de ochtend/avond-wissel. Zo kan snel tussen tabbladen tikken niet
-// stotteren, en onthoudt elk scherm ook gewoon waar je gescrold was.
+// De hele app is vier kolommen naast elkaar — ochtend, avond, de week, de
+// instellingen — en de camera staat op de gekozen kolom. Alles bestaat
+// permanent; er wisselt geen tak om. Elk scherm leest zijn `tabstand` (zijn
+// kolom min de camera) en verlegt daarmee per element het doel, net als de
+// ochtend/avond-wissel. Zo kan snel tikken niet stotteren, onthoudt elk scherm
+// waar je gescrold was, en staat de avond nooit stiekem achter de week: van
+// ochtend naar de week is de camera twee kolommen verderop, dus de avond
+// blijft er links van.
 private struct Tabinhoud: View {
     let tab: Tab
+
+    @Environment(Gezin.self) private var gezin
 
     var body: some View {
         ZStack {
@@ -187,15 +192,22 @@ private struct Tabinhoud: View {
     private func luik(_ s: Tab, @ViewBuilder _ scherm: () -> some View) -> some View {
         let hier = tab == s
         return scherm()
-            .environment(\.tabstand, CGFloat(nummer(s) - nummer(tab)))
+            .environment(\.tabstand, kolom(s) - kolom(tab))
             // Wat binnenkomt hoort óver wat vertrekt te reizen, niet eronder.
             .zIndex(hier ? 1 : 0)
             .allowsHitTesting(hier)
             .accessibilityHidden(!hier)
     }
 
-    private func nummer(_ s: Tab) -> Int {
-        Tab.allCases.firstIndex(of: s) ?? 0
+    // Waar een tabblad in de vier kolommen begint. Het ritme telt voor zijn
+    // gekozen kant, zodat de wissel op dat scherm zelf op nul uitkomt; de
+    // kolommen van ochtend en avond zelf staan in Ritmescherm.stand.
+    private func kolom(_ s: Tab) -> CGFloat {
+        switch s {
+        case .ritme: return gezin.ritme == .nacht ? 1 : 0
+        case .week: return 2
+        case .instellingen: return 3
+        }
     }
 }
 
