@@ -15,6 +15,10 @@ struct Agenda: View {
     // geheel, en zou een tweede beweging erbovenop alleen maar rommelig worden.
     var vanaf: Int? = nil
     var richting: CGFloat = 0
+    // Hoe ver en hoe verend de regels binnenkomen; het ritmescherm laat ze de
+    // hele reis zelf maken en geeft dus meer afstand mee dan hier standaard staat.
+    var afstand: CGFloat = 18
+    var animatie: Animation = Beweging.kort
     var opOpen: ((Agendaitem) -> Void)? = nil
 
     @Environment(\.palet) private var palet
@@ -30,7 +34,7 @@ struct Agenda: View {
                         .padding(.bottom, 22)
                 }
                 Blokkop(blok.kop, marge: zij ? 0 : 22)
-                    .trapje(vanaf, 0, richting)
+                    .trapje(vanaf, 0, richting, afstand, animatie)
                 Glas(radius: 26) {
                     VStack(spacing: 0) {
                         ForEach(Array(blok.items.enumerated()), id: \.offset) { (i, item) in
@@ -38,7 +42,7 @@ struct Agenda: View {
                             Rij(item: item, mensen: mensen,
                                 eerste: i == 0, laatste: i == blok.items.count - 1,
                                 opOpen: item.bijzonder ? opOpen : nil)
-                                .trapje(vanaf, i + 1, richting)
+                                .trapje(vanaf, i + 1, richting, afstand, animatie)
                         }
                     }
                 }
@@ -175,9 +179,10 @@ private struct Stippellijn: View {
 // Alleen meedoen aan het golfje als er een plek in de volgorde is meegegeven.
 private extension View {
     @ViewBuilder
-    func trapje(_ vanaf: Int?, _ eigen: Int, _ richting: CGFloat) -> some View {
+    func trapje(_ vanaf: Int?, _ eigen: Int, _ richting: CGFloat,
+                _ afstand: CGFloat, _ animatie: Animation) -> some View {
         if let vanaf {
-            komtBinnen(vanaf + eigen, vanaf: richting, afstand: 18)
+            komtBinnen(vanaf + eigen, vanaf: richting, afstand: afstand, animatie: animatie)
         } else {
             self
         }

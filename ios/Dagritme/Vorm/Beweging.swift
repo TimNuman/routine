@@ -42,10 +42,15 @@ enum Beweging {
     static let nacht = Animation.easeInOut(duration: 0.42)
 
     // ------------------------------------------------------------ na elkaar ---
-    // Kaartjes komen na elkaar binnen, bovenste eerst. Groot genoeg dat je het
-    // ziet golven, met een plafond erop — anders zit je te wachten tot de
-    // onderste er is.
-    static func natikken(_ i: Int, stap: Double = 0.042, hoogste: Double = 0.30) -> Double {
+    // De wissel van ochtend naar avond: elk element komt los van opzij binnen.
+    // De reis is langer dan bij het golfje van onderen, dus iets meer tijd, en
+    // een wipje aan het eind — het moet aankomen, niet aanschuiven.
+    static let entree = Animation.snappy(duration: 0.38, extraBounce: 0.18)
+
+    // Kaartjes komen na elkaar binnen, bovenste eerst: vijftig milliseconden per
+    // plek, elk element zijn eigen tel. Het plafond vangt alleen absurd lange
+    // lijsten af; bij een gewoon ritme komt niets er tegenaan.
+    static func natikken(_ i: Int, stap: Double = 0.05, hoogste: Double = 0.80) -> Double {
         min(Double(max(0, i)) * stap, hoogste)
     }
 }

@@ -127,9 +127,12 @@ private struct Vak: View {
                     Text("\(mijn.af)/\(mijn.totaal)")
                         .letter(L.telling)
                         .foregroundStyle(mijn.klaar ? GROEN : palet.zacht)
-                        // De cijfers rollen om in plaats van te verspringen.
+                        // De cijfers rollen om in plaats van te verspringen —
+                        // ook het totaal, want de tegel blijft staan als het
+                        // ritme omgaat en de telling van de andere kant komt.
                         .contentTransition(.numericText(value: Double(mijn.af)))
                         .animation(Beweging.kort, value: mijn.af)
+                        .animation(Beweging.kort, value: mijn.totaal)
                 }
                 Goot(breuk: mijn.breuk, klaar: mijn.klaar, kleur: Color(hex: persoon.kleur))
             }

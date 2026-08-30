@@ -95,6 +95,19 @@ extension View {
         modifier(Binnenkomst(index: index, vanaf: vanaf, afstand: afstand, animatie: animatie))
     }
 
+    /// Voor een blok waarvan de elementen hun eigen binnenkomst regelen (zie
+    /// Binnenkomst): alleen het oude vertrekt als geheel opzij, het nieuwe staat
+    /// er meteen — onzichtbaar — en golft daarna element voor element binnen.
+    /// Als de invoeging óók zou schuiven, bewoog alles dubbel, en dat leest als
+    /// één blok in plaats van dingen die aankomen.
+    func schuiftWeg(_ richting: CGFloat) -> some View {
+        transition(.asymmetric(
+            insertion: .identity,
+            removal: .move(edge: richting >= 0 ? .leading : .trailing)
+                .combined(with: .opacity)
+        ))
+    }
+
     /// Oud gaat de ene kant uit, nieuw komt van de andere. `richting` is 1 als je
     /// vooruit gaat (oud naar links) en -1 als je terug gaat.
     func schuiftMee(_ richting: CGFloat) -> some View {
