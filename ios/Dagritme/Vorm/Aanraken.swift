@@ -107,21 +107,21 @@ extension View {
     }
 }
 
-// De ochtend/avond-wissel zonder afbraak. Een overgang die het oude weggooit en
-// het nieuwe opbouwt gaat stuk zodra je snel heen en weer tikt: half
-// binnengekomen elementen bevriezen en vertrekken als blok, en de andere kant
-// begint van voren af aan. Daarom bestaan beide kanten hier altijd en onthoudt
-// elk element gewoon waar het is — een tik verlegt alleen waar het heen wil,
-// elk element een tel na het vorige. Wie halverwege terugtikt ziet alles
-// omkeren vanaf waar het nu hangt.
+// Wisselen zonder afbraak. Een overgang die het oude weggooit en het nieuwe
+// opbouwt gaat stuk zodra je snel heen en weer tikt: half binnengekomen
+// elementen bevriezen en vertrekken als blok, en de andere kant begint van
+// voren af aan. Daarom bestaan alle kanten permanent en onthoudt elk element
+// gewoon waar het is — een tik verlegt alleen waar het heen wil, elk element
+// een tel na het vorige. Wie halverwege terugtikt ziet alles omkeren vanaf
+// waar het nu hangt.
 struct Wissel: Equatable {
     /// Waar dit element in het golfje staat; telt door in de vertraging.
     var plek: Int
-    /// Welke kant zijn thuis op ligt: -1 links (ochtend), 1 rechts (avond).
-    var kant: CGFloat
-    /// Staat zijn ritme nu in beeld?
-    var thuis: Bool
-    /// Hoe ver opzij "weg" is: net voorbij de rand van het blok.
+    /// Hoeveel plekken dit element van huis is: 0 is in beeld, -1 één scherm
+    /// naar links, 1 één naar rechts. Doen er twee wissels tegelijk mee — een
+    /// ritme op een tabblad dat zelf ook opzij staat — dan telt het gewoon op.
+    var stand: CGFloat
+    /// Hoe ver één plek opzij is: net voorbij de rand van het scherm.
     var uitwijk: CGFloat
 }
 
@@ -134,9 +134,9 @@ extension View {
     func wisselplek(_ wissel: Wissel?, extra: Int = 0) -> some View {
         if let w = wissel {
             komtBinnen(w.plek + extra)
-                .offset(x: w.thuis ? 0 : w.kant * w.uitwijk)
+                .offset(x: w.stand * w.uitwijk)
                 .animation(Beweging.entree.delay(Beweging.natikken(w.plek + extra)),
-                           value: w.thuis)
+                           value: w.stand)
         } else {
             self
         }

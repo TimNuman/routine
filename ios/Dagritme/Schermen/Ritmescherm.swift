@@ -22,11 +22,10 @@ struct Ritmescherm: View {
     @Environment(Gezin.self) private var gezin
     @Environment(\.maten) private var m
     @Environment(\.palet) private var palet
+    @Environment(\.tabstand) private var tabstand
 
-    // Hoe breed het blok is — dat is hoe ver "weg" opzij ligt — en hoe hoog
-    // elk ritme uitpakt. Het scherm krijgt de hoogte van het gekozen ritme;
-    // het andere hangt er onzichtbaar naast en mag daar niet aan meetrekken.
-    @State private var breedte: CGFloat = 400
+    // Hoe hoog elk ritme uitpakt. Het scherm krijgt de hoogte van het gekozen
+    // ritme; het andere hangt er onzichtbaar naast en mag er niet aan trekken.
     @State private var hoogten: [Ritme: CGFloat] = [:]
 
     private var allen: Set<String> {
@@ -160,14 +159,15 @@ struct Ritmescherm: View {
         }
     }
 
-    // De balkjes horen bij het scherm, niet bij het ritme: ze blijven staan
-    // terwijl hun tellingen en kleuren ter plekke omrollen.
+    // De balkjes horen bij het scherm, niet bij het ritme: bij een
+    // ochtend/avond-wissel blijven ze staan terwijl hun tellingen en kleuren
+    // ter plekke omrollen. Aan de tabwissel doen ze wél mee.
     @ViewBuilder
     private var wisselaar: some View {
         if let inhoud = gezin.inhoud {
             Voortgang(mensen: inhoud.mensen, deel: deel, marge: m.breed ? 0 : 14,
                       zichtbaar: zichtbaar, gefilterd: gefilterd, opKies: wissel)
-                .komtBinnen()
+                .wisselplek(Wissel(plek: 1, stand: tabstand, uitwijk: m.breedte + 60))
         }
         tweeluik
     }
@@ -181,8 +181,6 @@ struct Ritmescherm: View {
             luik(.nacht)
         }
         .frame(height: hoogten[gezin.ritme], alignment: .top)
-        .onGeometryChange(for: CGFloat.self, of: { $0.size.width },
-                          action: { breedte = $0 })
     }
 
     private func luik(_ r: Ritme) -> some View {
@@ -263,11 +261,13 @@ struct Ritmescherm: View {
         }
     }
 
-    // Alles wat een element moet weten om mee te doen aan de wissel: waar het
-    // thuishoort, of dat nu in beeld is, en hoe ver opzij "weg" ligt.
+    // Alles wat een element moet weten om mee te doen aan de wissel. De twee
+    // verschuivingen tellen op: waar het ritme staat ten opzichte van het
+    // gekozen ritme, en waar dit hele tabblad staat ten opzichte van het
+    // gekozen tabblad.
     private func stand(_ r: Ritme, _ plek: Int) -> Wissel {
-        Wissel(plek: plek, kant: r == .nacht ? 1 : -1,
-               thuis: gezin.ritme == r, uitwijk: breedte + 60)
+        let ritmestand: CGFloat = gezin.ritme == r ? 0 : (r == .nacht ? 1 : -1)
+        return Wissel(plek: plek, stand: ritmestand + tabstand, uitwijk: m.breedte + 60)
     }
 
     // De plekken in het golfje, doorgeteld over alles heen. Een agendablok is

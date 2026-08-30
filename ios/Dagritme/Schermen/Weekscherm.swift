@@ -6,6 +6,8 @@ import SwiftUI
 struct Weekscherm: View {
     @Environment(Gezin.self) private var gezin
     @Environment(\.palet) private var palet
+    @Environment(\.maten) private var m
+    @Environment(\.tabstand) private var tabstand
 
     @State private var verschuiving = 0
     @State private var gekozenDag: String?
@@ -82,6 +84,7 @@ struct Weekscherm: View {
                     opKies: kiesDag,
                     opSchuif: schuif
                 )
+                .wisselplek(tabplek(1))
 
                 if let inhoud = gezin.inhoud {
                     // Alles wat bij de gekozen dag hoort is één ding. Een andere
@@ -89,6 +92,7 @@ struct Weekscherm: View {
                     // en komt het nieuwe binnen — regel voor regel, van boven
                     // naar beneden. De ZStack laat oud en nieuw elkaar even
                     // overlappen; in een VStack zouden ze onder elkaar komen.
+                    // Aan de tabwissel doet het blok als geheel mee.
                     ZStack(alignment: .topLeading) {
                         VStack(alignment: .leading, spacing: 0) {
                             dagInhoud(inhoud)
@@ -96,11 +100,14 @@ struct Weekscherm: View {
                         .id(datumVan(gekozen))
                         .schuiftMee(richting)
                     }
+                    .wisselplek(tabplek(2))
 
                     // Deze twee horen bij het scherm en niet bij de dag, dus die
                     // blijven staan waar ze staan.
                     Kaartknop("Iets bijzonders toevoegen", plus: true) { openDing(nil) }
+                        .wisselplek(tabplek(3))
                     Kaartknop("Typ of plak iets", teken: "✨") { assistent = true }
+                        .wisselplek(tabplek(4))
                 }
             }
 
@@ -160,6 +167,11 @@ struct Weekscherm: View {
     // Hoeveel regels er vóór blok `i` staan: elk blok is een kopje plus zijn rijen.
     private func voorloop(_ i: Int) -> Int {
         blokken.prefix(i).reduce(0) { $0 + 1 + $1.items.count }
+    }
+
+    // Hoe dit scherm meedoet aan de tabwissel, element voor element.
+    private func tabplek(_ plek: Int) -> Wissel {
+        Wissel(plek: plek, stand: tabstand, uitwijk: m.breedte + 60)
     }
 
     // Een andere dag in dezelfde week: het blok eronder schuift dezelfde kant op
