@@ -200,7 +200,7 @@ struct Ritmescherm: View {
         VStack(alignment: .leading, spacing: 0) {
             ForEach(Array(blokken(r).enumerated()), id: \.element.id) { (i, blok) in
                 Agenda(blok: blok, mensen: inhoud.mensen, zij: true, eerste: i == 0,
-                       wissel: stand(r, i * 2))
+                       wissel: stand(r, plekken(blokken(r).prefix(i))))
             }
         }
         .zIndex(gezin.ritme == r ? 1 : 0)
@@ -214,7 +214,7 @@ struct Ritmescherm: View {
             if !m.breed {
                 ForEach(Array(blokken(r).filter { !$0.later }.enumerated()), id: \.element.id) { (i, blok) in
                     Agenda(blok: blok, mensen: inhoud.mensen,
-                           wissel: stand(r, i * 2))
+                           wissel: stand(r, plekken(blokken(r).filter { !$0.later }.prefix(i))))
                 }
             }
 
@@ -253,12 +253,12 @@ struct Ritmescherm: View {
             if !m.breed {
                 ForEach(Array(blokken(r).filter { $0.later }.enumerated()), id: \.element.id) { (i, blok) in
                     Agenda(blok: blok, mensen: inhoud.mensen,
-                           wissel: stand(r, naloop(r) + i * 2))
+                           wissel: stand(r, naloop(r) + plekken(blokken(r).filter { $0.later }.prefix(i))))
                 }
             }
 
             if !groepen(r).isEmpty {
-                Opnieuw().wisselplek(stand(r, naloop(r) + blokken(r).filter { $0.later }.count * 2 + 1))
+                Opnieuw().wisselplek(stand(r, naloop(r) + plekken(blokken(r).filter { $0.later }) + 1))
             }
         }
     }
@@ -271,9 +271,14 @@ struct Ritmescherm: View {
     }
 
     // De plekken in het golfje, doorgeteld over alles heen. Een agendablok is
-    // er twee (de kop en de kaart), een groep een kopje plus één per kaartje.
+    // zijn kop plus één per regel (de kaart reist met de eerste regel mee),
+    // een groep een kopje plus één per kaartje.
+    private func plekken<S: Sequence>(_ blokken: S) -> Int where S.Element == Blok {
+        blokken.reduce(0) { $0 + 1 + $1.items.count }
+    }
+
     private func voorloop(_ r: Ritme, _ gi: Int) -> Int {
-        var n = m.breed ? 0 : blokken(r).filter { !$0.later }.count * 2
+        var n = m.breed ? 0 : plekken(blokken(r).filter { !$0.later })
         for groep in groepen(r).prefix(gi) {
             n += 1 + groep.stappen.count
         }

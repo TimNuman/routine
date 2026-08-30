@@ -15,10 +15,12 @@ struct Agenda: View {
     // geheel, en zou een tweede beweging erbovenop alleen maar rommelig worden.
     var vanaf: Int? = nil
     var richting: CGFloat = 0
-    // Op het ritmescherm doen kop en kaart mee aan de ochtend/avond-wissel: de
-    // kop op zijn plek, de kaart één erachter. De regels reizen met de kaart
-    // mee — een glas dat blijft staan terwijl zijn regels vertrekken scheurt
-    // het kaartje open. Het weekscherm kent geen wissel en laat dit leeg.
+    // Op het ritmescherm doet alles hier mee aan de ochtend/avond-wissel: de
+    // kop op zijn plek, de kaart mét zijn eerste regel één erachter, en elke
+    // volgende regel weer één verder. Die latere regels schuiven bínnen het
+    // glas — dat knipt ze bij zijn rand af, dus ze komen de kaart in in plaats
+    // van er los naast te hangen. Het weekscherm kent geen wissel en laat dit
+    // leeg.
     var wissel: Wissel? = nil
     var opOpen: ((Agendaitem) -> Void)? = nil
 
@@ -41,11 +43,18 @@ struct Agenda: View {
                 Glas(radius: 26) {
                     VStack(spacing: 0) {
                         ForEach(Array(blok.items.enumerated()), id: \.offset) { (i, item) in
-                            if i > 0 { Rectangle().fill(palet.streep).frame(height: 1).padding(.horizontal, 16) }
+                            if i > 0 {
+                                // Het streepje reist met de regel eronder mee.
+                                Rectangle().fill(palet.streep).frame(height: 1).padding(.horizontal, 16)
+                                    .wisselplek(wissel, extra: 1 + i)
+                            }
                             Rij(item: item, mensen: mensen,
                                 eerste: i == 0, laatste: i == blok.items.count - 1,
                                 opOpen: item.bijzonder ? opOpen : nil)
                                 .trapje(vanaf, i + 1, richting)
+                                // De eerste regel zit al aan de kaart vast; de
+                                // rest schuift er los achteraan naar binnen.
+                                .wisselplek(i == 0 ? nil : wissel, extra: 1 + i)
                         }
                     }
                 }
