@@ -1,13 +1,12 @@
 // Het ritme van vandaag: de stappen als kaartjes, per groep, met een rond
 // gezichtje per kind dat meedoet.
 //
-// Van ochtend naar avond vertrekt het oude blok opzij — vooruit naar links,
-// terug naar rechts, want zo staat de schakelaar er ook bij. Wat binnenkomt
-// schuift niet als blok mee maar komt er los van: elk element apart van
-// dezelfde kant, met een wipje aan het eind en elk een tel na het vorige — de
-// agendakop eerst, dan de regels, dan kopjes en kaartjes, kaartje voor kaartje.
-// Dat golfje is wat het onderscheid maakt tussen "het scherm is veranderd" en
-// "er komt iets aan".
+// Ochtend en avond staan allebei permanent in het scherm: ochtend links, avond
+// rechts — zo staat de schakelaar er ook bij — en alleen het gekozen ritme
+// staat in beeld. De schakelaar breekt niets af en bouwt niets op; hij verlegt
+// per element alleen het doel, met een wipje en elk element een tel na het
+// vorige. Daardoor kan snel heen en weer tikken niet stotteren: wat halverwege
+// hangt keert gewoon om vanaf waar het is. Zie Wissel in Vorm/Aanraken.swift.
 //
 // De balkjes bovenaan doen níet mee: die horen bij het scherm, niet bij het
 // ritme, dus die blijven staan en alleen hun tellingen en kleuren draaien om.
@@ -19,18 +18,16 @@
 // springen, dan lijkt het alsof zijn ochtend weg is.
 import SwiftUI
 
-// Hoe ver alles opzij klaarstaat voor het binnenkomt. Het blok zelf schuift
-// niet meer mee, dus dit is de hele reis; op de standaard 22 zou je de beweging
-// nauwelijks zien aankomen.
-private let AANLOOP: CGFloat = 56
-
 struct Ritmescherm: View {
     @Environment(Gezin.self) private var gezin
     @Environment(\.maten) private var m
     @Environment(\.palet) private var palet
 
-    // Welke kant het op ging bij de laatste wissel; leest de overgang uit.
-    @State private var richting: CGFloat = 1
+    // Hoe breed het blok is — dat is hoe ver "weg" opzij ligt — en hoe hoog
+    // elk ritme uitpakt. Het scherm krijgt de hoogte van het gekozen ritme;
+    // het andere hangt er onzichtbaar naast en mag daar niet aan meetrekken.
+    @State private var breedte: CGFloat = 400
+    @State private var hoogten: [Ritme: CGFloat] = [:]
 
     private var allen: Set<String> {
         Set((gezin.inhoud?.mensen ?? []).map(\.id))
@@ -46,9 +43,9 @@ struct Ritmescherm: View {
     // Staat er iets uit? Dan mag het scherm laten merken dat je iets hebt gekozen.
     private var gefilterd: Bool { zichtbaar.count < allen.count }
 
-    private var blokken: [Blok] {
+    private func blokken(_ r: Ritme) -> [Blok] {
         guard let inhoud = gezin.inhoud else { return [] }
-        return ritmeBlokken(inhoud, gezin.ritme, gezin.nu)
+        return ritmeBlokken(inhoud, r, gezin.nu)
             .map { blok in
                 var uit = blok
                 uit.items = blok.items.filter(hoortErbij)
@@ -57,11 +54,11 @@ struct Ritmescherm: View {
             .filter { !$0.items.isEmpty }
     }
 
-    // Alles wat er vandaag hoort te staan, zonder filter — hier hangen de
-    // tellingen aan, en die moeten over het hele ritme blijven gaan.
-    private var alleGroepen: [Groep] {
+    // Alles wat er hoort te staan, zonder filter — hier hangen de tellingen
+    // aan, en die moeten over het hele ritme blijven gaan.
+    private func alleGroepen(_ r: Ritme) -> [Groep] {
         guard let inhoud = gezin.inhoud else { return [] }
-        return inhoud[gezin.ritme]
+        return inhoud[r]
             .map { groep in
                 var uit = groep
                 uit.stappen = groep.stappen.filter { !$0.label.isEmpty && opDeze($0, gezin.nu) }
@@ -71,9 +68,9 @@ struct Ritmescherm: View {
     }
 
     // Wat er in beeld komt: hetzelfde, maar dan zonder de kinderen die uit staan.
-    private var groepen: [Groep] {
-        guard let inhoud = gezin.inhoud, gefilterd else { return alleGroepen }
-        return alleGroepen
+    private func groepen(_ r: Ritme) -> [Groep] {
+        guard let inhoud = gezin.inhoud, gefilterd else { return alleGroepen(r) }
+        return alleGroepen(r)
             .map { groep in
                 var uit = groep
                 uit.stappen = groep.stappen.filter { stap in
@@ -95,7 +92,7 @@ struct Ritmescherm: View {
         var uit: [String: Deel] = [:]
         for persoon in inhoud.mensen {
             var telling = Deel()
-            for groep in alleGroepen {
+            for groep in alleGroepen(gezin.ritme) {
                 for stap in groep.stappen {
                     guard wieDoetMee(stap, inhoud.mensen).contains(where: { $0.id == persoon.id })
                     else { continue }
@@ -121,17 +118,15 @@ struct Ritmescherm: View {
         }
     }
 
-    // De schakelaar zet niet alleen het ritme om, maar bepaalt ook welke kant het
-    // op schuift. Allebei in dezelfde beweging, zodat de pil en het blok samen
-    // vertrekken.
     private func wissel(_ id: String) {
         Trilling.keuze()
         withAnimation(Beweging.veer) { gezin.wisselKind(id) }
     }
 
+    // De elementen regelen hun eigen reis (zie Wissel); deze animatie is voor
+    // de rest — de titel, de tellingen, en de hoogte van het blok.
     private func kies(_ nieuw: Ritme) {
         guard nieuw != gezin.ritme else { return }
-        richting = nieuw == .nacht ? 1 : -1
         Trilling.keuze()
         withAnimation(Beweging.schuif) { gezin.zetRitme(nieuw) }
     }
@@ -142,7 +137,7 @@ struct Ritmescherm: View {
     private var inhoudje: some View {
         // Staat er niets in de agenda, dan vervalt de kolom en krijgen de
         // kaartjes de volle breedte.
-        let metZij = m.breed && !blokken.isEmpty
+        let metZij = m.breed && !blokken(gezin.ritme).isEmpty
 
         if m.breed {
             HStack(alignment: .top, spacing: m.naast) {
@@ -154,15 +149,8 @@ struct Ritmescherm: View {
 
                 if metZij, let inhoud = gezin.inhoud {
                     ZStack(alignment: .topLeading) {
-                        VStack(alignment: .leading, spacing: 0) {
-                            ForEach(Array(blokken.enumerated()), id: \.element.id) { (i, blok) in
-                                Agenda(blok: blok, mensen: inhoud.mensen, zij: true, eerste: i == 0,
-                                       vanaf: zijloop(i), richting: richting,
-                                       afstand: AANLOOP, animatie: Beweging.entree)
-                            }
-                        }
-                        .id(gezin.ritme)
-                        .schuiftWeg(richting)
+                        zijluik(.dag, inhoud)
+                        zijluik(.nacht, inhoud)
                     }
                     .frame(width: m.zijkolom)
                 }
@@ -172,42 +160,69 @@ struct Ritmescherm: View {
         }
     }
 
-    // De balkjes staan boven de wissel en horen er niet bij: geen nieuwe
-    // identiteit als het ritme omgaat, dus ze blijven staan terwijl hun
-    // tellingen en kleuren ter plekke omrollen. De rest van de kolom is één
-    // ding dat vervangen wordt. De ZStack is er omdat oud en nieuw elkaar even
-    // overlappen: in een VStack zouden ze onder elkaar komen te staan en zou
-    // het scherm tijdens de overgang twee keer zo lang worden.
+    // De balkjes horen bij het scherm, niet bij het ritme: ze blijven staan
+    // terwijl hun tellingen en kleuren ter plekke omrollen.
     @ViewBuilder
     private var wisselaar: some View {
         if let inhoud = gezin.inhoud {
             Voortgang(mensen: inhoud.mensen, deel: deel, marge: m.breed ? 0 : 14,
                       zichtbaar: zichtbaar, gefilterd: gefilterd, opKies: wissel)
-                .komtBinnen(0, vanaf: richting)
+                .komtBinnen()
         }
+        tweeluik
+    }
+
+    // Beide ritmes bestaan altijd. Het blok is zo hoog als het gekozen ritme;
+    // het andere is even hoog als hijzelf maar telt niet mee, dus wat er onder
+    // de rand uitsteekt hangt buiten beeld naast het scherm.
+    private var tweeluik: some View {
         ZStack(alignment: .topLeading) {
-            VStack(alignment: .leading, spacing: 0) { kolom }
-                .id(gezin.ritme)
-                .schuiftWeg(richting)
+            luik(.dag)
+            luik(.nacht)
         }
+        .frame(height: hoogten[gezin.ritme], alignment: .top)
+        .onGeometryChange(for: CGFloat.self, of: { $0.size.width },
+                          action: { breedte = $0 })
+    }
+
+    private func luik(_ r: Ritme) -> some View {
+        let thuis = gezin.ritme == r
+        return VStack(alignment: .leading, spacing: 0) { kolom(r) }
+            .onGeometryChange(for: CGFloat.self, of: { $0.size.height },
+                              action: { hoogten[r] = $0 })
+            // Wat binnenkomt hoort óver wat vertrekt te reizen, niet eronder.
+            .zIndex(thuis ? 1 : 0)
+            .allowsHitTesting(thuis)
+            .accessibilityHidden(!thuis)
+    }
+
+    private func zijluik(_ r: Ritme, _ inhoud: Inhoud) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(blokken(r).enumerated()), id: \.element.id) { (i, blok) in
+                Agenda(blok: blok, mensen: inhoud.mensen, zij: true, eerste: i == 0,
+                       wissel: stand(r, i * 2))
+            }
+        }
+        .zIndex(gezin.ritme == r ? 1 : 0)
+        .allowsHitTesting(gezin.ritme == r)
+        .accessibilityHidden(gezin.ritme != r)
     }
 
     @ViewBuilder
-    private var kolom: some View {
+    private func kolom(_ r: Ritme) -> some View {
         if let inhoud = gezin.inhoud {
             if !m.breed {
-                ForEach(Array(blokken.filter { !$0.later }.enumerated()), id: \.element.id) { (i, blok) in
+                ForEach(Array(blokken(r).filter { !$0.later }.enumerated()), id: \.element.id) { (i, blok) in
                     Agenda(blok: blok, mensen: inhoud.mensen,
-                           vanaf: eerder(i), richting: richting,
-                           afstand: AANLOOP, animatie: Beweging.entree)
+                           wissel: stand(r, i * 2))
                 }
             }
 
-            ForEach(Array(groepen.enumerated()), id: \.offset) { (gi, groep) in
+            ForEach(Array(groepen(r).enumerated()), id: \.offset) { (gi, groep) in
                 // Het kopje en de kaartjes eronder tellen door op één rij, zodat
                 // het golfje van boven naar beneden loopt en niet per groep
                 // opnieuw begint.
-                let begin = voorloop(gi)
+                let begin = voorloop(r, gi)
 
                 HStack(alignment: .firstTextBaseline, spacing: 12) {
                     Text(groep.groep).letter(L.groep).foregroundStyle(palet.inkt)
@@ -218,7 +233,7 @@ struct Ritmescherm: View {
                 .padding(.top, 20)
                 .padding(.horizontal, m.insprong)
                 .padding(.bottom, 10)
-                .komtBinnen(begin, vanaf: richting, afstand: AANLOOP, animatie: Beweging.entree)
+                .wisselplek(stand(r, begin))
 
                 LazyVGrid(
                     columns: Array(repeating: GridItem(.flexible(), spacing: m.tussen),
@@ -226,63 +241,48 @@ struct Ritmescherm: View {
                     spacing: m.tussen
                 ) {
                     ForEach(Array(groep.stappen.enumerated()), id: \.element) { (si, stap) in
-                        Kaartje(stap: stap, inhoud: inhoud, ritme: gezin.ritme, zichtbaar: zichtbaar,
+                        Kaartje(stap: stap, inhoud: inhoud, ritme: r, zichtbaar: zichtbaar,
                                 // Elk kaartje zijn eigen tel, ook naast elkaar:
                                 // binnen een rij loopt het golfje dan gewoon
                                 // opzij door in plaats van per rij te ploffen.
-                                volgorde: begin + 1 + si,
-                                richting: richting)
+                                wissel: stand(r, begin + 1 + si))
                     }
                 }
             }
 
             if !m.breed {
-                ForEach(Array(blokken.filter { $0.later }.enumerated()), id: \.element.id) { (i, blok) in
+                ForEach(Array(blokken(r).filter { $0.later }.enumerated()), id: \.element.id) { (i, blok) in
                     Agenda(blok: blok, mensen: inhoud.mensen,
-                           vanaf: naloop(i), richting: richting,
-                           afstand: AANLOOP, animatie: Beweging.entree)
+                           wissel: stand(r, naloop(r) + i * 2))
                 }
             }
 
-            if !groepen.isEmpty {
-                Opnieuw().komtBinnen(naloop(blokken.filter { $0.later }.count) + 1,
-                                     vanaf: richting, afstand: AANLOOP, animatie: Beweging.entree)
+            if !groepen(r).isEmpty {
+                Opnieuw().wisselplek(stand(r, naloop(r) + blokken(r).filter { $0.later }.count * 2 + 1))
             }
         }
     }
 
-    // De plekken in de volgorde, doorgeteld over alles heen: elke agendaregel,
-    // elk kopje en elk kaartje is er één. Een blok in de agenda telt als zijn
-    // kop plus zijn regels.
-    private func plekken<S: Sequence>(_ blokken: S) -> Int where S.Element == Blok {
-        blokken.reduce(0) { $0 + 1 + $1.items.count }
+    // Alles wat een element moet weten om mee te doen aan de wissel: waar het
+    // thuishoort, of dat nu in beeld is, en hoe ver opzij "weg" ligt.
+    private func stand(_ r: Ritme, _ plek: Int) -> Wissel {
+        Wissel(plek: plek, kant: r == .nacht ? 1 : -1,
+               thuis: gezin.ritme == r, uitwijk: breedte + 60)
     }
 
-    // Waar agendablok `i` bovenaan begint (alleen op een telefoon; breed staat
-    // de agenda in de zijkolom en begint de kolom bij de eerste groep).
-    private func eerder(_ i: Int) -> Int {
-        plekken(blokken.filter { !$0.later }.prefix(i))
-    }
-
-    // Hoeveel plekken er vóór groep `gi` liggen: de agenda erboven, en per
-    // eerdere groep een kopje plus zijn kaartjes.
-    private func voorloop(_ gi: Int) -> Int {
-        var n = m.breed ? 0 : plekken(blokken.filter { !$0.later })
-        for groep in groepen.prefix(gi) {
+    // De plekken in het golfje, doorgeteld over alles heen. Een agendablok is
+    // er twee (de kop en de kaart), een groep een kopje plus één per kaartje.
+    private func voorloop(_ r: Ritme, _ gi: Int) -> Int {
+        var n = m.breed ? 0 : blokken(r).filter { !$0.later }.count * 2
+        for groep in groepen(r).prefix(gi) {
             n += 1 + groep.stappen.count
         }
         return n
     }
 
-    // Waar de staart na de groepen begint: het `i`-de latere agendablok.
-    private func naloop(_ i: Int) -> Int {
-        voorloop(groepen.count) + plekken(blokken.filter { $0.later }.prefix(i))
-    }
-
-    // Hetzelfde voor de zijkolom, die zijn eigen telling heeft: die golft naast
-    // de kaartjes mee in plaats van erachteraan.
-    private func zijloop(_ i: Int) -> Int {
-        plekken(blokken.prefix(i))
+    // Waar de staart na de groepen begint.
+    private func naloop(_ r: Ritme) -> Int {
+        voorloop(r, groepen(r).count)
     }
 }
 
@@ -314,8 +314,7 @@ private struct Kaartje: View {
     let inhoud: Inhoud
     let ritme: Ritme
     let zichtbaar: Set<String>
-    let volgorde: Int
-    let richting: CGFloat
+    let wissel: Wissel
 
     @Environment(Gezin.self) private var gezin
     @Environment(\.maten) private var m
@@ -374,6 +373,6 @@ private struct Kaartje: View {
         // hij naar de achtergrond. Subtiel — het moet geen tweede feestje worden.
         .scaleEffect(helemaalAf ? 0.985 : 1)
         .animation(Beweging.wip, value: helemaalAf)
-        .komtBinnen(volgorde, vanaf: richting, afstand: AANLOOP, animatie: Beweging.entree)
+        .wisselplek(wissel)
     }
 }

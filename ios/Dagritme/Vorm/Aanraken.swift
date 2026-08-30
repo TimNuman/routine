@@ -95,19 +95,6 @@ extension View {
         modifier(Binnenkomst(index: index, vanaf: vanaf, afstand: afstand, animatie: animatie))
     }
 
-    /// Voor een blok waarvan de elementen hun eigen binnenkomst regelen (zie
-    /// Binnenkomst): alleen het oude vertrekt als geheel opzij, het nieuwe staat
-    /// er meteen — onzichtbaar — en golft daarna element voor element binnen.
-    /// Als de invoeging óók zou schuiven, bewoog alles dubbel, en dat leest als
-    /// één blok in plaats van dingen die aankomen.
-    func schuiftWeg(_ richting: CGFloat) -> some View {
-        transition(.asymmetric(
-            insertion: .identity,
-            removal: .move(edge: richting >= 0 ? .leading : .trailing)
-                .combined(with: .opacity)
-        ))
-    }
-
     /// Oud gaat de ene kant uit, nieuw komt van de andere. `richting` is 1 als je
     /// vooruit gaat (oud naar links) en -1 als je terug gaat.
     func schuiftMee(_ richting: CGFloat) -> some View {
@@ -117,5 +104,41 @@ extension View {
             removal: .move(edge: richting >= 0 ? .leading : .trailing)
                 .combined(with: .opacity)
         ))
+    }
+}
+
+// De ochtend/avond-wissel zonder afbraak. Een overgang die het oude weggooit en
+// het nieuwe opbouwt gaat stuk zodra je snel heen en weer tikt: half
+// binnengekomen elementen bevriezen en vertrekken als blok, en de andere kant
+// begint van voren af aan. Daarom bestaan beide kanten hier altijd en onthoudt
+// elk element gewoon waar het is — een tik verlegt alleen waar het heen wil,
+// elk element een tel na het vorige. Wie halverwege terugtikt ziet alles
+// omkeren vanaf waar het nu hangt.
+struct Wissel: Equatable {
+    /// Waar dit element in het golfje staat; telt door in de vertraging.
+    var plek: Int
+    /// Welke kant zijn thuis op ligt: -1 links (ochtend), 1 rechts (avond).
+    var kant: CGFloat
+    /// Staat zijn ritme nu in beeld?
+    var thuis: Bool
+    /// Hoe ver opzij "weg" is: net voorbij de rand van het blok.
+    var uitwijk: CGFloat
+}
+
+extension View {
+    /// `extra` telt door op de plek, voor wie meer dan één element uit dezelfde
+    /// Wissel bedient (de kop en de kaart van een agendablok). De komtBinnen
+    /// eronder is voor de allereerste keer in beeld; daarna speelt alleen nog
+    /// het verleggen van het doel.
+    @ViewBuilder
+    func wisselplek(_ wissel: Wissel?, extra: Int = 0) -> some View {
+        if let w = wissel {
+            komtBinnen(w.plek + extra)
+                .offset(x: w.thuis ? 0 : w.kant * w.uitwijk)
+                .animation(Beweging.entree.delay(Beweging.natikken(w.plek + extra)),
+                           value: w.thuis)
+        } else {
+            self
+        }
     }
 }
