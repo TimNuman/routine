@@ -21,7 +21,7 @@ extension Color {
     }
 }
 
-func tint(_ hex: String, _ part: Double) -> Color {
+func soft(_ hex: String, _ part: Double) -> Color {
     Color(hex: hex).opacity(part)
 }
 

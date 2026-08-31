@@ -97,7 +97,7 @@ private struct Tile: View {
     private var tile: some View {
         HStack(spacing: 11) {
             ZStack {
-                Circle().fill(tint(person.color, tally.complete ? 0.30 : 0.18))
+                Circle().fill(soft(person.color, tally.complete ? 0.30 : 0.18))
                 Text(person.emoji).font(.system(size: 26))
             }
             .accessibilityHidden(true)

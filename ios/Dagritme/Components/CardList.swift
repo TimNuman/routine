@@ -61,7 +61,7 @@ struct Faces: View {
         HStack(spacing: -8) {
             ForEach(people.prefix(4)) { p in
                 ZStack {
-                    Circle().fill(tint(p.color, 0.18))
+                    Circle().fill(soft(p.color, 0.18))
                     Text(p.emoji).font(.system(size: size * 0.56))
                 }
                 .frame(width: size, height: size)

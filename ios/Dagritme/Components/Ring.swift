@@ -34,7 +34,7 @@ struct Ring: View {
                 .scaleEffect(on ? 1 : 1.35)
 
             Circle()
-                .fill(tint(person.color, 0.16))
+                .fill(soft(person.color, 0.16))
                 .overlay(Circle().strokeBorder(edgeColor, lineWidth: 1.5))
                 .frame(width: faceSize, height: faceSize)
                 .overlay {
