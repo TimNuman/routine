@@ -39,7 +39,8 @@ struct ReadError: LocalizedError {
 
 func askAssistant(_ payload: Payload) async throws -> Json {
     guard let address = Config.assistantURL else {
-        throw ReadError(message: "Er is nog geen adres voor de uitlezer.", fromServer: false)
+        throw ReadError(message: String(localized: "Er is nog geen adres voor de uitlezer."),
+                        fromServer: false)
     }
     var request = URLRequest(url: address)
     request.httpMethod = "POST"

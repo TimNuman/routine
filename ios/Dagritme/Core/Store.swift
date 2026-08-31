@@ -8,7 +8,7 @@ enum StoreError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .noAddress: return "geen adres ingesteld"
+        case .noAddress: return String(localized: "geen adres ingesteld")
         case let .http(status): return "HTTP \(status)"
         }
     }

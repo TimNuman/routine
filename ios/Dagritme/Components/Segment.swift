@@ -20,8 +20,8 @@ struct Segment: View {
                         .animation(Motion.spring, value: routine)
 
                     HStack(spacing: 0) {
-                        option("ochtend", .day, "segment.day")
-                        option("avond", .night, "segment.night")
+                        option(String(localized: "ochtend"), .day, "segment.day")
+                        option(String(localized: "avond"), .night, "segment.night")
                     }
                 }
             }

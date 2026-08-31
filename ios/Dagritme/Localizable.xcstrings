@@ -1,102 +1,1546 @@
 {
-  "sourceLanguage" : "nl",
-  "strings" : {
-    "a11y.child.hide" : {
-      "comment" : "Tapping a progress tile that is currently shown",
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "%@ verbergen" } }
+  "sourceLanguage": "nl",
+  "strings": {
+    " en ": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": " en "
+          }
+        }
       }
     },
-    "a11y.child.show" : {
-      "comment" : "Tapping a progress tile that is currently hidden",
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "%@ er weer bij" } }
+    "'s Avonds": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "'s Avonds"
+          }
+        }
       }
     },
-    "a11y.child.solo" : {
-      "comment" : "Tapping a progress tile when everyone is shown",
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Alleen %@ tonen" } }
+    "Annuleer": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annuleer"
+          }
+        }
       }
     },
-    "a11y.close" : {
-      "comment" : "Tapping the dimmed backdrop behind a sheet",
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Sluiten" } }
+    "Avond": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avond"
+          }
+        }
       }
     },
-    "a11y.color" : {
-      "comment" : "A colour swatch in the child form",
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Kleur" } }
+    "Avondritme": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avondritme"
+          }
+        }
       }
     },
-    "a11y.date" : {
-      "comment" : "The date picker in the entry form",
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Datum" } }
+    "Bewaar": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bewaar"
+          }
+        }
       }
     },
-    "a11y.icon" : {
-      "comment" : "The emoji button in a form",
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Icoon" } }
+    "Bezig…": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bezig…"
+          }
+        }
       }
     },
-    "a11y.message" : {
-      "comment" : "The paste box in the assistant sheet",
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Bericht om uit te lezen" } }
+    "Bij welk onderdeel": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bij welk onderdeel"
+          }
+        }
       }
     },
-    "a11y.step.done" : {
-      "comment" : "State of a ticked circle",
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "afgevinkt" } }
+    "Dagritme": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dagritme"
+          }
+        }
       }
     },
-    "a11y.step.open" : {
-      "comment" : "State of an unticked circle",
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "nog niet afgevinkt" } }
+    "De tekst": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De tekst"
+          }
+        }
       }
     },
-    "a11y.step.person" : {
-      "comment" : "VoiceOver label for one child's circle on a step card",
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "%1$@, %2$@" } }
+    "Deze dag staat er niets in de agenda.": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze dag staat er niets in de agenda."
+          }
+        }
       }
     },
-    "a11y.suggestion.skip" : {
-      "comment" : "Checkbox on a checked suggestion",
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Niet overnemen" } }
+    "Deze week": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze week"
+          }
+        }
       }
     },
-    "a11y.suggestion.take" : {
-      "comment" : "Checkbox on an unchecked suggestion",
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Wel overnemen" } }
+    "Dieren": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieren"
+          }
+        }
       }
     },
-    "a11y.tally" : {
-      "comment" : "VoiceOver value for a child's progress bar",
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld van %2$lld af" } }
+    "Dingen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dingen"
+          }
+        }
       }
     },
-    "a11y.week.next" : {
-      "comment" : "Arrow right of the week strip",
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Volgende week" } }
+    "Dit haalde ik eruit": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit haalde ik eruit"
+          }
+        }
       }
     },
-    "a11y.week.previous" : {
-      "comment" : "Arrow left of the week strip",
-      "localizations" : {
-        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Vorige week" } }
+    "Eenmalig": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eenmalig"
+          }
+        }
+      }
+    },
+    "Er is nog geen adres voor de uitlezer.": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er is nog geen adres voor de uitlezer."
+          }
+        }
+      }
+    },
+    "Er moet minstens één kind overblijven.": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er moet minstens één kind overblijven."
+          }
+        }
+      }
+    },
+    "Er moet minstens één kind zijn.": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er moet minstens één kind zijn."
+          }
+        }
+      }
+    },
+    "Er moet minstens één stap overblijven.": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er moet minstens één stap overblijven."
+          }
+        }
+      }
+    },
+    "Er staat niets op een datum.": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er staat niets op een datum."
+          }
+        }
+      }
+    },
+    "Erbij": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erbij"
+          }
+        }
+      }
+    },
+    "Eten": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eten"
+          }
+        }
+      }
+    },
+    "Even iets vragen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Even iets vragen"
+          }
+        }
+      }
+    },
+    "Even kijken wat erin staat…": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Even kijken wat erin staat…"
+          }
+        }
+      }
+    },
+    "Even lezen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Even lezen"
+          }
+        }
+      }
+    },
+    "Even lezen…": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Even lezen…"
+          }
+        }
+      }
+    },
+    "Ga verder": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ga verder"
+          }
+        }
+      }
+    },
+    "Gereed": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gereed"
+          }
+        }
+      }
+    },
+    "Gezicht en naam": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gezicht en naam"
+          }
+        }
+      }
+    },
+    "Groep": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groep"
+          }
+        }
+      }
+    },
+    "Groep toevoegen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Groep toevoegen"
+          }
+        }
+      }
+    },
+    "Hier kon ik niets uithalen dat in de app hoort. Probeer het wat concreter, of plak er meer bij.": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hier kon ik niets uithalen dat in de app hoort. Probeer het wat concreter, of plak er meer bij."
+          }
+        }
+      }
+    },
+    "Hoe laat": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoe laat"
+          }
+        }
+      }
+    },
+    "Hoe vaak": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoe vaak"
+          }
+        }
+      }
+    },
+    "Huis": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Huis"
+          }
+        }
+      }
+    },
+    "Icoon en naam": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Icoon en naam"
+          }
+        }
+      }
+    },
+    "Iets bijzonders toevoegen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iets bijzonders toevoegen"
+          }
+        }
+      }
+    },
+    "Iets eenmaligs": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iets eenmaligs"
+          }
+        }
+      }
+    },
+    "Iets eenmaligs toevoegen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iets eenmaligs toevoegen"
+          }
+        }
+      }
+    },
+    "In welk ritme": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In welk ritme"
+          }
+        }
+      }
+    },
+    "Instellingen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instellingen"
+          }
+        }
+      }
+    },
+    "Item": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item"
+          }
+        }
+      }
+    },
+    "Item toevoegen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Item toevoegen"
+          }
+        }
+      }
+    },
+    "Kenmerk toevoegen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kenmerk toevoegen"
+          }
+        }
+      }
+    },
+    "Kies een gezicht": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies een gezicht"
+          }
+        }
+      }
+    },
+    "Kies een icoon": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies een icoon"
+          }
+        }
+      }
+    },
+    "Kies er minstens één.": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kies er minstens één."
+          }
+        }
+      }
+    },
+    "Kind": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kind"
+          }
+        }
+      }
+    },
+    "Kind toevoegen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kind toevoegen"
+          }
+        }
+      }
+    },
+    "Kinderen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kinderen"
+          }
+        }
+      }
+    },
+    "Kleur": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kleur"
+          }
+        }
+      }
+    },
+    "Lees uit": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lees uit"
+          }
+        }
+      }
+    },
+    "Mensen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mensen"
+          }
+        }
+      }
+    },
+    "Morgen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Morgen"
+          }
+        }
+      }
+    },
+    "Naam": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naam"
+          }
+        }
+      }
+    },
+    "Naam van de app": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naam van de app"
+          }
+        }
+      }
+    },
+    "Naamloos": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naamloos"
+          }
+        }
+      }
+    },
+    "Naamloze stap": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naamloze stap"
+          }
+        }
+      }
+    },
+    "Niets gevonden": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niets gevonden"
+          }
+        }
+      }
+    },
+    "Nieuw item": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuw item"
+          }
+        }
+      }
+    },
+    "Nieuw kind": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuw kind"
+          }
+        }
+      }
+    },
+    "Nieuwe groep": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuwe groep"
+          }
+        }
+      }
+    },
+    "Nieuwe stap": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuwe stap"
+          }
+        }
+      }
+    },
+    "Niks bijzonders": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niks bijzonders"
+          }
+        }
+      }
+    },
+    "Ochtend": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ochtend"
+          }
+        }
+      }
+    },
+    "Ochtendritme": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ochtendritme"
+          }
+        }
+      }
+    },
+    "Ons dagritme": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ons dagritme"
+          }
+        }
+      }
+    },
+    "Op welke dag": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op welke dag"
+          }
+        }
+      }
+    },
+    "Op welke dagen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op welke dagen"
+          }
+        }
+      }
+    },
+    "Opnieuw proberen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opnieuw proberen"
+          }
+        }
+      }
+    },
+    "Overdag": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overdag"
+          }
+        }
+      }
+    },
+    "Plak een mail of appje, of typ het gewoon:\\n\\niedere dinsdag om 18:00 tennis Emma": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plak een mail of appje, of typ het gewoon:\\n\\niedere dinsdag om 18:00 tennis Emma"
+          }
+        }
+      }
+    },
+    "Plak eerst een bericht.": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plak eerst een bericht."
+          }
+        }
+      }
+    },
+    "Ritme": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ritme"
+          }
+        }
+      }
+    },
+    "Spelen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spelen"
+          }
+        }
+      }
+    },
+    "Stap": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stap"
+          }
+        }
+      }
+    },
+    "Stap toevoegen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stap toevoegen"
+          }
+        }
+      }
+    },
+    "Typ of plak iets": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Typ of plak iets"
+          }
+        }
+      }
+    },
+    "Vanavond": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vanavond"
+          }
+        }
+      }
+    },
+    "Vandaag": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vandaag"
+          }
+        }
+      }
+    },
+    "Verwijderen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verwijderen"
+          }
+        }
+      }
+    },
+    "Volgende week": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volgende week"
+          }
+        }
+      }
+    },
+    "Voor wie": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voor wie"
+          }
+        }
+      }
+    },
+    "Voorstel": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voorstel"
+          }
+        }
+      }
+    },
+    "Voorstellen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voorstellen"
+          }
+        }
+      }
+    },
+    "Vorige week": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorige week"
+          }
+        }
+      }
+    },
+    "Vraag": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vraag"
+          }
+        }
+      }
+    },
+    "Vul een datum in, of zet hem op herhalen.": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul een datum in, of zet hem op herhalen."
+          }
+        }
+      }
+    },
+    "Vul een naam in.": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vul een naam in."
+          }
+        }
+      }
+    },
+    "Waar hoort dit bij?": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Waar hoort dit bij?"
+          }
+        }
+      }
+    },
+    "Wat is er": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wat is er"
+          }
+        }
+      }
+    },
+    "Wat voor iets": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wat voor iets"
+          }
+        }
+      }
+    },
+    "Wat we verder weten": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wat we verder weten"
+          }
+        }
+      }
+    },
+    "Weekritme": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weekritme"
+          }
+        }
+      }
+    },
+    "Weg": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weg"
+          }
+        }
+      }
+    },
+    "a11y.child.hide": {
+      "comment": "Tapping a progress tile that is currently shown",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ verbergen"
+          }
+        }
+      }
+    },
+    "a11y.child.show": {
+      "comment": "Tapping a progress tile that is currently hidden",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ er weer bij"
+          }
+        }
+      }
+    },
+    "a11y.child.solo": {
+      "comment": "Tapping a progress tile when everyone is shown",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alleen %@ tonen"
+          }
+        }
+      }
+    },
+    "a11y.close": {
+      "comment": "Tapping the dimmed backdrop behind a sheet",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sluiten"
+          }
+        }
+      }
+    },
+    "a11y.color": {
+      "comment": "A colour swatch in the child form",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kleur"
+          }
+        }
+      }
+    },
+    "a11y.date": {
+      "comment": "The date picker in the entry form",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Datum"
+          }
+        }
+      }
+    },
+    "a11y.icon": {
+      "comment": "The emoji button in a form",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Icoon"
+          }
+        }
+      }
+    },
+    "a11y.message": {
+      "comment": "The paste box in the assistant sheet",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bericht om uit te lezen"
+          }
+        }
+      }
+    },
+    "a11y.step.done": {
+      "comment": "State of a ticked circle",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "afgevinkt"
+          }
+        }
+      }
+    },
+    "a11y.step.open": {
+      "comment": "State of an unticked circle",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nog niet afgevinkt"
+          }
+        }
+      }
+    },
+    "a11y.step.person": {
+      "comment": "VoiceOver label for one child's circle on a step card",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "a11y.suggestion.skip": {
+      "comment": "Checkbox on a checked suggestion",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Niet overnemen"
+          }
+        }
+      }
+    },
+    "a11y.suggestion.take": {
+      "comment": "Checkbox on an unchecked suggestion",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wel overnemen"
+          }
+        }
+      }
+    },
+    "a11y.tally": {
+      "comment": "VoiceOver value for a child's progress bar",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld van %2$lld af"
+          }
+        }
+      }
+    },
+    "a11y.week.next": {
+      "comment": "Arrow right of the week strip",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volgende week"
+          }
+        }
+      }
+    },
+    "a11y.week.previous": {
+      "comment": "Arrow left of the week strip",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorige week"
+          }
+        }
+      }
+    },
+    "avond": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "avond"
+          }
+        }
+      }
+    },
+    "elke dag": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "elke dag"
+          }
+        }
+      }
+    },
+    "elke week": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "elke week"
+          }
+        }
+      }
+    },
+    "geen adres ingesteld": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "geen adres ingesteld"
+          }
+        }
+      }
+    },
+    "geen van deze": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "geen van deze"
+          }
+        }
+      }
+    },
+    "iedereen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iedereen"
+          }
+        }
+      }
+    },
+    "kind": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kind"
+          }
+        }
+      }
+    },
+    "niets op een datum": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "niets op een datum"
+          }
+        }
+      }
+    },
+    "nog niemand": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nog niemand"
+          }
+        }
+      }
+    },
+    "ochtend": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ochtend"
+          }
+        }
+      }
+    },
+    "opnieuw beginnen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "opnieuw beginnen"
+          }
+        }
+      }
+    },
+    "ritme": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ritme"
+          }
+        }
+      }
+    },
+    "school, sport en wat er verder is": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "school, sport en wat er verder is"
+          }
+        }
+      }
+    },
+    "testversie": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "testversie"
+          }
+        }
+      }
+    },
+    "tijd": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tijd"
+          }
+        }
+      }
+    },
+    "tot": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tot"
+          }
+        }
+      }
+    },
+    "van": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "van"
+          }
+        }
+      }
+    },
+    "vandaag": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vandaag"
+          }
+        }
+      }
+    },
+    "waarvan": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "waarvan"
+          }
+        }
+      }
+    },
+    "weekdagen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "weekdagen"
+          }
+        }
+      }
+    },
+    "weekend": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "weekend"
+          }
+        }
+      }
+    },
+    "welke": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "welke"
+          }
+        }
+      }
+    },
+    "☀️ ochtend": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "☀️ ochtend"
+          }
+        }
+      }
+    },
+    "✅ taak": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "✅ taak"
+          }
+        }
+      }
+    },
+    "🌙 avond": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🌙 avond"
+          }
+        }
+      }
+    },
+    "📌 één keer": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "📌 één keer"
+          }
+        }
+      }
+    },
+    "🔁 herhalen": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🔁 herhalen"
+          }
+        }
+      }
+    },
+    "🗓️ agenda": {
+      "extractionState": "manual",
+      "localizations": {
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "🗓️ agenda"
+          }
+        }
       }
     }
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

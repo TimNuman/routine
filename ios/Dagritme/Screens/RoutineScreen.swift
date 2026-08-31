@@ -81,7 +81,7 @@ struct RoutineScreen: View {
 
     var body: some View {
         Screen(
-            title: household.routine == .night ? "Avond" : "Ochtend",
+            title: household.routine == .night ? String(localized: "Avond") : String(localized: "Ochtend"),
             subtitle: dateText(household.now),
             center: AnyView(Segment(routine: household.routine, onSelect: select,
                                     topPad: m.wide ? 0 : 16))

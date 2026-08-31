@@ -98,7 +98,7 @@ final class Household {
         do {
             try await Store.saveContent(fresh)
         } catch {
-            return "Opslaan lukte niet (\(error.localizedDescription))."
+            return String(localized: "Opslaan lukte niet (\(error.localizedDescription)).")
         }
         content = normalize(Json(fresh))
         return nil

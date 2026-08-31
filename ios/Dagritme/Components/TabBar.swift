@@ -18,9 +18,9 @@ struct TabBar: View {
     }
 
     private let items: [Item] = [
-        Item(tab: .routine, name: "Ritme", shape: .routine, id: "tab.routine"),
-        Item(tab: .week, name: "Deze week", shape: .week, id: "tab.week"),
-        Item(tab: .settings, name: "Instellingen", shape: .gear, id: "tab.settings"),
+        Item(tab: .routine, name: String(localized: "Ritme"), shape: .routine, id: "tab.routine"),
+        Item(tab: .week, name: String(localized: "Deze week"), shape: .week, id: "tab.week"),
+        Item(tab: .settings, name: String(localized: "Instellingen"), shape: .gear, id: "tab.settings"),
     ]
 
     var body: some View {

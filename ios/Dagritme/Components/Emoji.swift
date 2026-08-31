@@ -1,30 +1,30 @@
 import Foundation
 
 let EMOJI_GROUPS: [(name: String, glyphs: [String])] = [
-    (name: "Dagritme", glyphs: [
+    (name: String(localized: "Dagritme"), glyphs: [
         "🛏️", "⏰", "🌅", "🪥", "🚿", "🛁", "🧼", "🧴", "🪮", "💇", "🚽", "🧻", "👕", "👖", "🧦", "👟",
         "🧥", "🧢", "🎒", "🚪", "🚗", "🚲", "🛴", "🌙", "😴", "📖", "🤗", "🧸", "🎧", "🪟"
     ]),
-    (name: "Eten", glyphs: [
+    (name: String(localized: "Eten"), glyphs: [
         "🍽️", "🥣", "🍞", "🥐", "🧀", "🥚", "🍎", "🍌", "🍓", "🥕", "🥪", "🍕", "🍝", "🥗", "🧃", "🥛",
         "🍪", "🍫", "🍇", "🥦", "🍚", "🍲", "🥞", "🧁"
     ]),
-    (name: "Spelen", glyphs: [
+    (name: String(localized: "Spelen"), glyphs: [
         "🧸", "⚽", "🏀", "🎾", "🏊", "🚴", "🤸", "🎨", "🖍️", "🧩", "🎲", "🎮", "🎹", "🎸", "🪁", "🛝",
         "🏐", "🥋", "⛸️", "🏓", "🎯", "🪀", "🤾", "🩰"
     ]),
-    (name: "Huis", glyphs: [
+    (name: String(localized: "Huis"), glyphs: [
         "🧹", "🧺", "🪣", "🧽", "🛋️", "🪴", "🗑️", "🍳", "🧊", "📦", "🔑", "💡", "🧷", "🪥", "🔌", "🧴"
     ]),
-    (name: "Dieren", glyphs: [
+    (name: String(localized: "Dieren"), glyphs: [
         "🦄", "🦖", "🐶", "🐱", "🦊", "🐼", "🐸", "🐙", "🦋", "🐝", "🦉", "🐢", "🐳", "🦁", "🐰", "🐥",
         "🦔", "🐧", "🐨", "🐷", "🐮", "🐒", "🐴", "🐬"
     ]),
-    (name: "Mensen", glyphs: [
+    (name: String(localized: "Mensen"), glyphs: [
         "😀", "😊", "🥳", "🤗", "🧒", "👦", "👧", "👶", "👩", "👨", "👩🏻", "👨🏻", "🧑", "👵", "👴", "🦸",
         "🧚", "🧜", "🤖", "👻", "🧑‍🤝‍🧑", "👨‍👩‍👧‍👦", "🏋️", "🧘"
     ]),
-    (name: "Dingen", glyphs: [
+    (name: String(localized: "Dingen"), glyphs: [
         "⭐", "❤️", "📅", "🏫", "🏠", "🎁", "🎈", "🎉", "📷", "🎵", "☀️", "🌈", "❄️", "🌸", "🔔", "⏳",
         "📌", "✅", "🏆", "💧", "🔥", "🌟", "🚌", "✏️"
     ]),

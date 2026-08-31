@@ -51,15 +51,15 @@ struct ChildSheet: View {
 
     var body: some View {
         ZStack {
-            Sheet(title: title, button: "Bewaar", onCancel: onCancel,
+            Sheet(title: title, button: String(localized: "Bewaar"), onCancel: onCancel,
                   onButton: { onSave(child) }) {
-                FormHead("Gezicht en naam", first: true)
+                FormHead(String(localized: "Gezicht en naam"), first: true)
                 HStack(spacing: 10) {
                     EmojiButton(value: child.emoji, size: 52) { picker = true }
-                    Field(value: $child.name, placeholder: "Naam", id: "child.name")
+                    Field(value: $child.name, placeholder: String(localized: "Naam"), id: "child.name")
                 }
 
-                FormHead("Kleur")
+                FormHead(String(localized: "Kleur"))
                 Chips {
                     ForEach(COLORS, id: \.self) { color in
                         Button { child.color = color } label: {
@@ -76,26 +76,26 @@ struct ChildSheet: View {
                     }
                 }
 
-                FormHead("Wat we verder weten")
+                FormHead(String(localized: "Wat we verder weten"))
                 EditCard {
                     ForEach(Array(child.pairs.enumerated()), id: \.element.id) { (i, _) in
                         if i > 0 { HairLine() }
-                        SwipeAway(title: "Weg", onDelete: { child.pairs.remove(at: i) }) {
+                        SwipeAway(title: String(localized: "Weg"), onDelete: { child.pairs.remove(at: i) }) {
                             HStack(spacing: 10) {
-                                Field(value: $child.pairs[i].key, placeholder: "waarvan")
-                                Field(value: $child.pairs[i].value, placeholder: "welke")
+                                Field(value: $child.pairs[i].key, placeholder: String(localized: "waarvan"))
+                                Field(value: $child.pairs[i].value, placeholder: String(localized: "welke"))
                             }
                             .padding(.vertical, 8)
                             .padding(.horizontal, 12)
                             .frame(minHeight: 58)
                         }
                     }
-                    AddRow("Kenmerk toevoegen") { child.pairs.append(TraitPair()) }
+                    AddRow(String(localized: "Kenmerk toevoegen")) { child.pairs.append(TraitPair()) }
                 }
             }
 
             if picker {
-                EmojiPicker(title: "Kies een gezicht", current: child.emoji,
+                EmojiPicker(title: String(localized: "Kies een gezicht"), current: child.emoji,
                             onCancel: { picker = false },
                             onDone: { glyph in child.emoji = glyph; picker = false })
             }

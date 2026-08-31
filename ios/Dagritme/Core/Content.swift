@@ -2,20 +2,29 @@ import Foundation
 
 let DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
 let COLORS = ["#2FA37C", "#7C6BD6", "#D9724F", "#3B82C4", "#C2417E", "#E0A33E"]
-let DAY_NAMES = ["zondag", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag"]
 let WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 let WORKDAYS: Set<String> = ["mon", "tue", "wed", "thu", "fri"]
 let WEEKEND: Set<String> = ["sat", "sun"]
 
 let EVENING_FROM = 17
-let DAY_LETTERS = ["mon": "M", "tue": "D", "wed": "W", "thu": "D", "fri": "V",
-                   "sat": "Z", "sun": "Z"]
-let DAY_LABELS = ["mon": "ma", "tue": "di", "wed": "wo", "thu": "do", "fri": "vr",
-                  "sat": "za", "sun": "zo"]
-let MONTHS = ["januari", "februari", "maart", "april", "mei", "juni", "juli",
-              "augustus", "september", "oktober", "november", "december"]
 
 let calendar = Calendar.current
+
+private let symbols: Calendar = {
+    var c = Calendar.current
+    c.locale = .autoupdatingCurrent
+    return c
+}()
+
+func dayLetter(_ code: String) -> String {
+    guard let i = DAYS.firstIndex(of: code) else { return "" }
+    return symbols.veryShortStandaloneWeekdaySymbols[i]
+}
+
+func dayLabel(_ code: String) -> String {
+    guard let i = DAYS.firstIndex(of: code) else { return code }
+    return symbols.shortStandaloneWeekdaySymbols[i].lowercased()
+}
 
 func weekdayIndex(_ d: Date) -> Int {
     calendar.component(.weekday, from: d) - 1
@@ -27,8 +36,7 @@ func dateString(_ d: Date) -> String {
 }
 
 func dateText(_ d: Date) -> String {
-    let parts = calendar.dateComponents([.month, .day], from: d)
-    return "\(DAY_NAMES[weekdayIndex(d)]) \(parts.day ?? 0) \(MONTHS[(parts.month ?? 1) - 1])"
+    d.formatted(.dateTime.weekday(.wide).day().month(.wide).locale(.autoupdatingCurrent))
 }
 
 func weekOf(_ d: Date, _ weeks: Int = 0) -> [Date] {
@@ -131,11 +139,9 @@ func isEvening(_ item: AgendaItem, _ from: Int) -> Bool {
     isEvening(time: item.time, until: item.until, evening: item.evening, from: from)
 }
 
-func dayLabel(_ code: String) -> String { DAY_LABELS[code] ?? code }
-
 func timeText(time: String, until: String) -> String {
     if !time.isEmpty && !until.isEmpty { return "\(time) – \(until)" }
-    if !until.isEmpty { return "tot " + until }
+    if !until.isEmpty { return String(localized: "tot \(until)") }
     return time
 }
 
@@ -201,14 +207,14 @@ func normalize(_ raw: Json) -> Content {
     let people = raw["people"].array.enumerated().map { (i, p) in
         Person(
             id: p["id"].text("p\(i)"),
-            name: p["name"].text("Naamloos"),
+            name: p["name"].text(String(localized: "Naamloos")),
             emoji: p["emoji"].text("🙂"),
             color: p["color"].text(COLORS[i % COLORS.count]),
             traits: traitsFrom(p["traits"])
         )
     }
     var out = Content(
-        title: raw["title"].text("Ons dagritme"),
+        title: raw["title"].text(String(localized: "Ons dagritme")),
         people: people,
         day: makeGroups(raw["day"]),
         night: makeGroups(raw["night"]),
@@ -248,14 +254,16 @@ func routineBlocks(_ content: Content, _ routine: Routine, _ now: Date) -> [Bloc
     let daytime = { (d: Date) in itemsOn(content, d).filter { !isEvening($0, EVENING_FROM) } }
 
     if routine != .night {
-        return [Block(heading: "Vandaag", items: byTime(daytime(now), past: clock))]
+        return [Block(heading: String(localized: "Vandaag"),
+                      items: byTime(daytime(now), past: clock))]
     }
     let tomorrow = calendar.date(byAdding: .day, value: 1, to: now) ?? now
     return [
-        Block(heading: "Vanavond",
+        Block(heading: String(localized: "Vanavond"),
               items: byTime(itemsOn(content, now).filter { isEvening($0, EVENING_FROM) },
                             past: clock)),
-        Block(heading: "Morgen", items: byTime(daytime(tomorrow), past: nil), later: true),
+        Block(heading: String(localized: "Morgen"),
+              items: byTime(daytime(tomorrow), past: nil), later: true),
     ]
 }
 

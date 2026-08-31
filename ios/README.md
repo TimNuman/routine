@@ -103,6 +103,41 @@ De maten groeien mee met het scherm (`Style/Metrics.swift`), met dezelfde drie
 grenzen als op web: krapper onder 360, een maatje groter vanaf 700, en vanaf 1000
 komt het weekritme als kolom ernaast — dat is een iPad in liggende stand.
 
+## Talen
+
+De app begint in het Nederlands, maar niets zit er meer aan vast. Alle tekst die
+je op het scherm ziet loopt via `String(localized:)` of via `Text(...)` — dat
+laatste vertaalt SwiftUI zelf — en komt samen in
+[`Dagritme/Localizable.xcstrings`](Dagritme/Localizable.xcstrings). Duits, Deens
+en Engels staan al als taal bij het project; in de cataloguseditor van Xcode vul
+je ze in.
+
+Wat VoiceOver voorleest zit daar in dezelfde catalogus bij, onder sleutels die
+met `a11y.` beginnen (zie [`Dagritme/Core/Strings.swift`](Dagritme/Core/Strings.swift)).
+De namen waarop de Maestro-stromen aanwijzen zijn iets anders: die zijn Engels,
+worden nooit voorgelezen en vertalen dus niet mee.
+
+Dagen en maanden komen uit de kalender van het toestel, niet uit een lijstje —
+`dateText` en `shortDate` gebruiken `Date.formatted`, en de letters boven de
+weekstrip komen uit `veryShortStandaloneWeekdaySymbols`. Een Deense telefoon
+krijgt daardoor Deense dagnamen zonder dat er iets vertaald hoeft te worden. De
+codes die over de lijn gaan (`mon`, `tue`, …) staan daar los van en veranderen
+niet mee.
+
+De uitlezer krijgt de taal mee in het verzoek en schrijft zijn voorstellen in
+die taal terug; het systeemprompt zelf blijft Nederlands, want dat is een
+instructie aan het model en geen tekst voor de ouder.
+
+**Eén ding vertaalt met opzet niet.** `stepKey` maakt van de naam van een stap
+de sleutel waaronder het vinkje in het huis staat, en vouwt daarvoor met een
+vaste `nl_NL`. Dat is geen slordigheid maar juist wat de sleutel stabiel houdt —
+zou hij de taal van het toestel volgen, dan verschoof de sleutel per telefoon.
+Wel iets om te weten: letters die geen samenstelling zijn (ø, æ, å, ß) vallen
+eruit in plaats van dat ze worden omgeschreven, dus een Deens huis krijgt
+sleutels met gaten. Werkt prima, maar het is het opruimen waard voordat er
+Deense gezinnen bij komen — en dat kan alleen samen met een verhuizing van de
+bestaande sleutels.
+
 ## Lettertypes
 
 `Fonts/` bevat dezelfde bijgeknipte bestanden als `mobiel/assets/fonts/`,

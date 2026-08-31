@@ -30,7 +30,7 @@ struct EntrySheet: View {
 
     var body: some View {
         ZStack {
-            Sheet(title: title, alert: alert, button: "Bewaar", busy: busy,
+            Sheet(title: title, alert: alert, button: String(localized: "Bewaar"), busy: busy,
                   onCancel: onCancel, onButton: save) {
                 nameSection
                 whenSection
@@ -40,7 +40,7 @@ struct EntrySheet: View {
             }
 
             if picker {
-                EmojiPicker(title: "Kies een icoon", current: entry.icon,
+                EmojiPicker(title: String(localized: "Kies een icoon"), current: entry.icon,
                             onCancel: { picker = false },
                             onDone: { glyph in entry.icon = glyph; picker = false })
             }
@@ -49,25 +49,25 @@ struct EntrySheet: View {
 
     @ViewBuilder
     private var nameSection: some View {
-        FormHead("Icoon en naam", first: true)
+        FormHead(String(localized: "Icoon en naam"), first: true)
         HStack(spacing: 10) {
             EmojiButton(value: entry.icon, size: 52) { picker = true }
-            Field(value: $entry.text, placeholder: "Wat is er", id: "entry.text")
+            Field(value: $entry.text, placeholder: String(localized: "Wat is er"), id: "entry.text")
         }
     }
 
     @ViewBuilder
     private var whenSection: some View {
-        FormHead("Hoe vaak")
+        FormHead(String(localized: "Hoe vaak"))
         Chips {
-            Chip(label: "🔁 herhalen", on: entry.weekly,
+            Chip(label: String(localized: "🔁 herhalen"), on: entry.weekly,
                  id: "entry.weekly") { entry.weekly = true }
-            Chip(label: "📌 één keer", on: !entry.weekly,
+            Chip(label: String(localized: "📌 één keer"), on: !entry.weekly,
                  id: "entry.once") { entry.weekly = false }
         }
 
         if entry.weekly {
-            FormHead("Op welke dagen")
+            FormHead(String(localized: "Op welke dagen"))
             Chips(equal: true) {
                 ForEach(WEEKDAYS, id: \.self) { day in
                     Chip(label: dayLabel(day), on: entry.days.contains(day),
@@ -78,54 +78,53 @@ struct EntrySheet: View {
                 }
             }
         } else {
-            FormHead("Op welke dag")
+            FormHead(String(localized: "Op welke dag"))
             DatePicker("Datum", selection: dateBinding, displayedComponents: [.date])
                 .datePickerStyle(.compact)
                 .labelsHidden()
                 .accessibilityLabel(Spoken.date)
-                .environment(\.locale, Locale(identifier: "nl_NL"))
                 .padding(.leading, 4)
         }
     }
 
     @ViewBuilder
     private var kindSection: some View {
-        FormHead("Wat voor iets")
+        FormHead(String(localized: "Wat voor iets"))
         Chips {
-            Chip(label: "✅ taak", on: entry.task) {
+            Chip(label: String(localized: "✅ taak"), on: entry.task) {
                 entry.task = true
                 if entry.group.trimmingCharacters(in: .whitespaces).isEmpty {
                     entry.group = firstGroupName(source(), entry.routine)
                 }
             }
-            Chip(label: "🗓️ agenda", on: !entry.task) { entry.task = false }
+            Chip(label: String(localized: "🗓️ agenda"), on: !entry.task) { entry.task = false }
         }
 
         if entry.task {
-            FormHead("In welk ritme")
+            FormHead(String(localized: "In welk ritme"))
             Chips {
-                Chip(label: "☀️ ochtend", on: entry.routine == .day) {
+                Chip(label: String(localized: "☀️ ochtend"), on: entry.routine == .day) {
                     entry.routine = .day
                     entry.group = firstGroupName(source(), .day)
                 }
-                Chip(label: "🌙 avond", on: entry.routine == .night) {
+                Chip(label: String(localized: "🌙 avond"), on: entry.routine == .night) {
                     entry.routine = .night
                     entry.group = firstGroupName(source(), .night)
                 }
             }
 
-            FormHead("Bij welk onderdeel")
+            FormHead(String(localized: "Bij welk onderdeel"))
             Chips {
                 ForEach(groupNames, id: \.self) { name in
                     Chip(label: name, on: entry.group == name) { entry.group = name }
                 }
             }
         } else {
-            FormHead("Hoe laat")
+            FormHead(String(localized: "Hoe laat"))
             HStack(spacing: 10) {
-                Field(value: $entry.time, placeholder: "van", kind: .time)
+                Field(value: $entry.time, placeholder: String(localized: "van"), kind: .time)
                 Text("–").textStyle(Fonts.rowMeta).foregroundStyle(SOFT_INK)
-                Field(value: $entry.until, placeholder: "tot", kind: .time)
+                Field(value: $entry.until, placeholder: String(localized: "tot"), kind: .time)
                 Spacer(minLength: 0)
             }
         }
@@ -133,11 +132,11 @@ struct EntrySheet: View {
 
     @ViewBuilder
     private var whoSection: some View {
-        FormHead("Voor wie")
+        FormHead(String(localized: "Voor wie"))
         Chips {
-            Chip(label: "iedereen", on: entry.who.isEmpty) { entry.who = [] }
+            Chip(label: String(localized: "iedereen"), on: entry.who.isEmpty) { entry.who = [] }
             ForEach(people) { person in
-                Chip(label: "\(person.emoji) \(person.name.isEmpty ? "kind" : person.name)",
+                Chip(label: "\(person.emoji) \(person.name.isEmpty ? String(localized: "kind") : person.name)",
                      on: entry.who.contains(person.id),
                      color: Color(hex: person.color)) {
                     if let i = entry.who.firstIndex(of: person.id) { entry.who.remove(at: i) }

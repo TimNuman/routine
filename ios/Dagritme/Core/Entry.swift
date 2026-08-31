@@ -115,7 +115,8 @@ func placeEntry(_ source: Draft, _ e: Entry, _ id: String, _ origin: Origin?) {
         var groups = source[e.routine]
         var target = groups.first { trimmed($0.name) == trimmed(e.group) } ?? groups.last
         if target == nil {
-            let fresh = DraftGroup(name: trimmed(e.group).isEmpty ? "Erbij" : trimmed(e.group),
+            let fresh = DraftGroup(name: trimmed(e.group).isEmpty
+                                       ? String(localized: "Erbij") : trimmed(e.group),
                                    time: "", steps: [])
             groups.append(fresh)
             target = fresh
@@ -164,10 +165,10 @@ func placeEntry(_ source: Draft, _ e: Entry, _ id: String, _ origin: Origin?) {
 
 func moveEntry(_ source: Draft, _ place: Place?, _ e: Entry) -> String? {
     if e.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-        return "Vul een naam in."
+        return String(localized: "Vul een naam in.")
     }
     if !e.weekly && !isDate(e.date) {
-        return "Vul een datum in, of zet hem op herhalen."
+        return String(localized: "Vul een datum in, of zet hem op herhalen.")
     }
     var id = newId()
     if case let .event(item) = place { id = item.id }

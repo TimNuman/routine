@@ -16,11 +16,11 @@ struct WeekScreen: View {
 
     private var weekTitle: String {
         switch weekShift {
-        case 0: return "Deze week"
-        case 1: return "Volgende week"
-        case -1: return "Vorige week"
-        case let n where n > 1: return "Over \(n) weken"
-        default: return "\(-weekShift) weken terug"
+        case 0: return String(localized: "Deze week")
+        case 1: return String(localized: "Volgende week")
+        case -1: return String(localized: "Vorige week")
+        case let n where n > 1: return String(localized: "Over \(n) weken")
+        default: return String(localized: "\(-weekShift) weken terug")
         }
     }
 
@@ -50,9 +50,9 @@ struct WeekScreen: View {
         let items = itemsOn(content, selected)
         let today = dateString(selected) == dateString(household.now)
         return [
-            Block(heading: "Overdag",
+            Block(heading: String(localized: "Overdag"),
                   items: byTime(items.filter { !isEvening($0, EVENING_FROM) }, past: nil)),
-            Block(heading: today ? "Vanavond" : "'s Avonds",
+            Block(heading: today ? String(localized: "Vanavond") : String(localized: "'s Avonds"),
                   items: byTime(items.filter { isEvening($0, EVENING_FROM) }, past: nil)),
         ].filter { !$0.items.isEmpty }
     }
@@ -82,10 +82,10 @@ struct WeekScreen: View {
                     }
                     .shifted(shift(2))
 
-                    CardButton("Iets bijzonders toevoegen", plus: true,
+                    CardButton(String(localized: "Iets bijzonders toevoegen"), plus: true,
                                id: "week.addOneOff") { openEntry(nil) }
                         .shifted(shift(3))
-                    CardButton("Typ of plak iets", glyph: "✨",
+                    CardButton(String(localized: "Typ of plak iets"), glyph: "✨",
                                id: "week.assistant") { assistantOpen = true }
                         .shifted(shift(4))
                 }
@@ -122,7 +122,7 @@ struct WeekScreen: View {
     @ViewBuilder
     private func dayContent(_ content: Content) -> some View {
         if blocks.isEmpty {
-            BlockHead("Niks bijzonders")
+            BlockHead(String(localized: "Niks bijzonders"))
                 .entrance(0, from: direction)
             Glass(radius: 26) {
                 Text("Deze dag staat er niets in de agenda.")
@@ -183,7 +183,7 @@ struct WeekScreen: View {
             entry.date = dateString(selected)
         }
         let name = item?.text ?? ""
-        sheet = SheetState(title: name.isEmpty ? "Iets eenmaligs" : name, place: place, entry: entry)
+        sheet = SheetState(title: name.isEmpty ? String(localized: "Iets eenmaligs") : name, place: place, entry: entry)
     }
 
     private func saveSheet() {

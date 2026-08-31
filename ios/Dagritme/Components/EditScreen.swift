@@ -6,12 +6,12 @@ enum EditKind: String, Identifiable {
 
     var title: String {
         switch self {
-        case .children: return "Kinderen"
-        case .day: return "Ochtendritme"
-        case .night: return "Avondritme"
-        case .week: return "Weekritme"
-        case .oneOff: return "Eenmalig"
-        case .general: return "Naam"
+        case .children: return String(localized: "Kinderen")
+        case .day: return String(localized: "Ochtendritme")
+        case .night: return String(localized: "Avondritme")
+        case .week: return String(localized: "Weekritme")
+        case .oneOff: return String(localized: "Eenmalig")
+        case .general: return String(localized: "Naam")
         }
     }
 }
@@ -142,13 +142,13 @@ struct EditScreen: View {
     private func done() {
         let fresh = cleaned(draft)
         if (fresh["people"] as? [[String: Any]] ?? []).isEmpty {
-            alert = "Er moet minstens één kind zijn."
+            alert = String(localized: "Er moet minstens één kind zijn.")
             return
         }
         let daySteps = countSteps(fresh["day"] as? [[String: Any]] ?? [])
         let nightSteps = countSteps(fresh["night"] as? [[String: Any]] ?? [])
         if daySteps == 0 && nightSteps == 0 {
-            alert = "Er moet minstens één stap overblijven."
+            alert = String(localized: "Er moet minstens één stap overblijven.")
             return
         }
         busy = true
@@ -177,9 +177,9 @@ struct EditScreen: View {
                     refresh()
                 }
 
-                AddRow("Kind toevoegen") {
+                AddRow(String(localized: "Kind toevoegen")) {
                     childSheet = ChildState(
-                        title: "Nieuw kind",
+                        title: String(localized: "Nieuw kind"),
                         child: ChildData(id: newId(), name: "", emoji: "🙂",
                                          color: COLORS[draft.people.count % COLORS.count],
                                          traits: [:])
@@ -201,7 +201,7 @@ struct EditScreen: View {
 
     private func openChild(_ person: DraftPerson) {
         childSheet = ChildState(
-            title: person.name.isEmpty ? "Kind" : person.name,
+            title: person.name.isEmpty ? String(localized: "Kind") : person.name,
             child: ChildData(id: person.id, name: person.name,
                              emoji: person.emoji.isEmpty ? "🙂" : person.emoji,
                              color: person.color,
@@ -211,7 +211,7 @@ struct EditScreen: View {
 
     private func removeChild(_ person: DraftPerson) {
         if draft.people.count <= 1 {
-            alert = "Er moet minstens één kind overblijven."
+            alert = String(localized: "Er moet minstens één kind overblijven.")
             return
         }
         detach(person.id)
@@ -246,8 +246,8 @@ struct EditScreen: View {
 
                 Section {
                     HStack(spacing: 8) {
-                        Field(value: bind(group, \.name), placeholder: "Groep")
-                        Field(value: bind(group, \.time), placeholder: "tijd", kind: .time)
+                        Field(value: bind(group, \.name), placeholder: String(localized: "Groep"))
+                        Field(value: bind(group, \.time), placeholder: String(localized: "tijd"), kind: .time)
                     }
                     .padding(.vertical, 4)
                     .swipeActions(edge: .trailing) {
@@ -261,11 +261,11 @@ struct EditScreen: View {
                         EditRow(
                             icon: step.icon.isEmpty ? "⭐" : step.icon,
                             label: step.label,
-                            empty: "Naamloze stap",
+                            empty: String(localized: "Naamloze stap"),
                             days: daysText(step.days),
                             who: whoForRow(step.who),
                             onOpen: {
-                                openEntry(step.label.isEmpty ? "Stap" : step.label,
+                                openEntry(step.label.isEmpty ? String(localized: "Stap") : step.label,
                                           .step(routine: routine, group: group, step: step)) { _ in }
                             }
                         )
@@ -281,14 +281,13 @@ struct EditScreen: View {
                     }
 
                     if oneOffs > 0 {
-                        CardNote(oneOffs == 1
-                            ? "Hier staat ook één ding voor één dag; dat bewerk je bij Eenmalig."
-                            : "Hier staan ook \(oneOffs) dingen voor één dag; die bewerk je bij Eenmalig.")
+                        CardNote(String(localized:
+                            "Hier staan ook \(oneOffs) dingen voor één dag; die bewerk je bij Eenmalig."))
                             .moveDisabled(true)
                     }
 
-                    AddRow("Stap toevoegen") {
-                        openEntry("Nieuwe stap", nil) { entry in
+                    AddRow(String(localized: "Stap toevoegen")) {
+                        openEntry(String(localized: "Nieuwe stap"), nil) { entry in
                             entry.icon = "⭐"
                             entry.task = true
                             entry.routine = routine
@@ -302,8 +301,8 @@ struct EditScreen: View {
             }
 
             Section {
-                CardButton("Groep toevoegen", plus: true, id: "edit.addGroup") {
-                    draft[routine].append(DraftGroup(name: "Nieuwe groep", time: "", steps: []))
+                CardButton(String(localized: "Groep toevoegen"), plus: true, id: "edit.addGroup") {
+                    draft[routine].append(DraftGroup(name: String(localized: "Nieuwe groep"), time: "", steps: []))
                     refresh()
                 }
                 .padding(.top, 0)
@@ -318,7 +317,7 @@ struct EditScreen: View {
 
     private func removeGroup(_ group: DraftGroup) {
         guard group.steps.isEmpty else {
-            alert = "Haal eerst de stappen uit '\(group.name)'."
+            alert = String(localized: "Haal eerst de stappen uit '\(group.name)'.")
             return
         }
         draft[routine].removeAll { $0 === group }
@@ -352,7 +351,7 @@ struct EditScreen: View {
                     EditRow(
                         icon: item.icon.isEmpty ? "📅" : item.icon,
                         label: item.text,
-                        empty: "Naamloos",
+                        empty: String(localized: "Naamloos"),
                         time: (isEvening(time: item.time, until: item.until,
                                          evening: item.evening, from: EVENING_FROM) ? "🌙 " : "")
                             + timeText(time: item.time, until: item.until),
@@ -360,7 +359,7 @@ struct EditScreen: View {
                         who: whoForRow(item.who),
                         twoLines: true,
                         onOpen: {
-                            openEntry(item.text.isEmpty ? "Item" : item.text, .week(item)) { _ in }
+                            openEntry(item.text.isEmpty ? String(localized: "Item") : item.text, .week(item)) { _ in }
                         }
                     )
                     .swipeActions(edge: .trailing) {
@@ -375,8 +374,8 @@ struct EditScreen: View {
                     refresh()
                 }
 
-                AddRow("Item toevoegen") {
-                    openEntry("Nieuw item", nil) { entry in
+                AddRow(String(localized: "Item toevoegen")) {
+                    openEntry(String(localized: "Nieuw item"), nil) { entry in
                         entry.icon = "📅"
                         entry.weekly = true
                         entry.task = false
@@ -411,13 +410,13 @@ struct EditScreen: View {
                         EditRow(
                             icon: row.icon,
                             label: row.name,
-                            empty: "Naamloos",
+                            empty: String(localized: "Naamloos"),
                             time: shortDate(row.date),
                             extra: row.extra,
                             who: whoForRow(row.who),
                             twoLines: true,
                             onOpen: {
-                                openEntry(row.name.isEmpty ? "Iets eenmaligs" : row.name,
+                                openEntry(row.name.isEmpty ? String(localized: "Iets eenmaligs") : row.name,
                                           row.place) { _ in }
                             }
                         )
@@ -433,8 +432,8 @@ struct EditScreen: View {
             }
 
             Section {
-                CardButton("Iets eenmaligs toevoegen", plus: true, id: "edit.addOneOff") {
-                    openEntry("Iets eenmaligs", nil) { entry in
+                CardButton(String(localized: "Iets eenmaligs toevoegen"), plus: true, id: "edit.addOneOff") {
+                    openEntry(String(localized: "Iets eenmaligs"), nil) { entry in
                         entry.icon = "🎉"
                         entry.weekly = false
                         entry.task = false
@@ -478,7 +477,8 @@ struct EditScreen: View {
                         icon: step.icon.isEmpty ? "📌" : step.icon,
                         name: step.label,
                         date: step.date,
-                        extra: "✅ " + (which == .day ? "☀️ " : "🌙 ") + (name.isEmpty ? "ritme" : name),
+                        extra: "✅ " + (which == .day ? "☀️ " : "🌙 ")
+                            + (name.isEmpty ? String(localized: "ritme") : name),
                         who: step.who,
                         place: .step(routine: which, group: group, step: step),
                         time: ""
@@ -494,7 +494,7 @@ struct EditScreen: View {
         EditCard {
             HStack(spacing: 10) {
                 Text("🏡").font(.system(size: 24)).frame(width: 46)
-                Field(value: bind(draft, \.title), placeholder: "Naam van de app")
+                Field(value: bind(draft, \.title), placeholder: String(localized: "Naam van de app"))
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 12)

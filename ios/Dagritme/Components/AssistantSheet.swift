@@ -27,22 +27,21 @@ struct AssistantSheet: View {
 
     private var title: String {
         switch phase {
-        case .busy: return "Even lezen"
-        case .nothing: return "Niets gevonden"
-        case .question: return "Even iets vragen"
-        case .suggestions: return "Dit haalde ik eruit"
-        case .paste: return "Typ of plak iets"
+        case .busy: return String(localized: "Even lezen")
+        case .nothing: return String(localized: "Niets gevonden")
+        case .question: return String(localized: "Even iets vragen")
+        case .suggestions: return String(localized: "Dit haalde ik eruit")
+        case .paste: return String(localized: "Typ of plak iets")
         }
     }
 
     private var button: String {
         switch phase {
-        case .busy: return "Even lezen…"
-        case .nothing: return "Opnieuw proberen"
-        case .question: return "Ga verder"
-        case .suggestions: return pickedCount == 1
-            ? "Zet er 1 in de app" : "Zet er \(pickedCount) in de app"
-        case .paste: return "Lees uit"
+        case .busy: return String(localized: "Even lezen…")
+        case .nothing: return String(localized: "Opnieuw proberen")
+        case .question: return String(localized: "Ga verder")
+        case .suggestions: return String(localized: "Zet er \(pickedCount) in de app")
+        case .paste: return String(localized: "Lees uit")
         }
     }
 
@@ -53,21 +52,21 @@ struct AssistantSheet: View {
                   onCancel: onCancel, onButton: next) {
                 switch phase {
                 case .paste:
-                    FormHead("De tekst", first: true)
+                    FormHead(String(localized: "De tekst"), first: true)
                     PasteBox(value: $message)
 
                 case .busy:
-                    Busy("Even kijken wat erin staat…")
+                    Busy(String(localized: "Even kijken wat erin staat…"))
 
                 case .nothing:
-                    Busy("""
+                    Busy(String(localized: """
                         Hier kon ik niets uithalen dat in de app hoort. Probeer het wat concreter, \
                         of plak er meer bij.
-                        """)
+                        """))
 
                 case .question:
                     if let question {
-                        FormHead("Vraag", first: true)
+                        FormHead(String(localized: "Vraag"), first: true)
                         Note(question.question)
                         ForEach(content.people) { person in
                             AskChild(
@@ -81,7 +80,7 @@ struct AssistantSheet: View {
                     }
 
                 case .suggestions:
-                    FormHead("Voorstellen", first: true)
+                    FormHead(String(localized: "Voorstellen"), first: true)
                     Glass(radius: 22) {
                         VStack(spacing: 0) {
                             ForEach(Array(items.enumerated()), id: \.element.id) { (i, item) in
@@ -102,7 +101,7 @@ struct AssistantSheet: View {
 
             if let i = editing, i < items.count, let working = draft {
                 EntrySheet(
-                    title: items[i].entry.text.isEmpty ? "Voorstel" : items[i].entry.text,
+                    title: items[i].entry.text.isEmpty ? String(localized: "Voorstel") : items[i].entry.text,
                     entry: withGroup(items[i].entry, working),
                     place: nil,
                     source: { working },
@@ -145,7 +144,7 @@ struct AssistantSheet: View {
             phase = .paste
         case .paste:
             if message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                alert = "Plak eerst een bericht."
+                alert = String(localized: "Plak eerst een bericht.")
                 return
             }
             Task { await read() }
@@ -174,11 +173,13 @@ struct AssistantSheet: View {
         } catch let problem as ReadError {
             phase = .paste
             alert = problem.fromServer ? problem.message
-                                       : "Het uitlezen lukte niet (\(problem.message))."
+                                       : String(localized:
+                                           "Het uitlezen lukte niet (\(problem.message)).")
             return
         } catch {
             phase = .paste
-            alert = "Het uitlezen lukte niet (\(error.localizedDescription))."
+            alert = String(localized:
+                "Het uitlezen lukte niet (\(error.localizedDescription)).")
             return
         }
 
@@ -190,7 +191,7 @@ struct AssistantSheet: View {
             answers = [:]
             question = Question(
                 key: out["key"].text("kenmerk"),
-                question: out["question"].text("Waar hoort dit bij?"),
+                question: out["question"].text(String(localized: "Waar hoort dit bij?")),
                 options: options,
                 multiple: out["multiple"].flag
             )
@@ -231,7 +232,7 @@ struct AssistantSheet: View {
         let chosen = items.enumerated().filter { $0.offset < picked.count && picked[$0.offset] }
             .map { $0.element }
         if chosen.isEmpty {
-            alert = "Kies er minstens één."
+            alert = String(localized: "Kies er minstens één.")
             return
         }
         let working = asDraft(content)
@@ -312,7 +313,7 @@ private struct AskChild: View {
                     Chip(label: option, on: picked.contains(option),
                          color: Color(hex: person.color)) { onPick(option) }
                 }
-                Chip(label: "geen van deze", on: picked.isEmpty, quiet: true) { onNone() }
+                Chip(label: String(localized: "geen van deze"), on: picked.isEmpty, quiet: true) { onNone() }
             }
         }
         .padding(.top, 10)
@@ -386,15 +387,16 @@ private struct Found: View {
 
     private var meta: String {
         let e = item.entry
-        let when = e.weekly ? (daysText(e.days).isEmpty ? "elke dag" : daysText(e.days))
+        let when = e.weekly ? (daysText(e.days).isEmpty ? String(localized: "elke dag") : daysText(e.days))
                             : longDate(e.date)
         let names = e.who.compactMap { id in people.first { $0.id == id }?.name }
         let kind = e.task
             ? "✅ " + (e.routine == .night ? "🌙 " : "☀️ ")
-                + (e.group.trimmingCharacters(in: .whitespaces).isEmpty ? "ritme" : e.group)
-            : (e.weekly ? "elke week" : "")
+                + (e.group.trimmingCharacters(in: .whitespaces).isEmpty
+                   ? String(localized: "ritme") : e.group)
+            : (e.weekly ? String(localized: "elke week") : "")
         return [when, timeText(time: e.time, until: e.until),
-                names.isEmpty ? "iedereen" : names.joined(separator: " en "), kind]
+                names.isEmpty ? String(localized: "iedereen") : names.joined(separator: String(localized: " en ")), kind]
             .filter { !$0.isEmpty }
             .joined(separator: " · ")
     }

@@ -27,7 +27,8 @@ struct EmojiPicker: View {
     }
 
     var body: some View {
-        Sheet(title: title, button: "Gereed", onCancel: onCancel, onButton: { onDone(value) }) {
+        Sheet(title: title, button: String(localized: "Gereed"), onCancel: onCancel,
+              onButton: { onDone(value) }) {
             RoundedRectangle(cornerRadius: 39, style: .continuous)
                 .fill(palette.tile)
                 .overlay(RoundedRectangle(cornerRadius: 39, style: .continuous)

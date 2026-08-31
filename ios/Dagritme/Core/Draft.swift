@@ -127,16 +127,15 @@ func asDate(_ value: String) -> Date? {
 
 func shortDate(_ value: String) -> String {
     guard let d = asDate(value) else { return "" }
-    let parts = calendar.dateComponents([.month, .day], from: d)
-    let day = dayLabel(WEEKDAYS[(weekdayIndex(d) + 6) % 7])
-    return "\(day) \(parts.day ?? 0) \(MONTHS[(parts.month ?? 1) - 1].prefix(3))"
+    return d.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated)
+        .locale(.autoupdatingCurrent))
 }
 
 func daysText(_ days: [String]) -> String {
     if days.isEmpty || days.count >= WEEKDAYS.count { return "" }
     let picked = Set(days)
-    if picked == WORKDAYS { return "weekdagen" }
-    if picked == WEEKEND { return "weekend" }
+    if picked == WORKDAYS { return String(localized: "weekdagen") }
+    if picked == WEEKEND { return String(localized: "weekend") }
     return WEEKDAYS.filter { picked.contains($0) }.map(dayLabel).joined(separator: ", ")
 }
 
@@ -247,13 +246,14 @@ func cleaned(_ c: Draft) -> [String: Any] {
     let title = c.title.trimmingCharacters(in: .whitespacesAndNewlines)
     return [
         "version": 2,
-        "title": title.isEmpty ? "Ons dagritme" : title,
+        "title": title.isEmpty ? String(localized: "Ons dagritme") : title,
         "eveningFrom": from,
         "people": c.people.enumerated().map { (i, p) -> [String: Any] in
             [
                 "id": p.id.isEmpty ? newId() : p.id,
                 "name": p.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                    ? "Naamloos" : p.name.trimmingCharacters(in: .whitespacesAndNewlines),
+                    ? String(localized: "Naamloos")
+                    : p.name.trimmingCharacters(in: .whitespacesAndNewlines),
                 "emoji": p.emoji.isEmpty ? "🙂" : p.emoji,
                 "color": p.color.isEmpty ? COLORS[i % COLORS.count] : p.color,
                 "traits": p.traits,

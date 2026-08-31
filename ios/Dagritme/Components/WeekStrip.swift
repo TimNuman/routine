@@ -44,7 +44,7 @@ struct WeekStrip: View {
     private func day(_ d: Date, selected on: Bool, today: Bool) -> some View {
         Button { onSelect(d) } label: {
             VStack(spacing: 8) {
-                Text(DAY_LETTERS[DAYS[weekdayIndex(d)]] ?? "")
+                Text(dayLetter(DAYS[weekdayIndex(d)]))
                     .textStyle(Fonts.weekLetter)
                     .foregroundStyle(SOFT_INK)
                 ZStack {

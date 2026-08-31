@@ -51,7 +51,7 @@ struct Sheet<Inner: View>: View {
                         .accessibilityHidden(true)
 
                     HStack {
-                        TextButton("Annuleer", id: "sheet.cancel") { close(onCancel) }
+                        TextButton(String(localized: "Annuleer"), id: "sheet.cancel") { close(onCancel) }
                         Spacer(minLength: 0)
                     }
                     .overlay {
@@ -142,14 +142,14 @@ struct FullSheet<Inner: View>: View {
             VStack(spacing: 0) {
                 Glass(radius: 28, floating: true) {
                     HStack(spacing: 10) {
-                        TextButton("Annuleer", id: "full.cancel") { onCancel() }
+                        TextButton(String(localized: "Annuleer"), id: "full.cancel") { onCancel() }
                             .frame(maxWidth: .infinity, alignment: .leading)
                         Text(title).textStyle(Fonts.sheetHead).foregroundStyle(INK)
                             .lineLimit(1)
                             .layoutPriority(1)
                             .accessibilityIdentifier("full.title")
                             .accessibilityAddTraits(.isHeader)
-                        TextButton(busy ? "Bezig…" : "Gereed", bold: true,
+                        TextButton(busy ? String(localized: "Bezig…") : String(localized: "Gereed"), bold: true,
                                    id: "full.done") { onDone() }
                             .frame(maxWidth: .infinity, alignment: .trailing)
                     }

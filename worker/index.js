@@ -5,7 +5,7 @@ export { House } from './house.js';
 const MODEL = 'claude-opus-5';
 const EFFORT = 'low';
 const MAX_TEXT = 20000;
-const DAY_NAMES = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+const DEFAULT_LANGUAGE = 'nl';
 
 const SCHEMA = {
   type: 'object',
@@ -50,7 +50,7 @@ const SYSTEM = `Je vult een gezinsapp met een dagritme per kind. Je krijgt tekst
 
 Je krijgt verder de datum van vandaag en de kinderen die in de app staan met wat er van ze bekend is (schoolgroep, team, en wat er verder aan kenmerken bij ze staat).
 
-Alle tekst die je teruggeeft is Nederlands — dat is wat de ouder en de kinderen in de app te zien krijgen. Alleen de veldnamen en de vaste waarden zijn Engels.
+De taal waarin je terugschrijft staat in het bericht hieronder — dat is wat de ouder en de kinderen in de app te zien krijgen. Alleen de veldnamen en de vaste waarden zijn Engels.
 
 Antwoord met één van drie dingen.
 
@@ -106,10 +106,21 @@ function childLine(child){
   return `- id ${child.id}, ${child.name || 'naamloos'} — ${traits || 'nog niets bekend'}`;
 }
 
+function languageName(tag){
+  try{ return new Intl.DisplayNames([tag], { type: 'language' }).of(tag) || tag; }
+  catch{ return tag; }
+}
+
 function promptText(payload){
   const d = new Date(payload.today + 'T12:00:00Z');
-  const dayName = Number.isNaN(d.getTime()) ? '' : ` (${DAY_NAMES[d.getUTCDay()]})`;
+  let dayName = '';
+  try{
+    dayName = Number.isNaN(d.getTime()) ? ''
+      : ` (${new Intl.DateTimeFormat(payload.language, { weekday: 'long', timeZone: 'UTC' }).format(d)})`;
+  }catch{ dayName = ''; }
   return [
+    `Taal van je antwoord: ${languageName(payload.language)} (${payload.language}). Alle tekst die de ouder en de kinderen te zien krijgen schrijf je in die taal.`,
+    '',
     `Vandaag is ${payload.today}${dayName}. Dit is ronde ${payload.round}.`,
     '',
     'De kinderen in de app:',
@@ -129,6 +140,8 @@ function cleanPayload(raw){
     text: message.slice(0, MAX_TEXT),
     today: /^\d{4}-\d{2}-\d{2}$/.test(raw.today) ? raw.today : new Date().toISOString().slice(0, 10),
     round: Number.isFinite(Number(raw.round)) ? Math.max(1, Math.floor(Number(raw.round))) : 1,
+    language: /^[a-zA-Z]{2,3}(-[a-zA-Z0-9]{2,8})*$/.test(raw.language || '')
+      ? raw.language : DEFAULT_LANGUAGE,
     children: children.slice(0, 12).map(child => ({
       id: String(child && child.id || '').slice(0, 40),
       name: String(child && child.name || '').slice(0, 40),
@@ -142,6 +155,7 @@ function payloadFromNl(raw){
     text: raw.tekst,
     today: raw.vandaag,
     round: raw.ronde,
+    language: 'nl',
     children: (Array.isArray(raw.kinderen) ? raw.kinderen : []).map(child => ({
       id: child && child.id,
       name: child && child.naam,
