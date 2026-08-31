@@ -47,7 +47,7 @@ Dagritme/
   Components/          de losse stukken van de schermen
   Screens/             ritme, week, instellingen
   Fonts/               Baloo 2 en Nunito, bijgeknipt tot Latijn
-Stuur/                 de app aansturen zonder handen — zie onderaan
+Driver/                de app aansturen zonder handen — zie onderaan
 ```
 
 `Core/` kent geen SwiftUI: dat is dezelfde bewerking als in de react
@@ -114,7 +114,7 @@ uit. Dat is dezelfde keuze als op web, en het is wel iets om te weten.
 
 ## De app aansturen
 
-`Stuur/` is een tweede doel in hetzelfde project: een UI-test die de app opstart
+`Driver/` is een tweede doel in hetzelfde project: een UI-test die de app opstart
 en er tikken en vegen in doet. Niet om iets te bewijzen — er staat geen enkele
 verwachting in — maar om te kúnnen kijken. Animaties bouwen die je niet kunt zien
 is gokken, en dat bleek: de vonkjes bij het afvinken zaten verstopt achter het
@@ -125,7 +125,7 @@ xcodebuild test -project Dagritme.xcodeproj -scheme Dagritme \
   -destination 'id=<simulator>'
 ```
 
-Zonder meer draait het plan in [`Stuur/plan.json`](Stuur/plan.json): opstarten, de
+Zonder meer draait het plan in [`Driver/plan.json`](Driver/plan.json): opstarten, de
 drie schermen langs door te vegen, en van elk een afdruk. Wil je iets anders, wijs
 dan een eigen plan aan — het `TEST_RUNNER_`-voorvoegsel valt er onderweg af:
 
@@ -157,7 +157,7 @@ filmstrip van die je in één keer kunt bekijken.
 
 ## Wat er nog niet is
 
-- **Op een echt toestel geprobeerd.** In de simulator wel, met `Stuur/` erbij, maar
+- **Op een echt toestel geprobeerd.** In de simulator wel, met `Driver/` erbij, maar
   een simulator kent geen trilling en geen trage verbinding. Reken erop dat het
   eerste kwartier op een iPhone nog een paar dingen rechtzet.
 - **Aanmelden.** Wie het adres kent, kan meelezen en meeschrijven; `SLEUTEL` is
