@@ -2,8 +2,9 @@ import Foundation
 
 enum Spoken {
     static func step(_ step: String, _ person: String) -> String {
-        String(localized: "a11y.step.person", defaultValue: "\(step), \(person)",
-               comment: "VoiceOver label for one child's circle on a step card")
+        String(format: NSLocalizedString(
+            "a11y.step.person", value: "%1$@, %2$@",
+            comment: "VoiceOver label for one child's circle on a step card"), step, person)
     }
 
     static let stepDone = String(localized: "a11y.step.done", defaultValue: "afgevinkt",
@@ -12,23 +13,27 @@ enum Spoken {
                                  comment: "State of an unticked circle")
 
     static func tally(_ done: Int, _ total: Int) -> String {
-        String(localized: "a11y.tally", defaultValue: "\(done) van \(total) af",
-               comment: "VoiceOver value for a child's progress bar")
+        String(format: NSLocalizedString(
+            "a11y.tally", value: "%1$lld van %2$lld af",
+            comment: "VoiceOver value for a child's progress bar"), done, total)
     }
 
     static func soloChild(_ name: String) -> String {
-        String(localized: "a11y.child.solo", defaultValue: "Alleen \(name) tonen",
-               comment: "Tapping a progress tile when everyone is shown")
+        String(format: NSLocalizedString(
+            "a11y.child.solo", value: "Alleen %@ tonen",
+            comment: "Tapping a progress tile when everyone is shown"), name)
     }
 
     static func hideChild(_ name: String) -> String {
-        String(localized: "a11y.child.hide", defaultValue: "\(name) verbergen",
-               comment: "Tapping a progress tile that is currently shown")
+        String(format: NSLocalizedString(
+            "a11y.child.hide", value: "%@ verbergen",
+            comment: "Tapping a progress tile that is currently shown"), name)
     }
 
     static func showChild(_ name: String) -> String {
-        String(localized: "a11y.child.show", defaultValue: "\(name) er weer bij",
-               comment: "Tapping a progress tile that is currently hidden")
+        String(format: NSLocalizedString(
+            "a11y.child.show", value: "%@ er weer bij",
+            comment: "Tapping a progress tile that is currently hidden"), name)
     }
 
     static let close = String(localized: "a11y.close", defaultValue: "Sluiten",
