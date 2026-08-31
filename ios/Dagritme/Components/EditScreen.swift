@@ -141,12 +141,12 @@ struct EditScreen: View {
 
     private func done() {
         let fresh = cleaned(draft)
-        if (fresh["mensen"] as? [[String: Any]] ?? []).isEmpty {
+        if (fresh["people"] as? [[String: Any]] ?? []).isEmpty {
             alert = "Er moet minstens één kind zijn."
             return
         }
-        let daySteps = countSteps(fresh["dag"] as? [[String: Any]] ?? [])
-        let nightSteps = countSteps(fresh["nacht"] as? [[String: Any]] ?? [])
+        let daySteps = countSteps(fresh["day"] as? [[String: Any]] ?? [])
+        let nightSteps = countSteps(fresh["night"] as? [[String: Any]] ?? [])
         if daySteps == 0 && nightSteps == 0 {
             alert = "Er moet minstens één stap overblijven."
             return

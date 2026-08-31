@@ -184,15 +184,15 @@ struct AssistantSheet: View {
 
         round += 1
         let kind = out["type"].text
-        let options = out["opties"].array.map { $0.text }.filter { !$0.isEmpty }
-        if kind == "vraag" && !options.isEmpty && asked < MAX_QUESTIONS {
+        let options = out["options"].array.map { $0.text }.filter { !$0.isEmpty }
+        if kind == "question" && !options.isEmpty && asked < MAX_QUESTIONS {
             asked += 1
             answers = [:]
             question = Question(
-                key: out["sleutel"].text("kenmerk"),
-                question: out["vraag"].text("Waar hoort dit bij?"),
+                key: out["key"].text("kenmerk"),
+                question: out["question"].text("Waar hoort dit bij?"),
                 options: options,
-                multiple: out["meerkeuze"].flag
+                multiple: out["multiple"].flag
             )
             phase = .question
             return

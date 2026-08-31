@@ -8,11 +8,11 @@ struct Payload {
 
     var body: [String: Any] {
         [
-            "tekst": text,
-            "vandaag": today,
-            "ronde": round,
-            "kinderen": children.map {
-                ["id": $0.id, "naam": $0.name, "kenmerken": $0.traits] as [String: Any]
+            "text": text,
+            "today": today,
+            "round": round,
+            "children": children.map {
+                ["id": $0.id, "name": $0.name, "traits": $0.traits] as [String: Any]
             },
         ]
     }
@@ -45,7 +45,7 @@ func askAssistant(_ payload: Payload) async throws -> Json {
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
     if !Config.key.isEmpty {
-        request.setValue(Config.key, forHTTPHeaderField: "X-Routine-Sleutel")
+        request.setValue(Config.key, forHTTPHeaderField: "X-Routine-Key")
     }
     request.httpBody = try JSONSerialization.data(withJSONObject: payload.body)
     request.timeoutInterval = 90
@@ -53,37 +53,37 @@ func askAssistant(_ payload: Payload) async throws -> Json {
     let (data, response) = try await URLSession.shared.data(for: request)
     let out = Json.parse(data)
     if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
-        let reason = out["fout"].text
+        let reason = out["error"].text
         throw ReadError(message: reason.isEmpty ? "HTTP \(http.statusCode)" : reason,
                         fromServer: !reason.isEmpty)
     }
-    return out.isNull ? .object(["type": .text("niets")]) : out
+    return out.isNull ? .object(["type": .text("nothing")]) : out
 }
 
-private let KINDS = ["bijzonderheid", "stap", "weekritme"]
+private let KINDS = ["occasion", "step", "weekly"]
 
 func cleanSuggestion(_ raw: Json, _ people: [Person]) -> Suggestion? {
-    let asked = raw["soort"].text
-    let kind = KINDS.contains(asked) ? asked : "bijzonderheid"
+    let asked = raw["kind"].text
+    let kind = KINDS.contains(asked) ? asked : "occasion"
     let known = Set(people.map { $0.id })
-    let date = isDate(raw["datum"].text) ? raw["datum"].text : ""
+    let date = isDate(raw["date"].text) ? raw["date"].text : ""
 
     var entry = Entry()
-    entry.icon = raw["icoon"].text(kind == "stap" ? "⭐" : "🎉")
-    entry.text = raw["tekst"].text.isEmpty ? raw["label"].text : raw["tekst"].text
-    entry.weekly = kind == "weekritme"
-    entry.task = kind == "stap"
-    entry.time = raw["tijd"].text
-    entry.until = raw["tot"].text
+    entry.icon = raw["icon"].text(kind == "step" ? "⭐" : "🎉")
+    entry.text = raw["text"].text.isEmpty ? raw["label"].text : raw["text"].text
+    entry.weekly = kind == "weekly"
+    entry.task = kind == "step"
+    entry.time = raw["time"].text
+    entry.until = raw["until"].text
     entry.date = date
-    entry.days = daysFrom(raw["dagen"])
-    entry.who = raw["wie"].array.map { $0.text }.filter { known.contains($0) }
-    entry.routine = raw["ritme"].text == "nacht" ? .night : .day
-    entry.group = raw["groep"].text
+    entry.days = daysFrom(raw["days"])
+    entry.who = raw["who"].array.map { $0.text }.filter { known.contains($0) }
+    entry.routine = raw["routine"].text == "night" ? .night : .day
+    entry.group = raw["group"].text
 
     if entry.text.isEmpty { return nil }
     guard entry.weekly || !entry.date.isEmpty else { return nil }
-    return Suggestion(entry: entry, source: String(raw["bron"].text.prefix(200)))
+    return Suggestion(entry: entry, source: String(raw["source"].text.prefix(200)))
 }
 
 private func entryKey(_ text: String, _ date: String, _ days: [String], _ who: [String]) -> String {

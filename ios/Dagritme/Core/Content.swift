@@ -1,14 +1,17 @@
 import Foundation
 
-let DAYS = ["zo", "ma", "di", "wo", "do", "vr", "za"]
+let DAYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
 let COLORS = ["#2FA37C", "#7C6BD6", "#D9724F", "#3B82C4", "#C2417E", "#E0A33E"]
 let DAY_NAMES = ["zondag", "maandag", "dinsdag", "woensdag", "donderdag", "vrijdag", "zaterdag"]
-let WEEKDAYS = ["ma", "di", "wo", "do", "vr", "za", "zo"]
-let WORKDAYS: Set<String> = ["ma", "di", "wo", "do", "vr"]
-let WEEKEND: Set<String> = ["za", "zo"]
+let WEEKDAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+let WORKDAYS: Set<String> = ["mon", "tue", "wed", "thu", "fri"]
+let WEEKEND: Set<String> = ["sat", "sun"]
 
 let EVENING_FROM = 17
-let DAY_LETTERS = ["ma": "M", "di": "D", "wo": "W", "do": "D", "vr": "V", "za": "Z", "zo": "Z"]
+let DAY_LETTERS = ["mon": "M", "tue": "D", "wed": "W", "thu": "D", "fri": "V",
+                   "sat": "Z", "sun": "Z"]
+let DAY_LABELS = ["mon": "ma", "tue": "di", "wed": "wo", "thu": "do", "fri": "vr",
+                  "sat": "za", "sun": "zo"]
 let MONTHS = ["januari", "februari", "maart", "april", "mei", "juni", "juli",
               "augustus", "september", "oktober", "november", "december"]
 
@@ -46,15 +49,12 @@ func traitsFrom(_ value: Json) -> [String: String] {
 
 func daysFrom(_ value: Json) -> [String] {
     value.array
-        .map { String($0.text.lowercased().prefix(2)) }
+        .map { $0.text.lowercased() }
         .filter { DAYS.contains($0) }
 }
 
 func whoFrom(_ item: Json) -> [String] {
-    var out = item["wie"].array.map { $0.text }.filter { !$0.isEmpty }
-    let single = item["persoon"].text
-    if out.isEmpty && !single.isEmpty { out.append(single) }
-    return out
+    item["who"].array.map { $0.text }.filter { !$0.isEmpty }
 }
 
 private func isDateString(_ value: String) -> Bool {
@@ -64,20 +64,20 @@ private func isDateString(_ value: String) -> Bool {
 private func makeGroups(_ value: Json) -> [StepGroup] {
     let list = value.array
     if list.isEmpty { return [] }
-    let grouped = list.contains { !$0["stappen"].isNull || !$0["groep"].isNull }
+    let grouped = list.contains { !$0["steps"].isNull || !$0["name"].isNull }
     let raw: [Json] = grouped
         ? list
-        : [.object(["groep": .text(""), "tijd": .text(""), "stappen": .array(list)])]
+        : [.object(["name": .text(""), "time": .text(""), "steps": .array(list)])]
     return raw.map { item in
         StepGroup(
-            name: item["groep"].text,
-            time: item["tijd"].text,
-            steps: item["stappen"].array.map { s in
+            name: item["name"].text,
+            time: item["time"].text,
+            steps: item["steps"].array.map { s in
                 Step(
-                    icon: s["icoon"].text("⭐"),
+                    icon: s["icon"].text("⭐"),
                     label: s["label"].text,
-                    days: daysFrom(s["dagen"]),
-                    date: isDateString(s["datum"].text) ? s["datum"].text : "",
+                    days: daysFrom(s["days"]),
+                    date: isDateString(s["date"].text) ? s["date"].text : "",
                     who: whoFrom(s)
                 )
             }
@@ -86,8 +86,8 @@ private func makeGroups(_ value: Json) -> [StepGroup] {
 }
 
 private func timeRange(_ raw: Json) -> (time: String, until: String) {
-    var time = raw["tijd"].text
-    var until = raw["tot"].text
+    var time = raw["time"].text
+    var until = raw["until"].text
     if until.isEmpty,
        let parts = time.firstMatch(pattern: "^(.*?)\\s*(?:–|—|-|tot|t/m)\\s*(.+)$"),
        parts.count == 3,
@@ -131,6 +131,8 @@ func isEvening(_ item: AgendaItem, _ from: Int) -> Bool {
     isEvening(time: item.time, until: item.until, evening: item.evening, from: from)
 }
 
+func dayLabel(_ code: String) -> String { DAY_LABELS[code] ?? code }
+
 func timeText(time: String, until: String) -> String {
     if !time.isEmpty && !until.isEmpty { return "\(time) – \(until)" }
     if !until.isEmpty { return "tot " + until }
@@ -142,13 +144,13 @@ func timeText(_ item: AgendaItem) -> String { timeText(time: item.time, until: i
 private func weekItem(_ raw: Json) -> WeekItem {
     let clock = timeRange(raw)
     return WeekItem(
-        icon: raw["icoon"].text("📅"),
-        text: raw["tekst"].text,
+        icon: raw["icon"].text("📅"),
+        text: raw["text"].text,
         time: clock.time,
         until: clock.until,
-        days: daysFrom(raw["dagen"]),
+        days: daysFrom(raw["days"]),
         who: whoFrom(raw),
-        evening: raw["avond"].flag
+        evening: raw["evening"].flag
     )
 }
 
@@ -157,7 +159,7 @@ private func weekList(_ value: Json) -> [WeekItem] {
     guard value.isObject, !value.isArray else { return flat() }
     let keys = value.keys
     let perDay = !keys.isEmpty && keys.allSatisfy {
-        DAYS.contains(String($0.trimmingCharacters(in: .whitespaces).lowercased().prefix(2)))
+        DAYS.contains($0.trimmingCharacters(in: .whitespaces).lowercased())
     }
     if !perDay { return flat() }
 
@@ -186,31 +188,31 @@ private func oneOff(_ raw: Json) -> OneOff {
     let clock = timeRange(raw)
     return OneOff(
         id: raw["id"].text.isEmpty ? newId("e") : raw["id"].text,
-        icon: raw["icoon"].text("🎉"),
-        text: raw["tekst"].text,
+        icon: raw["icon"].text("🎉"),
+        text: raw["text"].text,
         time: clock.time,
         until: clock.until,
-        date: isDateString(raw["datum"].text) ? raw["datum"].text : "",
+        date: isDateString(raw["date"].text) ? raw["date"].text : "",
         who: whoFrom(raw)
     )
 }
 
 func normalize(_ raw: Json) -> Content {
-    let people = raw["mensen"].array.enumerated().map { (i, p) in
+    let people = raw["people"].array.enumerated().map { (i, p) in
         Person(
             id: p["id"].text("p\(i)"),
-            name: p["naam"].text("Naamloos"),
+            name: p["name"].text("Naamloos"),
             emoji: p["emoji"].text("🙂"),
-            color: p["kleur"].text(COLORS[i % COLORS.count]),
-            traits: traitsFrom(p["kenmerken"])
+            color: p["color"].text(COLORS[i % COLORS.count]),
+            traits: traitsFrom(p["traits"])
         )
     }
     var out = Content(
-        title: raw["titel"].text("Ons dagritme"),
+        title: raw["title"].text("Ons dagritme"),
         people: people,
-        day: makeGroups(raw["dag"]),
-        night: makeGroups(raw["nacht"]),
-        week: weekList(raw["overzicht"]),
+        day: makeGroups(raw["day"]),
+        night: makeGroups(raw["night"]),
+        week: weekList(raw["week"]),
         events: raw["events"].array.map(oneOff)
             .filter { !$0.text.isEmpty && !$0.date.isEmpty }
             .sorted { ($0.date, $0.time) < ($1.date, $1.time) }

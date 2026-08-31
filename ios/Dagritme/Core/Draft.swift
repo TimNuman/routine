@@ -128,7 +128,7 @@ func asDate(_ value: String) -> Date? {
 func shortDate(_ value: String) -> String {
     guard let d = asDate(value) else { return "" }
     let parts = calendar.dateComponents([.month, .day], from: d)
-    let day = WEEKDAYS[(weekdayIndex(d) + 6) % 7]
+    let day = dayLabel(WEEKDAYS[(weekdayIndex(d) + 6) % 7])
     return "\(day) \(parts.day ?? 0) \(MONTHS[(parts.month ?? 1) - 1].prefix(3))"
 }
 
@@ -137,12 +137,12 @@ func daysText(_ days: [String]) -> String {
     let picked = Set(days)
     if picked == WORKDAYS { return "weekdagen" }
     if picked == WEEKEND { return "weekend" }
-    return WEEKDAYS.filter { picked.contains($0) }.joined(separator: ", ")
+    return WEEKDAYS.filter { picked.contains($0) }.map(dayLabel).joined(separator: ", ")
 }
 
 func daysFrom(_ value: [String]) -> [String] {
     value
-        .map { String($0.trimmingCharacters(in: .whitespaces).lowercased().prefix(2)) }
+        .map { $0.trimmingCharacters(in: .whitespaces).lowercased() }
         .filter { DAYS.contains($0) }
 }
 
@@ -178,23 +178,23 @@ private func cleanGroups(_ list: [DraftGroup]) -> [[String: Any]] {
             .filter { !$0.label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
             .map { s in
                 var out: [String: Any] = [
-                    "icoon": s.icon.isEmpty ? "⭐" : s.icon,
+                    "icon": s.icon.isEmpty ? "⭐" : s.icon,
                     "label": s.label.trimmingCharacters(in: .whitespacesAndNewlines),
                 ]
-                if isDate(s.date) { out["datum"] = s.date }
+                if isDate(s.date) { out["date"] = s.date }
                 let days = daysFrom(s.days)
-                if !days.isEmpty && out["datum"] == nil { out["dagen"] = days }
-                if !s.who.isEmpty { out["wie"] = s.who }
+                if !days.isEmpty && out["date"] == nil { out["days"] = days }
+                if !s.who.isEmpty { out["who"] = s.who }
                 return out
             }
         return [
-            "groep": g.name.trimmingCharacters(in: .whitespacesAndNewlines),
-            "tijd": g.time.trimmingCharacters(in: .whitespacesAndNewlines),
-            "stappen": steps,
+            "name": g.name.trimmingCharacters(in: .whitespacesAndNewlines),
+            "time": g.time.trimmingCharacters(in: .whitespacesAndNewlines),
+            "steps": steps,
         ]
     }.filter { g in
-        let steps = g["stappen"] as? [[String: Any]] ?? []
-        let name = g["groep"] as? String ?? ""
+        let steps = g["steps"] as? [[String: Any]] ?? []
+        let name = g["name"] as? String ?? ""
         return !steps.isEmpty || !name.isEmpty
     }
 }
@@ -204,18 +204,18 @@ private func cleanWeek(_ source: [DraftWeekItem], _ from: Int) -> [[String: Any]
         .filter { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
         .map { item in
             var out: [String: Any] = [
-                "icoon": item.icon.isEmpty ? "📅" : item.icon,
-                "tekst": item.text.trimmingCharacters(in: .whitespacesAndNewlines),
+                "icon": item.icon.isEmpty ? "📅" : item.icon,
+                "text": item.text.trimmingCharacters(in: .whitespacesAndNewlines),
             ]
             let time = item.time.trimmingCharacters(in: .whitespacesAndNewlines)
             let until = item.until.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !time.isEmpty { out["tijd"] = time }
-            if !until.isEmpty { out["tot"] = until }
+            if !time.isEmpty { out["time"] = time }
+            if !until.isEmpty { out["until"] = until }
             let days = daysFrom(item.days)
-            if !days.isEmpty && days.count < WEEKDAYS.count { out["dagen"] = days }
-            if !item.who.isEmpty { out["wie"] = item.who }
+            if !days.isEmpty && days.count < WEEKDAYS.count { out["days"] = days }
+            if !item.who.isEmpty { out["who"] = item.who }
             if isEvening(time: time, until: until, evening: item.evening, from: from) {
-                out["avond"] = true
+                out["evening"] = true
             }
             return out
         }
@@ -229,15 +229,15 @@ private func cleanEvents(_ source: [DraftEvent]) -> [[String: Any]] {
         .map { e in
             var out: [String: Any] = [
                 "id": e.id.isEmpty ? newId() : e.id,
-                "icoon": e.icon.isEmpty ? "🎉" : e.icon,
-                "tekst": e.text.trimmingCharacters(in: .whitespacesAndNewlines),
-                "datum": e.date,
+                "icon": e.icon.isEmpty ? "🎉" : e.icon,
+                "text": e.text.trimmingCharacters(in: .whitespacesAndNewlines),
+                "date": e.date,
             ]
             let time = e.time.trimmingCharacters(in: .whitespacesAndNewlines)
             let until = e.until.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !time.isEmpty { out["tijd"] = time }
-            if !until.isEmpty { out["tot"] = until }
-            if !e.who.isEmpty { out["wie"] = e.who }
+            if !time.isEmpty { out["time"] = time }
+            if !until.isEmpty { out["until"] = until }
+            if !e.who.isEmpty { out["who"] = e.who }
             return out
         }
 }
@@ -246,27 +246,28 @@ func cleaned(_ c: Draft) -> [String: Any] {
     let from = EVENING_FROM
     let title = c.title.trimmingCharacters(in: .whitespacesAndNewlines)
     return [
-        "titel": title.isEmpty ? "Ons dagritme" : title,
-        "avondVanaf": from,
-        "mensen": c.people.enumerated().map { (i, p) -> [String: Any] in
+        "version": 2,
+        "title": title.isEmpty ? "Ons dagritme" : title,
+        "eveningFrom": from,
+        "people": c.people.enumerated().map { (i, p) -> [String: Any] in
             [
                 "id": p.id.isEmpty ? newId() : p.id,
-                "naam": p.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                "name": p.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                     ? "Naamloos" : p.name.trimmingCharacters(in: .whitespacesAndNewlines),
                 "emoji": p.emoji.isEmpty ? "🙂" : p.emoji,
-                "kleur": p.color.isEmpty ? COLORS[i % COLORS.count] : p.color,
-                "kenmerken": p.traits,
+                "color": p.color.isEmpty ? COLORS[i % COLORS.count] : p.color,
+                "traits": p.traits,
             ]
         },
-        "dag": cleanGroups(c.day),
-        "nacht": cleanGroups(c.night),
-        "overzicht": cleanWeek(c.week, from),
+        "day": cleanGroups(c.day),
+        "night": cleanGroups(c.night),
+        "week": cleanWeek(c.week, from),
         "events": cleanEvents(c.events),
     ]
 }
 
 func countSteps(_ groups: [[String: Any]]) -> Int {
-    groups.reduce(0) { $0 + (($1["stappen"] as? [[String: Any]])?.count ?? 0) }
+    groups.reduce(0) { $0 + (($1["steps"] as? [[String: Any]])?.count ?? 0) }
 }
 
 extension Array {

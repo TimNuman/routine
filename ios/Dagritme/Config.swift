@@ -17,12 +17,12 @@ enum Config {
         return fromPlist.isEmpty ? defaultKey : fromPlist
     }
 
-    static var storeURL: URL? { URL(string: baseURL + "/api/opslag") }
-    static var assistantURL: URL? { URL(string: baseURL + "/api/lees") }
+    static var storeURL: URL? { URL(string: baseURL + "/api/v2/storage") }
+    static var assistantURL: URL? { URL(string: baseURL + "/api/v2/read") }
 
     static var streamURL: URL? {
         guard baseURL.hasPrefix("http") else { return nil }
-        return URL(string: "ws" + String(baseURL.dropFirst(4)) + "/api/opslag/stroom")
+        return URL(string: "ws" + String(baseURL.dropFirst(4)) + "/api/v2/storage/stream")
     }
 
     private static func plist(_ key: String) -> String {

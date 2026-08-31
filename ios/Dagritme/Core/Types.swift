@@ -1,8 +1,8 @@
 import Foundation
 
 enum Routine: String, Codable, Hashable {
-    case day = "dag"
-    case night = "nacht"
+    case day
+    case night
 }
 
 struct Person: Identifiable, Hashable {

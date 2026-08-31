@@ -7,7 +7,8 @@
     "start": "wrangler dev",
     "stempel": "node stempel.mjs",
     "reservekopie": "node reservekopie.mjs",
-    "deploy": "node stempel.mjs && wrangler deploy"
+    "deploy": "node stempel.mjs && wrangler deploy",
+    "test": "node worker/house.test.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.121.0"

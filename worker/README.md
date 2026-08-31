@@ -187,6 +187,39 @@ MODEL = "claude-sonnet-5"
 EFFORT = "medium"
 ```
 
+## Twee versies naast elkaar
+
+Sinds de Swift-app bestaat er een tweede, Engelse api naast de oude. Ze delen
+**één opslag**: `content` in het huis staat in het Engels, en de oude
+`/api/opslag`-routes vertalen bij de deur heen en terug. De webversie en de
+react native-versie merken daar niets van en blijven bij op de seconde — een
+vinkje in de app staat meteen in de browser, en andersom.
+
+| | oud (afgeschreven) | nieuw |
+|---|---|---|
+| opslag | `/api/opslag/*` | `/api/v2/storage/*` |
+| uitlezen | `/api/lees` | `/api/v2/read` |
+| kopje | `X-Routine-Sleutel` | `X-Routine-Key` |
+| stroom | `soort`: begin, inhoud, vink, ritme | `kind`: start, content, check, routine |
+| velden | `titel`, `mensen`, `dag`, `nacht`, `overzicht` | `title`, `people`, `day`, `night`, `week` |
+| dagen | `ma di wo do vr za zo` | `mon tue wed thu fri sat sun` |
+| ritme | `dag`, `nacht` | `day`, `night` |
+
+De vertaling staat op één plek, in [`schema.js`](schema.js), en
+[`house.test.mjs`](house.test.mjs) bewaakt hem: `npm test` controleert dat de
+oude kant er byte voor byte hetzelfde uitkomt, dat een schrijfactie op de ene
+versie meteen bij de andere staat, en dat één vinkje allebei de stroomvormen
+tegelijk bereikt.
+
+**Overgaan gebeurt vanzelf.** De eerste keer dat het huis wordt aangesproken zet
+hij `inhoud` om naar `content` en schrijft hij de vinkjes van deze week om. De
+oude `inhoud` blijft staan als het net onder het koord; is er iets mis, dan haal
+je `content` weg en staat alles weer zoals het was.
+
+Als de web- en react native-versie weg zijn, mag `serveV1` in `house.js` weg,
+samen met de helft van `schema.js` — en dan is er niets Nederlands meer aan de
+achterkant.
+
 ## De opslag
 
 Naast de uitlezer staat hier de opslag: `/api/opslag/*`. Alles van dit gezin zit

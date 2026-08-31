@@ -20,7 +20,7 @@ func checkKey(_ routine: Routine, _ step: String, _ person: String) -> String {
 
 enum Store {
     private static var headers: [String: String] {
-        Config.key.isEmpty ? [:] : ["X-Routine-Sleutel": Config.key]
+        Config.key.isEmpty ? [:] : ["X-Routine-Key": Config.key]
     }
 
     private static func url(_ path: String, _ query: [String: String] = [:]) throws -> URL {
@@ -59,26 +59,26 @@ enum Store {
     }
 
     static func loadContent() async throws -> Content {
-        normalize(try await get("inhoud")["inhoud"])
+        normalize(try await get("content")["content"])
     }
 
     static func saveContent(_ content: [String: Any]) async throws {
-        try await send("inhoud", "PUT", content)
+        try await send("content", "PUT", content)
     }
 
     static func loadChecks(_ date: String) async throws -> Checks {
-        let raw = try await get("dag", ["datum": date])["vinkjes"]
+        let raw = try await get("day", ["date": date])["checks"]
         var checks: Checks = [:]
         for key in raw.keys where raw[key].flag { checks[key] = true }
         return checks
     }
 
     static func writeCheck(date: String, key: String, on: Bool) async throws {
-        try await send("vink", "PUT", ["datum": date, "sleutel": key, "aan": on])
+        try await send("check", "PUT", ["date": date, "key": key, "on": on])
     }
 
     static func clearRoutine(date: String, routine: Routine) async throws {
-        try await send("ritme", "DELETE", ["datum": date, "ritme": routine.rawValue])
+        try await send("routine", "DELETE", ["date": date, "routine": routine.rawValue])
     }
 }
 
@@ -89,20 +89,20 @@ enum StreamMessage {
     case routine(date: String, routine: Routine)
 
     init?(_ raw: Json) {
-        switch raw["soort"].text {
-        case "begin":
+        switch raw["kind"].text {
+        case "start":
             var checks: Checks = [:]
-            let source = raw["vinkjes"]
+            let source = raw["checks"]
             for key in source.keys where source[key].flag { checks[key] = true }
-            self = .start(date: raw["datum"].text, content: raw["inhoud"], checks: checks)
-        case "inhoud":
-            self = .content(raw["inhoud"])
-        case "vink":
-            self = .check(date: raw["datum"].text, key: raw["sleutel"].text,
-                          on: raw["aan"].flag)
-        case "ritme":
-            self = .routine(date: raw["datum"].text,
-                            routine: raw["ritme"].text == "nacht" ? .night : .day)
+            self = .start(date: raw["date"].text, content: raw["content"], checks: checks)
+        case "content":
+            self = .content(raw["content"])
+        case "check":
+            self = .check(date: raw["date"].text, key: raw["key"].text,
+                          on: raw["on"].flag)
+        case "routine":
+            self = .routine(date: raw["date"].text,
+                            routine: raw["routine"].text == "night" ? .night : .day)
         default:
             return nil
         }
@@ -128,7 +128,7 @@ final class LiveStream {
         day = fresh
         guard let task, task.state == .running,
               let body = try? JSONSerialization.data(
-                withJSONObject: ["soort": "dag", "datum": fresh]),
+                withJSONObject: ["kind": "day", "date": fresh]),
               let text = String(data: body, encoding: .utf8)
         else { return }
         task.send(.string(text)) { _ in }
@@ -146,12 +146,12 @@ final class LiveStream {
     private func connect() {
         guard !closed, var address = Config.streamURL else { return }
         if var parts = URLComponents(url: address, resolvingAgainstBaseURL: false) {
-            parts.queryItems = [URLQueryItem(name: "datum", value: day)]
+            parts.queryItems = [URLQueryItem(name: "date", value: day)]
             if let out = parts.url { address = out }
         }
         var request = URLRequest(url: address)
         if !Config.key.isEmpty {
-            request.setValue(Config.key, forHTTPHeaderField: "X-Routine-Sleutel")
+            request.setValue(Config.key, forHTTPHeaderField: "X-Routine-Key")
         }
         let fresh = URLSession.shared.webSocketTask(with: request)
         task = fresh

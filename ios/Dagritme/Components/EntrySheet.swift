@@ -68,7 +68,7 @@ struct EntrySheet: View {
             FormHead("Op welke dagen")
             Chips(equal: true) {
                 ForEach(WEEKDAYS, id: \.self) { day in
-                    Chip(label: day, on: entry.days.contains(day)) {
+                    Chip(label: dayLabel(day), on: entry.days.contains(day)) {
                         if let i = entry.days.firstIndex(of: day) { entry.days.remove(at: i) }
                         else { entry.days.append(day) }
                     }
