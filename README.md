@@ -278,6 +278,26 @@ uit — Cloudflare bouwt zelf uit deze repo.
 
 Zelf uitrollen kan ook: `npm run deploy`.
 
+### De webversie op een eigen adres
+
+De iOS-app is de versie die verder gaat; de webversie en de react native-versie
+worden bevroren. Om ze niet zomaar weg te halen staat er in
+[`web-legacy/`](web-legacy) een tweede, losse Worker die dezelfde `public/`
+uitserveert en `/api/*` doorstuurt naar de echte Worker. Vanuit de browser praat
+de pagina daardoor nog steeds met zijn eigen adres, dus er hoeft nergens CORS
+open.
+
+```bash
+npm run deploy:web        # rolt uit naar routine-web.<jouw-naam>.workers.dev
+```
+
+Die uitrol staat los van `npm run deploy` en van de push naar `main`: hij gebeurt
+één keer, met de hand, en daarna niet meer. Er wordt bewust geen versienummer in
+gestempeld — de pagina zet zijn eigen bijwerk-controle dan vanzelf uit, en dat is
+precies wat je wilt bij iets dat niet meer verandert.
+
+Pas als dat adres het doet mag `public/` hier weg.
+
 `.github/workflows/deploy.yml` is er alleen nog voor wie het liever via GitHub
 Actions doet; bouwt Cloudflare zelf, dan mag dat bestand weg.
 

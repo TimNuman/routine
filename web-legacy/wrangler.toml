@@ -1,0 +1,16 @@
+name = "routine-web"
+main = "worker.js"
+compatibility_date = "2026-08-01"
+
+# De bevroren webversie, op een eigen adres. Hij serveert dezelfde bestanden
+# als vroeger en stuurt /api/* door naar de echte Worker, zodat de pagina
+# vanuit de browser gezien nog steeds met zichzelf praat — er is dus geen CORS
+# nodig, en de achterkant hoeft niets open te zetten.
+[assets]
+directory = "../public"
+binding = "ASSETS"
+
+[vars]
+# Het adres van de echte Worker. Zet SLEUTEL als secret als die daar aan staat:
+#   npx wrangler secret put SLEUTEL --config web-legacy/wrangler.toml
+UPSTREAM = "https://routine.tim-numan.workers.dev"
