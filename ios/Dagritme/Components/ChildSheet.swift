@@ -56,7 +56,7 @@ struct ChildSheet: View {
                 FormHead("Gezicht en naam", first: true)
                 HStack(spacing: 10) {
                     EmojiButton(value: child.emoji, size: 52) { picker = true }
-                    Field(value: $child.name, placeholder: "Naam")
+                    Field(value: $child.name, placeholder: "Naam", id: "child.name")
                 }
 
                 FormHead("Kleur")
@@ -72,7 +72,7 @@ struct ChildSheet: View {
                         }
                         .buttonStyle(.press)
                         .frame(width: 64, height: 34)
-                        .accessibilityLabel("Kleur")
+                        .accessibilityLabel(Spoken.color)
                     }
                 }
 

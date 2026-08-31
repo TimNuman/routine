@@ -1,0 +1,21 @@
+appId: app.dagritme
+name: Iets bijzonders toevoegen en annuleren
+---
+- launchApp
+- tapOn:
+    id: "tab.week"
+- tapOn:
+    id: "week.addOneOff"
+
+- assertVisible:
+    id: "sheet.title"
+- tapOn:
+    id: "entry.text"
+- inputText: "Tandarts"
+- takeScreenshot: formulier-ingevuld
+
+# Cancel rather than save: this runs against the real household.
+- tapOn:
+    id: "sheet.cancel"
+- assertVisible:
+    id: "week.addOneOff"

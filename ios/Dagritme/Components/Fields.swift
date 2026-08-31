@@ -14,6 +14,7 @@ struct FormHead: View {
     var body: some View {
         Text(text.uppercased())
             .textStyle(Fonts.formHead)
+            .accessibilityAddTraits(.isHeader)
             .foregroundStyle(palette.muted)
             .padding(.top, first ? 8 : 16)
             .padding(.horizontal, 6)
@@ -71,6 +72,7 @@ struct Field: View {
     @Binding var value: String
     var placeholder: String = ""
     var kind: FieldKind = .text
+    var id: String? = nil
 
     @Environment(\.palette) private var palette
 
@@ -91,6 +93,8 @@ struct Field: View {
                 .strokeBorder(palette.fieldEdge, lineWidth: 1))
             .textInputAutocapitalization(.sentences)
             .autocorrectionDisabled(kind != .text)
+            .accessibilityIdentifier(id ?? "")
+            .accessibilityLabel(placeholder)
     }
 
     private var width: CGFloat? {
@@ -131,6 +135,7 @@ struct Chip: View {
     let on: Bool
     var color: Color? = nil
     var quiet: Bool = false
+    var id: String? = nil
     let onTap: () -> Void
 
     @Environment(\.palette) private var palette
@@ -150,6 +155,7 @@ struct Chip: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.press)
+        .accessibilityIdentifier(id ?? "")
         .accessibilityAddTraits(on ? [.isButton, .isSelected] : .isButton)
     }
 
@@ -188,7 +194,8 @@ struct EmojiButton: View {
                 .frame(width: size, height: size)
         }
         .buttonStyle(.press)
-        .accessibilityLabel("Icoon")
+        .accessibilityLabel(Spoken.icon)
+        .accessibilityValue(value)
     }
 }
 
@@ -227,7 +234,7 @@ struct AddRow: View {
             HairLine()
             Button(action: onTap) {
                 HStack(spacing: 10) {
-                    Bullet()
+                    Bullet().accessibilityHidden(true)
                     Text(title).textStyle(Fonts.add).foregroundStyle(palette.muted)
                     Spacer(minLength: 0)
                 }
@@ -236,6 +243,7 @@ struct AddRow: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.press)
+            .accessibilityLabel(title)
         }
     }
 }
@@ -278,6 +286,7 @@ struct EditRow: View {
             }
         }
         .buttonStyle(.press)
+        .accessibilityElement(children: .combine)
         .padding(.vertical, 8)
         .frame(minHeight: 58)
     }

@@ -53,6 +53,7 @@ struct MenuIcon: View {
             .stroke(color, style: StrokeStyle(lineWidth: size / 24 * 1.9,
                                               lineCap: .round, lineJoin: .round))
             .frame(width: size, height: size)
+            .accessibilityHidden(true)
     }
 }
 
@@ -69,5 +70,6 @@ struct Chevron: View {
         }
         .stroke(color, style: StrokeStyle(lineWidth: 2 * s, lineCap: .round, lineJoin: .round))
         .frame(width: 9 * s, height: height)
+        .accessibilityHidden(true)
     }
 }

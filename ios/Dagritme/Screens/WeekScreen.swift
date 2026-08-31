@@ -82,9 +82,11 @@ struct WeekScreen: View {
                     }
                     .shifted(shift(2))
 
-                    CardButton("Iets bijzonders toevoegen", plus: true) { openEntry(nil) }
+                    CardButton("Iets bijzonders toevoegen", plus: true,
+                               id: "week.addOneOff") { openEntry(nil) }
                         .shifted(shift(3))
-                    CardButton("Typ of plak iets", glyph: "✨") { assistantOpen = true }
+                    CardButton("Typ of plak iets", glyph: "✨",
+                               id: "week.assistant") { assistantOpen = true }
                         .shifted(shift(4))
                 }
             }
@@ -223,6 +225,7 @@ private struct TodayButton: View {
                 .overlay(Capsule().strokeBorder(ORANGE.opacity(0.30), lineWidth: 1))
         }
         .buttonStyle(.press(0.94))
+        .accessibilityIdentifier("week.today")
         .transition(.scale.combined(with: .opacity))
     }
 }

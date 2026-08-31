@@ -1,0 +1,52 @@
+import Foundation
+
+enum Spoken {
+    static func step(_ step: String, _ person: String) -> String {
+        String(localized: "a11y.step.person", defaultValue: "\(step), \(person)",
+               comment: "VoiceOver label for one child's circle on a step card")
+    }
+
+    static let stepDone = String(localized: "a11y.step.done", defaultValue: "afgevinkt",
+                                 comment: "State of a ticked circle")
+    static let stepOpen = String(localized: "a11y.step.open", defaultValue: "nog niet afgevinkt",
+                                 comment: "State of an unticked circle")
+
+    static func tally(_ done: Int, _ total: Int) -> String {
+        String(localized: "a11y.tally", defaultValue: "\(done) van \(total) af",
+               comment: "VoiceOver value for a child's progress bar")
+    }
+
+    static func soloChild(_ name: String) -> String {
+        String(localized: "a11y.child.solo", defaultValue: "Alleen \(name) tonen",
+               comment: "Tapping a progress tile when everyone is shown")
+    }
+
+    static func hideChild(_ name: String) -> String {
+        String(localized: "a11y.child.hide", defaultValue: "\(name) verbergen",
+               comment: "Tapping a progress tile that is currently shown")
+    }
+
+    static func showChild(_ name: String) -> String {
+        String(localized: "a11y.child.show", defaultValue: "\(name) er weer bij",
+               comment: "Tapping a progress tile that is currently hidden")
+    }
+
+    static let close = String(localized: "a11y.close", defaultValue: "Sluiten",
+                              comment: "Tapping the dimmed backdrop behind a sheet")
+    static let icon = String(localized: "a11y.icon", defaultValue: "Icoon",
+                             comment: "The emoji button in a form")
+    static let color = String(localized: "a11y.color", defaultValue: "Kleur",
+                              comment: "A colour swatch in the child form")
+    static let date = String(localized: "a11y.date", defaultValue: "Datum",
+                             comment: "The date picker in the entry form")
+    static let message = String(localized: "a11y.message", defaultValue: "Bericht om uit te lezen",
+                                comment: "The paste box in the assistant sheet")
+    static let previousWeek = String(localized: "a11y.week.previous", defaultValue: "Vorige week",
+                                     comment: "Arrow left of the week strip")
+    static let nextWeek = String(localized: "a11y.week.next", defaultValue: "Volgende week",
+                                 comment: "Arrow right of the week strip")
+    static let take = String(localized: "a11y.suggestion.take", defaultValue: "Wel overnemen",
+                             comment: "Checkbox on an unchecked suggestion")
+    static let skip = String(localized: "a11y.suggestion.skip", defaultValue: "Niet overnemen",
+                             comment: "Checkbox on a checked suggestion")
+}

@@ -139,6 +139,9 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				nl,
+				de,
+				da,
+				en,
 				Base,
 			);
 			mainGroup = D1A0000000000000000000D1;

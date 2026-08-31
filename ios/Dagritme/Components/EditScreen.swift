@@ -302,7 +302,7 @@ struct EditScreen: View {
             }
 
             Section {
-                CardButton("Groep toevoegen", plus: true) {
+                CardButton("Groep toevoegen", plus: true, id: "edit.addGroup") {
                     draft[routine].append(DraftGroup(name: "Nieuwe groep", time: "", steps: []))
                     refresh()
                 }
@@ -433,7 +433,7 @@ struct EditScreen: View {
             }
 
             Section {
-                CardButton("Iets eenmaligs toevoegen", plus: true) {
+                CardButton("Iets eenmaligs toevoegen", plus: true, id: "edit.addOneOff") {
                     openEntry("Iets eenmaligs", nil) { entry in
                         entry.icon = "🎉"
                         entry.weekly = false

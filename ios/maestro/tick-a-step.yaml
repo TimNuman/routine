@@ -1,0 +1,22 @@
+appId: app.dagritme
+name: Een stap afvinken en weer uitzetten
+env:
+  RING: "ring.tanden-poetsen.emma"
+---
+- launchApp
+- tapOn:
+    id: "tab.routine"
+- tapOn:
+    id: "segment.night"
+
+- assertVisible:
+    id: "${RING}"
+- takeScreenshot: voor
+
+- tapOn:
+    id: "${RING}"
+- takeScreenshot: afgevinkt
+
+- tapOn:
+    id: "${RING}"
+- takeScreenshot: weer-uit

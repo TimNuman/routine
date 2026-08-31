@@ -2,6 +2,8 @@ import SwiftUI
 
 struct Ring: View {
     let person: Person
+    let stepName: String
+    let stepId: String
     let on: Bool
     var size: CGFloat = 40
     var faceSize: CGFloat = 34
@@ -9,6 +11,7 @@ struct Ring: View {
     let onTap: () -> Void
 
     @Environment(\.palette) private var palette
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var pop: CGFloat = 1
     @State private var spin: Double = 0
     @State private var pressed = false
@@ -18,7 +21,7 @@ struct Ring: View {
 
     var body: some View {
         ZStack {
-            if burst > 0 {
+            if burst > 0 && !reduceMotion {
                 Sparks(color: GREEN, from: faceSize * 0.66, to: faceSize * 1.15)
                     .id(burst)
             }
@@ -38,6 +41,7 @@ struct Ring: View {
                     Text(person.emoji)
                         .font(.system(size: glyphSize))
                         .grayscale(on ? 0 : 1)
+                        .accessibilityHidden(true)
                 }
                 .opacity(on ? 1 : 0.4)
         }
@@ -62,12 +66,15 @@ struct Ring: View {
         }
         .onAppear { appeared = true }
         .accessibilityElement()
-        .accessibilityLabel(person.name)
+        .accessibilityIdentifier("ring.\(stepId).\(person.id)")
+        .accessibilityLabel(Spoken.step(stepName, person.name))
+        .accessibilityValue(on ? Spoken.stepDone : Spoken.stepOpen)
         .accessibilityAddTraits(on ? [.isButton, .isSelected] : .isButton)
     }
 
     private func celebrate() {
         if byMe { Haptics.on() }
+        guard !reduceMotion else { return }
         burst &+= 1
         withAnimation(Motion.dent) { pop = 0.86 }
         withAnimation(Motion.pop.delay(0.10)) { pop = 1.22; spin = -9 }

@@ -17,6 +17,7 @@ struct CardRow: View {
     let note: String
     var first: Bool = false
     var faces: [Person] = []
+    var id: String? = nil
     let onTap: () -> Void
 
     @Environment(\.palette) private var palette
@@ -38,7 +39,7 @@ struct CardRow: View {
                         Text(note).textStyle(Fonts.listNote).foregroundStyle(palette.muted).lineLimit(1)
                     }
                     Spacer(minLength: 0)
-                    if !faces.isEmpty { Faces(people: faces) }
+                    if !faces.isEmpty { Faces(people: faces).accessibilityHidden(true) }
                     Chevron().opacity(0.6)
                 }
                 .padding(14)
@@ -46,6 +47,8 @@ struct CardRow: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.press)
+            .accessibilityElement(children: .combine)
+            .accessibilityIdentifier(id ?? "")
         }
     }
 }

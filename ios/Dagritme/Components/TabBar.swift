@@ -14,12 +14,13 @@ struct TabBar: View {
         let tab: Tab
         let name: String
         let shape: MenuShape.Kind
+        let id: String
     }
 
     private let items: [Item] = [
-        Item(tab: .routine, name: "Ritme", shape: .routine),
-        Item(tab: .week, name: "Deze week", shape: .week),
-        Item(tab: .settings, name: "Instellingen", shape: .gear),
+        Item(tab: .routine, name: "Ritme", shape: .routine, id: "tab.routine"),
+        Item(tab: .week, name: "Deze week", shape: .week, id: "tab.week"),
+        Item(tab: .settings, name: "Instellingen", shape: .gear, id: "tab.settings"),
     ]
 
     var body: some View {
@@ -33,6 +34,8 @@ struct TabBar: View {
                         label(item, on: on)
                     }
                     .buttonStyle(.press(0.94))
+                    .accessibilityIdentifier(item.id)
+                    .accessibilityLabel(item.name)
                     .accessibilityAddTraits(on ? [.isButton, .isSelected] : .isButton)
                 }
             }

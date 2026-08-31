@@ -1,0 +1,27 @@
+appId: app.dagritme
+name: De drie schermen
+tags:
+  - smoke
+---
+- launchApp
+- assertVisible:
+    id: "tab.routine"
+- takeScreenshot: 1-ritme
+
+- tapOn:
+    id: "tab.week"
+- assertVisible:
+    id: "week.today"
+- takeScreenshot: 2-deze-week
+
+- tapOn:
+    id: "tab.settings"
+- assertVisible:
+    id: "settings.children"
+- takeScreenshot: 3-instellingen
+
+- tapOn:
+    id: "tab.routine"
+- assertVisible:
+    id: "segment.day"
+- takeScreenshot: 4-terug-op-ritme

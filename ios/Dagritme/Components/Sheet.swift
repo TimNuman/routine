@@ -21,7 +21,9 @@ struct Sheet<Inner: View>: View {
                     .opacity(shown ? 1 : 0)
                     .ignoresSafeArea()
                     .onTapGesture { close(onCancel) }
-                    .accessibilityLabel("Sluiten")
+                    .accessibilityIdentifier("sheet.backdrop")
+                    .accessibilityLabel(Spoken.close)
+                    .accessibilityAddTraits(.isButton)
 
                 card(space.size.height)
                     .frame(maxWidth: 520)
@@ -46,14 +48,17 @@ struct Sheet<Inner: View>: View {
                         .frame(width: 44, height: 5)
                         .padding(.top, 10)
                         .padding(.bottom, 10)
+                        .accessibilityHidden(true)
 
                     HStack {
-                        TextButton("Annuleer") { close(onCancel) }
+                        TextButton("Annuleer", id: "sheet.cancel") { close(onCancel) }
                         Spacer(minLength: 0)
                     }
                     .overlay {
                         Text(title).textStyle(Fonts.sheetHead)
                             .foregroundStyle(palette.ink).lineLimit(1)
+                            .accessibilityIdentifier("sheet.title")
+                            .accessibilityAddTraits(.isHeader)
                     }
                 }
                 .contentShape(Rectangle())
@@ -89,6 +94,8 @@ struct Sheet<Inner: View>: View {
                                 .fill(ORANGE))
                     }
                     .buttonStyle(.press)
+                    .accessibilityIdentifier("sheet.submit")
+                    .accessibilityLabel(button)
                     .disabled(busy)
                     .opacity(busy ? 0.45 : 1)
                     .padding(.top, 14)
@@ -135,12 +142,15 @@ struct FullSheet<Inner: View>: View {
             VStack(spacing: 0) {
                 Glass(radius: 28, floating: true) {
                     HStack(spacing: 10) {
-                        TextButton("Annuleer") { onCancel() }
+                        TextButton("Annuleer", id: "full.cancel") { onCancel() }
                             .frame(maxWidth: .infinity, alignment: .leading)
                         Text(title).textStyle(Fonts.sheetHead).foregroundStyle(INK)
                             .lineLimit(1)
                             .layoutPriority(1)
-                        TextButton(busy ? "Bezig…" : "Gereed", bold: true) { onDone() }
+                            .accessibilityIdentifier("full.title")
+                            .accessibilityAddTraits(.isHeader)
+                        TextButton(busy ? "Bezig…" : "Gereed", bold: true,
+                                   id: "full.done") { onDone() }
                             .frame(maxWidth: .infinity, alignment: .trailing)
                     }
                     .padding(.vertical, 14)
@@ -181,11 +191,14 @@ struct FullSheet<Inner: View>: View {
 struct TextButton: View {
     let title: String
     var bold: Bool = false
+    var id: String? = nil
     let onTap: () -> Void
 
-    init(_ title: String, bold: Bool = false, onTap: @escaping () -> Void) {
+    init(_ title: String, bold: Bool = false, id: String? = nil,
+         onTap: @escaping () -> Void) {
         self.title = title
         self.bold = bold
+        self.id = id
         self.onTap = onTap
     }
 
@@ -198,6 +211,7 @@ struct TextButton: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.press)
+        .accessibilityIdentifier(id ?? "")
     }
 }
 

@@ -66,6 +66,7 @@ private struct Tile: View {
     var onSelect: ((String) -> Void)?
 
     @Environment(\.palette) private var palette
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var pop: CGFloat = 1
     @State private var appeared = false
 
@@ -76,16 +77,21 @@ private struct Tile: View {
         if let onSelect {
             Button { onSelect(person.id) } label: { tile }
                 .buttonStyle(.press(0.96))
+                .accessibilityIdentifier("tally.\(person.id)")
                 .accessibilityLabel(label)
+                .accessibilityValue(Spoken.tally(tally.done, tally.total))
                 .accessibilityAddTraits(on ? [.isButton, .isSelected] : .isButton)
         } else {
             tile
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("tally.\(person.id)")
+                .accessibilityValue(Spoken.tally(tally.done, tally.total))
         }
     }
 
     private var label: String {
-        if !filtered { return "Alleen \(person.name) tonen" }
-        return on ? "\(person.name) verbergen" : "\(person.name) er weer bij"
+        if !filtered { return Spoken.soloChild(person.name) }
+        return on ? Spoken.hideChild(person.name) : Spoken.showChild(person.name)
     }
 
     private var tile: some View {
@@ -94,6 +100,7 @@ private struct Tile: View {
                 Circle().fill(tint(person.color, tally.complete ? 0.30 : 0.18))
                 Text(person.emoji).font(.system(size: 26))
             }
+            .accessibilityHidden(true)
             .frame(width: 46, height: 46)
             .scaleEffect(pop)
 
@@ -132,6 +139,7 @@ private struct Tile: View {
         .onChange(of: tally.complete) { _, fresh in
             guard appeared, fresh else { return }
             Haptics.done()
+            guard !reduceMotion else { return }
             withAnimation(Motion.dent) { pop = 0.90 }
             withAnimation(Motion.pop.delay(0.08)) { pop = 1.20 }
             withAnimation(Motion.settle.delay(0.30)) { pop = 1 }
@@ -145,6 +153,7 @@ private struct Track: View {
     let complete: Bool
     let color: Color
     @Environment(\.palette) private var palette
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var sheen = 0
     @State private var appeared = false
@@ -160,13 +169,14 @@ private struct Track: View {
                     .animation(Motion.spring, value: fraction)
                     .animation(Motion.calm, value: complete)
 
-                if sheen > 0 {
+                if sheen > 0 && !reduceMotion {
                     Sheen(width: width).id(sheen)
                 }
             }
             .clipShape(Capsule())
         }
         .frame(height: 7)
+        .accessibilityHidden(true)
         .onChange(of: complete) { _, fresh in
             guard appeared, fresh else { return }
             Task { @MainActor in

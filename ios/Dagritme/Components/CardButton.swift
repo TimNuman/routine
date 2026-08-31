@@ -3,16 +3,18 @@ import SwiftUI
 struct CardButton: View {
     var glyph: String? = nil
     var plus: Bool = false
+    var id: String? = nil
     let title: String
     let onTap: () -> Void
 
     @Environment(\.palette) private var palette
 
-    init(_ title: String, glyph: String? = nil, plus: Bool = false,
+    init(_ title: String, glyph: String? = nil, plus: Bool = false, id: String? = nil,
          onTap: @escaping () -> Void) {
         self.title = title
         self.glyph = glyph
         self.plus = plus
+        self.id = id
         self.onTap = onTap
     }
 
@@ -24,11 +26,12 @@ struct CardButton: View {
             Glass(radius: 22) {
                 HStack(spacing: 10) {
                     if plus {
-                        Bullet()
+                        Bullet().accessibilityHidden(true)
                     } else {
                         Text(glyph ?? "")
                             .font(.system(size: 20))
                             .frame(width: 28)
+                            .accessibilityHidden(true)
                     }
                     Text(title)
                         .textStyle(Fonts.cardButton)
@@ -41,6 +44,8 @@ struct CardButton: View {
             }
         }
         .buttonStyle(.press)
+        .accessibilityIdentifier(id ?? "")
+        .accessibilityLabel(title)
         .padding(.top, 14)
     }
 }

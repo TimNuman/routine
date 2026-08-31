@@ -255,6 +255,7 @@ private struct ResetButton: View {
                 .overlay(Capsule().strokeBorder(INK.opacity(0.14), lineWidth: 1))
         }
         .buttonStyle(.press(0.94, fade: 0.7))
+        .accessibilityIdentifier("routine.reset")
         .frame(maxWidth: .infinity)
         .padding(.top, 22)
     }
@@ -292,6 +293,7 @@ private struct Card: View {
                 Text(step.icon)
                     .font(.system(size: m.iconSize))
                     .scaleEffect(allDone ? 1.12 : 1)
+                    .accessibilityHidden(true)
                 Text(step.label)
                     .textStyle(Fonts.taskName(m.nameSize))
                     .foregroundStyle(palette.ink)
@@ -302,6 +304,8 @@ private struct Card: View {
                     ForEach(taking) { person in
                         Ring(
                             person: person,
+                            stepName: step.label,
+                            stepId: key,
                             on: household.checks[checkKey(routine, key, person.id)] == true,
                             size: m.ringSize, faceSize: m.faceSize, glyphSize: m.glyphSize,
                             onTap: { household.toggle(checkKey(routine, key, person.id)) }
@@ -315,6 +319,7 @@ private struct Card: View {
         }
         .scaleEffect(allDone ? 0.985 : 1)
         .animation(Motion.pop, value: allDone)
+        .accessibilityIdentifier("card.\(stepKey(step))")
         .shifted(shift)
     }
 }

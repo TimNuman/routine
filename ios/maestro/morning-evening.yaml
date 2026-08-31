@@ -1,0 +1,18 @@
+appId: app.dagritme
+name: Ochtend en avond wisselen
+tags:
+  - smoke
+---
+- launchApp
+- tapOn:
+    id: "tab.routine"
+
+- tapOn:
+    id: "segment.night"
+- assertVisible: "Avond"
+- takeScreenshot: avond
+
+- tapOn:
+    id: "segment.day"
+- assertVisible: "Ochtend"
+- takeScreenshot: ochtend

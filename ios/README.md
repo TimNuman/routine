@@ -42,12 +42,14 @@ gewoon.
 ```
 Dagritme/
   Config.swift         waar de Worker staat
+  Localizable.xcstrings  de teksten; nl nu, de/da/en straks
   Core/                de logica, één op één uit mobiel/onderdelen
   Style/               kleuren, letters, maten, timing, het glas
   Components/          de losse stukken van de schermen
   Screens/             ritme, week, instellingen
   Fonts/               Baloo 2 en Nunito, bijgeknipt tot Latijn
-Driver/                de app aansturen zonder handen — zie onderaan
+maestro/               de stromen die de app aansturen — zie onderaan
+Driver/                afdrukken en opnames — zie onderaan
 ```
 
 `Core/` kent geen SwiftUI: dat is dezelfde bewerking als in de react
@@ -114,20 +116,54 @@ uit. Dat is dezelfde keuze als op web, en het is wel iets om te weten.
 
 ## De app aansturen
 
-`Driver/` is een tweede doel in hetzelfde project: een UI-test die de app opstart
-en er tikken en vegen in doet. Niet om iets te bewijzen — er staat geen enkele
-verwachting in — maar om te kúnnen kijken. Animaties bouwen die je niet kunt zien
-is gokken, en dat bleek: de vonkjes bij het afvinken zaten verstopt achter het
-gezichtje, en dat komt uit geen compiler en geen log.
+[Maestro](https://maestro.mobile.dev) doet het echte werk: een stroom is een
+paar regels yaml, hij wacht zelf tot iets er staat, en hij wijst elementen aan
+op hun naam in plaats van op een plek op het scherm. Daardoor blijft een stroom
+kloppen als er iets verschuift.
+
+```bash
+brew install maestro          # of: curl -Ls https://get.maestro.mobile.dev | bash
+maestro test ios/maestro                     # alles
+maestro test ios/maestro/smoke.yaml          # één stroom
+maestro test --include-tags smoke ios/maestro
+maestro studio                # klik je een stroom bij elkaar, met de boom erbij
+```
+
+De stromen staan in [`maestro/`](maestro):
+
+| | wat het doet |
+|---|---|
+| `smoke.yaml` | de drie schermen langs, met een afdruk van elk |
+| `morning-evening.yaml` | de schakelaar heen en terug |
+| `tick-a-step.yaml` | een rondje afvinken en weer uitzetten |
+| `add-something.yaml` | het formulier openen, invullen en annuleren |
+
+Ze wijzen aan op `accessibilityIdentifier`, en die staan overal waar je op kunt
+tikken: `tab.routine`, `segment.night`, `ring.<stap>.<kind>`,
+`settings.children`, `sheet.cancel`, `week.addOneOff`. Die namen zijn Engels en
+worden nooit voorgelezen — ze horen bij de code. Wat VoiceOver zegt staat er
+apart naast, in het Nederlands, en gaat mee in de vertaling.
+
+Let op: `tick-a-step.yaml` en `add-something.yaml` draaien tegen het echte huis.
+De eerste zet een vinkje en haalt het weer weg, de tweede annuleert het
+formulier — maar reken erop dat een stroom die je zelf schrijft wél iets
+achterlaat.
+
+### Afdrukken en opnames
+
+`Driver/` blijft ernaast staan voor wat Maestro niet doet: een opname van de
+beweging zelf. Animaties bouwen die je niet kunt zien is gokken, en dat bleek —
+de vonkjes bij het afvinken zaten verstopt achter het gezichtje, en dat komt uit
+geen compiler en geen log.
 
 ```bash
 xcodebuild test -project Dagritme.xcodeproj -scheme Dagritme \
   -destination 'id=<simulator>'
 ```
 
-Zonder meer draait het plan in [`Driver/plan.json`](Driver/plan.json): opstarten, de
-drie schermen langs door te vegen, en van elk een afdruk. Wil je iets anders, wijs
-dan een eigen plan aan — het `TEST_RUNNER_`-voorvoegsel valt er onderweg af:
+Zonder meer draait het plan in [`Driver/plan.json`](Driver/plan.json). Wil je
+iets anders, wijs dan een eigen plan aan — het `TEST_RUNNER_`-voorvoegsel valt
+er onderweg af:
 
 ```bash
 TEST_RUNNER_DRIVER_PLAN=/pad/plan.json \

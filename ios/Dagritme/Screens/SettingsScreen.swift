@@ -17,20 +17,26 @@ struct SettingsScreen: View {
                                 ? "nog niemand"
                                 : content.people.map { $0.name }.joined(separator: ", "),
                             first: true,
-                            faces: content.people) { sheet = .children }
+                            faces: content.people,
+                            id: "settings.children") { sheet = .children }
                     CardRow(icon: "☀️", title: "Ochtendritme",
-                            note: "\(stepCount(content.day)) stappen") { sheet = .day }
+                            note: "\(stepCount(content.day)) stappen",
+                            id: "settings.day") { sheet = .day }
                         .shifted(shift(2))
                     CardRow(icon: "🌙", title: "Avondritme",
-                            note: "\(stepCount(content.night)) stappen") { sheet = .night }
+                            note: "\(stepCount(content.night)) stappen",
+                            id: "settings.night") { sheet = .night }
                         .shifted(shift(3))
                     CardRow(icon: "📅", title: "Weekritme",
-                            note: "school, sport en wat er verder is") { sheet = .week }
+                            note: "school, sport en wat er verder is",
+                            id: "settings.week") { sheet = .week }
                         .shifted(shift(4))
                     CardRow(icon: "📌", title: "Eenmalig",
-                            note: oneOffText(content)) { sheet = .oneOff }
+                            note: oneOffText(content),
+                            id: "settings.oneOff") { sheet = .oneOff }
                         .shifted(shift(5))
-                    CardRow(icon: "⚙️", title: "Naam", note: content.title) {
+                    CardRow(icon: "⚙️", title: "Naam", note: content.title,
+                            id: "settings.general") {
                         sheet = .general
                     }
                     .shifted(shift(6))

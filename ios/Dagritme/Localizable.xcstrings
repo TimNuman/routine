@@ -1,0 +1,102 @@
+{
+  "sourceLanguage" : "nl",
+  "strings" : {
+    "a11y.child.hide" : {
+      "comment" : "Tapping a progress tile that is currently shown",
+      "localizations" : {
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "%@ verbergen" } }
+      }
+    },
+    "a11y.child.show" : {
+      "comment" : "Tapping a progress tile that is currently hidden",
+      "localizations" : {
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "%@ er weer bij" } }
+      }
+    },
+    "a11y.child.solo" : {
+      "comment" : "Tapping a progress tile when everyone is shown",
+      "localizations" : {
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Alleen %@ tonen" } }
+      }
+    },
+    "a11y.close" : {
+      "comment" : "Tapping the dimmed backdrop behind a sheet",
+      "localizations" : {
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Sluiten" } }
+      }
+    },
+    "a11y.color" : {
+      "comment" : "A colour swatch in the child form",
+      "localizations" : {
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Kleur" } }
+      }
+    },
+    "a11y.date" : {
+      "comment" : "The date picker in the entry form",
+      "localizations" : {
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Datum" } }
+      }
+    },
+    "a11y.icon" : {
+      "comment" : "The emoji button in a form",
+      "localizations" : {
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Icoon" } }
+      }
+    },
+    "a11y.message" : {
+      "comment" : "The paste box in the assistant sheet",
+      "localizations" : {
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Bericht om uit te lezen" } }
+      }
+    },
+    "a11y.step.done" : {
+      "comment" : "State of a ticked circle",
+      "localizations" : {
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "afgevinkt" } }
+      }
+    },
+    "a11y.step.open" : {
+      "comment" : "State of an unticked circle",
+      "localizations" : {
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "nog niet afgevinkt" } }
+      }
+    },
+    "a11y.step.person" : {
+      "comment" : "VoiceOver label for one child's circle on a step card",
+      "localizations" : {
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "%1$@, %2$@" } }
+      }
+    },
+    "a11y.suggestion.skip" : {
+      "comment" : "Checkbox on a checked suggestion",
+      "localizations" : {
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Niet overnemen" } }
+      }
+    },
+    "a11y.suggestion.take" : {
+      "comment" : "Checkbox on an unchecked suggestion",
+      "localizations" : {
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Wel overnemen" } }
+      }
+    },
+    "a11y.tally" : {
+      "comment" : "VoiceOver value for a child's progress bar",
+      "localizations" : {
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld van %2$lld af" } }
+      }
+    },
+    "a11y.week.next" : {
+      "comment" : "Arrow right of the week strip",
+      "localizations" : {
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Volgende week" } }
+      }
+    },
+    "a11y.week.previous" : {
+      "comment" : "Arrow left of the week strip",
+      "localizations" : {
+        "nl" : { "stringUnit" : { "state" : "translated", "value" : "Vorige week" } }
+      }
+    }
+  },
+  "version" : "1.0"
+}

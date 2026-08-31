@@ -17,7 +17,7 @@ struct WeekStrip: View {
 
         Glass(radius: 24) {
             HStack(spacing: 0) {
-                arrow(-1, "Vorige week")
+                arrow(-1, Spoken.previousWeek, "week.previous")
 
                 ZStack {
                     HStack(spacing: 0) {
@@ -32,7 +32,7 @@ struct WeekStrip: View {
                 .frame(maxWidth: .infinity)
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
-                arrow(1, "Volgende week")
+                arrow(1, Spoken.nextWeek, "week.next")
             }
             .padding(.vertical, 10)
             .padding(.horizontal, 4)
@@ -67,12 +67,13 @@ struct WeekStrip: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.press(0.92))
+        .accessibilityIdentifier("week.day.\(dateString(d))")
         .accessibilityLabel(dateText(d))
         .accessibilityAddTraits(on ? [.isButton, .isSelected] : .isButton)
     }
 
     @ViewBuilder
-    private func arrow(_ step: Int, _ title: String) -> some View {
+    private func arrow(_ step: Int, _ title: String, _ id: String) -> some View {
         Button { onShift(step) } label: {
             Chevron()
                 .scaleEffect(x: step < 0 ? -1 : 1, y: 1)
@@ -82,6 +83,7 @@ struct WeekStrip: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.smallPress)
+        .accessibilityIdentifier(id)
         .accessibilityLabel(title)
     }
 }

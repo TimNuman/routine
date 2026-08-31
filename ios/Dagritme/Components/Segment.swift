@@ -20,8 +20,8 @@ struct Segment: View {
                         .animation(Motion.spring, value: routine)
 
                     HStack(spacing: 0) {
-                        option("ochtend", .day)
-                        option("avond", .night)
+                        option("ochtend", .day, "segment.day")
+                        option("avond", .night, "segment.night")
                     }
                 }
             }
@@ -32,7 +32,7 @@ struct Segment: View {
     }
 
     @ViewBuilder
-    private func option(_ label: String, _ value: Routine) -> some View {
+    private func option(_ label: String, _ value: Routine, _ id: String) -> some View {
         let on = routine == value
         Button { onSelect(value) } label: {
             Text(label)
@@ -46,6 +46,7 @@ struct Segment: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.press)
+        .accessibilityIdentifier(id)
         .accessibilityAddTraits(on ? [.isButton, .isSelected] : .isButton)
     }
 }

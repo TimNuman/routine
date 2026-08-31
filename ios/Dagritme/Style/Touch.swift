@@ -48,14 +48,15 @@ struct Entrance: ViewModifier {
     var distance: CGFloat = 22
     var animation: Animation = Motion.short
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var shown = false
 
     func body(content: Self.Content) -> some View {
         content
             .opacity(shown ? 1 : 0)
-            .scaleEffect(shown ? 1 : 0.95, anchor: .top)
-            .offset(x: shown ? 0 : distance * from,
-                    y: shown ? 0 : (from == 0 ? 12 : 0))
+            .scaleEffect(shown || reduceMotion ? 1 : 0.95, anchor: .top)
+            .offset(x: shown || reduceMotion ? 0 : distance * from,
+                    y: shown || reduceMotion ? 0 : (from == 0 ? 12 : 0))
             .onAppear {
                 guard !shown else { return }
                 withAnimation(animation.delay(Motion.stagger(index))) { shown = true }

@@ -257,6 +257,8 @@ private struct PasteBox: View {
                     .allowsHitTesting(false)
             }
             TextEditor(text: $value)
+                .accessibilityIdentifier("assistant.text")
+                .accessibilityLabel(Spoken.message)
                 .textStyle(TextStyle(font: Fonts.nunito(14)))
                 .foregroundStyle(palette.ink)
                 .scrollContentBackground(.hidden)
@@ -343,7 +345,7 @@ private struct Found: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.press)
-            .accessibilityLabel(on ? "Niet overnemen" : "Wel overnemen")
+            .accessibilityLabel(on ? Spoken.skip : Spoken.take)
 
             Button(action: onOpen) {
                 HStack(alignment: .top, spacing: 11) {

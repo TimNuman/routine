@@ -52,7 +52,7 @@ struct EntrySheet: View {
         FormHead("Icoon en naam", first: true)
         HStack(spacing: 10) {
             EmojiButton(value: entry.icon, size: 52) { picker = true }
-            Field(value: $entry.text, placeholder: "Wat is er")
+            Field(value: $entry.text, placeholder: "Wat is er", id: "entry.text")
         }
     }
 
@@ -60,15 +60,18 @@ struct EntrySheet: View {
     private var whenSection: some View {
         FormHead("Hoe vaak")
         Chips {
-            Chip(label: "🔁 herhalen", on: entry.weekly) { entry.weekly = true }
-            Chip(label: "📌 één keer", on: !entry.weekly) { entry.weekly = false }
+            Chip(label: "🔁 herhalen", on: entry.weekly,
+                 id: "entry.weekly") { entry.weekly = true }
+            Chip(label: "📌 één keer", on: !entry.weekly,
+                 id: "entry.once") { entry.weekly = false }
         }
 
         if entry.weekly {
             FormHead("Op welke dagen")
             Chips(equal: true) {
                 ForEach(WEEKDAYS, id: \.self) { day in
-                    Chip(label: dayLabel(day), on: entry.days.contains(day)) {
+                    Chip(label: dayLabel(day), on: entry.days.contains(day),
+                         id: "entry.day.\(day)") {
                         if let i = entry.days.firstIndex(of: day) { entry.days.remove(at: i) }
                         else { entry.days.append(day) }
                     }
@@ -79,6 +82,7 @@ struct EntrySheet: View {
             DatePicker("Datum", selection: dateBinding, displayedComponents: [.date])
                 .datePickerStyle(.compact)
                 .labelsHidden()
+                .accessibilityLabel(Spoken.date)
                 .environment(\.locale, Locale(identifier: "nl_NL"))
                 .padding(.leading, 4)
         }
