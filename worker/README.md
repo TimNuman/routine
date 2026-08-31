@@ -184,13 +184,13 @@ Goedkoper mag, zonder de code aan te raken, met een var in `wrangler.toml`:
 ```toml
 [vars]
 MODEL = "claude-sonnet-5"
-MOEITE = "medium"
+EFFORT = "medium"
 ```
 
 ## De opslag
 
 Naast de uitlezer staat hier de opslag: `/api/opslag/*`. Alles van dit gezin zit
-in één *huis* — een Durable Object, klasse `Huis` in `huis.js` — en de Worker doet
+in één *huis* — een Durable Object, klasse `House` in `house.js` — en de Worker doet
 er niets anders mee dan de sleutel controleren en het verzoek doorgeven.
 
 ```
@@ -202,7 +202,7 @@ DELETE /api/opslag/ritme             { datum, ritme } — opnieuw beginnen
 GET    /api/opslag/stroom?datum=…    WebSocket: alles wat er verandert
 ```
 
-Welk huis staat in `GEZIN` in `wrangler.toml`, op de server dus. De app hoeft dat
+Welk huis staat in `HOUSEHOLD` in `wrangler.toml`, op de server dus. De app hoeft dat
 niet te weten, en er hoeft ook niets over de lijn dat je zou moeten raden.
 
 **Waarom een Durable Object en geen D1.** Het gaat om de stroom. Een database kan
@@ -221,7 +221,7 @@ precies één sleutel, dus twee telefoons die tegelijk iets aantikken overschrij
 elkaar niet. Dagen ouder dan een week ruimt het huis zelf op, bij het eerstvolgende
 vinkje.
 
-**Verhuizen.** Staat er `OVERNEMEN` in de vars, dan haalt een leeg huis die inhoud
+**Verhuizen.** Staat er `IMPORT_FROM` in de vars, dan haalt een leeg huis die inhoud
 er één keer bij en bewaart hem. Daarna wordt er niet meer gekeken.
 
 ## Straks: wie mag erbij
@@ -239,5 +239,5 @@ meer. De volgende stap is dus aanmelden:
 POST /api/aanmelden          → een token voor dit gezin
 ```
 
-en `GEZIN` uit de vars halen: het huis volgt dan uit het token in plaats van uit
+en `HOUSEHOLD` uit de vars halen: het huis volgt dan uit het token in plaats van uit
 de configuratie. Dat is werk voor als er een tweede gezin bijkomt.

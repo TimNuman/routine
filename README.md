@@ -212,15 +212,15 @@ Twee dingen staan in `wrangler.toml`:
 
 ```toml
 [vars]
-GEZIN = "een-eigen-woord"          # welk huis; de naam staat op de server
-OVERNEMEN = ""                     # eenmalig, om te verhuizen — zie hieronder
+HOUSEHOLD = "een-eigen-woord"      # welk huis; de naam staat op de server
+IMPORT_FROM = ""                   # eenmalig, om te verhuizen — zie hieronder
 ```
 
-`GEZIN` staat met opzet op de server en niet in de app: de app hoeft niet te weten
+`HOUSEHOLD` staat met opzet op de server en niet in de app: de app hoeft niet te weten
 in welk huis hij kijkt, dus hoeft er ook niets over de lijn dat je zou moeten
 raden.
 
-**Verhuizen vanaf een oude database.** Zet in `OVERNEMEN` het adres waar de oude
+**Verhuizen vanaf een oude database.** Zet in `IMPORT_FROM` het adres waar de oude
 inhoud staat (bijvoorbeeld de `config.json` van een Firebase Realtime Database).
 De eerste keer dat het huis leeg blijkt haalt hij die er één keer bij en bewaart
 hem. Daarna wordt er niet meer gekeken en mag de regel weg. De vinkjes van vandaag

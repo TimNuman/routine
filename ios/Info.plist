@@ -24,9 +24,9 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-	<key>ROUTINE_ADRES</key>
+	<key>ROUTINE_URL</key>
 	<string>https://routine.tim-numan.workers.dev</string>
-	<key>ROUTINE_SLEUTEL</key>
+	<key>ROUTINE_KEY</key>
 	<string></string>
 	<key>NSAppTransportSecurity</key>
 	<dict>

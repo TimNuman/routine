@@ -1,22 +1,11 @@
-// De achterkant. Eén Worker die twee dingen doet: de app uitserveren (dat zijn
-// de bestanden in public/, en dat kost niets) en /api/* afhandelen.
-//
-// Onder /api zitten twee dingen. De uitlezer achter 'Typ of plak iets' staat
-// hier en niet in de pagina, zodat de sleutel van de Claude-api op de server
-// blijft. En de opslag: het ritme zelf, met een WebSocket erbij zodat elke
-// telefoon meteen ziet wat er op een andere is afgevinkt. Dat laatste is de
-// reden dat het hierheen is verhuisd — een browser heeft EventSource, een
-// React Native app niet, en een WebSocket kennen ze allebei.
 import Anthropic from '@anthropic-ai/sdk';
-export { Huis } from './huis.js';
+export { House } from './house.js';
 
 const MODEL = 'claude-opus-5';
-const MOEITE = 'low';            // low | medium | high — uitlezen is licht werk
-const MAX_TEKST = 20000;         // een mail, geen boek
-const DAGNAMEN = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
+const EFFORT = 'low';
+const MAX_TEXT = 20000;
+const DAY_NAMES = ['zondag','maandag','dinsdag','woensdag','donderdag','vrijdag','zaterdag'];
 
-// Wat er terug mag komen. Met dit schema is het antwoord altijd geldige JSON in
-// deze vorm; de app hoeft niets te repareren.
 const SCHEMA = {
   type: 'object',
   additionalProperties: false,
@@ -24,13 +13,11 @@ const SCHEMA = {
   properties: {
     type: { type: 'string', enum: ['vraag', 'voorstellen', 'niets'] },
 
-    // bij type 'vraag'
     sleutel: { type: 'string' },
     vraag: { type: 'string' },
     opties: { type: 'array', items: { type: 'string' } },
     meerkeuze: { type: 'boolean' },
 
-    // bij type 'voorstellen'
     items: {
       type: 'array',
       items: {
@@ -41,9 +28,7 @@ const SCHEMA = {
           soort: { type: 'string', enum: ['bijzonderheid', 'stap', 'weekritme'] },
           icoon: { type: 'string' },
           tekst: { type: 'string' },
-          // bij bijzonderheid en stap: de dag zelf
           datum: { type: 'string', format: 'date' },
-          // bij weekritme: op welke weekdagen, leeg is elke dag
           dagen: {
             type: 'array',
             items: { type: 'string', enum: ['ma', 'di', 'wo', 'do', 'vr', 'za', 'zo'] },
@@ -60,7 +45,7 @@ const SCHEMA = {
   },
 };
 
-const SYSTEEM = `Je vult een gezinsapp met een dagritme per kind. Je krijgt tekst van een ouder: een doorgestuurde mail van school of de club, een appje, of gewoon een zin die die ouder zelf typt ("iedere dinsdag om 18:00 tennis Emma"). Behandel allebei hetzelfde — het gaat erom wat er in de app moet komen.
+const SYSTEM = `Je vult een gezinsapp met een dagritme per kind. Je krijgt tekst van een ouder: een doorgestuurde mail van school of de club, een appje, of gewoon een zin die die ouder zelf typt ("iedere dinsdag om 18:00 tennis Emma"). Behandel allebei hetzelfde — het gaat erom wat er in de app moet komen.
 
 Je krijgt verder de datum van vandaag en de kinderen die in de app staan met wat er van ze bekend is (schoolgroep, team, en wat er verder aan kenmerken bij ze staat).
 
@@ -91,157 +76,138 @@ Antwoord met één van drie dingen.
 
 Ga af op wat er staat en wat daar redelijkerwijs uit volgt. Verzin geen data, tijden of namen die nergens op slaan.`;
 
-// De api zet zijn uitleg in error.message; err.message zelf heeft de status en
-// de hele json er nog omheen staan.
-function reden(err){
-  const uitLijf = err && err.error && err.error.error && err.error.error.message;
-  return String(uitLijf || (err && err.message) || err).slice(0, 400);
+function reason(err){
+  const fromBody = err && err.error && err.error.error && err.error.error.message;
+  return String(fromBody || (err && err.message) || err).slice(0, 400);
 }
 
-function antwoord(inhoud, status){
-  return new Response(JSON.stringify(inhoud), {
+function reply(body, status){
+  return new Response(JSON.stringify(body), {
     status: status || 200,
     headers: { 'Content-Type': 'application/json; charset=utf-8' },
   });
 }
 
-// Geen CORS-kopjes, met opzet: daardoor kan een browser op een ander adres hier
-// niet bij. Een app buiten de browser kent geen CORS en heeft er ook niets aan,
-// dus daarvoor is er SLEUTEL — zie de README.
-function magErbij(request, env){
+function mayPass(request, env){
   if(!env.SLEUTEL) return true;
   if(request.headers.get('X-Routine-Sleutel') === env.SLEUTEL) return true;
-  // Een browser kan bij een WebSocket geen kopjes meesturen, dus daar mag de
-  // sleutel in het adres.
   return new URL(request.url).searchParams.get('sleutel') === env.SLEUTEL;
 }
 
-function kindregel(kind){
-  const kenmerken = Object.entries(kind.kenmerken || {})
-    .map(([sleutel, waarde]) => `${sleutel}: ${waarde}`).join(', ');
-  return `- id ${kind.id}, ${kind.naam || 'naamloos'} — ${kenmerken || 'nog niets bekend'}`;
+function childLine(child){
+  const traits = Object.entries(child.kenmerken || {})
+    .map(([key, value]) => `${key}: ${value}`).join(', ');
+  return `- id ${child.id}, ${child.naam || 'naamloos'} — ${traits || 'nog niets bekend'}`;
 }
 
-function vraagtekst(lading){
-  const d = new Date(lading.vandaag + 'T12:00:00Z');
-  const dagnaam = Number.isNaN(d.getTime()) ? '' : ` (${DAGNAMEN[d.getUTCDay()]})`;
+function promptText(payload){
+  const d = new Date(payload.vandaag + 'T12:00:00Z');
+  const dayName = Number.isNaN(d.getTime()) ? '' : ` (${DAY_NAMES[d.getUTCDay()]})`;
   return [
-    `Vandaag is ${lading.vandaag}${dagnaam}. Dit is ronde ${lading.ronde}.`,
+    `Vandaag is ${payload.vandaag}${dayName}. Dit is ronde ${payload.ronde}.`,
     '',
     'De kinderen in de app:',
-    lading.kinderen.map(kindregel).join('\n'),
+    payload.kinderen.map(childLine).join('\n'),
     '',
     'Het bericht:',
     '"""',
-    lading.tekst,
+    payload.tekst,
     '"""',
   ].join('\n');
 }
 
-// Alleen de velden die we kennen, en alleen van het soort dat we verwachten.
-function schoneLading(ruw){
-  const bericht = typeof ruw.tekst === 'string' ? ruw.tekst.trim() : '';
-  const kinderen = Array.isArray(ruw.kinderen) ? ruw.kinderen : [];
+function cleanPayload(raw){
+  const message = typeof raw.tekst === 'string' ? raw.tekst.trim() : '';
+  const children = Array.isArray(raw.kinderen) ? raw.kinderen : [];
   return {
-    tekst: bericht.slice(0, MAX_TEKST),
-    vandaag: /^\d{4}-\d{2}-\d{2}$/.test(ruw.vandaag) ? ruw.vandaag : new Date().toISOString().slice(0, 10),
-    ronde: Number.isFinite(Number(ruw.ronde)) ? Math.max(1, Math.floor(Number(ruw.ronde))) : 1,
-    kinderen: kinderen.slice(0, 12).map(kind => ({
-      id: String(kind && kind.id || '').slice(0, 40),
-      naam: String(kind && kind.naam || '').slice(0, 40),
-      kenmerken: kind && typeof kind.kenmerken === 'object' && kind.kenmerken ? kind.kenmerken : {},
-    })).filter(kind => kind.id),
+    tekst: message.slice(0, MAX_TEXT),
+    vandaag: /^\d{4}-\d{2}-\d{2}$/.test(raw.vandaag) ? raw.vandaag : new Date().toISOString().slice(0, 10),
+    ronde: Number.isFinite(Number(raw.ronde)) ? Math.max(1, Math.floor(Number(raw.ronde))) : 1,
+    kinderen: children.slice(0, 12).map(child => ({
+      id: String(child && child.id || '').slice(0, 40),
+      naam: String(child && child.naam || '').slice(0, 40),
+      kenmerken: child && typeof child.kenmerken === 'object' && child.kenmerken ? child.kenmerken : {},
+    })).filter(child => child.id),
   };
 }
 
-// POST /api/lees — bericht erin, voorstellen eruit.
-async function lees(request, env){
-  if(request.method !== 'POST') return antwoord({ fout: 'Alleen POST.' }, 405);
-  if(!magErbij(request, env)) return antwoord({ fout: 'Verkeerde of ontbrekende sleutel.' }, 401);
-  if(!env.ANTHROPIC_API_KEY) return antwoord({ fout: 'De uitlezer heeft nog geen sleutel.' }, 500);
+async function read(request, env){
+  if(request.method !== 'POST') return reply({ fout: 'Alleen POST.' }, 405);
+  if(!mayPass(request, env)) return reply({ fout: 'Verkeerde of ontbrekende sleutel.' }, 401);
+  if(!env.ANTHROPIC_API_KEY) return reply({ fout: 'De uitlezer heeft nog geen sleutel.' }, 500);
 
-  let ruw;
-  try{ ruw = await request.json(); }
-  catch{ return antwoord({ fout: 'Geen geldige JSON.' }, 400); }
+  let raw;
+  try{ raw = await request.json(); }
+  catch{ return reply({ fout: 'Geen geldige JSON.' }, 400); }
 
-  const lading = schoneLading(ruw || {});
-  if(!lading.tekst) return antwoord({ type: 'niets' });
+  const payload = cleanPayload(raw || {});
+  if(!payload.tekst) return reply({ type: 'niets' });
 
   const claude = new Anthropic({
     apiKey: env.ANTHROPIC_API_KEY,
-    ...(env.ANTHROPIC_BASIS ? { baseURL: env.ANTHROPIC_BASIS } : {}),
+    ...(env.ANTHROPIC_BASE_URL ? { baseURL: env.ANTHROPIC_BASE_URL } : {}),
   });
 
   try{
-    const bericht = await claude.messages.create({
+    const message = await claude.messages.create({
       model: env.MODEL || MODEL,
       max_tokens: 4000,
       output_config: {
-        effort: env.MOEITE || MOEITE,
+        effort: env.EFFORT || EFFORT,
         format: { type: 'json_schema', schema: SCHEMA },
       },
-      system: [{ type: 'text', text: SYSTEEM, cache_control: { type: 'ephemeral' } }],
-      messages: [{ role: 'user', content: vraagtekst(lading) }],
+      system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
+      messages: [{ role: 'user', content: promptText(payload) }],
     });
 
-    const tekstblok = bericht.content.find(blok => blok.type === 'text');
-    if(!tekstblok) return antwoord({ type: 'niets' });
-    // Het schema garandeert de vorm, dus dit is alleen nog omzetten.
-    return antwoord(JSON.parse(tekstblok.text));
+    const textBlock = message.content.find(block => block.type === 'text');
+    if(!textBlock) return reply({ type: 'niets' });
+    return reply(JSON.parse(textBlock.text));
   }catch(err){
     if(err instanceof Anthropic.AuthenticationError){
-      console.error('sleutel klopt niet:', err.message);
-      return antwoord({ fout: 'De sleutel van de uitlezer klopt niet.' }, 500);
+      console.error('bad api key:', err.message);
+      return reply({ fout: 'De sleutel van de uitlezer klopt niet.' }, 500);
     }
     if(err instanceof Anthropic.RateLimitError){
-      return antwoord({ fout: 'Even te druk, probeer het zo nog eens.' }, 429);
+      return reply({ fout: 'Even te druk, probeer het zo nog eens.' }, 429);
     }
-    // De reden gaat mee terug. Dit is een gezinsapp, geen dienst voor vreemden:
-    // 'het lukte niet' laat je met lege handen staan, en de api zet zijn eigen
-    // sleutel niet in een foutmelding.
     if(err instanceof Anthropic.APIError){
-      console.error('api gaf', err.status, err.message);
-      return antwoord({ fout: `De Claude-api gaf ${err.status}: ${reden(err)}` }, 502);
+      console.error('api returned', err.status, err.message);
+      return reply({ fout: `De Claude-api gaf ${err.status}: ${reason(err)}` }, 502);
     }
-    console.error('onverwacht:', err);
-    return antwoord({ fout: 'Er ging iets mis in de uitlezer: ' + (err && err.message || err) }, 500);
+    console.error('unexpected:', err);
+    return reply({ fout: 'Er ging iets mis in de uitlezer: ' + (err && err.message || err) }, 500);
   }
 }
 
-// Alles van dit gezin zit in één Durable Object. De naam ervan is het enige
-// wat een huis van een ander huis scheidt; die staat op de server, niet in de
-// app, zodat er niets over de lijn hoeft dat je moet raden.
-function huisVan(env){
-  const naam = env.GEZIN || 'huis';
-  return env.HUIS.get(env.HUIS.idFromName(naam));
+function houseOf(env){
+  const name = env.HOUSEHOLD || 'huis';
+  return env.HOUSE.get(env.HOUSE.idFromName(name));
 }
 
-// Alles onder /api/opslag/ gaat rechtstreeks door naar het huis. De Worker
-// controleert alleen of je erbij mag.
-async function opslag(request, env){
+async function storage(request, env){
   const url = new URL(request.url);
   const rest = url.pathname.slice('/api/opslag'.length) || '/';
-  const naar = new URL(rest + url.search, 'https://huis');
-  return await huisVan(env).fetch(new Request(naar, request));
+  const target = new URL(rest + url.search, 'https://huis');
+  return await houseOf(env).fetch(new Request(target, request));
 }
 
 const ROUTES = {
-  '/api/lees': lees,
+  '/api/lees': read,
 };
 
 export default {
   async fetch(request, env){
-    const pad = new URL(request.url).pathname;
+    const path = new URL(request.url).pathname;
 
-    if(pad.startsWith('/api/opslag')){
-      if(!magErbij(request, env)) return antwoord({ fout: 'Verkeerde of ontbrekende sleutel.' }, 401);
-      return await opslag(request, env);
+    if(path.startsWith('/api/opslag')){
+      if(!mayPass(request, env)) return reply({ fout: 'Verkeerde of ontbrekende sleutel.' }, 401);
+      return await storage(request, env);
     }
 
-    const route = ROUTES[pad];
+    const route = ROUTES[path];
     if(route) return await route(request, env);
-    if(pad.startsWith('/api/')) return antwoord({ fout: 'Onbekend adres.' }, 404);
-    // Al het andere is de app zelf.
+    if(path.startsWith('/api/')) return reply({ fout: 'Onbekend adres.' }, 404);
     return env.ASSETS.fetch(request);
   },
 };

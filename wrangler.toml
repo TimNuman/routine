@@ -18,16 +18,20 @@ binding = "ASSETS"
 # meekijken. Een Durable Object is de enige plek die tegelijk kan bewaren en
 # weten wie er verbonden is, dus daar hoeft niemand te pollen.
 [[durable_objects.bindings]]
-name = "HUIS"
-class_name = "Huis"
+name = "HOUSE"
+class_name = "House"
 
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Huis"]
 
+[[migrations]]
+tag = "v2"
+renamed_classes = [{ from = "Huis", to = "House" }]
+
 [vars]
 # Welk huis. Eén naam, hier op de server: dan hoeft de app hem niet te kennen.
-GEZIN = "huis-9f3k2a"
+HOUSEHOLD = "huis-9f3k2a"
 # Eenmalig, om te verhuizen: hier staat de oude inhoud. Zodra het huis eenmaal
 # gevuld is wordt hier niet meer gekeken en mag deze regel weg.
-OVERNEMEN = "https://routine-35aaa-default-rtdb.europe-west1.firebasedatabase.app/huis-9f3k2a/config.json"
+IMPORT_FROM = "https://routine-35aaa-default-rtdb.europe-west1.firebasedatabase.app/huis-9f3k2a/config.json"
