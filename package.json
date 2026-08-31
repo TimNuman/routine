@@ -7,8 +7,7 @@
     "start": "wrangler dev",
     "reservekopie": "node reservekopie.mjs",
     "deploy": "wrangler deploy",
-    "test": "node worker/house.test.mjs",
-    "deploy:web": "wrangler deploy --config web-legacy/wrangler.toml"
+    "test": "node worker/house.test.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.121.0"

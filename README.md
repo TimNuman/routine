@@ -253,7 +253,6 @@ public/     de webversie: de export van mobiel/, plus de iconen
 worker/     de achterkant: /api/*, en hij serveert public/ uit
 mobiel/     de bron van die webversie, in React Native — zie mobiel/README.md
 ios/        dezelfde app in Swift, voor de iPhone — zie ios/README.md
-web-legacy/ dezelfde public/ op een eigen, bevroren adres
 wrangler.toml
 ```
 
@@ -268,33 +267,6 @@ en ongemeten) en `/api/*` in dezelfde Worker. Elke push naar `main` rolt vanzelf
 uit — Cloudflare bouwt zelf uit deze repo.
 
 Zelf uitrollen kan ook: `npm run deploy`.
-
-### De webversie op een eigen adres
-
-De iOS-app is de versie die verder gaat; de webversie en de react native-versie
-worden bevroren. Om ze niet zomaar weg te halen staat er in
-[`web-legacy/`](web-legacy) een tweede, losse Worker die dezelfde `public/`
-uitserveert en `/api/*` doorgeeft aan de echte Worker. Vanuit de browser praat
-de pagina daardoor nog steeds met zijn eigen adres, dus er hoeft nergens CORS
-open.
-
-Dat doorgeven gaat via een *service binding* en niet over
-`https://routine.<naam>.workers.dev`: een Worker die een andere Worker op
-hetzelfde account over zijn publieke adres aanroept komt bij zichzelf terug uit,
-en dan laadt er niets. Intern doorgeven scheelt bovendien een ronde over het net,
-en omdat het verzoek onaangeroerd wordt doorgegeven blijft de `Upgrade`-kop staan
-en komt de WebSocket er gewoon doorheen.
-
-```bash
-npm run deploy:web        # rolt uit naar routine-web.<jouw-naam>.workers.dev
-```
-
-Die uitrol staat los van `npm run deploy` en van de push naar `main`: hij gebeurt
-met de hand, wanneer je wilt.
-
-Nu de react native-versie zelf de webversie is en gewoon op `/` staat, serveert
-dit adres precies hetzelfde. Het is dus een reservekopie geworden in plaats van
-een uitwijk, en mag weg zodra je er niets meer aan hebt.
 
 `.github/workflows/deploy.yml` is er alleen nog voor wie het liever via GitHub
 Actions doet; bouwt Cloudflare zelf, dan mag dat bestand weg.
