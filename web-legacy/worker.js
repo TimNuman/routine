@@ -5,15 +5,12 @@ export default {
     if (!url.pathname.startsWith('/api/')) return env.ASSETS.fetch(request);
 
     if (!env.UPSTREAM) {
-      return new Response(JSON.stringify({ fout: 'Geen UPSTREAM ingesteld.' }), {
+      return new Response(JSON.stringify({ fout: 'Geen UPSTREAM gebonden.' }), {
         status: 500,
         headers: { 'Content-Type': 'application/json; charset=utf-8' },
       });
     }
 
-    const target = new URL(url.pathname + url.search, env.UPSTREAM);
-    const forwarded = new Request(target, request);
-    if (env.SLEUTEL) forwarded.headers.set('X-Routine-Sleutel', env.SLEUTEL);
-    return await fetch(forwarded);
+    return await env.UPSTREAM.fetch(request);
   },
 };

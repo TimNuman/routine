@@ -3,14 +3,18 @@ main = "worker.js"
 compatibility_date = "2026-08-01"
 
 # De bevroren webversie, op een eigen adres. Hij serveert dezelfde bestanden
-# als vroeger en stuurt /api/* door naar de echte Worker, zodat de pagina
-# vanuit de browser gezien nog steeds met zichzelf praat — er is dus geen CORS
-# nodig, en de achterkant hoeft niets open te zetten.
+# als vroeger en geeft /api/* door aan de echte Worker, zodat de pagina vanuit
+# de browser gezien nog steeds met zichzelf praat — er hoeft dus nergens CORS
+# open.
 [assets]
 directory = "../public"
 binding = "ASSETS"
 
-[vars]
-# Het adres van de echte Worker. Zet SLEUTEL als secret als die daar aan staat:
-#   npx wrangler secret put SLEUTEL --config web-legacy/wrangler.toml
-UPSTREAM = "https://routine.tim-numan.workers.dev"
+# Met een service binding en niet over https://…workers.dev: een Worker die
+# een andere Worker op hetzelfde account over zijn publieke adres aanroept komt
+# bij zichzelf terug uit. Dit gaat intern, scheelt een ronde over het net, en
+# een WebSocket komt er ongeschonden doorheen — het verzoek wordt onaangeroerd
+# doorgegeven, dus de Upgrade-kop blijft staan.
+[[services]]
+binding = "UPSTREAM"
+service = "routine"

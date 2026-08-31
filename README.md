@@ -283,9 +283,16 @@ Zelf uitrollen kan ook: `npm run deploy`.
 De iOS-app is de versie die verder gaat; de webversie en de react native-versie
 worden bevroren. Om ze niet zomaar weg te halen staat er in
 [`web-legacy/`](web-legacy) een tweede, losse Worker die dezelfde `public/`
-uitserveert en `/api/*` doorstuurt naar de echte Worker. Vanuit de browser praat
+uitserveert en `/api/*` doorgeeft aan de echte Worker. Vanuit de browser praat
 de pagina daardoor nog steeds met zijn eigen adres, dus er hoeft nergens CORS
 open.
+
+Dat doorgeven gaat via een *service binding* en niet over
+`https://routine.<naam>.workers.dev`: een Worker die een andere Worker op
+hetzelfde account over zijn publieke adres aanroept komt bij zichzelf terug uit,
+en dan laadt er niets. Intern doorgeven scheelt bovendien een ronde over het net,
+en omdat het verzoek onaangeroerd wordt doorgegeven blijft de `Upgrade`-kop staan
+en komt de WebSocket er gewoon doorheen.
 
 ```bash
 npm run deploy:web        # rolt uit naar routine-web.<jouw-naam>.workers.dev
