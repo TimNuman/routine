@@ -5,9 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "wrangler dev",
-    "stempel": "node stempel.mjs",
     "reservekopie": "node reservekopie.mjs",
-    "deploy": "node stempel.mjs && wrangler deploy",
+    "deploy": "wrangler deploy",
     "test": "node worker/house.test.mjs",
     "deploy:web": "wrangler deploy --config web-legacy/wrangler.toml"
   },

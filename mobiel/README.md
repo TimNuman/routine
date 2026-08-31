@@ -2,7 +2,7 @@
 
 Een proef, geen vervanging. Eén scherm — het ritme — in Expo, om te zien of de
 vormtaal en het gevoel overeind blijven voordat de rest volgt. De webversie in
-`public/` doet gewoon zijn werk; deze staat ernaast op `/nieuw`.
+Sinds kort is dit *de* webversie: de export gaat naar `public/` en staat op `/`.
 
 ## Wat erin zit
 
@@ -70,7 +70,7 @@ lettertype stilletjes terug op het systeem.
 cd mobiel
 npm install
 npm run web          # http://localhost:8081
-npm run bouw         # exporteert naar ../public/nieuw
+npm run bouw         # exporteert naar ../public
 ```
 
 `npm run web` draait op zichzelf en heeft dus een adres nodig voor de achterkant;

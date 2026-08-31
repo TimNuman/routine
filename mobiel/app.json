@@ -8,11 +8,29 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "icon": "./assets/icon.png",
-    "splash": { "image": "./assets/splash-icon.png", "resizeMode": "contain", "backgroundColor": "#FFF9EF" },
-    "ios": { "supportsTablet": true, "bundleIdentifier": "app.dagritme" },
-    "android": { "package": "app.dagritme" },
-    "web": { "bundler": "metro", "output": "static", "favicon": "./assets/favicon.png" },
-    "plugins": ["expo-router", "expo-font"],
-    "experiments": { "typedRoutes": true, "baseUrl": "/nieuw" }
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFF9EF"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.dagritme"
+    },
+    "android": {
+      "package": "app.dagritme"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
   }
 }

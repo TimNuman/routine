@@ -4,7 +4,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
-const MAP = new URL('../public/nieuw/', import.meta.url).pathname;
+const MAP = new URL('../public/', import.meta.url).pathname;
 const VERDACHT = /https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+)(:\d+)?/g;
 
 function alleBestanden(map) {

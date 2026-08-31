@@ -102,9 +102,8 @@ in het weekritme — daar verschijnt de naam als gekleurd label.
 meteen. Lukt dat niet, dan blijft het scherm open staan met de reden — er wordt
 nooit stilletjes iets half opgeslagen.
 
-`routine.json` in deze repo is alleen nog het **zaadje**: de eerste keer dat de
-app een leeg huis vindt, zet hij die inhoud erin. Daarna is het huis de
-baas en hoef je dit bestand niet meer aan te raken.
+Het huis is de baas over wat er in de app staat; er is geen bestand in deze
+repo dat dat nog overschrijft.
 
 ## Typ of plak iets
 
@@ -147,12 +146,6 @@ kent zelf ook geen achternamen, adressen of mailadressen. Wat terugkomt zijn ids
 die de app al had.
 
 Het echte uitlezen doet Claude, op `/api/lees` — hetzelfde adres als de app, dus
-`routine.json` hoeft alleen te weten dat het er is:
-
-```json
-"assistent": "/api/lees"
-```
-
 Dat draait in de Worker en niet in de pagina, om één reden: de sleutel van de
 Claude-api hoort niet in iets wat iedereen kan openen. Hoe je hem neerzet, wat hij
 kost en welk protocol hij spreekt staat in [`worker/README.md`](worker/README.md).
@@ -245,10 +238,9 @@ Omdat de app-weergave geen browserbalk heeft, is er ook geen ingebouwd
 trek-om-te-verversen. Die beweging zit daarom zelf in de pagina: sleep vanaf
 bovenaan naar beneden tot het rondje verschijnt en laat los.
 
-Verder werkt de app zichzelf bij: de deploy stempelt het commit-nummer in de
-pagina én in `versie.txt` ernaast, en bij elke terugkeer in de app wordt dat
-vergeleken. Verschilt het, dan herlaadt de pagina met een verse url zodat de
-bewaarde versie gepasseerd wordt.
+Bijwerken gaat zoals bij elke pagina: een nieuwe uitgave staat er na een
+herlading. Het stempelen van commit-nummers dat de oude handgeschreven versie
+gebruikte is weg, samen met die versie.
 
 Het icoon is `icon.svg`; de PNG's ernaast zijn daaruit gerenderd (32, 180, 192 en
 512px, plus een ruimer opgezette `maskable`-versie voor Android, dat er een cirkel
@@ -257,18 +249,17 @@ uit snijdt).
 ## Hoe het in elkaar zit
 
 ```
-public/     de app: index.html met alles erin, de iconen, routine.json
-public/nieuw/  de web-export van mobiel/, op /nieuw
+public/     de webversie: de export van mobiel/, plus de iconen
 worker/     de achterkant: /api/*, en hij serveert public/ uit
-mobiel/     een proef in React Native — zie mobiel/README.md
+mobiel/     de bron van die webversie, in React Native — zie mobiel/README.md
 ios/        dezelfde app in Swift, voor de iPhone — zie ios/README.md
+web-legacy/ dezelfde public/ op een eigen, bevroren adres
 wrangler.toml
 ```
 
-Nog steeds geen build voor de app zelf: `public/index.html` is één bestand met de
-hele boel erin. De Worker heeft wel `npm install` nodig, voor de Claude-sdk, en
-`stempel.mjs` zet vlak voor het uitrollen het commit-nummer in de pagina — dat is
-hoe de app merkt dat er iets nieuwers staat.
+De webversie wordt nu gebouwd: `public/` is de uitvoer van `npm run bouw` in
+`mobiel/` en hoort niet met de hand bewerkt te worden. De Worker heeft
+`npm install` nodig, voor de Claude-sdk.
 
 ## Publiceren
 
@@ -299,11 +290,11 @@ npm run deploy:web        # rolt uit naar routine-web.<jouw-naam>.workers.dev
 ```
 
 Die uitrol staat los van `npm run deploy` en van de push naar `main`: hij gebeurt
-één keer, met de hand, en daarna niet meer. Er wordt bewust geen versienummer in
-gestempeld — de pagina zet zijn eigen bijwerk-controle dan vanzelf uit, en dat is
-precies wat je wilt bij iets dat niet meer verandert.
+met de hand, wanneer je wilt.
 
-Pas als dat adres het doet mag `public/` hier weg.
+Nu de react native-versie zelf de webversie is en gewoon op `/` staat, serveert
+dit adres precies hetzelfde. Het is dus een reservekopie geworden in plaats van
+een uitwijk, en mag weg zodra je er niets meer aan hebt.
 
 `.github/workflows/deploy.yml` is er alleen nog voor wie het liever via GitHub
 Actions doet; bouwt Cloudflare zelf, dan mag dat bestand weg.

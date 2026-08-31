@@ -26,9 +26,6 @@ jobs:
         with:
           node-version: 22
 
-      - name: Versie stempelen
-        run: node stempel.mjs
-
       # Overslaan zolang het token er nog niet is, in plaats van rood worden.
       - name: Uitrollen naar Cloudflare
         if: ${{ env.CLOUDFLARE_API_TOKEN != '' }}

@@ -12,7 +12,7 @@ adressen.
 ```
 routine.<jij>.workers.dev/            → public/index.html
                          /icon-*.png  → public/
-                         /routine.json
+                         /manifest.webmanifest
                          /api/lees    → worker/index.js
 ```
 
@@ -35,7 +35,7 @@ GitHub, kies deze repo. Bij de instellingen:
 
 | Veld | Waarde |
 |---|---|
-| Build command | `npm install && node stempel.mjs` |
+| Build command | `npm install` |
 | Deploy command | `npx wrangler deploy` |
 
 Daarna **Save and Deploy**. Cloudflare bouwt vanaf dat moment bij elke push naar
@@ -58,7 +58,7 @@ zodra deze twee bij **Settings → Secrets and variables → Actions** staan:
 Staan ze er niet, dan slaat die stap zichzelf over in plaats van rood te worden.
 Dit is precies waar GitHub-secrets wél voor bedoeld zijn: ze bestaan alleen
 tijdens de build en komen nergens in iets gepubliceerds terecht — anders dan
-`routine.json`, dat gewoon openbaar is.
+de pagina zelf, die gewoon openbaar is.
 
 ### Zelf draaien
 
@@ -112,11 +112,11 @@ npx wrangler secret put SLEUTEL
 ```
 
 Dan wil `/api/*` een `X-Routine-Sleutel`-kopje met dat woord. Zet hetzelfde woord
-bij `assistentSleutel` in `routine.json`, anders komt de web-app er zelf ook niet
+bij de web-app, anders komt die er zelf ook niet
 meer langs.
 
 Wees eerlijk over wat dat is: een drempel, geen slot. Het woord staat ook in
-`routine.json` en dat bestand is openbaar. Het houdt scanners tegen, niet iemand
+de pagina en die is openbaar. Het houdt scanners tegen, niet iemand
 die de app openmaakt. Echt dichtzetten is inloggen — zie *Straks* hieronder.
 
 ## `POST /api/lees`
