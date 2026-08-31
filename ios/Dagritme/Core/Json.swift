@@ -70,12 +70,16 @@ enum Json {
     var array: [Json] {
         switch self {
         case let .array(values):
-            return values.filter { !$0.isNone }
+            return values.filter { !$0.isNull }
         case let .object(object):
             return object.keys
-                .sorted { (Int($0) ?? .max, $0) < (Int($1) ?? .max, $1) }
+                .sorted { left, right in
+                    let leftIndex = Int(left) ?? .max
+                    let rightIndex = Int(right) ?? .max
+                    return leftIndex == rightIndex ? left < right : leftIndex < rightIndex
+                }
                 .compactMap { object[$0] }
-                .filter { !$0.isNone }
+                .filter { !$0.isNull }
         default:
             return []
         }
