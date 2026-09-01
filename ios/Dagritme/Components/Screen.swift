@@ -1,13 +1,15 @@
 import SwiftUI
 
-private struct TabOffsetKey: EnvironmentKey {
-    static let defaultValue: CGFloat = 0
+private struct TabShiftKey: EnvironmentKey {
+    static let defaultValue = Shift(slot: 0, steps: 0, span: 0)
 }
 
 extension EnvironmentValues {
-    var tabOffset: CGFloat {
-        get { self[TabOffsetKey.self] }
-        set { self[TabOffsetKey.self] = newValue }
+    /// Waar dit tabblad staat ten opzichte van de camera; de schermen geven
+    /// er per regel een eigen slot aan.
+    var tabShift: Shift {
+        get { self[TabShiftKey.self] }
+        set { self[TabShiftKey.self] = newValue }
     }
 }
 
@@ -22,7 +24,7 @@ struct Screen<Inner: View>: View {
     @Environment(Household.self) private var household
     @Environment(\.metrics) private var m
     @Environment(\.palette) private var palette
-    @Environment(\.tabOffset) private var tabOffset
+    @Environment(\.tabShift) private var tabShift
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -58,9 +60,7 @@ struct Screen<Inner: View>: View {
         }
     }
 
-    private func shift(_ slot: Int) -> Shift {
-        Shift(slot: slot, steps: tabOffset, span: m.width + 60)
-    }
+    private func shift(_ slot: Int) -> Shift { tabShift.at(slot) }
 
     @ViewBuilder
     private var header: some View {
@@ -127,6 +127,7 @@ struct RootScreen: View {
 
 private struct TabPages: View {
     @Environment(Household.self) private var household
+    @Environment(\.metrics) private var m
     @State private var camera = Camera()
 
     var body: some View {
@@ -155,7 +156,8 @@ private struct TabPages: View {
             ? camera.entering.isDisjoint(with: [0, 1])
             : !camera.entering.contains(column)
         return screen()
-            .environment(\.tabOffset, CGFloat(column - camera.column))
+            .environment(\.tabShift, Shift(slot: 0, steps: camera.offset(of: column),
+                                           span: m.width + 60, animated: camera.slides(column)))
             .environment(\.entranceOn, entrance)
             .zIndex(here ? 1 : 0)
             .allowsHitTesting(here)

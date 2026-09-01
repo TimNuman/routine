@@ -4,7 +4,7 @@ struct WeekScreen: View {
     @Environment(Household.self) private var household
     @Environment(\.palette) private var palette
     @Environment(\.metrics) private var m
-    @Environment(\.tabOffset) private var tabOffset
+    @Environment(\.tabShift) private var tabShift
 
     @State private var weekShift = 0
     @State private var pickedDay: String?
@@ -146,9 +146,7 @@ struct WeekScreen: View {
         blocks.prefix(i).reduce(0) { $0 + 1 + $1.items.count }
     }
 
-    private func shift(_ slot: Int) -> Shift {
-        Shift(slot: slot, steps: tabOffset, span: m.width + 60)
-    }
+    private func shift(_ slot: Int) -> Shift { tabShift.at(slot) }
 
     private func pickDay(_ d: Date) {
         guard dateString(d) != dateString(selected) else { return }

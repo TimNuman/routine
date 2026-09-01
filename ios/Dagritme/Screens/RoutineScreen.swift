@@ -18,7 +18,7 @@ struct RoutineScreen: View {
     @Environment(Camera.self) private var camera
     @Environment(\.metrics) private var m
     @Environment(\.palette) private var palette
-    @Environment(\.tabOffset) private var tabOffset
+    @Environment(\.tabShift) private var tabShift
 
     @State private var heights: [Routine: CGFloat] = [:]
 
@@ -182,7 +182,7 @@ struct RoutineScreen: View {
             ProgressBars(people: content.people, tallies: tallies(content, here.all),
                          topPad: m.wide ? 0 : 14,
                          visible: visible, filtered: filtered, onSelect: toggleChild)
-                .shifted(Shift(slot: 1, steps: tabOffset, span: m.width + 60))
+                .shifted(tabShift.at(1))
         }
 
         ZStack(alignment: .topLeading) {
@@ -272,7 +272,9 @@ struct RoutineScreen: View {
     }
 
     private func shift(_ r: Routine, _ slot: Int) -> Shift {
-        Shift(slot: slot, steps: CGFloat(columnOf(.routine, r) - camera.column), span: m.width + 60)
+        let col = columnOf(.routine, r)
+        return Shift(slot: slot, steps: camera.offset(of: col), span: m.width + 60,
+                     animated: camera.slides(col))
     }
 }
 

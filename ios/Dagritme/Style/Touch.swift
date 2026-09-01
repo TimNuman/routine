@@ -103,6 +103,13 @@ struct Shift: Equatable {
     var slot: Int
     var steps: CGFloat
     var span: CGFloat
+    var animated = true
+
+    func at(_ slot: Int) -> Shift {
+        var out = self
+        out.slot = slot
+        return out
+    }
 }
 
 extension View {
@@ -111,7 +118,7 @@ extension View {
         if let s = shift {
             entrance(s.slot + extra)
                 .offset(x: s.steps * s.span)
-                .animation(Motion.entrance.delay(Motion.stagger(s.slot + extra)),
+                .animation(s.animated ? Motion.entrance.delay(Motion.stagger(s.slot + extra)) : nil,
                            value: s.steps)
         } else {
             self

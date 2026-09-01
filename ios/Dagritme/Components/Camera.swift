@@ -13,6 +13,8 @@ import Observation
 final class Camera {
     private(set) var tab: Tab = .routine
     private(set) var routine: Routine = .day
+    /// De kolom waar het oog net vandaan komt.
+    private(set) var previous = 0
     private(set) var mounted: Set<Int> = [0, 1]
     /// Net gebouwd om naartoe te schuiven: die slaan de intrede-animatie over.
     private(set) var entering: Set<Int> = []
@@ -24,13 +26,24 @@ final class Camera {
 
     var column: Int { columnOf(tab, routine) }
 
+    /// Wat uit beeld is staat precies één breedte opzij, links of rechts;
+    /// de kolommen stapelen daar, in plaats van op een rij te staan.
+    func offset(of column: Int) -> CGFloat {
+        CGFloat(max(-1, min(1, column - self.column)))
+    }
+
+    /// Alleen wat in beeld komt of gaat schuift mee; een kolom die van de
+    /// ene stapel naar de andere moet, springt.
+    func slides(_ column: Int) -> Bool {
+        column == self.column || column == previous
+    }
+
     func look(at tab: Tab, _ routine: Routine) {
         settle?.cancel()
         let target = columnOf(tab, routine)
         if mounted.contains(target) {
             pending = nil
-            self.tab = tab
-            self.routine = routine
+            point(at: tab, routine)
         } else {
             mounted.insert(target)
             entering.insert(target)
@@ -49,8 +62,13 @@ final class Camera {
     func arrived(_ column: Int) {
         guard let pending, columnOf(pending.tab, pending.routine) == column else { return }
         self.pending = nil
-        tab = pending.tab
-        routine = pending.routine
+        point(at: pending.tab, pending.routine)
+    }
+
+    private func point(at tab: Tab, _ routine: Routine) {
+        previous = column
+        self.tab = tab
+        self.routine = routine
     }
 }
 

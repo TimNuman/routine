@@ -4,7 +4,7 @@ struct SettingsScreen: View {
     @Environment(Household.self) private var household
     @Environment(\.palette) private var palette
     @Environment(\.metrics) private var m
-    @Environment(\.tabOffset) private var tabOffset
+    @Environment(\.tabShift) private var tabShift
 
     @State private var sheet: EditKind?
 
@@ -64,9 +64,7 @@ struct SettingsScreen: View {
         }
     }
 
-    private func shift(_ slot: Int) -> Shift {
-        Shift(slot: slot, steps: tabOffset, span: m.width + 60)
-    }
+    private func shift(_ slot: Int) -> Shift { tabShift.at(slot) }
 
     private func oneOffText(_ content: Content) -> String {
         let count = oneOffEntries(content).count
