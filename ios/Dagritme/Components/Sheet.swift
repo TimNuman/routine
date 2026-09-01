@@ -167,21 +167,13 @@ struct FullSheet<Inner: View>: View {
             }
             .contentMargins(.top, headHeight + 4)
 
-            // ...en lost daar op in een kopie van dezelfde hemel, zodat de
-            // kleur op elke hoogte precies klopt.
-            Sky(dark: false)
-                .mask(
-                    VStack(spacing: 0) {
-                        // Tot bovenaan het scherm dicht, ook achter de klok.
-                        Rectangle().frame(height: SafeArea.top + headHeight)
-                        LinearGradient(colors: [.black, .clear],
-                                       startPoint: .top, endPoint: .bottom)
-                            .frame(height: 12)
-                        Color.clear
-                    }
-                    .ignoresSafeArea()
-                )
-                .allowsHitTesting(false)
+            // ...met bij de klok dezelfde zachte overloop als op de
+            // gewone schermen; de kop zelf zweeft erboven, en zijn glas
+            // vervaagt wat eronderdoor schuift.
+            EdgeFade(dark: false)
+                .frame(height: 96)
+                .frame(maxHeight: .infinity, alignment: .top)
+                .ignoresSafeArea()
 
             Glass(radius: 28, floating: true) {
                 HStack(spacing: 10) {
