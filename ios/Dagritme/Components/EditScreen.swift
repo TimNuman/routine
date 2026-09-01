@@ -238,8 +238,33 @@ struct EditScreen: View {
         for event in draft.events { event.who.removeAll { $0 == id } }
     }
 
+    /// Eén doorlopende lijst: een stap hoort bij de groepskop die erboven
+    /// staat. Zo sleep je een stap ook naar een andere groep, en een kop
+    /// zelf is net zo goed te verslepen.
+    private enum RoutineRow: Identifiable {
+        case head(DraftGroup)
+        case step(DraftStep)
+        case add(DraftGroup)
+
+        var id: String {
+            switch self {
+            case .head(let group): "g\(UInt(bitPattern: ObjectIdentifier(group).hashValue))"
+            case .step(let step): "s\(UInt(bitPattern: ObjectIdentifier(step).hashValue))"
+            case .add(let group): "a\(UInt(bitPattern: ObjectIdentifier(group).hashValue))"
+            }
+        }
+    }
+
+    private func flatRows() -> [RoutineRow] {
+        draft[routine].flatMap { group in
+            [RoutineRow.head(group)]
+                + group.steps.filter { $0.date.isEmpty }.map { RoutineRow.step($0) }
+        }
+    }
+
     @ViewBuilder
     private var routineList: some View {
+        let rows = flatRows()
         List {
             Section {
                 Segment(routine: routine, onSelect: { routine = $0 }, topPad: 0)
@@ -247,77 +272,136 @@ struct EditScreen: View {
             }
             .listRowBackground(Color.clear)
 
-            ForEach(draft[routine]) { group in
-                let fixed = group.steps.filter { $0.date.isEmpty }
+            Section {
+                ForEach(rows) { row in
+                    switch row {
+                    case .head(let group): headRow(group, first: rows.first?.id == row.id)
+                    case .step(let step): stepRow(step)
+                    case .add: EmptyView()
+                    }
+                }
+                .onMove { from, to in moveRow(from, to) }
+                .plainRow()
 
-                Section {
-                    HStack(spacing: 8) {
-                        Field(value: bind(group, \.name), placeholder: String(localized: "Groep"))
-                        Field(value: bind(group, \.time), placeholder: String(localized: "tijd"), kind: .time)
-                    }
-                    .padding(.vertical, 10)
-                    .padding(.horizontal, 20)
-                    .listRowInsets(EdgeInsets())
-                    .swipeActions(edge: .trailing) {
-                        Button(role: .destructive) { removeGroup(group) } label: {
-                            Image(systemName: "trash")
-                        }
-                        .tint(RED)
-                    }
-                    .moveDisabled(true)
-
-                    ForEach(fixed) { step in
-                        EditRow(
-                            icon: step.icon.isEmpty ? "⭐" : step.icon,
-                            label: step.label,
-                            empty: String(localized: "Naamloze stap"),
-                            days: daysText(step.days),
-                            who: whoForRow(step.who),
-                            onOpen: {
-                                openEntry(step.label.isEmpty ? String(localized: "Stap") : step.label,
-                                          .step(routine: routine, group: group, step: step)) { _ in }
-                            }
-                        )
-                        .landingGlow(landing == ObjectIdentifier(step))
-                        .swipeActions(edge: .trailing) {
-                            Button(role: .destructive) {
-                                group.steps.removeAll { $0 === step }
-                                refresh()
-                            } label: { Image(systemName: "trash") }
-                            .tint(RED)
-                        }
-                    }
-                    .onMove { from, to in
-                        moveStep(group, from, to)
-                    }
-                    .plainRow()
-
-                    AddRow(String(localized: "Stap toevoegen")) {
+                // Onderaan één rij met twee plusjes: een stap en een groep.
+                HStack(spacing: 0) {
+                    AddRow(String(localized: "Stap")) {
                         openEntry(String(localized: "Nieuwe stap"), nil) { entry in
                             entry.icon = "⭐"
                             entry.task = true
                             entry.routine = routine
-                            entry.group = group.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                            entry.group = draft[routine].last?.name
+                                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                         }
                     }
-                    .plainRow()
-                    .moveDisabled(true)
+                    AddRow(String(localized: "Groep"), glyph: "+", color: ORANGE) {
+                        draft[routine].append(DraftGroup(
+                            name: String(localized: "Nieuwe groep"), time: "", steps: []))
+                        refresh()
+                    }
                 }
-                .listRowBackground(rowBackground)
+                .plainRow()
+                .moveDisabled(true)
             }
-
-            Section {
-                CardButton(String(localized: "Groep toevoegen"), plus: true, id: "edit.addGroup") {
-                    draft[routine].append(DraftGroup(name: String(localized: "Nieuwe groep"), time: "", steps: []))
-                    refresh()
-                }
-                .padding(.top, 0)
-                .listRowInsets(EdgeInsets())
-            }
-            .listRowBackground(Color.clear)
+            .listRowBackground(rowBackground)
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
+    }
+
+    @ViewBuilder
+    private func headRow(_ group: DraftGroup, first: Bool) -> some View {
+        HStack(spacing: 8) {
+            Field(value: bind(group, \.name), placeholder: String(localized: "Groep"))
+            Field(value: bind(group, \.time), placeholder: String(localized: "tijd"), kind: .time)
+        }
+        .padding(.top, first ? 10 : 22)
+        .padding(.bottom, 10)
+        .padding(.horizontal, 20)
+        .landingGlow(landing == ObjectIdentifier(group))
+        .swipeActions(edge: .trailing) {
+            Button(role: .destructive) { removeGroup(group) } label: {
+                Image(systemName: "trash")
+            }
+            .tint(RED)
+        }
+    }
+
+    @ViewBuilder
+    private func stepRow(_ step: DraftStep) -> some View {
+        EditRow(
+            icon: step.icon.isEmpty ? "⭐" : step.icon,
+            label: step.label,
+            empty: String(localized: "Naamloze stap"),
+            days: daysText(step.days),
+            who: whoForRow(step.who),
+            onOpen: {
+                let group = groupOf(step) ?? draft[routine].first
+                guard let group else { return }
+                openEntry(step.label.isEmpty ? String(localized: "Stap") : step.label,
+                          .step(routine: routine, group: group, step: step)) { _ in }
+            }
+        )
+        .landingGlow(landing == ObjectIdentifier(step))
+        .swipeActions(edge: .trailing) {
+            Button(role: .destructive) {
+                groupOf(step)?.steps.removeAll { $0 === step }
+                refresh()
+            } label: { Image(systemName: "trash") }
+            .tint(RED)
+        }
+    }
+
+    private func groupOf(_ step: DraftStep) -> DraftGroup? {
+        draft[routine].first { $0.steps.contains { $0 === step } }
+    }
+
+    /// Na een sleep wordt de indeling opnieuw afgelezen uit de volgorde:
+    /// wat onder een kop staat, hoort bij die kop. Stappen die boven de
+    /// eerste kop belanden, schuiven bij de eerste groep in.
+    private func moveRow(_ from: IndexSet, _ to: Int) {
+        var rows = flatRows()
+        guard let source = from.first, rows.indices.contains(source) else { return }
+        let moved = rows[source]
+        rows.move(fromOffsets: from, toOffset: to)
+
+        var hidden: [ObjectIdentifier: [DraftStep]] = [:]
+        for group in draft[routine] {
+            hidden[ObjectIdentifier(group)] = group.steps.filter { !$0.date.isEmpty }
+        }
+
+        var order: [DraftGroup] = []
+        var bucket: [ObjectIdentifier: [DraftStep]] = [:]
+        var orphans: [DraftStep] = []
+        var current: DraftGroup?
+        for row in rows {
+            switch row {
+            case .head(let group):
+                order.append(group)
+                current = group
+            case .step(let step):
+                if let current {
+                    bucket[ObjectIdentifier(current), default: []].append(step)
+                } else {
+                    orphans.append(step)
+                }
+            case .add:
+                break
+            }
+        }
+        guard !order.isEmpty else { return }
+        bucket[ObjectIdentifier(order[0])] = orphans + (bucket[ObjectIdentifier(order[0])] ?? [])
+        for group in order {
+            group.steps = (bucket[ObjectIdentifier(group)] ?? []) + (hidden[ObjectIdentifier(group)] ?? [])
+        }
+        draft[routine] = order
+
+        switch moved {
+        case .head(let group): landed(group)
+        case .step(let step): landed(step)
+        case .add: break
+        }
+        refresh()
     }
 
     private func removeGroup(_ group: DraftGroup) {
@@ -330,24 +414,7 @@ struct EditScreen: View {
         refresh()
     }
 
-    private func moveStep(_ group: DraftGroup, _ from: IndexSet, _ to: Int) {
-        let fixed = group.steps.filter { $0.date.isEmpty }
-        guard let source = from.first, fixed.indices.contains(source) else { return }
-        let step = fixed[source]
-        guard let a = group.steps.firstIndex(where: { $0 === step }) else { return }
-        let target: Int
-        if to >= fixed.count {
-            target = group.steps.count
-        } else if let b = group.steps.firstIndex(where: { $0 === fixed[to] }) {
-            target = b
-        } else {
-            return
-        }
-        let moved = group.steps.remove(at: a)
-        group.steps.insert(moved, at: target > a ? target - 1 : target)
-        landed(moved)
-        refresh()
-    }
+
 
     private func landed(_ object: AnyObject) {
         let mark = ObjectIdentifier(object)

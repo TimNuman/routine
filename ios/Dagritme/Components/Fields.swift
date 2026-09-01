@@ -236,19 +236,24 @@ struct HairLine: View {
 
 struct AddRow: View {
     let title: String
+    var glyph: String = "+"
+    var color: Color = GREEN
     let onTap: () -> Void
 
-    @Environment(\.palette) private var palette
-
-    init(_ title: String, onTap: @escaping () -> Void) {
+    init(_ title: String, glyph: String = "+", color: Color = GREEN,
+         onTap: @escaping () -> Void) {
         self.title = title
+        self.glyph = glyph
+        self.color = color
         self.onTap = onTap
     }
+
+    @Environment(\.palette) private var palette
 
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 10) {
-                Bullet().frame(width: 32).accessibilityHidden(true)
+                Bullet(glyph: glyph, color: color).frame(width: 32).accessibilityHidden(true)
                 Text(title).textStyle(Fonts.add).foregroundStyle(palette.muted)
                 Spacer(minLength: 0)
             }
