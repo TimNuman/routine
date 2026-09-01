@@ -176,7 +176,7 @@ struct FullSheet<Inner: View>: View {
                         Rectangle().frame(height: SafeArea.top + headHeight)
                         LinearGradient(colors: [.black, .clear],
                                        startPoint: .top, endPoint: .bottom)
-                            .frame(height: 30)
+                            .frame(height: 12)
                         Color.clear
                     }
                     .ignoresSafeArea()
