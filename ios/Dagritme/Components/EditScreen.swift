@@ -315,7 +315,7 @@ struct EditScreen: View {
             Field(value: bind(group, \.name), placeholder: String(localized: "Groep"))
             Field(value: bind(group, \.time), placeholder: String(localized: "tijd"), kind: .time)
         }
-        .padding(.top, first ? 14 : 16)
+        .padding(.top, first ? 14 : 10)
         .padding(.bottom, 10)
         .padding(.horizontal, 20)
         .landingGlow(landing == ObjectIdentifier(group))
