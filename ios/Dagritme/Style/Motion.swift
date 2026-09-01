@@ -25,6 +25,8 @@ enum Motion {
     /// De schuif tussen de bladzijden: een veer zonder wachttijd, zodat een
     /// tik halverwege gewoon van richting verandert met de snelheid die er al is.
     static let glide = Animation.snappy(duration: 0.5, extraBounce: 0)
+    /// Het vervagen van de ene bladzijde naar de andere in een bakje.
+    static let fade = Animation.easeInOut(duration: 0.22)
 
     static func stagger(_ i: Int, step: Double = 0.01, cap: Double = 0.80) -> Double {
         min(Double(max(0, i)) * step, cap)

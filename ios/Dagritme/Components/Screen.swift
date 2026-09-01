@@ -109,48 +109,29 @@ struct RootScreen: View {
     }
 }
 
-private struct Look: Equatable {
-    let tab: Tab
-    let routine: Routine
-}
-
 private struct TabPages: View {
     @Environment(Household.self) private var household
     @Environment(\.metrics) private var m
-    @State private var camera = Camera()
+    @State private var slide = Slide<Tab>(.routine)
+    @State private var launching = true
 
     var body: some View {
-        let span = m.width + 60
-        ZStack {
-            if camera.tabs.mounted.contains(.routine) {
-                page(.routine, span) { RoutineScreen() }
-            }
-            if camera.tabs.mounted.contains(.week) {
-                page(.week, span) { WeekScreen() }
-            }
-            if camera.tabs.mounted.contains(.settings) {
-                page(.settings, span) { SettingsScreen() }
+        SlideView(slide: slide, span: m.width + 60) { tab in
+            switch tab {
+            case .routine: RoutineScreen()
+            case .week: WeekScreen()
+            case .settings: SettingsScreen()
             }
         }
-        .strip(eye: camera.tabs.eye, span: span)
-        .environment(camera)
-        .onChange(of: Look(tab: household.tab, routine: household.routine), initial: true) {
-            camera.look(at: household.tab, household.routine)
+        // De intrede-animatie is voor de start; wat daarna in beeld komt,
+        // komt al van opzij.
+        .environment(\.entranceOn, launching)
+        .task(id: household.content == nil) {
+            guard household.content != nil else { return }
+            try? await Task.sleep(for: .seconds(2))
+            launching = false
         }
-    }
-
-    private func page(_ which: Tab, _ span: CGFloat,
-                      @ViewBuilder _ screen: () -> some View) -> some View {
-        let here = camera.tabs.current == which
-        return screen()
-            .placed(at: camera.tabs.position(of: which), span: span)
-            .environment(\.entranceOn, !camera.tabs.fresh.contains(which))
-            .zIndex(here ? 1 : 0)
-            .allowsHitTesting(here)
-            .accessibilityHidden(!here)
-            .transition(.identity)
-            // Pas ná het eerste beeld, zodat het bouwen niet in de schuif valt.
-            .task { camera.arrived(which) }
+        .onChange(of: household.tab) { slide.go(to: household.tab) }
     }
 }
 

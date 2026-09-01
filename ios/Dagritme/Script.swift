@@ -17,8 +17,8 @@ enum Script {
             case "ritme": household.go(.routine)
             case "week": household.go(.week)
             case "instellingen": household.go(.settings)
-            case "ochtend": withAnimation(Motion.slide) { household.setRoutine(.day) }
-            case "avond": withAnimation(Motion.slide) { household.setRoutine(.night) }
+            case "ochtend": household.setRoutine(.day)
+            case "avond": household.setRoutine(.night)
             default: break
             }
         }
