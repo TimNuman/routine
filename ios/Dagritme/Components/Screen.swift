@@ -109,43 +109,48 @@ struct RootScreen: View {
     }
 }
 
+private struct Look: Equatable {
+    let tab: Tab
+    let routine: Routine
+}
+
 private struct TabPages: View {
     @Environment(Household.self) private var household
     @Environment(\.metrics) private var m
-    @State private var launching = true
+    @State private var camera = Camera()
 
     var body: some View {
+        let span = m.width + 60
         ZStack {
-            switch household.tab {
-            case .routine: RoutineScreen().transition(slide)
-            case .week: WeekScreen().transition(slide)
-            case .settings: SettingsScreen().transition(slide)
+            if camera.tabs.mounted.contains(.routine) {
+                page(.routine, span) { RoutineScreen() }
+            }
+            if camera.tabs.mounted.contains(.week) {
+                page(.week, span) { WeekScreen() }
+            }
+            if camera.tabs.mounted.contains(.settings) {
+                page(.settings, span) { SettingsScreen() }
             }
         }
-        // De intrede-animatie is voor de start; wat daarna in beeld komt,
-        // komt al van opzij.
-        .environment(\.entranceOn, launching)
-        .task(id: household.pending) {
-            // Start pas na de opbouw waarin de richting is verwerkt.
-            guard let move = household.pending else { return }
-            withAnimation(Motion.glide) {
-                household.tab = move.tab
-                household.routine = move.routine
-                household.pending = nil
-            }
-        }
-        .task(id: household.content == nil) {
-            guard household.content != nil else { return }
-            try? await Task.sleep(for: .seconds(2))
-            launching = false
+        .strip(eye: camera.tabs.eye, span: span)
+        .environment(camera)
+        .onChange(of: Look(tab: household.tab, routine: household.routine), initial: true) {
+            camera.look(at: household.tab, household.routine)
         }
     }
 
-    /// De nieuwe bladzijde komt van de kant waar zijn tabblad zit, de oude
-    /// gaat de andere kant op; één breedte plus wat lucht ertussen.
-    private var slide: AnyTransition {
-        let step = CGFloat(household.direction) * (m.width + 60)
-        return .asymmetric(insertion: .offset(x: step), removal: .offset(x: -step))
+    private func page(_ which: Tab, _ span: CGFloat,
+                      @ViewBuilder _ screen: () -> some View) -> some View {
+        let here = camera.tabs.current == which
+        return screen()
+            .placed(at: camera.tabs.position(of: which), span: span)
+            .environment(\.entranceOn, !camera.tabs.fresh.contains(which))
+            .zIndex(here ? 1 : 0)
+            .allowsHitTesting(here)
+            .accessibilityHidden(!here)
+            .transition(.identity)
+            // Pas ná het eerste beeld, zodat het bouwen niet in de schuif valt.
+            .task { camera.arrived(which) }
     }
 }
 
@@ -154,12 +159,9 @@ extension Household {
         let byClock: Routine = calendar.component(.hour, from: now) >= EVENING_FROM ? .night : .day
         guard fresh != tab || (fresh == .routine && routine != byClock) else { return }
         Haptics.select()
-        let order = Tab.allCases
-        // Eerst de richting, dan pas de wissel: een bladzijde die weggaat neemt
-        // de overgang mee zoals die stond toen hij voor het laatst is opgebouwd,
-        // dus die moet de nieuwe richting al gezien hebben. TabPages voert de
-        // wissel uit zodra dat zo is.
-        direction = order.firstIndex(of: fresh)! > order.firstIndex(of: tab)! ? 1 : -1
-        pending = Move(tab: fresh, routine: fresh == .routine ? byClock : routine)
+        withAnimation(Motion.short) {
+            tab = fresh
+            if fresh == .routine { routine = byClock }
+        }
     }
 }

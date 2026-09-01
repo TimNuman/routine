@@ -100,6 +100,18 @@ extension View {
 }
 
 extension View {
+    /// Een vaste plek in een rij bladzijden, in breedtes.
+    func placed(at lane: Int, span: CGFloat) -> some View {
+        offset(x: CGFloat(lane) * span)
+    }
+
+    /// De rij zelf: schuift zodat het oog in beeld staat, op één veer, zodat
+    /// alles in de rij samen beweegt.
+    func strip(eye: Int, span: CGFloat) -> some View {
+        offset(x: -CGFloat(eye) * span)
+            .animation(Motion.glide, value: eye)
+    }
+
     @ViewBuilder
     func entrance(at slot: Int?, extra: Int = 0) -> some View {
         if let slot { entrance(slot + extra) } else { self }
