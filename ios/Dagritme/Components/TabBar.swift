@@ -1,14 +1,14 @@
 import SwiftUI
 
+/// Dezelfde vorm als de ochtend/avond-schakelaar: glas, en een wit kussen dat
+/// onder de gekozen knop door schuift — hier met de pictogrammen erbij.
 struct TabBar: View {
     var wide: Bool
 
     static let edge: CGFloat = 8
-    private static let deviceCorner: CGFloat = 55
 
     @Environment(Household.self) private var household
     @Environment(\.palette) private var palette
-    @Namespace private var space
 
     private struct Item {
         let tab: Tab
@@ -23,56 +23,61 @@ struct TabBar: View {
         Item(tab: .settings, name: String(localized: "Instellingen"), shape: .gear, id: "tab.settings"),
     ]
 
+    private var row: CGFloat { wide ? 42 : 52 }
+
     var body: some View {
-        Glass(radius: wide ? 26 : 30,
-              bottomRadius: wide ? 26 : Self.deviceCorner - Self.edge,
-              floating: true) {
-            HStack(spacing: 4) {
-                ForEach(items, id: \.tab) { item in
-                    let on = household.tab == item.tab
-                    Button { household.go(item.tab) } label: {
-                        label(item, on: on)
+        Glass(radius: 19) {
+            GeometryReader { space in
+                let width = space.size.width / CGFloat(items.count)
+                let chosen = items.firstIndex { $0.tab == household.tab } ?? 0
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 15, style: .continuous)
+                        .fill(palette.dark ? Color.white.opacity(0.92) : .white)
+                        .frame(width: width, height: row)
+                        .shadow(color: .black.opacity(0.10), radius: 5, x: 0, y: 3)
+                        .offset(x: CGFloat(chosen) * width)
+                        .animation(Motion.spring, value: household.tab)
+
+                    HStack(spacing: 0) {
+                        ForEach(items, id: \.tab) { item in
+                            option(item, on: household.tab == item.tab)
+                        }
                     }
-                    .buttonStyle(.press(0.94))
-                    .accessibilityIdentifier(item.id)
-                    .accessibilityLabel(item.name)
-                    .accessibilityAddTraits(on ? [.isButton, .isSelected] : .isButton)
                 }
             }
-            .padding(wide ? 4 : 5)
-            .padding(.bottom, wide ? 0 : max(0, SafeArea.bottom - Self.edge - 5))
+            .frame(height: row)
+            .padding(4)
         }
     }
 
     @ViewBuilder
-    private func label(_ item: Item, on: Bool) -> some View {
-        let color = on ? ORANGE : palette.idleTab
-        let shape = RoundedRectangle(cornerRadius: 20, style: .continuous)
-        Group {
-            if wide {
-                HStack(spacing: 7) {
-                    MenuIcon(kind: item.shape, color: color, size: 19)
-                    Text(item.name).textStyle(Fonts.tabWide)
-                }
-            } else {
-                VStack(spacing: 2) {
-                    MenuIcon(kind: item.shape, color: color, size: 23)
-                    Text(item.name).textStyle(Fonts.tab)
+    private func option(_ item: Item, on: Bool) -> some View {
+        let color = on ? INK : palette.muted
+        Button { household.go(item.tab) } label: {
+            Group {
+                if wide {
+                    HStack(spacing: 7) {
+                        MenuIcon(kind: item.shape, color: color, size: 19)
+                        Text(item.name).textStyle(Fonts.tabWide)
+                    }
+                } else {
+                    VStack(spacing: 3) {
+                        MenuIcon(kind: item.shape, color: color, size: 22)
+                        Text(item.name).textStyle(Fonts.tab)
+                    }
                 }
             }
+            .foregroundStyle(color)
+            .animation(Motion.short, value: on)
+            .scaleEffect(on ? 1.04 : 1)
+            .animation(Motion.spring, value: on)
+            .frame(maxWidth: .infinity)
+            .frame(height: row)
+            .contentShape(Rectangle())
         }
-        .foregroundStyle(color)
-        .scaleEffect(on ? 1.06 : 1)
-        .animation(Motion.pop, value: on)
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, wide ? 8 : 7)
-        .background {
-            if on {
-                shape.fill(ORANGE.opacity(0.16))
-                    .overlay(shape.strokeBorder(ORANGE.opacity(0.28), lineWidth: 1))
-                    .matchedGeometryEffect(id: "pil", in: space)
-            }
-        }
-        .contentShape(shape)
+        .buttonStyle(.press)
+        .accessibilityIdentifier(item.id)
+        .accessibilityLabel(item.name)
+        .accessibilityAddTraits(on ? [.isButton, .isSelected] : .isButton)
     }
 }
