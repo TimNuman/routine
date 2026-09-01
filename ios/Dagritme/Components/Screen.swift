@@ -97,6 +97,7 @@ struct RootScreen: View {
 
                 EdgeFade(dark: household.evening, bottom: true)
                     .frame(height: 130)
+                    .frame(maxHeight: .infinity, alignment: .bottom)
                     .ignoresSafeArea()
 
                 if !m.wide {
