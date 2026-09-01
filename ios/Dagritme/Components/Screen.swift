@@ -90,6 +90,15 @@ struct RootScreen: View {
 
                 TabPages()
 
+                EdgeFade(dark: household.evening)
+                    .frame(height: 96)
+                    .frame(maxHeight: .infinity, alignment: .top)
+                    .ignoresSafeArea()
+
+                EdgeFade(dark: household.evening, bottom: true)
+                    .frame(height: 130)
+                    .ignoresSafeArea()
+
                 if !m.wide {
                     TabBar(wide: false)
                         .padding(.bottom, TabBar.edge - SafeArea.bottom)
