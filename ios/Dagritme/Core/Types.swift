@@ -1,6 +1,6 @@
 import Foundation
 
-enum Routine: String, Codable, Hashable {
+enum Routine: String, Codable, Hashable, CaseIterable {
     case day
     case night
 }

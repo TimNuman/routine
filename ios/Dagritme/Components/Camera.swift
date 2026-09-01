@@ -1,86 +1,131 @@
 import Foundation
 import Observation
 
-/// Waar het oog staat. Het huis zegt welk tabblad en welk ritme gekozen zijn;
-/// de camera loopt daar een stap achteraan, want een bladzijde moet eerst
-/// buiten beeld gebouwd zijn voordat hij kan aanschuiven.
+/// Een rij bladzijden waar er één van in beeld staat. Wat in de rij staat
+/// heeft een vaste plek, precies één breedte uit elkaar; alleen de rij zelf
+/// schuift, op één veer. Zo blijft de afstand tussen de bladzijde die gaat
+/// en de bladzijde die komt altijd gelijk, ook als er halverwege wordt getikt.
 ///
-/// In rust staat er precies één bladzijde in de boom. Bij een tik komt de
-/// nieuwe erbij, buiten beeld; zodra hij er staat schuift de oude eruit en
-/// de nieuwe erin, en even later gaat de oude weer uit de boom. Meer dan die
-/// twee zijn er nooit tegelijk.
-///
-/// De kolommen: 0 ochtend, 1 avond, 2 week, 3 instellingen. Wat lager
-/// genummerd is ligt links.
-@MainActor
-@Observable
-final class Camera {
-    private(set) var tab: Tab = .routine
-    private(set) var routine: Routine = .day
-    /// De bladzijde die net verlaten is en nog naar buiten schuift.
-    private(set) var leaving: Int?
-    /// De bladzijde die net gebouwd is en buiten beeld wacht tot hij er staat.
-    private(set) var entering: Int?
+/// In rust staat er één bladzijde in de rij. Bij een tik komt de nieuwe erbij,
+/// buiten beeld; zodra hij er staat (`arrived`) schuift de rij, en even later
+/// (`rest`) gaat de oude er weer uit. Meer dan twee zijn er nooit tegelijk.
+struct Strip<Key: CaseIterable & Hashable> {
+    private(set) var current: Key
+    /// Net verlaten, schuift nog naar buiten.
+    private(set) var leaving: Key?
+    /// Net gebouwd, wacht buiten beeld tot hij er staat.
+    private(set) var entering: Key?
+    /// De plek in de rij die in beeld hoort; de weergave veert erheen.
+    private(set) var eye = 0
+    private var lane: [Key: Int]
 
-    @ObservationIgnored private var pending: (tab: Tab, routine: Routine)?
-    @ObservationIgnored private var settle: Task<Void, Never>?
-
-    var column: Int { columnOf(tab, routine) }
-
-    var mounted: Set<Int> { Set([column, leaving, entering].compactMap { $0 }) }
-
-    /// Wat uit beeld is staat precies één breedte opzij, aan de kant waar
-    /// het in de rij hoort.
-    func offset(of column: Int) -> CGFloat {
-        column == self.column ? 0 : (column < self.column ? -1 : 1)
+    init(_ current: Key) {
+        self.current = current
+        lane = [current: 0]
     }
 
-    func look(at tab: Tab, _ routine: Routine) {
-        let target = columnOf(tab, routine)
-        if target == column {
-            // Terug naar waar we al staan: wat klaarstond hoeft niet meer.
-            pending = nil
+    var mounted: Set<Key> { Set([current, leaving, entering].compactMap { $0 }) }
+
+    func position(of key: Key) -> Int { lane[key] ?? eye }
+
+    /// Geeft terug of het oog nu verschuift.
+    mutating func look(at target: Key) -> Bool {
+        if target == current {
             entering = nil
-        } else if target == entering {
-            pending = (tab, routine)
-        } else if target == leaving {
-            // Hij is nog onderweg naar buiten: draai hem om.
-            pending = nil
-            entering = nil
-            point(at: tab, routine)
-        } else {
-            // Wat nog naar buiten schoof is nu weg; er schuiven er nooit twee.
-            leaving = nil
-            entering = target
-            pending = (tab, routine)
+            return false
         }
+        if target == entering { return false }
+        if target == leaving {
+            // Hij is nog onderweg naar buiten: draai de rij om.
+            entering = nil
+            turn(to: target)
+            return true
+        }
+        // Wat nog naar buiten schoof is nu weg; er schuiven er nooit twee.
+        leaving = nil
+        entering = target
+        lane[target] = eye + (index(target) > index(current) ? 1 : -1)
+        return false
     }
 
-    /// De bladzijde staat in de boom; nu kan het oog erheen.
-    func arrived(_ column: Int) {
-        guard let pending, column == entering else { return }
-        self.pending = nil
+    /// De bladzijde staat in de rij; nu kan het oog erheen.
+    mutating func arrived(_ key: Key) -> Bool {
+        guard key == entering else { return false }
         entering = nil
-        point(at: pending.tab, pending.routine)
+        turn(to: key)
+        return true
     }
 
-    private func point(at tab: Tab, _ routine: Routine) {
-        settle?.cancel()
-        leaving = column
-        self.tab = tab
-        self.routine = routine
-        settle = Task { [weak self] in
-            try? await Task.sleep(for: .seconds(0.7))
-            guard let self, !Task.isCancelled else { return }
-            leaving = nil
-        }
+    mutating func rest() {
+        leaving = nil
+        lane = lane.filter { mounted.contains($0.key) }
+    }
+
+    private mutating func turn(to key: Key) {
+        leaving = current
+        current = key
+        eye = lane[key] ?? eye
+    }
+
+    private func index(_ key: Key) -> Int {
+        Array(Key.allCases).firstIndex(of: key) ?? 0
     }
 }
 
-func columnOf(_ tab: Tab, _ routine: Routine) -> Int {
-    switch tab {
-    case .routine: return routine == .night ? 1 : 0
-    case .week: return 2
-    case .settings: return 3
+/// Waar het oog staat. Het huis zegt welk tabblad en welk ritme gekozen zijn;
+/// de camera loopt daar een stap achteraan, want een bladzijde moet eerst
+/// buiten beeld gebouwd zijn voordat hij kan aanschuiven. De tabbladen vormen
+/// één rij; binnen het ritme-scherm vormen ochtend en avond er nog een.
+@MainActor
+@Observable
+final class Camera {
+    private(set) var tabs = Strip<Tab>(.routine)
+    private(set) var routines = Strip<Routine>(.day)
+
+    @ObservationIgnored private var settleTabs: Task<Void, Never>?
+    @ObservationIgnored private var settleRoutines: Task<Void, Never>?
+
+    var tab: Tab { tabs.current }
+    var routine: Routine { routines.current }
+
+    func look(at tab: Tab, _ routine: Routine) {
+        if tab == tabs.current && tabs.entering == nil {
+            if tab == .routine, routines.look(at: routine) { restRoutines() }
+            return
+        }
+        let fresh = !tabs.mounted.contains(tab)
+        if tabs.look(at: tab) { restTabs() }
+        guard tab == .routine else { return }
+        if fresh {
+            routines = Strip(routine)
+        } else if routines.look(at: routine) {
+            restRoutines()
+        }
+    }
+
+    func arrived(_ tab: Tab) {
+        if tabs.arrived(tab) { restTabs() }
+    }
+
+    func arrived(_ routine: Routine) {
+        if routines.arrived(routine) { restRoutines() }
+    }
+
+    private func restTabs() {
+        settleTabs?.cancel()
+        settleTabs = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(0.7))
+            guard let self, !Task.isCancelled else { return }
+            tabs.rest()
+        }
+    }
+
+    private func restRoutines() {
+        settleRoutines?.cancel()
+        settleRoutines = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(0.7))
+            guard let self, !Task.isCancelled else { return }
+            routines.rest()
+        }
     }
 }

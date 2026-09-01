@@ -109,45 +109,47 @@ struct RootScreen: View {
     }
 }
 
+private struct Look: Equatable {
+    let tab: Tab
+    let routine: Routine
+}
+
 private struct TabPages: View {
     @Environment(Household.self) private var household
     @Environment(\.metrics) private var m
     @State private var camera = Camera()
 
     var body: some View {
+        let span = m.width + 60
         ZStack {
-            if !camera.mounted.isDisjoint(with: [0, 1]) {
-                page(.routine) { RoutineScreen() }
+            if camera.tabs.mounted.contains(.routine) {
+                page(.routine, span) { RoutineScreen() }
             }
-            if camera.mounted.contains(2) {
-                page(.week) { WeekScreen() }
+            if camera.tabs.mounted.contains(.week) {
+                page(.week, span) { WeekScreen() }
             }
-            if camera.mounted.contains(3) {
-                page(.settings) { SettingsScreen() }
+            if camera.tabs.mounted.contains(.settings) {
+                page(.settings, span) { SettingsScreen() }
             }
         }
+        .strip(eye: camera.tabs.eye, span: span)
         .environment(camera)
-        .onChange(of: columnOf(household.tab, household.routine), initial: true) {
+        .onChange(of: Look(tab: household.tab, routine: household.routine), initial: true) {
             camera.look(at: household.tab, household.routine)
         }
     }
 
-    private func page(_ which: Tab, @ViewBuilder _ screen: () -> some View) -> some View {
-        let here = camera.tab == which
-        let column = columnOf(which, camera.routine)
-        let shift = Shift(steps: camera.offset(of: column), span: m.width + 60)
-        // Het ritme-scherm meldt zich per kolom, vanuit zijn eigen panelen.
-        let entrance = which == .routine
-            ? camera.entering.map { $0 > 1 } ?? true
-            : camera.entering != column
+    private func page(_ which: Tab, _ span: CGFloat,
+                      @ViewBuilder _ screen: () -> some View) -> some View {
+        let here = camera.tabs.current == which
         return screen()
-            .shifted(shift)
-            .environment(\.entranceOn, entrance)
+            .placed(at: camera.tabs.position(of: which), span: span)
+            .environment(\.entranceOn, camera.tabs.entering != which)
             .zIndex(here ? 1 : 0)
             .allowsHitTesting(here)
             .accessibilityHidden(!here)
             .transition(.identity)
-            .onAppear { if which != .routine { camera.arrived(column) } }
+            .onAppear { camera.arrived(which) }
     }
 }
 

@@ -99,17 +99,17 @@ extension View {
     }
 }
 
-/// Hoe ver een bladzijde opzij staat, in breedtes. Eén veer per bladzijde;
-/// de regels erop bewegen niet los van elkaar.
-struct Shift: Equatable {
-    var steps: CGFloat
-    var span: CGFloat
-}
-
 extension View {
-    func shifted(_ shift: Shift) -> some View {
-        offset(x: shift.steps * shift.span)
-            .animation(Motion.glide, value: shift.steps)
+    /// Een vaste plek in een rij bladzijden, in breedtes.
+    func placed(at lane: Int, span: CGFloat) -> some View {
+        offset(x: CGFloat(lane) * span)
+    }
+
+    /// De rij zelf: schuift zodat het oog in beeld staat, op één veer, zodat
+    /// alles in de rij samen beweegt.
+    func strip(eye: Int, span: CGFloat) -> some View {
+        offset(x: -CGFloat(eye) * span)
+            .animation(Motion.glide, value: eye)
     }
 
     @ViewBuilder

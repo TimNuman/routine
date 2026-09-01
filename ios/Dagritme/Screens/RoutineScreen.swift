@@ -39,7 +39,7 @@ struct RoutineScreen: View {
 
     private func plan(_ r: Routine, _ content: Content?, _ today: Today) -> Plan {
         var out = Plan()
-        guard let content, camera.mounted.contains(columnOf(.routine, r)) else { return out }
+        guard let content, mounted(r) else { return out }
 
         out.blocks = routineBlocks(content, r, household.now)
             .map { block in
@@ -161,6 +161,7 @@ struct RoutineScreen: View {
                         if mounted(.day) { sidePane(.day, content, day) }
                         if mounted(.night) { sidePane(.night, content, night) }
                     }
+                    .strip(eye: camera.routines.eye, span: m.width + 60)
                     .frame(width: m.sideColumn)
                 }
             }
@@ -172,7 +173,7 @@ struct RoutineScreen: View {
     }
 
     private func mounted(_ r: Routine) -> Bool {
-        camera.mounted.contains(columnOf(.routine, r))
+        camera.routines.mounted.contains(r)
     }
 
     @ViewBuilder
@@ -188,24 +189,24 @@ struct RoutineScreen: View {
             if mounted(.day) { pane(.day, content, day) }
             if mounted(.night) { pane(.night, content, night) }
         }
+        .strip(eye: camera.routines.eye, span: m.width + 60)
         .frame(height: heights[camera.routine], alignment: .top)
     }
 
     private func pane(_ r: Routine, _ content: Content?, _ plan: Plan) -> some View {
         let here = camera.routine == r
-        let col = columnOf(.routine, r)
         return VStack(alignment: .leading, spacing: 0) {
             if let content { column(r, content, plan) }
         }
-        .shifted(shift(r))
-        .environment(\.entranceOn, camera.entering != col)
+        .placed(at: camera.routines.position(of: r), span: m.width + 60)
+        .environment(\.entranceOn, camera.routines.entering != r)
         .onGeometryChange(for: CGFloat.self, of: { $0.size.height },
                           action: { heights[r] = $0 })
         .zIndex(here ? 1 : 0)
         .allowsHitTesting(here)
         .accessibilityHidden(!here)
         .transition(.identity)
-        .onAppear { camera.arrived(col) }
+        .onAppear { camera.arrived(r) }
     }
 
     private func sidePane(_ r: Routine, _ content: Content, _ plan: Plan) -> some View {
@@ -216,8 +217,8 @@ struct RoutineScreen: View {
                        slot: plan.sideStarts[i])
             }
         }
-        .shifted(shift(r))
-        .environment(\.entranceOn, camera.entering != columnOf(.routine, r))
+        .placed(at: camera.routines.position(of: r), span: m.width + 60)
+        .environment(\.entranceOn, camera.routines.entering != r)
         .zIndex(here ? 1 : 0)
         .allowsHitTesting(here)
         .accessibilityHidden(!here)
@@ -272,13 +273,6 @@ struct RoutineScreen: View {
         }
     }
 
-    /// Het paneel staat op zijn eigen kolom; de bladzijde eromheen schuift al
-    /// mee met de kolom waar de camera naar kijkt, dus alleen het verschil.
-    private func shift(_ r: Routine) -> Shift {
-        let page = columnOf(.routine, camera.routine)
-        return Shift(steps: camera.offset(of: columnOf(.routine, r)) - camera.offset(of: page),
-                     span: m.width + 60)
-    }
 }
 
 private struct ResetButton: View {
