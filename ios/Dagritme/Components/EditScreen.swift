@@ -44,9 +44,6 @@ struct EditScreen: View {
     @State private var routine: Routine
     @State private var sheet: SheetState?
     @State private var childSheet: ChildState?
-    @State private var draggedChild: DraftPerson?
-    @State private var draggedStep: DraftStep?
-    @State private var draggedWeek: DraftWeekItem?
 
     init(kind: EditKind, content: Content, onCancel: @escaping () -> Void,
          onSave: @escaping (Draft) async -> String?) {
@@ -174,13 +171,10 @@ struct EditScreen: View {
                             }
                             .tint(RED)
                         }
-                        .onDrag {
-                            draggedChild = person
-                            return NSItemProvider(object: person.name as NSString)
-                        }
                 }
-                .onInsert(of: [.utf8PlainText, .plainText, .text]) { index, _ in
-                    dropChild(index)
+                .onMove { from, to in
+                    draft.people.move(fromOffsets: from, toOffset: to)
+                    refresh()
                 }
                 .plainRow()
 
@@ -283,13 +277,9 @@ struct EditScreen: View {
                             } label: { Image(systemName: "trash") }
                             .tint(RED)
                         }
-                        .onDrag {
-                            draggedStep = step
-                            return NSItemProvider(object: step.label as NSString)
-                        }
                     }
-                    .onInsert(of: [.utf8PlainText, .plainText, .text]) { index, _ in
-                        dropStep(index, into: group)
+                    .onMove { from, to in
+                        moveStep(group, from, to)
                     }
                     .plainRow()
 
@@ -331,49 +321,24 @@ struct EditScreen: View {
         refresh()
     }
 
-    // Vastpakken en slepen: binnen een groep, of naar een andere groep.
-    private func dropStep(_ index: Int, into group: DraftGroup) {
-        guard let step = draggedStep else { return }
-        draggedStep = nil
+    private func moveStep(_ group: DraftGroup, _ from: IndexSet, _ to: Int) {
         let fixed = group.steps.filter { $0.date.isEmpty }
-        let ref = index < fixed.count ? fixed[index] : nil
-        guard ref !== step else { return }
-        for g in draft[routine] { g.steps.removeAll { $0 === step } }
-        if let ref, let at = group.steps.firstIndex(where: { $0 === ref }) {
-            group.steps.insert(step, at: at)
+        guard let source = from.first, fixed.indices.contains(source) else { return }
+        let step = fixed[source]
+        guard let a = group.steps.firstIndex(where: { $0 === step }) else { return }
+        let target: Int
+        if to >= fixed.count {
+            target = group.steps.count
+        } else if let b = group.steps.firstIndex(where: { $0 === fixed[to] }) {
+            target = b
         } else {
-            group.steps.append(step)
+            return
         }
+        let moved = group.steps.remove(at: a)
+        group.steps.insert(moved, at: target > a ? target - 1 : target)
         refresh()
     }
 
-    private func dropChild(_ index: Int) {
-        guard let person = draggedChild else { return }
-        draggedChild = nil
-        let ref = index < draft.people.count ? draft.people[index] : nil
-        guard ref !== person else { return }
-        draft.people.removeAll { $0 === person }
-        if let ref, let at = draft.people.firstIndex(where: { $0 === ref }) {
-            draft.people.insert(person, at: at)
-        } else {
-            draft.people.append(person)
-        }
-        refresh()
-    }
-
-    private func dropWeek(_ index: Int) {
-        guard let item = draggedWeek else { return }
-        draggedWeek = nil
-        let ref = index < draft.week.count ? draft.week[index] : nil
-        guard ref !== item else { return }
-        draft.week.removeAll { $0 === item }
-        if let ref, let at = draft.week.firstIndex(where: { $0 === ref }) {
-            draft.week.insert(item, at: at)
-        } else {
-            draft.week.append(item)
-        }
-        refresh()
-    }
 
 
     @ViewBuilder
@@ -402,13 +367,10 @@ struct EditScreen: View {
                         } label: { Image(systemName: "trash") }
                         .tint(RED)
                     }
-                    .onDrag {
-                        draggedWeek = item
-                        return NSItemProvider(object: item.text as NSString)
-                    }
                 }
-                .onInsert(of: [.utf8PlainText, .plainText, .text]) { index, _ in
-                    dropWeek(index)
+                .onMove { from, to in
+                    draft.week.move(fromOffsets: from, toOffset: to)
+                    refresh()
                 }
                 .plainRow()
 
