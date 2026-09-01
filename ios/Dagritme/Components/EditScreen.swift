@@ -44,6 +44,10 @@ struct EditScreen: View {
     @State private var routine: Routine
     @State private var sheet: SheetState?
     @State private var childSheet: ChildState?
+    /// De rij die net is neergezet: die houdt heel even de zwevende look
+    /// vast en laat die dan wegvloeien, zodat het systeemvoorbeeld geruisloos
+    /// kan verdwijnen.
+    @State private var landing: ObjectIdentifier?
 
     init(kind: EditKind, content: Content, onCancel: @escaping () -> Void,
          onSave: @escaping (Draft) async -> String?) {
@@ -165,6 +169,7 @@ struct EditScreen: View {
             Section {
                 ForEach(draft.people) { person in
                     ChildRow(person: person, onOpen: { openChild(person) })
+                        .landingGlow(landing == ObjectIdentifier(person))
                         .swipeActions(edge: .trailing) {
                             Button(role: .destructive) { removeChild(person) } label: {
                                 Image(systemName: "trash")
@@ -173,7 +178,9 @@ struct EditScreen: View {
                         }
                 }
                 .onMove { from, to in
+                    let moved = from.first.map { draft.people[$0] }
                     draft.people.move(fromOffsets: from, toOffset: to)
+                    if let moved { landed(moved) }
                     refresh()
                 }
                 .plainRow()
@@ -271,6 +278,7 @@ struct EditScreen: View {
                                           .step(routine: routine, group: group, step: step)) { _ in }
                             }
                         )
+                        .landingGlow(landing == ObjectIdentifier(step))
                         .swipeActions(edge: .trailing) {
                             Button(role: .destructive) {
                                 group.steps.removeAll { $0 === step }
@@ -337,7 +345,18 @@ struct EditScreen: View {
         }
         let moved = group.steps.remove(at: a)
         group.steps.insert(moved, at: target > a ? target - 1 : target)
+        landed(moved)
         refresh()
+    }
+
+    private func landed(_ object: AnyObject) {
+        let mark = ObjectIdentifier(object)
+        landing = mark
+        Task {
+            try? await Task.sleep(for: .milliseconds(650))
+            guard landing == mark else { return }
+            withAnimation(.easeOut(duration: 0.35)) { landing = nil }
+        }
     }
 
 
@@ -361,6 +380,7 @@ struct EditScreen: View {
                             openEntry(item.text.isEmpty ? String(localized: "Item") : item.text, .week(item)) { _ in }
                         }
                     )
+                    .landingGlow(landing == ObjectIdentifier(item))
                     .swipeActions(edge: .trailing) {
                         Button(role: .destructive) {
                             draft.week.removeAll { $0 === item }
@@ -370,7 +390,9 @@ struct EditScreen: View {
                     }
                 }
                 .onMove { from, to in
+                    let moved = from.first.map { draft.week[$0] }
                     draft.week.move(fromOffsets: from, toOffset: to)
+                    if let moved { landed(moved) }
                     refresh()
                 }
                 .plainRow()
@@ -526,6 +548,17 @@ private struct CardNote: View {
 }
 
 private extension View {
+    /// Dezelfde look als het zwevende sleepvoorbeeld; vloeit weg als `on`
+    /// weer uit gaat.
+    func landingGlow(_ on: Bool) -> some View {
+        background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color(hex: "#FBF3F1"))
+                .shadow(color: .black.opacity(on ? 0.16 : 0), radius: on ? 8 : 0, y: on ? 3 : 0)
+                .opacity(on ? 1 : 0)
+        )
+    }
+
     /// Rijen zonder eigen lijstinzet, met één nette scheidslijn die op de
     /// binnenrand van de kaart begint.
     func plainRow() -> some View {
