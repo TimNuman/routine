@@ -18,7 +18,16 @@ struct Glass<Inner: View>: View {
         )
     }
 
+    @ViewBuilder
     var body: some View {
+        if floating {
+            shell.shadow(color: palette.shadow, radius: 19, x: 0, y: 16)
+        } else {
+            shell
+        }
+    }
+
+    private var shell: some View {
         content()
             .background {
                 ZStack {
@@ -41,6 +50,5 @@ struct Glass<Inner: View>: View {
                     lineWidth: 1
                 )
             }
-            .shadow(color: palette.shadow, radius: 19, x: 0, y: 16)
     }
 }

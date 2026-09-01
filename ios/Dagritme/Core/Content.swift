@@ -285,8 +285,8 @@ func byTime(_ items: [AgendaItem], past clock: Int?) -> [AgendaItem] {
         .map(\.element)
 }
 
-func stepKey(_ step: Step) -> String {
-    let flat = step.label.lowercased()
+func stepKey(_ label: String) -> String {
+    let flat = label.lowercased()
         .folding(options: [.diacriticInsensitive], locale: Locale(identifier: "nl_NL"))
     var out = ""
     var dash = false
@@ -302,10 +302,20 @@ func stepKey(_ step: Step) -> String {
     return out.isEmpty ? "stap" : out
 }
 
-func onDay(_ step: Step, _ d: Date) -> Bool {
-    if !step.date.isEmpty { return step.date == dateString(d) }
+struct Today {
+    let date: String
+    let day: String
+
+    init(_ d: Date) {
+        date = dateString(d)
+        day = DAYS[weekdayIndex(d)]
+    }
+}
+
+func onDay(_ step: Step, _ today: Today) -> Bool {
+    if !step.date.isEmpty { return step.date == today.date }
     if step.days.isEmpty { return true }
-    return step.days.contains(DAYS[weekdayIndex(d)])
+    return step.days.contains(today.day)
 }
 
 func stepCount(_ groups: [StepGroup]) -> Int {

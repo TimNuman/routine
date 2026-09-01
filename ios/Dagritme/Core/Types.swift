@@ -19,6 +19,16 @@ struct Step: Hashable {
     var days: [String]
     var date: String
     var who: [String]
+    let key: String
+
+    init(icon: String, label: String, days: [String], date: String, who: [String]) {
+        self.icon = icon
+        self.label = label
+        self.days = days
+        self.date = date
+        self.who = who
+        self.key = stepKey(label)
+    }
 }
 
 struct StepGroup: Hashable {

@@ -157,7 +157,7 @@ op hun naam in plaats van op een plek op het scherm. Daardoor blijft een stroom
 kloppen als er iets verschuift.
 
 ```bash
-brew install maestro          # of: curl -Ls https://get.maestro.mobile.dev | bash
+curl -Ls "https://get.maestro.mobile.dev" | bash   # of: brew tap mobile-dev-inc/tap && brew install maestro
 maestro test ios/maestro                     # alles
 maestro test ios/maestro/smoke.yaml          # één stroom
 maestro test --include-tags smoke ios/maestro

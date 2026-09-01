@@ -1,5 +1,18 @@
 import SwiftUI
 
+private struct Plan {
+    var blocks: [Block] = []
+    var early: [Block] = []
+    var later: [Block] = []
+    var all: [StepGroup] = []
+    var groups: [StepGroup] = []
+    var sideStarts: [Int] = []
+    var earlyStarts: [Int] = []
+    var laterStarts: [Int] = []
+    var groupStarts: [Int] = []
+    var resetSlot: Int = 0
+}
+
 struct RoutineScreen: View {
     @Environment(Household.self) private var household
     @Environment(\.metrics) private var m
@@ -19,62 +32,84 @@ struct RoutineScreen: View {
 
     private var filtered: Bool { visible.count < everyone.count }
 
-    private func blocks(_ r: Routine) -> [Block] {
-        guard let content = household.content else { return [] }
-        return routineBlocks(content, r, household.now)
-            .map { block in
-                var out = block
-                out.items = block.items.filter(belongs)
-                return out
-            }
-            .filter { !$0.items.isEmpty }
-    }
-
-    private func allGroups(_ r: Routine) -> [StepGroup] {
-        guard let content = household.content else { return [] }
-        return content[r]
-            .map { group in
-                var out = group
-                out.steps = group.steps.filter { !$0.label.isEmpty && onDay($0, household.now) }
-                return out
-            }
-            .filter { !$0.steps.isEmpty }
-    }
-
-    private func groups(_ r: Routine) -> [StepGroup] {
-        guard let content = household.content, filtered else { return allGroups(r) }
-        return allGroups(r)
-            .map { group in
-                var out = group
-                out.steps = group.steps.filter { step in
-                    participants(step, content.people).contains { visible.contains($0.id) }
-                }
-                return out
-            }
-            .filter { !$0.steps.isEmpty }
-    }
-
     private func belongs(_ item: AgendaItem) -> Bool {
         guard filtered else { return true }
         return item.who.isEmpty || item.who.contains { visible.contains($0) }
     }
 
-    private var tallies: [String: Tally] {
-        guard let content = household.content else { return [:] }
+    private func plan(_ r: Routine, _ content: Content, _ today: Today) -> Plan {
+        var out = Plan()
+
+        out.blocks = routineBlocks(content, r, household.now)
+            .map { block in
+                var block = block
+                block.items = block.items.filter(belongs)
+                return block
+            }
+            .filter { !$0.items.isEmpty }
+        out.early = out.blocks.filter { !$0.later }
+        out.later = out.blocks.filter { $0.later }
+
+        out.all = content[r]
+            .map { group in
+                var group = group
+                group.steps = group.steps.filter { !$0.label.isEmpty && onDay($0, today) }
+                return group
+            }
+            .filter { !$0.steps.isEmpty }
+
+        out.groups = filtered
+            ? out.all
+                .map { group in
+                    var group = group
+                    group.steps = group.steps.filter { step in
+                        participants(step, content.people).contains { visible.contains($0.id) }
+                    }
+                    return group
+                }
+                .filter { !$0.steps.isEmpty }
+            : out.all
+
+        var side = 0
+        for block in out.blocks {
+            out.sideStarts.append(side)
+            side += 1 + block.items.count
+        }
+
+        var lead = 0
+        for block in out.early {
+            out.earlyStarts.append(lead)
+            lead += 1 + block.items.count
+        }
+        if m.wide { lead = 0 }
+
+        for group in out.groups {
+            out.groupStarts.append(lead)
+            lead += 1 + group.steps.count
+        }
+
+        for block in out.later {
+            out.laterStarts.append(lead)
+            lead += 1 + block.items.count
+        }
+        out.resetSlot = lead + 1
+
+        return out
+    }
+
+    private func tallies(_ content: Content, _ groups: [StepGroup]) -> [String: Tally] {
         var out: [String: Tally] = [:]
-        for person in content.people {
-            var tally = Tally()
-            for group in allGroups(household.routine) {
-                for step in group.steps {
-                    guard participants(step, content.people).contains(where: { $0.id == person.id })
-                    else { continue }
-                    tally.total += 1
-                    if household.checks[checkKey(household.routine, stepKey(step), person.id)] == true {
-                        tally.done += 1
+        for person in content.people { out[person.id] = Tally() }
+        for group in groups {
+            for step in group.steps {
+                for person in participants(step, content.people) {
+                    guard out[person.id] != nil else { continue }
+                    out[person.id]?.total += 1
+                    if household.checks[checkKey(household.routine, step.key, person.id)] == true {
+                        out[person.id]?.done += 1
                     }
                 }
             }
-            out[person.id] = tally
         }
         return out
     }
@@ -103,50 +138,54 @@ struct RoutineScreen: View {
 
     @ViewBuilder
     private var pages: some View {
-        let withSide = m.wide && !blocks(household.routine).isEmpty
+        if let content = household.content {
+            let today = Today(household.now)
+            let day = plan(.day, content, today)
+            let night = plan(.night, content, today)
+            let here = household.routine == .night ? night : day
+            let withSide = m.wide && !here.blocks.isEmpty
 
-        if m.wide {
-            HStack(alignment: .top, spacing: m.columnGap) {
-                VStack(alignment: .leading, spacing: 0) {
-                    columns
-                }
-                .padding(.top, withSide ? 31 : 0)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                if withSide, let content = household.content {
-                    ZStack(alignment: .topLeading) {
-                        sidePane(.day, content)
-                        sidePane(.night, content)
+            if m.wide {
+                HStack(alignment: .top, spacing: m.columnGap) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        columns(content, here, day, night)
                     }
-                    .frame(width: m.sideColumn)
+                    .padding(.top, withSide ? 31 : 0)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    if withSide {
+                        ZStack(alignment: .topLeading) {
+                            sidePane(.day, content, day)
+                            sidePane(.night, content, night)
+                        }
+                        .frame(width: m.sideColumn)
+                    }
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 0) {
+                    columns(content, here, day, night)
                 }
             }
-        } else {
-            VStack(alignment: .leading, spacing: 0) { columns }
         }
     }
 
     @ViewBuilder
-    private var columns: some View {
-        if let content = household.content {
-            ProgressBars(people: content.people, tallies: tallies, topPad: m.wide ? 0 : 14,
-                         visible: visible, filtered: filtered, onSelect: toggleChild)
-                .shifted(Shift(slot: 1, steps: tabOffset, span: m.width + 60))
-        }
-        routinePair
-    }
+    private func columns(_ content: Content, _ here: Plan, _ day: Plan, _ night: Plan) -> some View {
+        ProgressBars(people: content.people, tallies: tallies(content, here.all),
+                     topPad: m.wide ? 0 : 14,
+                     visible: visible, filtered: filtered, onSelect: toggleChild)
+            .shifted(Shift(slot: 1, steps: tabOffset, span: m.width + 60))
 
-    private var routinePair: some View {
         ZStack(alignment: .topLeading) {
-            pane(.day)
-            pane(.night)
+            pane(.day, content, day)
+            pane(.night, content, night)
         }
         .frame(height: heights[household.routine], alignment: .top)
     }
 
-    private func pane(_ r: Routine) -> some View {
+    private func pane(_ r: Routine, _ content: Content, _ plan: Plan) -> some View {
         let here = household.routine == r
-        return VStack(alignment: .leading, spacing: 0) { column(r) }
+        return VStack(alignment: .leading, spacing: 0) { column(r, content, plan) }
             .onGeometryChange(for: CGFloat.self, of: { $0.size.height },
                               action: { heights[r] = $0 })
             .zIndex(here ? 1 : 0)
@@ -154,11 +193,11 @@ struct RoutineScreen: View {
             .accessibilityHidden(!here)
     }
 
-    private func sidePane(_ r: Routine, _ content: Content) -> some View {
+    private func sidePane(_ r: Routine, _ content: Content, _ plan: Plan) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            ForEach(Array(blocks(r).enumerated()), id: \.element.id) { (i, block) in
+            ForEach(Array(plan.blocks.enumerated()), id: \.element.id) { (i, block) in
                 Agenda(block: block, people: content.people, side: true, first: i == 0,
-                       shift: shift(r, slots(blocks(r).prefix(i))))
+                       shift: shift(r, plan.sideStarts[i]))
             }
         }
         .zIndex(household.routine == r ? 1 : 0)
@@ -167,74 +206,56 @@ struct RoutineScreen: View {
     }
 
     @ViewBuilder
-    private func column(_ r: Routine) -> some View {
-        if let content = household.content {
-            if !m.wide {
-                ForEach(Array(blocks(r).filter { !$0.later }.enumerated()), id: \.element.id) { (i, block) in
-                    Agenda(block: block, people: content.people,
-                           shift: shift(r, slots(blocks(r).filter { !$0.later }.prefix(i))))
+    private func column(_ r: Routine, _ content: Content, _ plan: Plan) -> some View {
+        if !m.wide {
+            ForEach(Array(plan.early.enumerated()), id: \.element.id) { (i, block) in
+                Agenda(block: block, people: content.people,
+                       shift: shift(r, plan.earlyStarts[i]))
+            }
+        }
+
+        ForEach(Array(plan.groups.enumerated()), id: \.offset) { (gi, group) in
+            let start = plan.groupStarts[gi]
+
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                Text(group.name).textStyle(Fonts.group).foregroundStyle(palette.ink)
+                if !group.time.isEmpty {
+                    Text(group.time).textStyle(Fonts.groupTime).foregroundStyle(palette.muted)
                 }
             }
+            .padding(.top, 20)
+            .padding(.horizontal, m.indent)
+            .padding(.bottom, 10)
+            .shifted(shift(r, start))
 
-            ForEach(Array(groups(r).enumerated()), id: \.offset) { (gi, group) in
-                let start = leadSlots(r, gi)
-
-                HStack(alignment: .firstTextBaseline, spacing: 12) {
-                    Text(group.name).textStyle(Fonts.group).foregroundStyle(palette.ink)
-                    if !group.time.isEmpty {
-                        Text(group.time).textStyle(Fonts.groupTime).foregroundStyle(palette.muted)
-                    }
-                }
-                .padding(.top, 20)
-                .padding(.horizontal, m.indent)
-                .padding(.bottom, 10)
-                .shifted(shift(r, start))
-
-                LazyVGrid(
-                    columns: Array(repeating: GridItem(.flexible(), spacing: m.gridGap),
-                                   count: m.perRow),
-                    spacing: m.gridGap
-                ) {
-                    ForEach(Array(group.steps.enumerated()), id: \.element) { (si, step) in
-                        Card(step: step, content: content, routine: r, visible: visible,
-                             shift: shift(r, start + 1 + si))
-                    }
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible(), spacing: m.gridGap),
+                               count: m.perRow),
+                spacing: m.gridGap
+            ) {
+                ForEach(Array(group.steps.enumerated()), id: \.element) { (si, step) in
+                    Card(step: step, content: content, routine: r, visible: visible,
+                         shift: shift(r, start + 1 + si))
                 }
             }
+        }
 
-            if !m.wide {
-                ForEach(Array(blocks(r).filter { $0.later }.enumerated()), id: \.element.id) { (i, block) in
-                    Agenda(block: block, people: content.people,
-                           shift: shift(r, tailSlots(r) + slots(blocks(r).filter { $0.later }.prefix(i))))
-                }
+        if !m.wide {
+            ForEach(Array(plan.later.enumerated()), id: \.element.id) { (i, block) in
+                Agenda(block: block, people: content.people,
+                       shift: shift(r, plan.laterStarts[i]))
             }
+        }
 
-            if !groups(r).isEmpty {
-                ResetButton()
-                    .shifted(shift(r, tailSlots(r) + slots(blocks(r).filter { $0.later }) + 1))
-            }
+        if !plan.groups.isEmpty {
+            ResetButton()
+                .shifted(shift(r, plan.resetSlot))
         }
     }
 
     private func shift(_ r: Routine, _ slot: Int) -> Shift {
         let routineOffset: CGFloat = household.routine == r ? 0 : (r == .night ? 1 : -1)
         return Shift(slot: slot, steps: routineOffset + tabOffset, span: m.width + 60)
-    }
-
-    private func slots<S: Sequence>(_ blocks: S) -> Int where S.Element == Block {
-        blocks.reduce(0) { $0 + 1 + $1.items.count }
-    }
-
-    private func leadSlots(_ r: Routine, _ gi: Int) -> Int {
-        var n = m.wide ? 0 : slots(blocks(r).filter { !$0.later })
-        for group in groups(r).prefix(gi) {
-            n += 1 + group.steps.count
-        }
-        return n
-    }
-
-    private func tailSlots(_ r: Routine) -> Int {
-        leadSlots(r, groups(r).count)
     }
 }
 
@@ -277,15 +298,15 @@ private struct Card: View {
     }
 
     private var allDone: Bool {
-        let key = stepKey(step)
-        guard !taking.isEmpty else { return false }
-        return taking.allSatisfy {
-            household.checks[checkKey(routine, key, $0.id)] == true
+        let people = taking
+        guard !people.isEmpty else { return false }
+        return people.allSatisfy {
+            household.checks[checkKey(routine, step.key, $0.id)] == true
         }
     }
 
     var body: some View {
-        let key = stepKey(step)
+        let key = step.key
 
         Glass(radius: 22) {
             VStack(spacing: m.cardGap) {
@@ -319,7 +340,7 @@ private struct Card: View {
         }
         .scaleEffect(allDone ? 0.985 : 1)
         .animation(Motion.pop, value: allDone)
-        .accessibilityIdentifier("card.\(stepKey(step))")
+        .accessibilityIdentifier("card.\(key)")
         .shifted(shift)
     }
 }
