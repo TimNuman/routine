@@ -2,6 +2,7 @@ import SwiftUI
 import UIKit
 
 enum SafeArea {
+    static var top: CGFloat { window?.safeAreaInsets.top ?? 0 }
     static var bottom: CGFloat { window?.safeAreaInsets.bottom ?? 0 }
 
     private static var window: UIWindow? {

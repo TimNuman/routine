@@ -172,12 +172,14 @@ struct FullSheet<Inner: View>: View {
             Sky(dark: false)
                 .mask(
                     VStack(spacing: 0) {
-                        Rectangle().frame(height: headHeight)
+                        // Tot bovenaan het scherm dicht, ook achter de klok.
+                        Rectangle().frame(height: SafeArea.top + headHeight)
                         LinearGradient(colors: [.black, .clear],
                                        startPoint: .top, endPoint: .bottom)
                             .frame(height: 30)
                         Color.clear
                     }
+                    .ignoresSafeArea()
                 )
                 .allowsHitTesting(false)
 
