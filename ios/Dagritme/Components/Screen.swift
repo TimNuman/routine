@@ -92,9 +92,8 @@ struct RootScreen: View {
 
                 if !m.wide {
                     TabBar(wide: false)
-                        .frame(maxWidth: 492)
-                        .padding(.horizontal, TabBar.edge)
-                        .padding(.bottom, TabBar.edge)
+                        .padding(.bottom, TabBar.edge - SafeArea.bottom)
+                        .ignoresSafeArea(.container, edges: .bottom)
                         .opacity(household.sheetOpen ? 0 : 1)
                         .offset(y: household.sheetOpen ? 30 : 0)
                         .animation(Motion.sheetUp, value: household.sheetOpen)

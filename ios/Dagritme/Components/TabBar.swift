@@ -5,7 +5,7 @@ import SwiftUI
 struct TabBar: View {
     var wide: Bool
 
-    static let edge: CGFloat = 8
+    static let edge: CGFloat = 10
 
     @Environment(Household.self) private var household
     @Environment(\.palette) private var palette
@@ -24,30 +24,29 @@ struct TabBar: View {
     ]
 
     private var row: CGFloat { wide ? 42 : 52 }
+    /// Zo breed als een knop nodig heeft; de balk hangt dicht om de drie heen.
+    private var width: CGFloat { wide ? 150 : 94 }
 
     var body: some View {
-        Glass(radius: 19) {
-            GeometryReader { space in
-                let width = space.size.width / CGFloat(items.count)
-                let chosen = items.firstIndex { $0.tab == household.tab } ?? 0
-                ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 15, style: .continuous)
-                        .fill(palette.dark ? Color.white.opacity(0.92) : .white)
-                        .frame(width: width, height: row)
-                        .shadow(color: .black.opacity(0.10), radius: 5, x: 0, y: 3)
-                        .offset(x: CGFloat(chosen) * width)
-                        .animation(Motion.spring, value: household.tab)
+        let chosen = items.firstIndex { $0.tab == household.tab } ?? 0
+        Glass(radius: (row + 8) / 2) {
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(palette.dark ? Color.white.opacity(0.92) : .white)
+                    .frame(width: width, height: row)
+                    .shadow(color: .black.opacity(0.10), radius: 5, x: 0, y: 3)
+                    .offset(x: CGFloat(chosen) * width)
+                    .animation(Motion.spring, value: household.tab)
 
-                    HStack(spacing: 0) {
-                        ForEach(items, id: \.tab) { item in
-                            option(item, on: household.tab == item.tab)
-                        }
+                HStack(spacing: 0) {
+                    ForEach(items, id: \.tab) { item in
+                        option(item, on: household.tab == item.tab)
                     }
                 }
             }
-            .frame(height: row)
             .padding(4)
         }
+        .fixedSize()
     }
 
     @ViewBuilder
@@ -71,9 +70,8 @@ struct TabBar: View {
             .animation(Motion.short, value: on)
             .scaleEffect(on ? 1.04 : 1)
             .animation(Motion.spring, value: on)
-            .frame(maxWidth: .infinity)
-            .frame(height: row)
-            .contentShape(Rectangle())
+            .frame(width: width, height: row)
+            .contentShape(Capsule())
         }
         .buttonStyle(.press)
         .accessibilityIdentifier(item.id)
