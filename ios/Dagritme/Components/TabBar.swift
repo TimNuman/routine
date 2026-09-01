@@ -5,7 +5,7 @@ import SwiftUI
 struct TabBar: View {
     var wide: Bool
 
-    static let edge: CGFloat = 10
+    static let edge: CGFloat = 18
 
     @Environment(Household.self) private var household
     @Environment(\.palette) private var palette
