@@ -8,7 +8,7 @@ enum EditKind: String, Identifiable {
     var title: String {
         switch self {
         case .children: return String(localized: "Kinderen")
-        case .day: return String(localized: "Ochtendritme")
+        case .day: return String(localized: "Dagritme")
         case .night: return String(localized: "Avondritme")
         case .week: return String(localized: "Weekritme")
         case .oneOff: return String(localized: "Eenmalig")

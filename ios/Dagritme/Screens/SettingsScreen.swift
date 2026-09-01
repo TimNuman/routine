@@ -18,27 +18,23 @@ struct SettingsScreen: View {
                             first: true,
                             faces: content.people,
                             id: "settings.children") { sheet = .children }
-                    CardRow(icon: "☀️", title: String(localized: "Ochtendritme"),
-                            note: String(localized: "\(stepCount(content.day)) stappen"),
+                    CardRow(icon: "☀️", title: String(localized: "Dagritme"),
+                            note: String(localized: "\(stepCount(content.day) + stepCount(content.night)) stappen"),
                             id: "settings.day") { sheet = .day }
                         .entrance(2)
-                    CardRow(icon: "🌙", title: String(localized: "Avondritme"),
-                            note: String(localized: "\(stepCount(content.night)) stappen"),
-                            id: "settings.night") { sheet = .night }
-                        .entrance(3)
                     CardRow(icon: "📅", title: String(localized: "Weekritme"),
                             note: String(localized: "school, sport en wat er verder is"),
                             id: "settings.week") { sheet = .week }
-                        .entrance(4)
+                        .entrance(3)
                     CardRow(icon: "📌", title: String(localized: "Eenmalig"),
                             note: oneOffText(content),
                             id: "settings.oneOff") { sheet = .oneOff }
-                        .entrance(5)
+                        .entrance(4)
                     CardRow(icon: "⚙️", title: String(localized: "Naam"), note: content.title,
                             id: "settings.general") {
                         sheet = .general
                     }
-                    .entrance(6)
+                    .entrance(5)
                 }
                 .entrance(1)
             }
