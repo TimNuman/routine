@@ -194,9 +194,10 @@ struct EditScreen: View {
         .scrollContentBackground(.hidden)
     }
 
+    // Effen, in de kleur die het glas hier toch al oplevert: een rij die je
+    // optilt blijft dan dicht in plaats van doorschijnend.
     private var rowBackground: some View {
-        Rectangle().fill(.ultraThinMaterial)
-            .overlay(Rectangle().fill(Palette(dark: false).glass))
+        Color(hex: "#FBF3F1")
     }
 
     private func openChild(_ person: DraftPerson) {
@@ -531,6 +532,7 @@ private extension View {
         listRowInsets(EdgeInsets())
             .listRowSeparatorTint(Palette(dark: false).line)
             .alignmentGuide(.listRowSeparatorLeading) { _ in 20 }
+            .contentShape(.dragPreview, RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 
