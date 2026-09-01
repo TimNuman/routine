@@ -710,9 +710,6 @@
         }
       }
     },
-    "Hier staan ook %lld dingen voor één dag; die bewerk je bij Eenmalig." : {
-
-    },
     "Hoe laat" : {
       "extractionState" : "manual",
       "localizations" : {

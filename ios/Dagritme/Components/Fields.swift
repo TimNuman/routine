@@ -253,7 +253,7 @@ struct AddRow: View {
                 Spacer(minLength: 0)
             }
             .padding(.vertical, 6)
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 20)
             .frame(minHeight: 48)
             .contentShape(Rectangle())
         }
@@ -300,7 +300,7 @@ struct EditRow: View {
         }
         .buttonStyle(.press)
         .accessibilityElement(children: .combine)
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 20)
         .frame(minHeight: 48)
     }
 

@@ -135,61 +135,74 @@ struct FullSheet<Inner: View>: View {
     let onDone: () -> Void
     @ViewBuilder var content: () -> Inner
 
+    @State private var headHeight: CGFloat = 92
+
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             Sky(dark: false)
 
-            VStack(spacing: 0) {
-                Glass(radius: 28, floating: true) {
-                    HStack(spacing: 10) {
-                        TextButton(String(localized: "Annuleer"), id: "full.cancel") { onCancel() }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        Text(title).textStyle(Fonts.sheetHead).foregroundStyle(INK)
-                            .lineLimit(1)
-                            .layoutPriority(1)
-                            .accessibilityIdentifier("full.title")
-                            .accessibilityAddTraits(.isHeader)
-                        TextButton(busy ? String(localized: "Bezig…") : String(localized: "Gereed"), bold: true,
-                                   id: "full.done") { onDone() }
-                            .frame(maxWidth: .infinity, alignment: .trailing)
+            // De inhoud scrolt achter de kop langs...
+            Group {
+                if ownScroll {
+                    VStack(alignment: .leading, spacing: 0) {
+                        if !alert.isEmpty {
+                            AlertBox(alert).padding(.horizontal, 22)
+                        }
+                        content()
                     }
-                    .padding(.vertical, 14)
-                    .padding(.horizontal, 18)
-                }
-                .padding(.horizontal, 22)
-                .padding(.top, 18)
-                .padding(.bottom, 18)
-                .frame(maxWidth: 496 + 44)
-
-                Group {
-                    if ownScroll {
+                    .frame(maxWidth: 520 + 44)
+                    .frame(maxWidth: .infinity)
+                } else {
+                    ScrollView {
                         VStack(alignment: .leading, spacing: 0) {
-                            if !alert.isEmpty {
-                                AlertBox(alert).padding(.horizontal, 22)
-                            }
+                            if !alert.isEmpty { AlertBox(alert) }
                             content()
                         }
+                        .padding(.horizontal, 22)
+                        .padding(.bottom, 30)
                         .frame(maxWidth: 520 + 44)
                         .frame(maxWidth: .infinity)
-                    } else {
-                        ScrollView {
-                            VStack(alignment: .leading, spacing: 0) {
-                                if !alert.isEmpty { AlertBox(alert) }
-                                content()
-                            }
-                            .padding(.horizontal, 22)
-                            .padding(.bottom, 30)
-                            .frame(maxWidth: 520 + 44)
-                            .frame(maxWidth: .infinity)
-                        }
                     }
                 }
-                // Wat omhoog scrolt lost op voor het onder de kop schuift,
-                // in plaats van hard afgesneden te worden.
-                .overlay(alignment: .top) {
-                    EdgeFade(dark: false).frame(height: 30)
-                }
             }
+            .contentMargins(.top, headHeight + 4)
+
+            // ...en lost daar op in een kopie van dezelfde hemel, zodat de
+            // kleur op elke hoogte precies klopt.
+            Sky(dark: false)
+                .mask(
+                    VStack(spacing: 0) {
+                        Rectangle().frame(height: headHeight)
+                        LinearGradient(colors: [.black, .clear],
+                                       startPoint: .top, endPoint: .bottom)
+                            .frame(height: 30)
+                        Color.clear
+                    }
+                )
+                .allowsHitTesting(false)
+
+            Glass(radius: 28, floating: true) {
+                HStack(spacing: 10) {
+                    TextButton(String(localized: "Annuleer"), id: "full.cancel") { onCancel() }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Text(title).textStyle(Fonts.sheetHead).foregroundStyle(INK)
+                        .lineLimit(1)
+                        .layoutPriority(1)
+                        .accessibilityIdentifier("full.title")
+                        .accessibilityAddTraits(.isHeader)
+                    TextButton(busy ? String(localized: "Bezig…") : String(localized: "Gereed"), bold: true,
+                               id: "full.done") { onDone() }
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                }
+                .padding(.vertical, 14)
+                .padding(.horizontal, 18)
+            }
+            .padding(.horizontal, 22)
+            .padding(.top, 18)
+            .padding(.bottom, 18)
+            .frame(maxWidth: 496 + 44)
+            .onGeometryChange(for: CGFloat.self, of: { $0.size.height },
+                              action: { headHeight = $0 })
         }
         .environment(\.palette, Palette(dark: false))
     }

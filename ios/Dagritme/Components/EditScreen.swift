@@ -253,7 +253,9 @@ struct EditScreen: View {
                         Field(value: bind(group, \.name), placeholder: String(localized: "Groep"))
                         Field(value: bind(group, \.time), placeholder: String(localized: "tijd"), kind: .time)
                     }
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 10)
+                    .padding(.horizontal, 20)
+                    .listRowInsets(EdgeInsets())
                     .swipeActions(edge: .trailing) {
                         Button(role: .destructive) { removeGroup(group) } label: {
                             Image(systemName: "trash")
@@ -566,7 +568,7 @@ private extension View {
     func plainRow() -> some View {
         listRowInsets(EdgeInsets())
             .listRowSeparatorTint(Palette(dark: false).line)
-            .alignmentGuide(.listRowSeparatorLeading) { _ in 12 }
+            .alignmentGuide(.listRowSeparatorLeading) { _ in 20 }
     }
 }
 
@@ -593,7 +595,7 @@ private struct ChildRow: View {
                 Spacer(minLength: 0)
             }
             .padding(.vertical, 6)
-            .padding(.horizontal, 12)
+            .padding(.horizontal, 20)
             .frame(minHeight: 48)
             .contentShape(Rectangle())
         }
