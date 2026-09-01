@@ -65,10 +65,11 @@ private struct Tile: View {
     var filtered: Bool = false
     var onSelect: ((String) -> Void)?
 
+    @Environment(Household.self) private var household
     @Environment(\.palette) private var palette
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var pop: CGFloat = 1
-    @State private var appeared = false
+    @State private var celebrations = 0
 
     private var highlighted: Bool { filtered && on }
     private var dimmed: Bool { !on }
@@ -118,7 +119,7 @@ private struct Tile: View {
                         .animation(Motion.short, value: tally.done)
                         .animation(Motion.short, value: tally.total)
                 }
-                Track(fraction: tally.fraction, complete: tally.complete,
+                Track(fraction: tally.fraction, complete: tally.complete, celebrate: celebrations,
                       color: Color(hex: person.color))
             }
         }
@@ -136,27 +137,31 @@ private struct Tile: View {
         .animation(Motion.calm, value: tally.complete)
         .animation(Motion.short, value: on)
         .animation(Motion.short, value: filtered)
-        .onChange(of: tally.complete) { _, fresh in
-            guard appeared, fresh else { return }
+        // Alleen bij het vinkje dat de balk vol maakt — niet als hij al vol
+        // binnenkomt bij laden, herladen of een bladzijde die terugkomt.
+        .onChange(of: household.lastTick) { _, tick in
+            guard let tick, tick.on, tally.complete,
+                  tick.key.hasPrefix(household.routine.rawValue + "/"),
+                  tick.key.hasSuffix("/" + person.id) else { return }
+            celebrations += 1
             Haptics.done()
             guard !reduceMotion else { return }
             withAnimation(Motion.dent) { pop = 0.90 }
             withAnimation(Motion.pop.delay(0.08)) { pop = 1.20 }
             withAnimation(Motion.settle.delay(0.30)) { pop = 1 }
         }
-        .onAppear { appeared = true }
     }
 }
 
 private struct Track: View {
     let fraction: Double
     let complete: Bool
+    let celebrate: Int
     let color: Color
     @Environment(\.palette) private var palette
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var sheen = 0
-    @State private var appeared = false
 
     var body: some View {
         GeometryReader { space in
@@ -177,14 +182,12 @@ private struct Track: View {
         }
         .frame(height: 7)
         .accessibilityHidden(true)
-        .onChange(of: complete) { _, fresh in
-            guard appeared, fresh else { return }
+        .onChange(of: celebrate) {
             Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(180))
                 sheen &+= 1
             }
         }
-        .onAppear { appeared = true }
     }
 }
 

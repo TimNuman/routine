@@ -19,6 +19,13 @@ enum Script {
             case "instellingen": household.go(.settings)
             case "ochtend": household.setRoutine(.day)
             case "avond": household.setRoutine(.night)
+            // Het eerste vinkje van het eerste kind, zoals een tik op de ring.
+            case "vink":
+                if let content = household.content, let person = content.people.first,
+                   let step = content[household.routine].first?.steps.first {
+                    household.toggle(checkKey(household.routine, step.key, person.id))
+                }
+            case "herlaad": await household.reload()
             default: break
             }
         }

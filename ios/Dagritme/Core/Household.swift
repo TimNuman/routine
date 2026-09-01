@@ -7,6 +7,15 @@ enum Tab: Hashable, CaseIterable {
     case settings
 }
 
+/// Eén vinkje dat écht gezet of weggehaald is — door een tik hier, of door
+/// een tik op een ander toestel. Niet wat er bij laden of herverbinden
+/// binnenkomt: daar viert niemand iets om.
+struct Tick: Equatable {
+    var key: String
+    var on: Bool
+    var n: Int
+}
+
 @MainActor
 @Observable
 final class Household {
@@ -18,6 +27,8 @@ final class Household {
     var sheetOpen = false
     var hidden: Set<String> = []
     var now = Date()
+    /// Het laatste vinkje dat iemand zette; de voortgangsbalk viert alleen daarop.
+    var lastTick: Tick?
 
     var date: String { dateString(now) }
 
@@ -87,6 +98,7 @@ final class Household {
     func toggle(_ key: String) {
         let on = checks[key] != true
         set(key, on)
+        lastTick = Tick(key: key, on: on, n: (lastTick?.n ?? 0) + 1)
         let day = date
         Task {
             do {
@@ -139,6 +151,7 @@ final class Household {
                 }
             case let .check(_, key, on):
                 self.set(key, on)
+                self.lastTick = Tick(key: key, on: on, n: (self.lastTick?.n ?? 0) + 1)
             case let .routine(_, which):
                 self.checks = self.checks.filter { !$0.key.hasPrefix(which.rawValue + "/") }
             }

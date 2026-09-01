@@ -227,7 +227,9 @@ TEST_RUNNER_DRIVER_SCRIPT="wait 4, week, wait 0.15, instellingen, wait 2, ritme,
 xcodebuild test ...
 ```
 
-De stappen zijn `wait <s>`, `ritme`, `week`, `instellingen`, `ochtend` en `avond`.
+De stappen zijn `wait <s>`, `ritme`, `week`, `instellingen`, `ochtend`, `avond`,
+`vink` (het eerste vinkje van het eerste kind omzetten — let op, dat schrijft naar
+het echte huis) en `herlaad` (alsof de app wakker wordt).
 In een plan kunnen ook `home` (naar het beginscherm) en `activate` (terug naar de
 app) staan, om slapen en wakker worden na te spelen.
 Neem het op met `xcrun simctl io <simulator> recordVideo` en trek er beelden uit;
