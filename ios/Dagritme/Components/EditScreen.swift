@@ -321,6 +321,8 @@ struct EditScreen: View {
         .padding(.bottom, 10)
         .padding(.horizontal, 20)
         .landingGlow(landing == ObjectIdentifier(group))
+        // De bovenste kop staat vast: alles begint bij de eerste groep.
+        .moveDisabled(first)
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) { removeGroup(group) } label: {
                 Image(systemName: "trash")
