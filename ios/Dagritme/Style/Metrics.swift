@@ -11,8 +11,8 @@ struct Metrics {
     var columnGap: CGFloat { 26 }
     var indent: CGFloat { 16 }
     var gutter: CGFloat { tight ? 16 : wide ? 26 : 22 }
-    // Een klein beetje lucht boven de paginakop.
-    var topPad: CGFloat { 8 }
+    // Vlak onder de statusbalk.
+    var topPad: CGFloat { 2 }
     /// De kop begint op één lijn met de klok in de statusbalk (51 pt).
     var headIndent: CGFloat { 27 }
     var bottomPad: CGFloat { wide ? 40 : 120 }
