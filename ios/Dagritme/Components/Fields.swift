@@ -111,6 +111,19 @@ struct Field: View {
     }
 }
 
+private struct ChipTightKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    /// In een rij gelijke chips is er weinig ruimte: smalle randen, en een
+    /// woord dat net niet past krimpt iets in plaats van dat het "…" wordt.
+    var chipTight: Bool {
+        get { self[ChipTightKey.self] }
+        set { self[ChipTightKey.self] = newValue }
+    }
+}
+
 struct Chips<Inner: View>: View {
     var equal: Bool = false
     @ViewBuilder var content: () -> Inner
@@ -120,6 +133,7 @@ struct Chips<Inner: View>: View {
             Group {
                 if equal {
                     HStack(spacing: 6) { content() }
+                        .environment(\.chipTight, true)
                 } else {
                     Flow(gap: 6, rowGap: 6) { content() }
                 }
@@ -139,15 +153,17 @@ struct Chip: View {
     let onTap: () -> Void
 
     @Environment(\.palette) private var palette
+    @Environment(\.chipTight) private var tight
 
     var body: some View {
         Button(action: onTap) {
             Text(label)
                 .textStyle(Fonts.chip)
                 .lineLimit(1)
+                .minimumScaleFactor(tight ? 0.8 : 1)
                 .foregroundStyle(textColor)
                 .padding(.vertical, 9)
-                .padding(.horizontal, 14)
+                .padding(.horizontal, tight ? 3 : 14)
                 .frame(maxWidth: .infinity)
                 .background(RoundedRectangle(cornerRadius: 15, style: .continuous).fill(fill))
                 .overlay(RoundedRectangle(cornerRadius: 15, style: .continuous)

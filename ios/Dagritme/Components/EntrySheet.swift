@@ -100,9 +100,20 @@ struct EntrySheet: View {
             }
         } else {
             FormHead(String(localized: "Op welke dag"))
+            // De compacte DatePicker laat zijn letter niet kiezen; hij ligt er
+            // onzichtbaar onder voor de tik en de kalender, en de app tekent
+            // er zijn eigen knop overheen.
             DatePicker("Datum", selection: dateBinding, displayedComponents: [.date])
                 .datePickerStyle(.compact)
                 .labelsHidden()
+                .opacity(0.02)
+                .overlay {
+                    Chip(label: dateBinding.wrappedValue
+                        .formatted(.dateTime.day().month(.abbreviated).year()
+                            .locale(.autoupdatingCurrent)),
+                         on: true) {}
+                        .allowsHitTesting(false)
+                }
                 .accessibilityLabel(Spoken.date)
                 .padding(.leading, 4)
         }
