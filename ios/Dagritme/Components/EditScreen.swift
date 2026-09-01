@@ -176,6 +176,7 @@ struct EditScreen: View {
                     draft.people.move(fromOffsets: from, toOffset: to)
                     refresh()
                 }
+                .plainRow()
 
                 AddRow(String(localized: "Kind toevoegen")) {
                     childSheet = ChildState(
@@ -185,7 +186,7 @@ struct EditScreen: View {
                                          traits: [:])
                     )
                 }
-                .listRowInsets(EdgeInsets())
+                .plainRow()
             }
             .listRowBackground(rowBackground)
         }
@@ -279,6 +280,7 @@ struct EditScreen: View {
                     .onMove { from, to in
                         moveStep(group, fixed, from, to)
                     }
+                    .plainRow()
 
                     if oneOffs > 0 {
                         CardNote(String(localized:
@@ -294,7 +296,7 @@ struct EditScreen: View {
                             entry.group = group.name.trimmingCharacters(in: .whitespacesAndNewlines)
                         }
                     }
-                    .listRowInsets(EdgeInsets())
+                    .plainRow()
                     .moveDisabled(true)
                 }
                 .listRowBackground(rowBackground)
@@ -373,6 +375,7 @@ struct EditScreen: View {
                     draft.week.move(fromOffsets: from, toOffset: to)
                     refresh()
                 }
+                .plainRow()
 
                 AddRow(String(localized: "Item toevoegen")) {
                     openEntry(String(localized: "Nieuw item"), nil) { entry in
@@ -381,7 +384,7 @@ struct EditScreen: View {
                         entry.task = false
                     }
                 }
-                .listRowInsets(EdgeInsets())
+                .plainRow()
                 .moveDisabled(true)
             }
             .listRowBackground(rowBackground)
@@ -426,6 +429,7 @@ struct EditScreen: View {
                                 refresh()
                             } label: { Label("Weg", systemImage: "trash") }
                         }
+                        .plainRow()
                     }
                 }
                 .listRowBackground(rowBackground)
@@ -523,6 +527,16 @@ private struct CardNote: View {
     }
 }
 
+private extension View {
+    /// Rijen zonder eigen lijstinzet, met één nette scheidslijn die op de
+    /// binnenrand van de kaart begint.
+    func plainRow() -> some View {
+        listRowInsets(EdgeInsets())
+            .listRowSeparatorTint(Palette(dark: false).line)
+            .alignmentGuide(.listRowSeparatorLeading) { _ in 12 }
+    }
+}
+
 private struct ChildRow: View {
     let person: DraftPerson
     let onOpen: () -> Void
@@ -542,8 +556,9 @@ private struct ChildRow: View {
                 }
                 Spacer(minLength: 0)
             }
-            .padding(.vertical, 8)
-            .frame(minHeight: 58)
+            .padding(.vertical, 6)
+            .padding(.horizontal, 12)
+            .frame(minHeight: 48)
             .contentShape(Rectangle())
         }
         .buttonStyle(.press)

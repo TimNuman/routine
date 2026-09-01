@@ -246,21 +246,18 @@ struct AddRow: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            HairLine()
-            Button(action: onTap) {
-                HStack(spacing: 10) {
-                    Bullet().accessibilityHidden(true)
-                    Text(title).textStyle(Fonts.add).foregroundStyle(palette.muted)
-                    Spacer(minLength: 0)
-                }
-                .padding(.vertical, 11)
-                .padding(.horizontal, 12)
-                .contentShape(Rectangle())
+        Button(action: onTap) {
+            HStack(spacing: 10) {
+                Bullet().accessibilityHidden(true)
+                Text(title).textStyle(Fonts.add).foregroundStyle(palette.muted)
+                Spacer(minLength: 0)
             }
-            .buttonStyle(.press)
-            .accessibilityLabel(title)
+            .padding(.vertical, 6)
+            .padding(.horizontal, 12)
+            .frame(minHeight: 48)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.press)
     }
 }
 
@@ -303,8 +300,8 @@ struct EditRow: View {
         }
         .buttonStyle(.press)
         .accessibilityElement(children: .combine)
-        .padding(.vertical, 8)
-        .frame(minHeight: 58)
+        .padding(.horizontal, 12)
+        .frame(minHeight: 48)
     }
 
     @ViewBuilder
