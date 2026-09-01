@@ -15,7 +15,6 @@ private struct Plan {
 
 struct RoutineScreen: View {
     @Environment(Household.self) private var household
-    @Environment(Camera.self) private var camera
     @Environment(\.metrics) private var m
     @Environment(\.palette) private var palette
 
@@ -39,7 +38,7 @@ struct RoutineScreen: View {
 
     private func plan(_ r: Routine, _ content: Content?, _ today: Today) -> Plan {
         var out = Plan()
-        guard let content, mounted(r) else { return out }
+        guard let content else { return out }
 
         out.blocks = routineBlocks(content, r, household.now)
             .map { block in
@@ -106,7 +105,7 @@ struct RoutineScreen: View {
                 for person in participants(step, content.people) {
                     guard out[person.id] != nil else { continue }
                     out[person.id]?.total += 1
-                    if household.checks[checkKey(camera.routine, step.key, person.id)] == true {
+                    if household.checks[checkKey(household.routine, step.key, person.id)] == true {
                         out[person.id]?.done += 1
                     }
                 }
@@ -134,50 +133,42 @@ struct RoutineScreen: View {
     private func select(_ fresh: Routine) {
         guard fresh != household.routine else { return }
         Haptics.select()
-        withAnimation(Motion.slide) { household.setRoutine(fresh) }
+        withAnimation(Motion.glide) { household.setRoutine(fresh) }
     }
 
-    // De panelen staan er ook zonder inhoud, zodat een kolom die de camera
-    // net heeft laten bouwen zich altijd kan melden.
     @ViewBuilder
     private var pages: some View {
         let content = household.content
-        let today = Today(household.now)
-        let day = plan(.day, content, today)
-        let night = plan(.night, content, today)
-        let here = camera.routine == .night ? night : day
+        let here = plan(household.routine, content, Today(household.now))
         let withSide = m.wide && !here.blocks.isEmpty
 
         if m.wide {
             HStack(alignment: .top, spacing: m.columnGap) {
                 VStack(alignment: .leading, spacing: 0) {
-                    columns(content, here, day, night)
+                    columns(content, here)
                 }
                 .padding(.top, withSide ? 31 : 0)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 if withSide, let content {
                     ZStack(alignment: .topLeading) {
-                        if mounted(.day) { sidePane(.day, content, day) }
-                        if mounted(.night) { sidePane(.night, content, night) }
+                        switch household.routine {
+                        case .day: sidePane(.day, content, here)
+                        case .night: sidePane(.night, content, here)
+                        }
                     }
-                    .strip(eye: camera.routines.eye, span: m.width + 60)
                     .frame(width: m.sideColumn)
                 }
             }
         } else {
             VStack(alignment: .leading, spacing: 0) {
-                columns(content, here, day, night)
+                columns(content, here)
             }
         }
     }
 
-    private func mounted(_ r: Routine) -> Bool {
-        camera.routines.mounted.contains(r)
-    }
-
     @ViewBuilder
-    private func columns(_ content: Content?, _ here: Plan, _ day: Plan, _ night: Plan) -> some View {
+    private func columns(_ content: Content?, _ here: Plan) -> some View {
         if let content {
             ProgressBars(people: content.people, tallies: tallies(content, here.all),
                          topPad: m.wide ? 0 : 14,
@@ -186,43 +177,36 @@ struct RoutineScreen: View {
         }
 
         ZStack(alignment: .topLeading) {
-            if mounted(.day) { pane(.day, content, day) }
-            if mounted(.night) { pane(.night, content, night) }
+            switch household.routine {
+            case .day: pane(.day, content, here)
+            case .night: pane(.night, content, here)
+            }
         }
-        .strip(eye: camera.routines.eye, span: m.width + 60)
-        .frame(height: heights[camera.routine], alignment: .top)
+        .frame(height: heights[household.routine], alignment: .top)
     }
 
     private func pane(_ r: Routine, _ content: Content?, _ plan: Plan) -> some View {
-        let here = camera.routine == r
-        return VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
             if let content { column(r, content, plan) }
         }
-        .placed(at: camera.routines.position(of: r), span: m.width + 60)
-        .environment(\.entranceOn, !camera.routines.fresh.contains(r))
         .onGeometryChange(for: CGFloat.self, of: { $0.size.height },
                           action: { heights[r] = $0 })
-        .zIndex(here ? 1 : 0)
-        .allowsHitTesting(here)
-        .accessibilityHidden(!here)
-        .transition(.identity)
-        .task { camera.arrived(r) }
+        .transition(slide(r))
     }
 
     private func sidePane(_ r: Routine, _ content: Content, _ plan: Plan) -> some View {
-        let here = camera.routine == r
-        return VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
             ForEach(Array(plan.blocks.enumerated()), id: \.element.id) { (i, block) in
                 Agenda(block: block, people: content.people, side: true, first: i == 0,
                        slot: plan.sideStarts[i])
             }
         }
-        .placed(at: camera.routines.position(of: r), span: m.width + 60)
-        .environment(\.entranceOn, !camera.routines.fresh.contains(r))
-        .zIndex(here ? 1 : 0)
-        .allowsHitTesting(here)
-        .accessibilityHidden(!here)
-        .transition(.identity)
+        .transition(slide(r))
+    }
+
+    /// De ochtend ligt links van de avond: hij komt van links en gaat naar links.
+    private func slide(_ r: Routine) -> AnyTransition {
+        .offset(x: (r == .day ? -1 : 1) * (m.width + 60))
     }
 
     @ViewBuilder

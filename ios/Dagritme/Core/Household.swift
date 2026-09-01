@@ -7,6 +7,11 @@ enum Tab: Hashable, CaseIterable {
     case settings
 }
 
+struct Move: Equatable {
+    var tab: Tab
+    var routine: Routine
+}
+
 @MainActor
 @Observable
 final class Household {
@@ -15,6 +20,11 @@ final class Household {
     var checks: Checks = [:]
     var routine: Routine = .day
     var tab: Tab = .routine
+    /// Welke kant de laatste tabwissel op ging: 1 naar rechts, -1 naar links.
+    var direction = 1
+    /// De gevraagde wissel; het scherm voert hem een beeld later uit, zodat de
+    /// bladzijde die weggaat de richting al kent.
+    var pending: Move?
     var sheetOpen = false
     var hidden: Set<String> = []
     var now = Date()
