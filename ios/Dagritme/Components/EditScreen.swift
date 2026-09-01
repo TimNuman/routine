@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 enum EditKind: String, Identifiable {
     case children, day, night, week, oneOff, general
@@ -43,7 +44,9 @@ struct EditScreen: View {
     @State private var routine: Routine
     @State private var sheet: SheetState?
     @State private var childSheet: ChildState?
-    @State private var reordering = false
+    @State private var draggedChild: DraftPerson?
+    @State private var draggedStep: DraftStep?
+    @State private var draggedWeek: DraftWeekItem?
 
     init(kind: EditKind, content: Content, onCancel: @escaping () -> Void,
          onSave: @escaping (Draft) async -> String?) {
@@ -161,20 +164,23 @@ struct EditScreen: View {
 
     @ViewBuilder
     private var childrenList: some View {
-        ReorderButton(on: $reordering)
         List {
             Section {
                 ForEach(draft.people) { person in
                     ChildRow(person: person, onOpen: { openChild(person) })
                         .swipeActions(edge: .trailing) {
                             Button(role: .destructive) { removeChild(person) } label: {
-                                Label("Weg", systemImage: "trash")
+                                Image(systemName: "trash")
                             }
+                            .tint(RED)
+                        }
+                        .onDrag {
+                            draggedChild = person
+                            return NSItemProvider(object: person.name as NSString)
                         }
                 }
-                .onMove { from, to in
-                    draft.people.move(fromOffsets: from, toOffset: to)
-                    refresh()
+                .onInsert(of: [.utf8PlainText, .plainText, .text]) { index, _ in
+                    dropChild(index)
                 }
                 .plainRow()
 
@@ -192,7 +198,6 @@ struct EditScreen: View {
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
-        .environment(\.editMode, .constant(reordering ? .active : .inactive))
     }
 
     private var rowBackground: some View {
@@ -233,7 +238,6 @@ struct EditScreen: View {
 
     @ViewBuilder
     private var routineList: some View {
-        ReorderButton(on: $reordering)
         List {
             Section {
                 Segment(routine: routine, onSelect: { routine = $0 }, topPad: 0)
@@ -253,8 +257,9 @@ struct EditScreen: View {
                     .padding(.vertical, 4)
                     .swipeActions(edge: .trailing) {
                         Button(role: .destructive) { removeGroup(group) } label: {
-                            Label("Weg", systemImage: "trash")
+                            Image(systemName: "trash")
                         }
+                        .tint(RED)
                     }
                     .moveDisabled(true)
 
@@ -274,11 +279,16 @@ struct EditScreen: View {
                             Button(role: .destructive) {
                                 group.steps.removeAll { $0 === step }
                                 refresh()
-                            } label: { Label("Weg", systemImage: "trash") }
+                            } label: { Image(systemName: "trash") }
+                            .tint(RED)
+                        }
+                        .onDrag {
+                            draggedStep = step
+                            return NSItemProvider(object: step.label as NSString)
                         }
                     }
-                    .onMove { from, to in
-                        moveStep(group, fixed, from, to)
+                    .onInsert(of: [.utf8PlainText, .plainText, .text]) { index, _ in
+                        dropStep(index, into: group)
                     }
                     .plainRow()
 
@@ -314,7 +324,6 @@ struct EditScreen: View {
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
-        .environment(\.editMode, .constant(reordering ? .active : .inactive))
     }
 
     private func removeGroup(_ group: DraftGroup) {
@@ -327,26 +336,53 @@ struct EditScreen: View {
         refresh()
     }
 
-    private func moveStep(_ group: DraftGroup, _ fixed: [DraftStep], _ from: IndexSet, _ to: Int) {
-        guard let source = from.first, fixed.indices.contains(source) else { return }
-        let step = fixed[source]
-        guard let a = group.steps.firstIndex(where: { $0 === step }) else { return }
-        let target: Int
-        if to >= fixed.count {
-            target = group.steps.count
-        } else if let b = group.steps.firstIndex(where: { $0 === fixed[to] }) {
-            target = b
+    // Vastpakken en slepen: binnen een groep, of naar een andere groep.
+    private func dropStep(_ index: Int, into group: DraftGroup) {
+        guard let step = draggedStep else { return }
+        draggedStep = nil
+        let fixed = group.steps.filter { $0.date.isEmpty }
+        let ref = index < fixed.count ? fixed[index] : nil
+        guard ref !== step else { return }
+        for g in draft[routine] { g.steps.removeAll { $0 === step } }
+        if let ref, let at = group.steps.firstIndex(where: { $0 === ref }) {
+            group.steps.insert(step, at: at)
         } else {
-            return
+            group.steps.append(step)
         }
-        let moved = group.steps.remove(at: a)
-        group.steps.insert(moved, at: min(max(0, a < target ? target - 1 : target), group.steps.count))
         refresh()
     }
 
+    private func dropChild(_ index: Int) {
+        guard let person = draggedChild else { return }
+        draggedChild = nil
+        let ref = index < draft.people.count ? draft.people[index] : nil
+        guard ref !== person else { return }
+        draft.people.removeAll { $0 === person }
+        if let ref, let at = draft.people.firstIndex(where: { $0 === ref }) {
+            draft.people.insert(person, at: at)
+        } else {
+            draft.people.append(person)
+        }
+        refresh()
+    }
+
+    private func dropWeek(_ index: Int) {
+        guard let item = draggedWeek else { return }
+        draggedWeek = nil
+        let ref = index < draft.week.count ? draft.week[index] : nil
+        guard ref !== item else { return }
+        draft.week.removeAll { $0 === item }
+        if let ref, let at = draft.week.firstIndex(where: { $0 === ref }) {
+            draft.week.insert(item, at: at)
+        } else {
+            draft.week.append(item)
+        }
+        refresh()
+    }
+
+
     @ViewBuilder
     private var weekList: some View {
-        ReorderButton(on: $reordering)
         List {
             Section {
                 ForEach(draft.week) { item in
@@ -368,12 +404,16 @@ struct EditScreen: View {
                         Button(role: .destructive) {
                             draft.week.removeAll { $0 === item }
                             refresh()
-                        } label: { Label("Weg", systemImage: "trash") }
+                        } label: { Image(systemName: "trash") }
+                        .tint(RED)
+                    }
+                    .onDrag {
+                        draggedWeek = item
+                        return NSItemProvider(object: item.text as NSString)
                     }
                 }
-                .onMove { from, to in
-                    draft.week.move(fromOffsets: from, toOffset: to)
-                    refresh()
+                .onInsert(of: [.utf8PlainText, .plainText, .text]) { index, _ in
+                    dropWeek(index)
                 }
                 .plainRow()
 
@@ -391,7 +431,6 @@ struct EditScreen: View {
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
-        .environment(\.editMode, .constant(reordering ? .active : .inactive))
     }
 
     @ViewBuilder
@@ -427,7 +466,8 @@ struct EditScreen: View {
                             Button(role: .destructive) {
                                 removeEntry(draft, row.place)
                                 refresh()
-                            } label: { Label("Weg", systemImage: "trash") }
+                            } label: { Image(systemName: "trash") }
+                            .tint(RED)
                         }
                         .plainRow()
                     }
@@ -546,7 +586,10 @@ private struct ChildRow: View {
     var body: some View {
         Button(action: onOpen) {
             HStack(spacing: 10) {
-                EmojiButton(value: person.emoji.isEmpty ? "🙂" : person.emoji, onTap: onOpen)
+                Text(person.emoji.isEmpty ? "🙂" : person.emoji)
+                    .font(.system(size: 24))
+                    .frame(width: 32, height: 32)
+                    .accessibilityHidden(true)
                 Text(person.name.isEmpty ? "Naamloos" : person.name)
                     .textStyle(Fonts.rowLabel)
                     .foregroundStyle(person.name.isEmpty ? palette.muted : palette.ink)
@@ -565,27 +608,3 @@ private struct ChildRow: View {
     }
 }
 
-private struct ReorderButton: View {
-    @Binding var on: Bool
-
-    var body: some View {
-        HStack {
-            Spacer(minLength: 0)
-            Button {
-                Haptics.select()
-                withAnimation(Motion.spring) { on.toggle() }
-            } label: {
-                Text(on ? "klaar" : "volgorde")
-                    .textStyle(Fonts.pill)
-                    .foregroundStyle(ORANGE)
-                    .padding(.vertical, 6)
-                    .padding(.horizontal, 14)
-                    .background(Capsule().fill(ORANGE.opacity(on ? 0.22 : 0.12)))
-                    .overlay(Capsule().strokeBorder(ORANGE.opacity(0.30), lineWidth: 1))
-            }
-            .buttonStyle(.press(0.94))
-        }
-        .padding(.horizontal, 22)
-        .padding(.bottom, 6)
-    }
-}

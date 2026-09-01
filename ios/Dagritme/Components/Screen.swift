@@ -52,7 +52,7 @@ struct Screen<Inner: View>: View {
             Text(title).textStyle(Fonts.title).foregroundStyle(palette.ink)
             HStack(spacing: 10) {
                 Text(subtitle).textStyle(Fonts.subtitle).foregroundStyle(palette.subtle)
-                if let trailing { trailing }
+                if let trailing { trailing.frame(height: 20) }
                 Spacer(minLength: 0)
             }
         }

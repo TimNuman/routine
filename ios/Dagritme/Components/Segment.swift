@@ -8,11 +8,11 @@ struct Segment: View {
     @Environment(\.palette) private var palette
 
     var body: some View {
-        Glass(radius: 19) {
+        Glass(radius: 25) {
             GeometryReader { space in
                 let width = space.size.width
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 15, style: .continuous)
+                    Capsule()
                         .fill(palette.dark ? Color.white.opacity(0.92) : .white)
                         .frame(width: width / 2, height: 42)
                         .shadow(color: .black.opacity(0.10), radius: 5, x: 0, y: 3)

@@ -26,7 +26,7 @@ let EMOJI_GROUPS: [(name: String, glyphs: [String])] = [
     ]),
     (name: String(localized: "Dingen"), glyphs: [
         "⭐", "❤️", "📅", "🏫", "🏠", "🎁", "🎈", "🎉", "📷", "🎵", "☀️", "🌈", "❄️", "🌸", "🔔", "⏳",
-        "📌", "✅", "🏆", "💧", "🔥", "🌟", "🚌", "✏️"
+        "📌", "✅", "🏆", "💧", "🔥", "🌟", "🚌", "✏️", "💻", "📱", "🖥️", "📺"
     ]),
 ]
 
@@ -75,6 +75,8 @@ let EMOJI_KEYWORDS: [(glyph: String, words: [String])] = [
     ("🪟", ["gordijn", "gordijnen", "raam", "curtain", "window"]),
     ("🔌", ["opladen", "oplader", "charge"]),
     ("📱", ["telefoon", "ipad", "tablet", "phone", "schermtijd", "screen"]),
+    ("💻", ["laptop", "computer"]),
+    ("🖥️", ["desktop", "pc"]),
     ("📺", ["tv", "televisie", "kijken", "film", "watch", "movie"]),
     ("🎮", ["gamen", "game", "nintendo", "switch", "playstation"]),
     ("🍽️", ["eten", "avondeten", "diner", "dinner", "eat", "maaltijd"]),

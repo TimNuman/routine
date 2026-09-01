@@ -933,9 +933,6 @@
         }
       }
     },
-    "klaar" : {
-
-    },
     "Kleur" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1023,6 +1020,9 @@
           }
         }
       }
+    },
+    "naar vandaag" : {
+
     },
     "Niets gevonden" : {
       "extractionState" : "manual",
@@ -1420,9 +1420,6 @@
           }
         }
       }
-    },
-    "volgorde" : {
-
     },
     "Voor wie" : {
       "extractionState" : "manual",

@@ -161,26 +161,33 @@ struct FullSheet<Inner: View>: View {
                 .padding(.bottom, 18)
                 .frame(maxWidth: 496 + 44)
 
-                if ownScroll {
-                    VStack(alignment: .leading, spacing: 0) {
-                        if !alert.isEmpty {
-                            AlertBox(alert).padding(.horizontal, 22)
-                        }
-                        content()
-                    }
-                    .frame(maxWidth: 520 + 44)
-                    .frame(maxWidth: .infinity)
-                } else {
-                    ScrollView {
+                Group {
+                    if ownScroll {
                         VStack(alignment: .leading, spacing: 0) {
-                            if !alert.isEmpty { AlertBox(alert) }
+                            if !alert.isEmpty {
+                                AlertBox(alert).padding(.horizontal, 22)
+                            }
                             content()
                         }
-                        .padding(.horizontal, 22)
-                        .padding(.bottom, 30)
                         .frame(maxWidth: 520 + 44)
                         .frame(maxWidth: .infinity)
+                    } else {
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 0) {
+                                if !alert.isEmpty { AlertBox(alert) }
+                                content()
+                            }
+                            .padding(.horizontal, 22)
+                            .padding(.bottom, 30)
+                            .frame(maxWidth: 520 + 44)
+                            .frame(maxWidth: .infinity)
+                        }
                     }
+                }
+                // Wat omhoog scrolt lost op voor het onder de kop schuift,
+                // in plaats van hard afgesneden te worden.
+                .overlay(alignment: .top) {
+                    EdgeFade(dark: false).frame(height: 30)
                 }
             }
         }

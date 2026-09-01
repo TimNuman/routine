@@ -212,7 +212,7 @@ private struct TodayButton: View {
 
     var body: some View {
         Button(action: onTap) {
-            Text("vandaag")
+            Text("naar vandaag")
                 .textStyle(Fonts.pill)
                 .foregroundStyle(ORANGE)
                 .padding(.vertical, 5)

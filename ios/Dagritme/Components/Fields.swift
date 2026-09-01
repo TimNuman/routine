@@ -248,7 +248,7 @@ struct AddRow: View {
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 10) {
-                Bullet().accessibilityHidden(true)
+                Bullet().frame(width: 32).accessibilityHidden(true)
                 Text(title).textStyle(Fonts.add).foregroundStyle(palette.muted)
                 Spacer(minLength: 0)
             }
@@ -283,7 +283,7 @@ struct EditRow: View {
             if twoLines {
                 VStack(alignment: .leading, spacing: 3) {
                     HStack(spacing: 10) { iconAndName }
-                    if hasMeta { metaLine.padding(.leading, 52) }
+                    if hasMeta { metaLine.padding(.leading, 42) }
                 }
                 .padding(.vertical, 6)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -306,7 +306,10 @@ struct EditRow: View {
 
     @ViewBuilder
     private var iconAndName: some View {
-        EmojiButton(value: icon, onTap: onOpen)
+        Text(icon)
+            .font(.system(size: 24))
+            .frame(width: 32, height: 32)
+            .accessibilityHidden(true)
         Text(label.isEmpty ? empty : label)
             .textStyle(Fonts.rowLabel)
             .foregroundStyle(label.isEmpty ? palette.muted : palette.ink)
