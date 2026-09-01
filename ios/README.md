@@ -227,6 +227,8 @@ xcodebuild test ...
 ```
 
 De stappen zijn `wait <s>`, `ritme`, `week`, `instellingen`, `ochtend` en `avond`.
+In een plan kunnen ook `home` (naar het beginscherm) en `activate` (terug naar de
+app) staan, om slapen en wakker worden na te spelen.
 Neem het op met `xcrun simctl io <simulator> recordVideo` en trek er beelden uit;
 de opname heeft geen vaste beeldsnelheid, dus zet hem eerst om (`ffmpeg -vf
 fps=30`) voordat je op beeldnummer zoekt.

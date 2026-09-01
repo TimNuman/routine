@@ -13,7 +13,11 @@ struct DagritmeApp: App {
                 .preferredColorScheme(household.evening ? .dark : .light)
         }
         .onChange(of: phase) { _, fresh in
-            if fresh == .active { household.wake() }
+            switch fresh {
+            case .active: household.wake()
+            case .background: household.sleep()
+            default: break
+            }
         }
     }
 }

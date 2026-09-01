@@ -50,8 +50,19 @@ final class Household {
     }
 
     func wake() {
+        if stream == nil { listen() } else { stream?.watch(date) }
+        if clock == nil { tick() }
         Task { await reload() }
-        stream?.watch(date)
+    }
+
+    /// Naar de achtergrond: de stroom dicht en de klok stil. Zo doet de app
+    /// daar niets, en ligt hij straks niet steeds opnieuw te verbinden — elke
+    /// poging haalt de radio uit zijn slaap.
+    func sleep() {
+        stream?.stop()
+        stream = nil
+        clock?.cancel()
+        clock = nil
     }
 
     func toggleChild(_ id: String) {
@@ -112,12 +123,20 @@ final class Household {
         stream = LiveStream(date: date) { [weak self] message in
             guard let self else { return }
             switch message {
+            // Alleen toekennen wat echt anders is: elke herverbinding begint
+            // met een start, en die hoeft het scherm niet opnieuw op te bouwen.
             case let .start(_, fresh, stored):
                 self.error = ""
-                if !fresh.isNull { self.content = normalize(fresh) }
-                self.checks = stored
+                if !fresh.isNull {
+                    let content = normalize(fresh)
+                    if content != self.content { self.content = content }
+                }
+                if stored != self.checks { self.checks = stored }
             case let .content(fresh):
-                if !fresh.isNull { self.content = normalize(fresh) }
+                if !fresh.isNull {
+                    let content = normalize(fresh)
+                    if content != self.content { self.content = content }
+                }
             case let .check(_, key, on):
                 self.set(key, on)
             case let .routine(_, which):

@@ -30,6 +30,10 @@ final class Driver: XCTestCase {
                     withVelocity: .init(number(step["speed"]) ?? 900),
                     thenHoldForDuration: number(step["hold"]) ?? 0
                 )
+            case "home":
+                XCUIDevice.shared.press(.home)
+            case "activate":
+                app.activate()
             case "shot":
                 save(step["name"] as? String ?? "shot")
             default:
