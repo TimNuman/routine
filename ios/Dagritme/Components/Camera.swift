@@ -7,24 +7,34 @@ import Observation
 /// en de bladzijde die komt altijd gelijk, ook als er halverwege wordt getikt.
 ///
 /// In rust staat er één bladzijde in de rij. Bij een tik komt de nieuwe erbij,
-/// buiten beeld; zodra hij er staat (`arrived`) schuift de rij, en even later
-/// (`rest`) gaat de oude er weer uit. Meer dan twee zijn er nooit tegelijk.
+/// buiten beeld; zodra hij er staat (`arrived`) schuift de rij, en als die
+/// tot rust komt (`rest`) gaat alles wat verlaten is er weer uit. Wie tijdens
+/// de schuif nog eens tikt, ziet de rij doorschuiven of omkeren — er verdwijnt
+/// onderweg niets.
 struct Strip<Key: CaseIterable & Hashable> {
     private(set) var current: Key
-    /// Net verlaten, schuift nog naar buiten.
-    private(set) var leaving: Key?
+    /// Verlaten, maar nog in de rij tot die tot rust komt: wat halverwege
+    /// uit de boom gaat, zie je verdwijnen.
+    private(set) var leaving: Set<Key> = []
     /// Net gebouwd, wacht buiten beeld tot hij er staat.
     private(set) var entering: Key?
     /// De plek in de rij die in beeld hoort; de weergave veert erheen.
     private(set) var eye = 0
     private var lane: [Key: Int]
+    /// Welke kant de rij op beweegt, of 0 in rust.
+    private var flow = 0
 
     init(_ current: Key) {
         self.current = current
         lane = [current: 0]
     }
 
-    var mounted: Set<Key> { Set([current, leaving, entering].compactMap { $0 }) }
+    var mounted: Set<Key> {
+        var out = leaving
+        out.insert(current)
+        if let entering { out.insert(entering) }
+        return out
+    }
 
     func position(of key: Key) -> Int { lane[key] ?? eye }
 
@@ -35,16 +45,20 @@ struct Strip<Key: CaseIterable & Hashable> {
             return false
         }
         if target == entering { return false }
-        if target == leaving {
+        if leaving.contains(target) {
             // Hij is nog onderweg naar buiten: draai de rij om.
             entering = nil
             turn(to: target)
             return true
         }
-        // Wat nog naar buiten schoof is nu weg; er schuiven er nooit twee.
-        leaving = nil
+        // Een nieuwe bladzijde komt aan de kant waar de rij al heen beweegt,
+        // want daar is de plek naast het oog altijd vrij; in rust aan de kant
+        // waar hij in de volgorde hoort.
+        let side = flow != 0 ? flow : (index(target) > index(current) ? 1 : -1)
+        let spot = eye + side
+        for key in leaving where lane[key] == spot { leaving.remove(key) }
         entering = target
-        lane[target] = eye + (index(target) > index(current) ? 1 : -1)
+        lane[target] = spot
         return false
     }
 
@@ -57,14 +71,18 @@ struct Strip<Key: CaseIterable & Hashable> {
     }
 
     mutating func rest() {
-        leaving = nil
+        leaving = []
+        flow = 0
         lane = lane.filter { mounted.contains($0.key) }
     }
 
     private mutating func turn(to key: Key) {
-        leaving = current
+        leaving.insert(current)
+        leaving.remove(key)
         current = key
-        eye = lane[key] ?? eye
+        let to = lane[key] ?? eye
+        if to != eye { flow = to > eye ? 1 : -1 }
+        eye = to
     }
 
     private func index(_ key: Key) -> Int {
