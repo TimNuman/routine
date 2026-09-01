@@ -104,7 +104,7 @@ struct RootScreen: View {
             ZStack(alignment: .bottom) {
                 Sky(dark: household.evening)
 
-                TabPages(tab: household.tab)
+                TabPages()
 
                 if !m.wide {
                     TabBar(wide: false)
@@ -126,33 +126,42 @@ struct RootScreen: View {
 }
 
 private struct TabPages: View {
-    let tab: Tab
-
     @Environment(Household.self) private var household
+    @State private var camera = Camera()
 
     var body: some View {
         ZStack {
-            page(.routine) { RoutineScreen() }
-            page(.week) { WeekScreen() }
-            page(.settings) { SettingsScreen() }
+            if !camera.mounted.isDisjoint(with: [0, 1]) {
+                page(.routine) { RoutineScreen() }
+            }
+            if camera.mounted.contains(2) {
+                page(.week) { WeekScreen() }
+            }
+            if camera.mounted.contains(3) {
+                page(.settings) { SettingsScreen() }
+            }
+        }
+        .environment(camera)
+        .onChange(of: columnOf(household.tab, household.routine), initial: true) {
+            camera.look(at: household.tab, household.routine)
         }
     }
 
     private func page(_ which: Tab, @ViewBuilder _ screen: () -> some View) -> some View {
-        let here = tab == which
+        let here = camera.tab == which
+        let column = columnOf(which, camera.routine)
+        // Het ritme-scherm meldt zich per kolom, vanuit zijn eigen panelen.
+        let entrance = which == .routine
+            ? camera.entering.isDisjoint(with: [0, 1])
+            : !camera.entering.contains(column)
         return screen()
-            .environment(\.tabOffset, column(which) - column(tab))
+            .environment(\.tabOffset, CGFloat(column - camera.column))
+            .environment(\.entranceOn, entrance)
             .zIndex(here ? 1 : 0)
             .allowsHitTesting(here)
             .accessibilityHidden(!here)
-    }
-
-    private func column(_ which: Tab) -> CGFloat {
-        switch which {
-        case .routine: return household.routine == .night ? 1 : 0
-        case .week: return 2
-        case .settings: return 3
-        }
+            .transition(.identity)
+            .onAppear { if which != .routine { camera.arrived(column) } }
     }
 }
 

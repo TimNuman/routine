@@ -15,6 +15,7 @@ private struct Plan {
 
 struct RoutineScreen: View {
     @Environment(Household.self) private var household
+    @Environment(Camera.self) private var camera
     @Environment(\.metrics) private var m
     @Environment(\.palette) private var palette
     @Environment(\.tabOffset) private var tabOffset
@@ -37,8 +38,9 @@ struct RoutineScreen: View {
         return item.who.isEmpty || item.who.contains { visible.contains($0) }
     }
 
-    private func plan(_ r: Routine, _ content: Content, _ today: Today) -> Plan {
+    private func plan(_ r: Routine, _ content: Content?, _ today: Today) -> Plan {
         var out = Plan()
+        guard let content, camera.mounted.contains(columnOf(.routine, r)) else { return out }
 
         out.blocks = routineBlocks(content, r, household.now)
             .map { block in
@@ -105,7 +107,7 @@ struct RoutineScreen: View {
                 for person in participants(step, content.people) {
                     guard out[person.id] != nil else { continue }
                     out[person.id]?.total += 1
-                    if household.checks[checkKey(household.routine, step.key, person.id)] == true {
+                    if household.checks[checkKey(camera.routine, step.key, person.id)] == true {
                         out[person.id]?.done += 1
                     }
                 }
@@ -136,73 +138,89 @@ struct RoutineScreen: View {
         withAnimation(Motion.slide) { household.setRoutine(fresh) }
     }
 
+    // De panelen staan er ook zonder inhoud, zodat een kolom die de camera
+    // net heeft laten bouwen zich altijd kan melden.
     @ViewBuilder
     private var pages: some View {
-        if let content = household.content {
-            let today = Today(household.now)
-            let day = plan(.day, content, today)
-            let night = plan(.night, content, today)
-            let here = household.routine == .night ? night : day
-            let withSide = m.wide && !here.blocks.isEmpty
+        let content = household.content
+        let today = Today(household.now)
+        let day = plan(.day, content, today)
+        let night = plan(.night, content, today)
+        let here = camera.routine == .night ? night : day
+        let withSide = m.wide && !here.blocks.isEmpty
 
-            if m.wide {
-                HStack(alignment: .top, spacing: m.columnGap) {
-                    VStack(alignment: .leading, spacing: 0) {
-                        columns(content, here, day, night)
-                    }
-                    .padding(.top, withSide ? 31 : 0)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                    if withSide {
-                        ZStack(alignment: .topLeading) {
-                            sidePane(.day, content, day)
-                            sidePane(.night, content, night)
-                        }
-                        .frame(width: m.sideColumn)
-                    }
-                }
-            } else {
+        if m.wide {
+            HStack(alignment: .top, spacing: m.columnGap) {
                 VStack(alignment: .leading, spacing: 0) {
                     columns(content, here, day, night)
                 }
+                .padding(.top, withSide ? 31 : 0)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                if withSide, let content {
+                    ZStack(alignment: .topLeading) {
+                        if mounted(.day) { sidePane(.day, content, day) }
+                        if mounted(.night) { sidePane(.night, content, night) }
+                    }
+                    .frame(width: m.sideColumn)
+                }
+            }
+        } else {
+            VStack(alignment: .leading, spacing: 0) {
+                columns(content, here, day, night)
             }
         }
     }
 
-    @ViewBuilder
-    private func columns(_ content: Content, _ here: Plan, _ day: Plan, _ night: Plan) -> some View {
-        ProgressBars(people: content.people, tallies: tallies(content, here.all),
-                     topPad: m.wide ? 0 : 14,
-                     visible: visible, filtered: filtered, onSelect: toggleChild)
-            .shifted(Shift(slot: 1, steps: tabOffset, span: m.width + 60))
-
-        ZStack(alignment: .topLeading) {
-            pane(.day, content, day)
-            pane(.night, content, night)
-        }
-        .frame(height: heights[household.routine], alignment: .top)
+    private func mounted(_ r: Routine) -> Bool {
+        camera.mounted.contains(columnOf(.routine, r))
     }
 
-    private func pane(_ r: Routine, _ content: Content, _ plan: Plan) -> some View {
-        let here = household.routine == r
-        return VStack(alignment: .leading, spacing: 0) { column(r, content, plan) }
-            .onGeometryChange(for: CGFloat.self, of: { $0.size.height },
-                              action: { heights[r] = $0 })
-            .zIndex(here ? 1 : 0)
-            .allowsHitTesting(here)
-            .accessibilityHidden(!here)
+    @ViewBuilder
+    private func columns(_ content: Content?, _ here: Plan, _ day: Plan, _ night: Plan) -> some View {
+        if let content {
+            ProgressBars(people: content.people, tallies: tallies(content, here.all),
+                         topPad: m.wide ? 0 : 14,
+                         visible: visible, filtered: filtered, onSelect: toggleChild)
+                .shifted(Shift(slot: 1, steps: tabOffset, span: m.width + 60))
+        }
+
+        ZStack(alignment: .topLeading) {
+            if mounted(.day) { pane(.day, content, day) }
+            if mounted(.night) { pane(.night, content, night) }
+        }
+        .frame(height: heights[camera.routine], alignment: .top)
+    }
+
+    private func pane(_ r: Routine, _ content: Content?, _ plan: Plan) -> some View {
+        let here = camera.routine == r
+        let col = columnOf(.routine, r)
+        return VStack(alignment: .leading, spacing: 0) {
+            if let content { column(r, content, plan) }
+        }
+        .environment(\.entranceOn, !camera.entering.contains(col))
+        .onGeometryChange(for: CGFloat.self, of: { $0.size.height },
+                          action: { heights[r] = $0 })
+        .zIndex(here ? 1 : 0)
+        .allowsHitTesting(here)
+        .accessibilityHidden(!here)
+        .transition(.identity)
+        .onAppear { camera.arrived(col) }
     }
 
     private func sidePane(_ r: Routine, _ content: Content, _ plan: Plan) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
+        let here = camera.routine == r
+        return VStack(alignment: .leading, spacing: 0) {
             ForEach(Array(plan.blocks.enumerated()), id: \.element.id) { (i, block) in
                 Agenda(block: block, people: content.people, side: true, first: i == 0,
                        shift: shift(r, plan.sideStarts[i]))
             }
         }
-        .zIndex(household.routine == r ? 1 : 0)
-        .allowsHitTesting(household.routine == r)
-        .accessibilityHidden(household.routine != r)
+        .environment(\.entranceOn, !camera.entering.contains(columnOf(.routine, r)))
+        .zIndex(here ? 1 : 0)
+        .allowsHitTesting(here)
+        .accessibilityHidden(!here)
+        .transition(.identity)
     }
 
     @ViewBuilder
@@ -254,8 +272,7 @@ struct RoutineScreen: View {
     }
 
     private func shift(_ r: Routine, _ slot: Int) -> Shift {
-        let routineOffset: CGFloat = household.routine == r ? 0 : (r == .night ? 1 : -1)
-        return Shift(slot: slot, steps: routineOffset + tabOffset, span: m.width + 60)
+        Shift(slot: slot, steps: CGFloat(columnOf(.routine, r) - camera.column), span: m.width + 60)
     }
 }
 

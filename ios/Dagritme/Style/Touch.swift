@@ -42,6 +42,19 @@ enum Haptics {
     static func tap() { light.impactOccurred(intensity: 0.6) }
 }
 
+private struct EntranceOnKey: EnvironmentKey {
+    static let defaultValue = true
+}
+
+extension EnvironmentValues {
+    /// Uit voor een kolom die net gebouwd is om naartoe te schuiven: die komt
+    /// al van opzij en hoeft niet ook nog op te doemen.
+    var entranceOn: Bool {
+        get { self[EntranceOnKey.self] }
+        set { self[EntranceOnKey.self] = newValue }
+    }
+}
+
 struct Entrance: ViewModifier {
     var index: Int = 0
     var from: CGFloat = 0
@@ -49,17 +62,23 @@ struct Entrance: ViewModifier {
     var animation: Animation = Motion.short
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.entranceOn) private var entranceOn
     @State private var shown = false
 
     func body(content: Self.Content) -> some View {
+        let visible = shown || !entranceOn
         content
-            .opacity(shown ? 1 : 0)
-            .scaleEffect(shown || reduceMotion ? 1 : 0.95, anchor: .top)
-            .offset(x: shown || reduceMotion ? 0 : distance * from,
-                    y: shown || reduceMotion ? 0 : (from == 0 ? 12 : 0))
+            .opacity(visible ? 1 : 0)
+            .scaleEffect(visible || reduceMotion ? 1 : 0.95, anchor: .top)
+            .offset(x: visible || reduceMotion ? 0 : distance * from,
+                    y: visible || reduceMotion ? 0 : (from == 0 ? 12 : 0))
             .onAppear {
                 guard !shown else { return }
-                withAnimation(animation.delay(Motion.stagger(index))) { shown = true }
+                if entranceOn {
+                    withAnimation(animation.delay(Motion.stagger(index))) { shown = true }
+                } else {
+                    shown = true
+                }
             }
     }
 }
