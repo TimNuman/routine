@@ -198,6 +198,7 @@ struct EditScreen: View {
             .listRowBackground(rowBackground)
         }
         .listStyle(.insetGrouped)
+        .listSectionSpacing(16)
         .scrollContentBackground(.hidden)
     }
 
@@ -268,7 +269,7 @@ struct EditScreen: View {
         List {
             Section {
                 Segment(routine: routine, onSelect: { routine = $0 }, topPad: 0)
-                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 8, trailing: 0))
+                    .listRowInsets(EdgeInsets())
             }
             .listRowBackground(Color.clear)
 
@@ -306,6 +307,7 @@ struct EditScreen: View {
             .listRowBackground(rowBackground)
         }
         .listStyle(.insetGrouped)
+        .listSectionSpacing(16)
         .scrollContentBackground(.hidden)
     }
 
@@ -477,6 +479,7 @@ struct EditScreen: View {
             .listRowBackground(rowBackground)
         }
         .listStyle(.insetGrouped)
+        .listSectionSpacing(16)
         .scrollContentBackground(.hidden)
     }
 
@@ -535,6 +538,7 @@ struct EditScreen: View {
             .listRowBackground(Color.clear)
         }
         .listStyle(.insetGrouped)
+        .listSectionSpacing(16)
         .scrollContentBackground(.hidden)
     }
 

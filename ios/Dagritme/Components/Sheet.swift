@@ -165,7 +165,7 @@ struct FullSheet<Inner: View>: View {
                     }
                 }
             }
-            .contentMargins(.top, headHeight + 4)
+            .contentMargins(.top, headHeight + 16)
 
             // ...met bij de klok dezelfde zachte overloop als op de
             // gewone schermen; de kop zelf zweeft erboven, en zijn glas
@@ -175,7 +175,7 @@ struct FullSheet<Inner: View>: View {
                 .frame(maxHeight: .infinity, alignment: .top)
                 .ignoresSafeArea()
 
-            Glass(radius: 28, floating: true) {
+            Glass(radius: 26, floating: true) {
                 HStack(spacing: 10) {
                     TextButton(String(localized: "Annuleer"), id: "full.cancel") { onCancel() }
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -191,9 +191,8 @@ struct FullSheet<Inner: View>: View {
                 .padding(.vertical, 14)
                 .padding(.horizontal, 18)
             }
-            .padding(.horizontal, 22)
+            .padding(.horizontal, 20)
             .padding(.top, 18)
-            .padding(.bottom, 18)
             .frame(maxWidth: 496 + 44)
             .onGeometryChange(for: CGFloat.self, of: { $0.size.height },
                               action: { headHeight = $0 })
