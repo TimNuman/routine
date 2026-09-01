@@ -26,6 +26,26 @@ struct EntrySheet: View {
         self.onSave = onSave
         self.onDelete = onDelete
         _entry = State(initialValue: entry)
+        _startIcon = State(initialValue: entry.icon)
+    }
+
+    /// Het icoon waarmee het blad openging, en wat de app er zelf van maakte:
+    /// zolang er niet met de hand gekozen is, kiest hij mee met de naam.
+    @State private var startIcon: String
+    @State private var autoIcon: String?
+    @State private var handPicked = false
+    private static let plainIcons: Set<String> = ["", "📅", "⭐", "📌", "🎉"]
+
+    private func suggestIcon() {
+        guard !handPicked,
+              Self.plainIcons.contains(entry.icon) || entry.icon == autoIcon else { return }
+        if let glyph = suggestEmoji(for: entry.text) {
+            entry.icon = glyph
+            autoIcon = glyph
+        } else if entry.icon == autoIcon {
+            entry.icon = startIcon
+            autoIcon = nil
+        }
     }
 
     var body: some View {
@@ -42,7 +62,7 @@ struct EntrySheet: View {
             if picker {
                 EmojiPicker(title: String(localized: "Kies een icoon"), current: entry.icon,
                             onCancel: { picker = false },
-                            onDone: { glyph in entry.icon = glyph; picker = false })
+                            onDone: { glyph in entry.icon = glyph; handPicked = true; picker = false })
             }
         }
     }
@@ -54,6 +74,7 @@ struct EntrySheet: View {
             EmojiButton(value: entry.icon, size: 52) { picker = true }
             Field(value: $entry.text, placeholder: String(localized: "Wat is er"), id: "entry.text")
         }
+        .onChange(of: entry.text) { suggestIcon() }
     }
 
     @ViewBuilder

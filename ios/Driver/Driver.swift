@@ -30,6 +30,10 @@ final class Driver: XCTestCase {
                     withVelocity: .init(number(step["speed"]) ?? 900),
                     thenHoldForDuration: number(step["hold"]) ?? 0
                 )
+            case "tapId":
+                app.descendants(matching: .any)[step["id"] as? String ?? ""].firstMatch.tap()
+            case "type":
+                app.typeText(step["text"] as? String ?? "")
             case "home":
                 XCUIDevice.shared.press(.home)
             case "activate":
