@@ -30,18 +30,26 @@ final class Camera {
     /// Wat uit beeld is staat precies één breedte opzij, links of rechts;
     /// de kolommen stapelen daar, in plaats van op een rij te staan.
     func offset(of column: Int) -> CGFloat {
-        CGFloat(max(-1, min(1, column - self.column)))
+        Self.side(column, seenFrom: self.column)
     }
 
-    /// Alleen wat in beeld is of onderweg schuift mee; een kolom die in rust
-    /// van de ene stapel naar de andere moet, springt ongezien.
-    func slides(_ column: Int) -> Bool {
-        column == self.column || moving.contains(column)
+    private static func side(_ column: Int, seenFrom eye: Int) -> CGFloat {
+        CGFloat(max(-1, min(1, column - eye)))
     }
 
     func look(at tab: Tab, _ routine: Routine) {
         settle?.cancel()
         let target = columnOf(tab, routine)
+
+        // Een kolom die in rust van de ene stapel naar de andere zou moeten,
+        // gaat even uit de boom: schuiven zou hem dwars over het scherm halen.
+        // Na de schuif zet settle terug wat naast de camera hoort.
+        for c in mounted where c != column && c != target && !moving.contains(c) {
+            if Self.side(c, seenFrom: column) != Self.side(c, seenFrom: target) {
+                mounted.remove(c)
+            }
+        }
+
         if mounted.contains(target) {
             pending = nil
             point(at: tab, routine)

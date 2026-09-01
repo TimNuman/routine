@@ -1,18 +1,5 @@
 import SwiftUI
 
-private struct TabShiftKey: EnvironmentKey {
-    static let defaultValue = Shift(slot: 0, steps: 0, span: 0)
-}
-
-extension EnvironmentValues {
-    /// Waar dit tabblad staat ten opzichte van de camera; de schermen geven
-    /// er per regel een eigen slot aan.
-    var tabShift: Shift {
-        get { self[TabShiftKey.self] }
-        set { self[TabShiftKey.self] = newValue }
-    }
-}
-
 struct Screen<Inner: View>: View {
     let title: String
     let subtitle: String
@@ -24,7 +11,6 @@ struct Screen<Inner: View>: View {
     @Environment(Household.self) private var household
     @Environment(\.metrics) private var m
     @Environment(\.palette) private var palette
-    @Environment(\.tabShift) private var tabShift
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -37,14 +23,14 @@ struct Screen<Inner: View>: View {
                             .tint(ORANGE)
                             .padding(.top, 40)
                             .frame(maxWidth: .infinity)
-                            .shifted(shift(1))
+                            .entrance(1)
                     }
                     if !household.error.isEmpty {
                         Text("De inhoud laden lukte niet (\(household.error)).")
                             .textStyle(TextStyle(font: Fonts.nunitoHeavy(14)))
                             .foregroundStyle(RED)
                             .padding(.top, 32)
-                            .shifted(shift(1))
+                            .entrance(1)
                     }
 
                     content()
@@ -59,8 +45,6 @@ struct Screen<Inner: View>: View {
             .refreshable { await household.reload() }
         }
     }
-
-    private func shift(_ slot: Int) -> Shift { tabShift.at(slot) }
 
     @ViewBuilder
     private var header: some View {
@@ -77,11 +61,11 @@ struct Screen<Inner: View>: View {
         if m.wide {
             HStack(alignment: .center, spacing: 24) {
                 names.frame(maxWidth: .infinity, alignment: .leading)
-                    .shifted(shift(0))
+                    .entrance(0)
                 TabBar(wide: true).frame(width: m.sideColumn)
             }
             .overlay(alignment: .center) {
-                if let center { center.frame(width: 250).shifted(shift(0)) }
+                if let center { center.frame(width: 250).entrance(0) }
             }
             .padding(.bottom, 4)
         } else {
@@ -89,7 +73,7 @@ struct Screen<Inner: View>: View {
                 names
                 if let center { center }
             }
-            .shifted(shift(0))
+            .entrance(0)
         }
     }
 }
@@ -151,13 +135,13 @@ private struct TabPages: View {
     private func page(_ which: Tab, @ViewBuilder _ screen: () -> some View) -> some View {
         let here = camera.tab == which
         let column = columnOf(which, camera.routine)
+        let shift = Shift(steps: camera.offset(of: column), span: m.width + 60)
         // Het ritme-scherm meldt zich per kolom, vanuit zijn eigen panelen.
         let entrance = which == .routine
             ? camera.entering.isDisjoint(with: [0, 1])
             : !camera.entering.contains(column)
         return screen()
-            .environment(\.tabShift, Shift(slot: 0, steps: camera.offset(of: column),
-                                           span: m.width + 60, animated: camera.slides(column)))
+            .shifted(shift)
             .environment(\.entranceOn, entrance)
             .zIndex(here ? 1 : 0)
             .allowsHitTesting(here)

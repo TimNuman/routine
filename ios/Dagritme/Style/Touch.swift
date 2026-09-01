@@ -99,28 +99,21 @@ extension View {
     }
 }
 
+/// Hoe ver een bladzijde opzij staat, in breedtes. Eén veer per bladzijde;
+/// de regels erop bewegen niet los van elkaar.
 struct Shift: Equatable {
-    var slot: Int
     var steps: CGFloat
     var span: CGFloat
-    var animated = true
-
-    func at(_ slot: Int) -> Shift {
-        var out = self
-        out.slot = slot
-        return out
-    }
 }
 
 extension View {
+    func shifted(_ shift: Shift) -> some View {
+        offset(x: shift.steps * shift.span)
+            .animation(Motion.glide, value: shift.steps)
+    }
+
     @ViewBuilder
-    func shifted(_ shift: Shift?, extra: Int = 0) -> some View {
-        if let s = shift {
-            entrance(s.slot + extra)
-                .offset(x: s.steps * s.span)
-                .animation(s.animated ? Motion.glide(s.slot + extra) : nil, value: s.steps)
-        } else {
-            self
-        }
+    func entrance(at slot: Int?, extra: Int = 0) -> some View {
+        if let slot { entrance(slot + extra) } else { self }
     }
 }

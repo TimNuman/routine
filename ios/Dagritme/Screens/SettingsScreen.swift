@@ -4,7 +4,6 @@ struct SettingsScreen: View {
     @Environment(Household.self) private var household
     @Environment(\.palette) private var palette
     @Environment(\.metrics) private var m
-    @Environment(\.tabShift) private var tabShift
 
     @State private var sheet: EditKind?
 
@@ -22,26 +21,26 @@ struct SettingsScreen: View {
                     CardRow(icon: "☀️", title: String(localized: "Ochtendritme"),
                             note: String(localized: "\(stepCount(content.day)) stappen"),
                             id: "settings.day") { sheet = .day }
-                        .shifted(shift(2))
+                        .entrance(2)
                     CardRow(icon: "🌙", title: String(localized: "Avondritme"),
                             note: String(localized: "\(stepCount(content.night)) stappen"),
                             id: "settings.night") { sheet = .night }
-                        .shifted(shift(3))
+                        .entrance(3)
                     CardRow(icon: "📅", title: String(localized: "Weekritme"),
                             note: String(localized: "school, sport en wat er verder is"),
                             id: "settings.week") { sheet = .week }
-                        .shifted(shift(4))
+                        .entrance(4)
                     CardRow(icon: "📌", title: String(localized: "Eenmalig"),
                             note: oneOffText(content),
                             id: "settings.oneOff") { sheet = .oneOff }
-                        .shifted(shift(5))
+                        .entrance(5)
                     CardRow(icon: "⚙️", title: String(localized: "Naam"), note: content.title,
                             id: "settings.general") {
                         sheet = .general
                     }
-                    .shifted(shift(6))
+                    .entrance(6)
                 }
-                .shifted(shift(1))
+                .entrance(1)
             }
 
             Text("testversie")
@@ -50,7 +49,7 @@ struct SettingsScreen: View {
                 .opacity(0.75)
                 .frame(maxWidth: .infinity)
                 .padding(.top, 20)
-                .shifted(shift(7))
+                .entrance(7)
         }
         .fullScreenCover(item: $sheet) { kind in
             if let content = household.content {
@@ -64,7 +63,6 @@ struct SettingsScreen: View {
         }
     }
 
-    private func shift(_ slot: Int) -> Shift { tabShift.at(slot) }
 
     private func oneOffText(_ content: Content) -> String {
         let count = oneOffEntries(content).count

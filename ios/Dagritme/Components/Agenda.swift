@@ -7,7 +7,7 @@ struct Agenda: View {
     var first: Bool = false
     var from: Int? = nil
     var direction: CGFloat = 0
-    var shift: Shift? = nil
+    var slot: Int? = nil
     var onOpen: ((AgendaItem) -> Void)? = nil
 
     @Environment(\.palette) private var palette
@@ -21,28 +21,28 @@ struct Agenda: View {
                     DashLine()
                         .frame(height: 1)
                         .padding(.bottom, 22)
-                        .shifted(shift)
+                        .entrance(at: slot)
                 }
                 BlockHead(block.heading, topPad: side ? 0 : 22)
                     .staggered(from, 0, direction)
-                    .shifted(shift)
+                    .entrance(at: slot)
                 Glass(radius: 26) {
                     VStack(spacing: 0) {
                         ForEach(Array(block.items.enumerated()), id: \.offset) { (i, item) in
                             if i > 0 {
                                 Rectangle().fill(palette.line).frame(height: 1)
                                     .padding(.horizontal, 16)
-                                    .shifted(shift, extra: 1 + i)
+                                    .entrance(at: slot, extra: 1 + i)
                             }
                             Row(item: item, people: people,
                                 first: i == 0, last: i == block.items.count - 1,
                                 onOpen: item.special ? onOpen : nil)
                                 .staggered(from, i + 1, direction)
-                                .shifted(i == 0 ? nil : shift, extra: 1 + i)
+                                .entrance(at: i == 0 ? nil : slot, extra: 1 + i)
                         }
                     }
                 }
-                .shifted(shift, extra: 1)
+                .entrance(at: slot, extra: 1)
             }
             .padding(.top, side ? (first ? 0 : 22) : (block.later ? 26 : 0))
         }

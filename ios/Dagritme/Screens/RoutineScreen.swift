@@ -18,7 +18,6 @@ struct RoutineScreen: View {
     @Environment(Camera.self) private var camera
     @Environment(\.metrics) private var m
     @Environment(\.palette) private var palette
-    @Environment(\.tabShift) private var tabShift
 
     @State private var heights: [Routine: CGFloat] = [:]
 
@@ -182,7 +181,7 @@ struct RoutineScreen: View {
             ProgressBars(people: content.people, tallies: tallies(content, here.all),
                          topPad: m.wide ? 0 : 14,
                          visible: visible, filtered: filtered, onSelect: toggleChild)
-                .shifted(tabShift.at(1))
+                .entrance(1)
         }
 
         ZStack(alignment: .topLeading) {
@@ -198,6 +197,7 @@ struct RoutineScreen: View {
         return VStack(alignment: .leading, spacing: 0) {
             if let content { column(r, content, plan) }
         }
+        .shifted(shift(r))
         .environment(\.entranceOn, !camera.entering.contains(col))
         .onGeometryChange(for: CGFloat.self, of: { $0.size.height },
                           action: { heights[r] = $0 })
@@ -213,9 +213,10 @@ struct RoutineScreen: View {
         return VStack(alignment: .leading, spacing: 0) {
             ForEach(Array(plan.blocks.enumerated()), id: \.element.id) { (i, block) in
                 Agenda(block: block, people: content.people, side: true, first: i == 0,
-                       shift: shift(r, plan.sideStarts[i]))
+                       slot: plan.sideStarts[i])
             }
         }
+        .shifted(shift(r))
         .environment(\.entranceOn, !camera.entering.contains(columnOf(.routine, r)))
         .zIndex(here ? 1 : 0)
         .allowsHitTesting(here)
@@ -228,7 +229,7 @@ struct RoutineScreen: View {
         if !m.wide {
             ForEach(Array(plan.early.enumerated()), id: \.element.id) { (i, block) in
                 Agenda(block: block, people: content.people,
-                       shift: shift(r, plan.earlyStarts[i]))
+                       slot: plan.earlyStarts[i])
             }
         }
 
@@ -244,7 +245,7 @@ struct RoutineScreen: View {
             .padding(.top, 20)
             .padding(.horizontal, m.indent)
             .padding(.bottom, 10)
-            .shifted(shift(r, start))
+            .entrance(start)
 
             LazyVGrid(
                 columns: Array(repeating: GridItem(.flexible(), spacing: m.gridGap),
@@ -253,7 +254,7 @@ struct RoutineScreen: View {
             ) {
                 ForEach(Array(group.steps.enumerated()), id: \.element) { (si, step) in
                     Card(step: step, content: content, routine: r, visible: visible,
-                         shift: shift(r, start + 1 + si))
+                         slot: start + 1 + si)
                 }
             }
         }
@@ -261,20 +262,22 @@ struct RoutineScreen: View {
         if !m.wide {
             ForEach(Array(plan.later.enumerated()), id: \.element.id) { (i, block) in
                 Agenda(block: block, people: content.people,
-                       shift: shift(r, plan.laterStarts[i]))
+                       slot: plan.laterStarts[i])
             }
         }
 
         if !plan.groups.isEmpty {
             ResetButton()
-                .shifted(shift(r, plan.resetSlot))
+                .entrance(plan.resetSlot)
         }
     }
 
-    private func shift(_ r: Routine, _ slot: Int) -> Shift {
-        let col = columnOf(.routine, r)
-        return Shift(slot: slot, steps: camera.offset(of: col), span: m.width + 60,
-                     animated: camera.slides(col))
+    /// Het paneel staat op zijn eigen kolom; de bladzijde eromheen schuift al
+    /// mee met de kolom waar de camera naar kijkt, dus alleen het verschil.
+    private func shift(_ r: Routine) -> Shift {
+        let page = columnOf(.routine, camera.routine)
+        return Shift(steps: camera.offset(of: columnOf(.routine, r)) - camera.offset(of: page),
+                     span: m.width + 60)
     }
 }
 
@@ -306,7 +309,7 @@ private struct Card: View {
     let content: Content
     let routine: Routine
     let visible: Set<String>
-    let shift: Shift
+    let slot: Int
 
     @Environment(Household.self) private var household
     @Environment(\.metrics) private var m
@@ -360,6 +363,6 @@ private struct Card: View {
         .scaleEffect(allDone ? 0.985 : 1)
         .animation(Motion.pop, value: allDone)
         .accessibilityIdentifier("card.\(key)")
-        .shifted(shift)
+        .entrance(slot)
     }
 }

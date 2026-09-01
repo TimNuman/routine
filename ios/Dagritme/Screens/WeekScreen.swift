@@ -4,7 +4,6 @@ struct WeekScreen: View {
     @Environment(Household.self) private var household
     @Environment(\.palette) private var palette
     @Environment(\.metrics) private var m
-    @Environment(\.tabShift) private var tabShift
 
     @State private var weekShift = 0
     @State private var pickedDay: String?
@@ -70,7 +69,7 @@ struct WeekScreen: View {
                     onSelect: pickDay,
                     onShift: shiftWeeks
                 )
-                .shifted(shift(1))
+                .entrance(1)
 
                 if let content = household.content {
                     ZStack(alignment: .topLeading) {
@@ -80,14 +79,14 @@ struct WeekScreen: View {
                         .id(dateString(selected))
                         .slides(direction)
                     }
-                    .shifted(shift(2))
+                    .entrance(2)
 
                     CardButton(String(localized: "Iets bijzonders toevoegen"), plus: true,
                                id: "week.addOneOff") { openEntry(nil) }
-                        .shifted(shift(3))
+                        .entrance(3)
                     CardButton(String(localized: "Typ of plak iets"), glyph: "✨",
                                id: "week.assistant") { assistantOpen = true }
-                        .shifted(shift(4))
+                        .entrance(4)
                 }
             }
 
@@ -146,7 +145,6 @@ struct WeekScreen: View {
         blocks.prefix(i).reduce(0) { $0 + 1 + $1.items.count }
     }
 
-    private func shift(_ slot: Int) -> Shift { tabShift.at(slot) }
 
     private func pickDay(_ d: Date) {
         guard dateString(d) != dateString(selected) else { return }
