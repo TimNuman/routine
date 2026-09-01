@@ -36,6 +36,8 @@ final class Slide<Key: CaseIterable & Hashable> {
     }
 
     var stage: Key { trays[stageIndex]! }
+    /// De bladzijde waar de rij naartoe onderweg is (in rust: het toneel).
+    var arriving: Key { trays[lanes[0] == eye ? 0 : 1] ?? stage }
 
     /// Zonder schuif, voor de eerste keer.
     func jump(to key: Key) {
@@ -194,10 +196,12 @@ struct SlideView<Key: CaseIterable & Hashable, Page: View>: View {
     @ViewBuilder let page: (Key) -> Page
 
     var body: some View {
-        ZStack {
+        // Bovenaan uitgelijnd: een korter paneel mag niet in het midden
+        // hangen naast een langer, en dan verspringen als dat weg is.
+        ZStack(alignment: .topLeading) {
             ForEach(0..<2, id: \.self) { i in
                 if let key = slide.trays[i] {
-                    ZStack {
+                    ZStack(alignment: .topLeading) {
                         page(key).id(key).transition(.identity)
                         if let ghost = slide.ghosts[i] {
                             page(ghost).id(ghost)

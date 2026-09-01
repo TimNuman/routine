@@ -184,7 +184,9 @@ struct RoutineScreen: View {
         SlideView(slide: panes, span: m.width + 60) { r in
             pane(r, content, r == household.routine ? here : plan(r, content, today))
         }
-        .frame(height: heights[panes.stage], alignment: .top)
+        // De hoogte loopt mee met het paneel dat eraan komt, op dezelfde veer.
+        .frame(height: heights[panes.arriving], alignment: .top)
+        .animation(Motion.glide, value: panes.arriving)
     }
 
     private func pane(_ r: Routine, _ content: Content?, _ plan: Plan) -> some View {
