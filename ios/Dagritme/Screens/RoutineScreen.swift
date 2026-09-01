@@ -199,14 +199,14 @@ struct RoutineScreen: View {
             if let content { column(r, content, plan) }
         }
         .placed(at: camera.routines.position(of: r), span: m.width + 60)
-        .environment(\.entranceOn, camera.routines.entering != r)
+        .environment(\.entranceOn, !camera.routines.fresh.contains(r))
         .onGeometryChange(for: CGFloat.self, of: { $0.size.height },
                           action: { heights[r] = $0 })
         .zIndex(here ? 1 : 0)
         .allowsHitTesting(here)
         .accessibilityHidden(!here)
         .transition(.identity)
-        .onAppear { camera.arrived(r) }
+        .task { camera.arrived(r) }
     }
 
     private func sidePane(_ r: Routine, _ content: Content, _ plan: Plan) -> some View {
@@ -218,7 +218,7 @@ struct RoutineScreen: View {
             }
         }
         .placed(at: camera.routines.position(of: r), span: m.width + 60)
-        .environment(\.entranceOn, camera.routines.entering != r)
+        .environment(\.entranceOn, !camera.routines.fresh.contains(r))
         .zIndex(here ? 1 : 0)
         .allowsHitTesting(here)
         .accessibilityHidden(!here)

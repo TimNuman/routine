@@ -7,10 +7,10 @@ import Observation
 /// en de bladzijde die komt altijd gelijk, ook als er halverwege wordt getikt.
 ///
 /// In rust staat er één bladzijde in de rij. Bij een tik komt de nieuwe erbij,
-/// buiten beeld; zodra hij er staat (`arrived`) schuift de rij, en als die
-/// tot rust komt (`rest`) gaat alles wat verlaten is er weer uit. Wie tijdens
-/// de schuif nog eens tikt, ziet de rij doorschuiven of omkeren — er verdwijnt
-/// onderweg niets.
+/// buiten beeld, aan de kant waar zijn tabblad zit; zodra hij er staat
+/// (`arrived`) schuift de rij, en als die tot rust komt (`rest`) gaat alles wat
+/// verlaten is er weer uit. Wie tijdens de schuif nog eens tikt, ziet de rij
+/// doorrijden of omkeren — er verdwijnt onderweg niets.
 struct Strip<Key: CaseIterable & Hashable> {
     private(set) var current: Key
     /// Verlaten, maar nog in de rij tot die tot rust komt: wat halverwege
@@ -18,11 +18,13 @@ struct Strip<Key: CaseIterable & Hashable> {
     private(set) var leaving: Set<Key> = []
     /// Net gebouwd, wacht buiten beeld tot hij er staat.
     private(set) var entering: Key?
+    /// Gebouwd tijdens deze schuif: die slaat de intrede-animatie over, tot de
+    /// rij tot rust komt — niet eerder, want dan doemen regels die net iets
+    /// later verschijnen alsnog op.
+    private(set) var fresh: Set<Key> = []
     /// De plek in de rij die in beeld hoort; de weergave veert erheen.
     private(set) var eye = 0
     private var lane: [Key: Int]
-    /// Welke kant de rij op beweegt, of 0 in rust.
-    private var flow = 0
 
     init(_ current: Key) {
         self.current = current
@@ -51,13 +53,14 @@ struct Strip<Key: CaseIterable & Hashable> {
             turn(to: target)
             return true
         }
-        // Een nieuwe bladzijde komt aan de kant waar de rij al heen beweegt,
-        // want daar is de plek naast het oog altijd vrij; in rust aan de kant
-        // waar hij in de volgorde hoort.
-        let side = flow != 0 ? flow : (index(target) > index(current) ? 1 : -1)
-        let spot = eye + side
-        for key in leaving where lane[key] == spot { leaving.remove(key) }
+        // Een nieuwe bladzijde komt aan de kant waar hij in de volgorde hoort,
+        // altijd. Staat daar nog iets dat aan het vertrekken is, dan komt hij
+        // daar voorbij, en rijdt de rij er gewoon langs.
+        let side = index(target) > index(current) ? 1 : -1
+        var spot = eye + side
+        while lane.values.contains(spot) { spot += side }
         entering = target
+        fresh.insert(target)
         lane[target] = spot
         return false
     }
@@ -72,7 +75,7 @@ struct Strip<Key: CaseIterable & Hashable> {
 
     mutating func rest() {
         leaving = []
-        flow = 0
+        fresh = []
         lane = lane.filter { mounted.contains($0.key) }
     }
 
@@ -80,9 +83,7 @@ struct Strip<Key: CaseIterable & Hashable> {
         leaving.insert(current)
         leaving.remove(key)
         current = key
-        let to = lane[key] ?? eye
-        if to != eye { flow = to > eye ? 1 : -1 }
-        eye = to
+        eye = lane[key] ?? eye
     }
 
     private func index(_ key: Key) -> Int {

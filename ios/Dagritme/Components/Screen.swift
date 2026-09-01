@@ -144,12 +144,13 @@ private struct TabPages: View {
         let here = camera.tabs.current == which
         return screen()
             .placed(at: camera.tabs.position(of: which), span: span)
-            .environment(\.entranceOn, camera.tabs.entering != which)
+            .environment(\.entranceOn, !camera.tabs.fresh.contains(which))
             .zIndex(here ? 1 : 0)
             .allowsHitTesting(here)
             .accessibilityHidden(!here)
             .transition(.identity)
-            .onAppear { camera.arrived(which) }
+            // Pas ná het eerste beeld, zodat het bouwen niet in de schuif valt.
+            .task { camera.arrived(which) }
     }
 }
 
