@@ -11,7 +11,8 @@ struct Metrics {
     var columnGap: CGFloat { 26 }
     var indent: CGFloat { 16 }
     var gutter: CGFloat { tight ? 16 : wide ? 26 : 22 }
-    var topPad: CGFloat { wide ? 22 : 26 }
+    // Evenveel lucht boven de paginakop als eronder.
+    var topPad: CGFloat { 16 }
     var bottomPad: CGFloat { wide ? 40 : 120 }
     var perRow: Int { roomy ? 5 : 3 }
     var gridGap: CGFloat { roomy ? 14 : 10 }
