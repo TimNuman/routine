@@ -198,7 +198,7 @@ struct RoutineScreen: View {
             if let content { column(r, content, plan) }
         }
         .shifted(shift(r))
-        .environment(\.entranceOn, !camera.entering.contains(col))
+        .environment(\.entranceOn, camera.entering != col)
         .onGeometryChange(for: CGFloat.self, of: { $0.size.height },
                           action: { heights[r] = $0 })
         .zIndex(here ? 1 : 0)
@@ -217,7 +217,7 @@ struct RoutineScreen: View {
             }
         }
         .shifted(shift(r))
-        .environment(\.entranceOn, !camera.entering.contains(columnOf(.routine, r)))
+        .environment(\.entranceOn, camera.entering != columnOf(.routine, r))
         .zIndex(here ? 1 : 0)
         .allowsHitTesting(here)
         .accessibilityHidden(!here)

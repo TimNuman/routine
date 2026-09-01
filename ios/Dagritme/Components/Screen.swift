@@ -138,8 +138,8 @@ private struct TabPages: View {
         let shift = Shift(steps: camera.offset(of: column), span: m.width + 60)
         // Het ritme-scherm meldt zich per kolom, vanuit zijn eigen panelen.
         let entrance = which == .routine
-            ? camera.entering.isDisjoint(with: [0, 1])
-            : !camera.entering.contains(column)
+            ? camera.entering.map { $0 > 1 } ?? true
+            : camera.entering != column
         return screen()
             .shifted(shift)
             .environment(\.entranceOn, entrance)
