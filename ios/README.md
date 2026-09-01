@@ -215,6 +215,22 @@ je ze met gewone gereedschappen vergelijken:
 ffmpeg -i voor.png -i na.png -filter_complex psnr -f null -   # inf = gelijk
 ```
 
+Eén ding kan de UI-test niet: snel achter elkaar tikken. Vóór elke tik wacht
+hij tot de app stilstaat, dus een tweede tik komt altijd pas ná de schuif. Voor
+precies dat geval voert de app zelf een rijtje tikken uit als `DRIVER_SCRIPT`
+gezet is — de test geeft hem door als `SCRIPT` — en dan zie je wel wat er
+gebeurt als iemand midden in een overgang alweer ergens anders heen wil:
+
+```bash
+TEST_RUNNER_DRIVER_SCRIPT="wait 4, week, wait 0.15, instellingen, wait 2, ritme, avond" \
+xcodebuild test ...
+```
+
+De stappen zijn `wait <s>`, `ritme`, `week`, `instellingen`, `ochtend` en `avond`.
+Neem het op met `xcrun simctl io <simulator> recordVideo` en trek er beelden uit;
+de opname heeft geen vaste beeldsnelheid, dus zet hem eerst om (`ffmpeg -vf
+fps=30`) voordat je op beeldnummer zoekt.
+
 Bewegen zie je zo natuurlijk niet. Daarvoor loopt er een opname naast:
 
 ```bash

@@ -22,6 +22,14 @@ enum Motion {
 
     static let entrance = Animation.snappy(duration: 0.6, extraBounce: 0)
 
+    /// De schuif tussen de kolommen: een veer zonder wachttijd, zodat een tik
+    /// halverwege gewoon van richting verandert met de snelheid die er al is.
+    /// Wat lager op het scherm staat krijgt een iets tragere veer en komt dus
+    /// iets later aan — dat is de cascade, zonder dat er iets stilstaat.
+    static func glide(_ slot: Int) -> Animation {
+        .snappy(duration: 0.5 + stagger(slot, step: 0.012, cap: 0.30), extraBounce: 0)
+    }
+
     static func stagger(_ i: Int, step: Double = 0.01, cap: Double = 0.80) -> Double {
         min(Double(max(0, i)) * step, cap)
     }

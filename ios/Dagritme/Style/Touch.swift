@@ -118,8 +118,7 @@ extension View {
         if let s = shift {
             entrance(s.slot + extra)
                 .offset(x: s.steps * s.span)
-                .animation(s.animated ? Motion.entrance.delay(Motion.stagger(s.slot + extra)) : nil,
-                           value: s.steps)
+                .animation(s.animated ? Motion.glide(s.slot + extra) : nil, value: s.steps)
         } else {
             self
         }

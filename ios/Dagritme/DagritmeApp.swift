@@ -9,6 +9,7 @@ struct DagritmeApp: App {
         WindowGroup {
             RootScreen()
                 .environment(household)
+                .task { await Script.run(household) }
                 .preferredColorScheme(household.evening ? .dark : .light)
         }
         .onChange(of: phase) { _, fresh in

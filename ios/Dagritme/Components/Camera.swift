@@ -13,8 +13,9 @@ import Observation
 final class Camera {
     private(set) var tab: Tab = .routine
     private(set) var routine: Routine = .day
-    /// De kolom waar het oog net vandaan komt.
-    private(set) var previous = 0
+    /// Waar het oog heeft gestaan sinds het voor het laatst tot rust kwam:
+    /// die kolommen kunnen nog onderweg zijn en schuiven dus mee.
+    private(set) var moving: Set<Int> = []
     private(set) var mounted: Set<Int> = [0, 1]
     /// Net gebouwd om naartoe te schuiven: die slaan de intrede-animatie over.
     private(set) var entering: Set<Int> = []
@@ -32,10 +33,10 @@ final class Camera {
         CGFloat(max(-1, min(1, column - self.column)))
     }
 
-    /// Alleen wat in beeld komt of gaat schuift mee; een kolom die van de
-    /// ene stapel naar de andere moet, springt.
+    /// Alleen wat in beeld is of onderweg schuift mee; een kolom die in rust
+    /// van de ene stapel naar de andere moet, springt ongezien.
     func slides(_ column: Int) -> Bool {
-        column == self.column || column == previous
+        column == self.column || moving.contains(column)
     }
 
     func look(at tab: Tab, _ routine: Routine) {
@@ -55,6 +56,7 @@ final class Camera {
             if let pending { arrived(columnOf(pending.tab, pending.routine)) }
             mounted = Set(max(0, column - 1)...min(Self.last, column + 1))
             entering = []
+            moving = []
         }
     }
 
@@ -66,7 +68,7 @@ final class Camera {
     }
 
     private func point(at tab: Tab, _ routine: Routine) {
-        previous = column
+        moving.insert(column)
         self.tab = tab
         self.routine = routine
     }
