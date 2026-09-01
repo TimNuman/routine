@@ -56,7 +56,7 @@ struct Screen<Inner: View>: View {
                 Spacer(minLength: 0)
             }
         }
-        .padding(.leading, m.indent)
+        .padding(.leading, m.headIndent)
 
         if m.wide {
             HStack(alignment: .center, spacing: 24) {
