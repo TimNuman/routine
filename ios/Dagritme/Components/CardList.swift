@@ -40,7 +40,8 @@ struct CardRow: View {
                     }
                     Spacer(minLength: 0)
                     if !faces.isEmpty { Faces(people: faces).accessibilityHidden(true) }
-                    Chevron().opacity(0.6)
+                    // Evenveel lucht rechts van het pijltje als links van het icoon.
+                    Chevron().opacity(0.6).padding(.trailing, 6)
                 }
                 .padding(14)
                 .frame(minHeight: 62)
