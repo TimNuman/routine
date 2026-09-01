@@ -24,8 +24,8 @@ struct TabBar: View {
     ]
 
     private var row: CGFloat { wide ? 42 : 52 }
-    /// Zo breed als een knop nodig heeft; de balk hangt dicht om de drie heen.
-    private var width: CGFloat { wide ? 150 : 94 }
+    /// Net breed genoeg om de rand kaartjes met hun ringen af te dekken.
+    private var width: CGFloat { wide ? 150 : 112 }
 
     var body: some View {
         let chosen = items.firstIndex { $0.tab == household.tab } ?? 0
