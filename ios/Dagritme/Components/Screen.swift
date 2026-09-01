@@ -113,7 +113,14 @@ private struct TabPages: View {
     @Environment(Household.self) private var household
     @Environment(\.metrics) private var m
     @State private var slide = Slide<Tab>(.routine)
+    @State private var panes = Slide<Routine>(.day)
+    @State private var zones = SwipeZones()
     @State private var launching = true
+    @State private var swiping: Row?
+
+    /// Welke rij een veeg verschuift: die van de tabbladen, of die van
+    /// ochtend en avond binnen het ritme.
+    private enum Row { case tabs, panes }
 
     var body: some View {
         SlideView(slide: slide, span: m.width + 60) { tab in
@@ -123,6 +130,8 @@ private struct TabPages: View {
             case .settings: SettingsScreen()
             }
         }
+        .environment(panes)
+        .environment(zones)
         // De intrede-animatie is voor de start; wat daarna in beeld komt,
         // komt al van opzij.
         .environment(\.entranceOn, launching)
@@ -132,6 +141,73 @@ private struct TabPages: View {
             launching = false
         }
         .onChange(of: household.tab) { slide.go(to: household.tab) }
+        .background {
+            PageSwipe(
+                shouldBegin: { place in
+                    !household.sheetOpen && !zones.blocked.values.contains { $0.contains(place) }
+                },
+                changed: { dx in move(dx) },
+                ended: { dx, velocity in
+                    guard let swiping else { return }
+                    finish(swiping, velocity: velocity)
+                    self.swiping = nil
+                }
+            )
+        }
+    }
+
+    // Vegen loopt over ochtend – avond – week – instellingen, alsof het één
+    // rij is; welke van de twee rijen er schuift hangt af van waar je staat
+    // en welke kant je op gaat.
+    private func move(_ dx: CGFloat) {
+        let wanted = row(for: dx)
+        if let swiping, swiping != wanted { finish(swiping, velocity: 0) }
+        swiping = wanted
+        switch wanted {
+        case .tabs:
+            slide.drag(to: dx) { side in
+                guard let tab = beside(household.tab, side) else { return nil }
+                // Van de week terug naar het ritme kom je bij de avond uit.
+                if tab == .routine { household.setRoutine(side < 0 ? .night : .day) }
+                return tab
+            }
+        case .panes:
+            panes.drag(to: dx) { side in
+                side > 0 ? (household.routine == .day ? .night : nil)
+                         : (household.routine == .night ? .day : nil)
+            }
+        }
+    }
+
+    private func row(for dx: CGFloat) -> Row {
+        let side = dx < 0 ? 1 : -1
+        if household.tab == .routine,
+           (household.routine == .day && side > 0) || (household.routine == .night && side < 0) {
+            return .panes
+        }
+        return .tabs
+    }
+
+    private func beside(_ tab: Tab, _ side: Int) -> Tab? {
+        let order = Tab.allCases
+        guard let i = order.firstIndex(of: tab), order.indices.contains(i + side) else { return nil }
+        return order[i + side]
+    }
+
+    private func finish(_ row: Row, velocity: CGFloat) {
+        let span = m.width + 60
+        switch row {
+        case .tabs:
+            if let tab = slide.release(velocity: velocity, span: span) {
+                Haptics.select()
+                withAnimation(Motion.short) { household.tab = tab }
+            }
+        case .panes:
+            if let routine = panes.release(velocity: velocity, span: span) {
+                Haptics.select()
+                household.setRoutine(routine)
+            }
+        }
     }
 }
 

@@ -62,6 +62,7 @@ vorm waar de schermen mee werken.
 | toestand | één `@Observable` klasse (`Core/Household.swift`) in de omgeving |
 | opslag | `URLSession` naar `/api/opslag`, met `URLSessionWebSocketTask` voor de stroom |
 | bewerken | `List` met `.swipeActions` en `.onMove`; de rest van de app is eigen glas |
+| bladeren | vegen over ochtend – avond – week – instellingen (`Components/Slide.swift`, `PageSwipe.swift`); op de dagen van de weekstrook bladert een veeg door de weken |
 | animatie | gewone SwiftUI-animaties, timing in `Style/Motion.swift` |
 
 ### Twee dingen die anders moesten

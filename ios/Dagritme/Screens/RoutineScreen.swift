@@ -15,7 +15,7 @@ private struct Plan {
 
 struct RoutineScreen: View {
     @Environment(Household.self) private var household
-    @State private var panes = Slide<Routine>(.day)
+    @Environment(Slide<Routine>.self) private var panes
     @State private var live = false
     @Environment(\.metrics) private var m
     @Environment(\.palette) private var palette

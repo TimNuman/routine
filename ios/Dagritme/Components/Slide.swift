@@ -23,9 +23,13 @@ final class Slide<Key: CaseIterable & Hashable> {
     private(set) var stageIndex = 0
     /// De plek die in beeld hoort; de rij veert erheen.
     private(set) var eye = 0
+    /// Hoe ver een vinger de rij opzij heeft getrokken, in punten.
+    private(set) var drag: CGFloat = 0
 
     @ObservationIgnored private var generation = 0
     @ObservationIgnored private var fades = [0, 0]
+    /// Aan welke kant de vinger een buur heeft opgehaald; 0 als er geen vinger is.
+    @ObservationIgnored private var draggingSide = 0
 
     init(_ stage: Key) {
         trays = [stage, nil]
@@ -42,7 +46,9 @@ final class Slide<Key: CaseIterable & Hashable> {
             lanes = [0, 1]
             stageIndex = 0
             eye = 0
+            drag = 0
         }
+        draggingSide = 0
     }
 
     func go(to target: Key) {
@@ -75,6 +81,45 @@ final class Slide<Key: CaseIterable & Hashable> {
         }
     }
 
+    /// Meeschuiven met een vinger. `neighbour` zegt wat er aan een kant ligt
+    /// (1 rechts, -1 links); ligt daar niets, dan geeft de rij een beetje mee
+    /// en veert hij straks terug.
+    func drag(to translation: CGFloat, neighbour: (Int) -> Key?) {
+        let other = 1 - stageIndex
+        let side = translation < 0 ? 1 : -1
+        if draggingSide == 0 {
+            guard trays[other] == nil else { return }
+        }
+        if side != draggingSide {
+            draggingSide = side
+            still {
+                ghosts[other] = nil
+                if let key = neighbour(side) {
+                    lanes[other] = lanes[stageIndex] + side
+                    trays[other] = key
+                } else {
+                    trays[other] = nil
+                }
+            }
+        }
+        still { drag = trays[other] == nil ? translation / 3 : translation }
+    }
+
+    /// De vinger gaat los: door naar de buur als hij ver of snel genoeg ging,
+    /// anders terug. Geeft de buur terug als het doorgaat.
+    @discardableResult
+    func release(velocity: CGFloat, span: CGFloat) -> Key? {
+        guard draggingSide != 0 else { return nil }
+        let side = draggingSide
+        draggingSide = 0
+        let other = 1 - stageIndex
+        let far = abs(drag) > span * 0.35
+        let flick = abs(velocity) > 250 && (velocity < 0) == (side == 1)
+        let goes = trays[other] != nil && (far || flick)
+        run(to: goes ? lanes[other] : lanes[stageIndex])
+        return goes ? trays[other] : nil
+    }
+
     /// Wisselt de inhoud van een bakje: de oude bladzijde blijft er als
     /// geest overheen liggen en vervaagt.
     private func swap(_ i: Int, to target: Key) {
@@ -96,8 +141,10 @@ final class Slide<Key: CaseIterable & Hashable> {
     private func run(to lane: Int) {
         generation += 1
         let mine = generation
+        draggingSide = 0
         withAnimation(Motion.glide, completionCriteria: .removed) {
             eye = lane
+            drag = 0
         } completion: { [weak self] in
             guard let self, generation == mine else { return }
             still {
@@ -127,15 +174,16 @@ final class Slide<Key: CaseIterable & Hashable> {
 /// in plaats van dat SwiftUI haar apart laat aanschuiven.
 private struct Sliding: ViewModifier, Animatable {
     var eye: CGFloat
+    var drag: CGFloat
     let span: CGFloat
 
-    var animatableData: CGFloat {
-        get { eye }
-        set { eye = newValue }
+    var animatableData: AnimatablePair<CGFloat, CGFloat> {
+        get { AnimatablePair(eye, drag) }
+        set { eye = newValue.first; drag = newValue.second }
     }
 
     func body(content: Self.Content) -> some View {
-        content.offset(x: -eye * span)
+        content.offset(x: -eye * span + drag)
     }
 }
 
@@ -163,6 +211,6 @@ struct SlideView<Key: CaseIterable & Hashable, Page: View>: View {
                 }
             }
         }
-        .modifier(Sliding(eye: CGFloat(slide.eye), span: span))
+        .modifier(Sliding(eye: CGFloat(slide.eye), drag: slide.drag, span: span))
     }
 }
