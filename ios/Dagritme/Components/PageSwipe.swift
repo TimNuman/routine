@@ -9,6 +9,39 @@ final class SwipeZones {
     var blocked: [String: CGRect] = [:]
 }
 
+/// Een pan die pas beslist na een stukje beweging: duidelijk opzij, dan
+/// begint hij; anders valt hij af, en scrolt de ScrollView. UIKit zelf vraagt
+/// dat al bij de eerste beweging, als er nog niets te zien is.
+final class HorizontalPan: UIPanGestureRecognizer {
+    private(set) var sideways = false
+    private var start: CGPoint?
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
+        super.touchesBegan(touches, with: event)
+        start = touches.first?.location(in: view)
+    }
+
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent) {
+        if state == .possible, let start, let now = touches.first?.location(in: view) {
+            let dx = now.x - start.x
+            let dy = now.y - start.y
+            guard hypot(dx, dy) >= 12 else { return }
+            guard abs(dx) > abs(dy) * 1.3 else {
+                state = .failed
+                return
+            }
+            sideways = true
+        }
+        super.touchesMoved(touches, with: event)
+    }
+
+    override func reset() {
+        super.reset()
+        sideways = false
+        start = nil
+    }
+}
+
 /// Een horizontale veeg over de bladzijden, als UIKit-herkenner. Die begint
 /// pas als de vinger duidelijk opzij gaat, laat een verticale veeg aan de
 /// ScrollView, en trekt — net als een ScrollView — de aanraking weg bij de
@@ -36,7 +69,11 @@ struct PageSwipe: UIViewRepresentable {
     /// bovenste view onder het venster, zodat elke aanraking op de
     /// bladzijden erlangs komt, ook die op SwiftUI-knoppen.
     final class Anchor: UIView {
-        let pan = UIPanGestureRecognizer()
+        let pan: HorizontalPan = {
+            let pan = HorizontalPan()
+            pan.maximumNumberOfTouches = 1
+            return pan
+        }()
 
         override func didMoveToWindow() {
             super.didMoveToWindow()
@@ -63,8 +100,8 @@ struct PageSwipe: UIViewRepresentable {
         func gestureRecognizerShouldBegin(_ recognizer: UIGestureRecognizer) -> Bool {
             guard let pan = recognizer as? UIPanGestureRecognizer,
                   let host = pan.view, let anchor else { return false }
-            let shift = pan.translation(in: host)
-            guard abs(shift.x) > abs(shift.y) else { return false }
+            // Duidelijk opzij, anders is het scrollen.
+            guard (pan as? HorizontalPan)?.sideways == true else { return false }
             let place = pan.location(in: host)
             guard anchor.convert(anchor.bounds, to: host).contains(place) else { return false }
             return swipe.shouldBegin(host.convert(place, to: nil))
@@ -73,6 +110,14 @@ struct PageSwipe: UIViewRepresentable {
         func gestureRecognizer(_ recognizer: UIGestureRecognizer,
                                shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool {
             false
+        }
+
+        /// De ScrollViews wachten tot deze veeg beslist heeft: is het opzij,
+        /// dan schuift de bladzijde en scrolt er niets; is het niet opzij,
+        /// dan valt hij meteen af en scrolt het gewoon.
+        func gestureRecognizer(_ recognizer: UIGestureRecognizer,
+                               shouldBeRequiredToFailBy other: UIGestureRecognizer) -> Bool {
+            other is UIPanGestureRecognizer
         }
 
         @objc func panned(_ pan: UIPanGestureRecognizer) {
