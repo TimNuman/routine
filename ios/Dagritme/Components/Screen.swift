@@ -91,7 +91,7 @@ struct RootScreen: View {
                 TabPages()
 
                 EdgeFade(dark: household.evening)
-                    .frame(height: 96)
+                    .frame(height: 72)
                     .frame(maxHeight: .infinity, alignment: .top)
                     .ignoresSafeArea()
 

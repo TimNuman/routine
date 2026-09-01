@@ -171,7 +171,7 @@ struct FullSheet<Inner: View>: View {
             // gewone schermen; de kop zelf zweeft erboven, en zijn glas
             // vervaagt wat eronderdoor schuift.
             EdgeFade(dark: false)
-                .frame(height: 96)
+                .frame(height: 72)
                 .frame(maxHeight: .infinity, alignment: .top)
                 .ignoresSafeArea()
 
