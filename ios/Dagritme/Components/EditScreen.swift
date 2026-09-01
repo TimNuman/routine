@@ -247,7 +247,6 @@ struct EditScreen: View {
 
             ForEach(draft[routine]) { group in
                 let fixed = group.steps.filter { $0.date.isEmpty }
-                let oneOffs = group.steps.count - fixed.count
 
                 Section {
                     HStack(spacing: 8) {
@@ -291,12 +290,6 @@ struct EditScreen: View {
                         dropStep(index, into: group)
                     }
                     .plainRow()
-
-                    if oneOffs > 0 {
-                        CardNote(String(localized:
-                            "Hier staan ook \(oneOffs) dingen voor één dag; die bewerk je bij Eenmalig."))
-                            .moveDisabled(true)
-                    }
 
                     AddRow(String(localized: "Stap toevoegen")) {
                         openEntry(String(localized: "Nieuwe stap"), nil) { entry in
