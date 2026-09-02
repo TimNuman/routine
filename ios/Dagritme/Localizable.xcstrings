@@ -486,8 +486,15 @@
     "Doe mee" : {
 
     },
-    "Doe mee in Routines: zet de app op je telefoon, log in en tik bij Instellingen → Ouders en verzorgers deze code in: %@" : {
-
+    "Doe mee in Routines: %@/join/%@\n\nLukt de link niet? Log in de app in en tik bij Instellingen → Ouders en verzorgers deze code in: %@" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Doe mee in Routines: %1$@/join/%2$@\n\nLukt de link niet? Log in de app in en tik bij Instellingen → Ouders en verzorgers deze code in: %3$@"
+          }
+        }
+      }
     },
     "Eén keer te gebruiken, een week geldig." : {
 
@@ -913,6 +920,12 @@
           }
         }
       }
+    },
+    "Je bent uitgenodigd in een huis. Doe je mee, dan laat de app voortaan dat huis zien." : {
+
+    },
+    "Je hebt een uitnodiging. Log in, dan doe je meteen mee." : {
+
     },
     "jij" : {
 
@@ -1467,6 +1480,9 @@
 
     },
     "Uitloggen?" : {
+
+    },
+    "Uitnodiging" : {
 
     },
     "van" : {

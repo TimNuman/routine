@@ -21,14 +21,96 @@ let EMOJI_GROUPS: [(name: String, glyphs: [String])] = [
         "🦔", "🐧", "🐨", "🐷", "🐮", "🐒", "🐴", "🐬"
     ]),
     (name: String(localized: "Mensen"), glyphs: [
-        "😀", "😊", "🥳", "🤗", "🧒", "👦", "👧", "👶", "👩", "👨", "👩🏻", "👨🏻", "🧑", "👵", "👴", "🦸",
-        "🧚", "🧜", "🤖", "👻", "🧑‍🤝‍🧑", "👨‍👩‍👧‍👦", "🏋️", "🧘"
+        "😀", "😊", "🥳", "🤗", "😎", "🤓", "🥰",
+        "👶", "🧒", "👦", "👧", "🧑", "👨", "👩", "🧔", "🧔‍♀️", "👱", "👱‍♀️", "👱‍♂️",
+        "👨‍🦰", "👩‍🦰", "🧑‍🦰", "👨‍🦱", "👩‍🦱", "🧑‍🦱", "👨‍🦳", "👩‍🦳", "🧑‍🦳", "👨‍🦲", "👩‍🦲", "🧑‍🦲",
+        "🧓", "👴", "👵", "🧕", "👳", "👳‍♀️", "👲", "🤰", "🫃", "👼",
+        "🙋", "🙋‍♂️", "💁", "💁‍♂️", "🤷", "🤷‍♂️", "🙆", "🙅", "🧏", "🧏‍♂️",
+        "👮", "👮‍♀️", "👷", "👷‍♀️", "💂", "🕵️", "🕵️‍♀️",
+        "🧑‍⚕️", "👩‍⚕️", "👨‍⚕️", "🧑‍🏫", "👩‍🏫", "👨‍🏫", "🧑‍🍳", "👩‍🍳", "👨‍🍳", "🧑‍🌾", "👩‍🌾", "👨‍🌾",
+        "🧑‍🔧", "👩‍🔧", "👨‍🔧", "🧑‍💻", "👩‍💻", "👨‍💻", "🧑‍🚒", "👩‍🚒", "👨‍🚒", "🧑‍✈️", "👩‍✈️", "👨‍✈️",
+        "🧑‍🚀", "👩‍🚀", "👨‍🚀", "🧑‍🎨", "🧑‍🔬", "🧑‍🎤", "🧑‍⚖️", "🧑‍💼", "🧑‍🏭",
+        "🦸", "🦸‍♀️", "🦸‍♂️", "🦹", "🧙", "🧙‍♀️", "🧚", "🧚‍♂️", "🧜", "🧜‍♂️", "🧛", "🧝", "🧞", "🎅", "🤶", "🧑‍🎄",
+        "🧑‍🦽", "🧑‍🦼", "🧑‍🦯", "🏋️", "🧘", "🚴", "🏊", "🤸", "🧗", "🏄",
+        "🤖", "👻", "👽", "🧑‍🤝‍🧑", "👨‍👩‍👧‍👦"
     ]),
     (name: String(localized: "Dingen"), glyphs: [
         "⭐", "❤️", "📅", "🏫", "🏠", "🎁", "🎈", "🎉", "📷", "🎵", "☀️", "🌈", "❄️", "🌸", "🔔", "⏳",
         "📌", "✅", "🏆", "💧", "🔥", "🌟", "🚌", "✏️", "💻", "📱", "🖥️", "📺"
     ]),
 ]
+
+/// Huidskleur, zoals je die in de kiezer kiest: één keuze voor de hele rij.
+enum SkinTone: Int, CaseIterable {
+    case none, light, mediumLight, medium, mediumDark, dark
+
+    private static let modifiers: [Unicode.Scalar] = [
+        "\u{1F3FB}", "\u{1F3FC}", "\u{1F3FD}", "\u{1F3FE}", "\u{1F3FF}",
+    ]
+
+    var scalar: Unicode.Scalar? { self == .none ? nil : Self.modifiers[rawValue - 1] }
+
+    /// Een hand om de keuze mee te laten zien.
+    var sample: String { apply(to: "✋") }
+
+    static func isModifier(_ scalar: Unicode.Scalar) -> Bool { modifiers.contains(scalar) }
+
+    /// De kleur zoals die nu in een icoon zit, of `.none`.
+    static func of(_ glyph: String) -> SkinTone {
+        for scalar in glyph.unicodeScalars {
+            if let i = modifiers.firstIndex(of: scalar) { return SkinTone(rawValue: i + 1) ?? .none }
+        }
+        return .none
+    }
+
+    static var remembered: SkinTone {
+        get { SkinTone(rawValue: UserDefaults.standard.integer(forKey: "skinTone")) ?? .none }
+        set { UserDefaults.standard.set(newValue.rawValue, forKey: "skinTone") }
+    }
+
+    /// Zet deze kleur in een icoon: achter het eerste mensfiguur erin, in
+    /// plaats van wat er al stond. Iconen met meer dan één figuur (hand in
+    /// hand, een gezin) blijven zoals ze zijn; die hebben geen kleur.
+    func apply(to glyph: String) -> String {
+        let bare = Self.bare(glyph)
+        guard Self.supportsTone(bare), let modifier = scalar else { return bare }
+        var out = String.UnicodeScalarView()
+        var placed = false
+        var scalars = Array(bare.unicodeScalars)
+        var i = 0
+        while i < scalars.count {
+            let s = scalars[i]
+            out.append(s)
+            if !placed, s.properties.isEmojiModifierBase {
+                out.append(modifier)
+                placed = true
+                // Een variatiekiezer achter het figuur hoort weg zodra er een kleur staat.
+                if i + 1 < scalars.count, scalars[i + 1] == "\u{FE0F}" { i += 1 }
+            }
+            i += 1
+        }
+        scalars = []
+        return String(out)
+    }
+
+    /// Precies één figuur dat een kleur kan hebben.
+    static func supportsTone(_ glyph: String) -> Bool {
+        glyph.unicodeScalars.filter { $0.properties.isEmojiModifierBase }.count == 1
+    }
+
+    /// Zonder kleur, zoals het in de lijst staat.
+    static func bare(_ glyph: String) -> String {
+        var out = String.UnicodeScalarView()
+        for s in glyph.unicodeScalars where !isModifier(s) { out.append(s) }
+        var text = String(out)
+        // 🕵️ staat in de lijst mét variatiekiezer; die komt terug als de kleur weggaat.
+        if let scalar = text.unicodeScalars.first, text.unicodeScalars.count == 1,
+           scalar.properties.isEmojiModifierBase, !scalar.properties.isEmojiPresentation {
+            text += "\u{FE0F}"
+        }
+        return text
+    }
+}
 
 /// Trefwoorden per icoon, zodat de app er zelf een kiest bij wat je typt.
 /// Een woord telt als het begin van een woord in de naam overeenkomt; het

@@ -9,6 +9,7 @@ struct EmojiPicker: View {
     @Environment(\.palette) private var palette
     @State private var value: String
     @State private var group: String
+    @State private var tone: SkinTone
 
     init(title: String, current: String, onCancel: @escaping () -> Void,
          onDone: @escaping (String) -> Void) {
@@ -17,13 +18,21 @@ struct EmojiPicker: View {
         self.onCancel = onCancel
         self.onDone = onDone
         let glyph = current.isEmpty ? "⭐" : current
+        let bare = SkinTone.bare(glyph)
         _value = State(initialValue: glyph)
-        _group = State(initialValue: EMOJI_GROUPS.first { $0.glyphs.contains(glyph) }?.name
+        _group = State(initialValue: EMOJI_GROUPS.first { $0.glyphs.contains(bare) }?.name
             ?? EMOJI_GROUPS[0].name)
+        // De kleur die er al in zit wint; anders wat je de vorige keer koos.
+        _tone = State(initialValue: SkinTone.supportsTone(bare) && SkinTone.of(glyph) != .none
+            ? SkinTone.of(glyph) : SkinTone.remembered)
     }
 
     private var glyphs: [String] {
-        EMOJI_GROUPS.first { $0.name == group }?.glyphs ?? []
+        (EMOJI_GROUPS.first { $0.name == group }?.glyphs ?? []).map { tone.apply(to: $0) }
+    }
+
+    private var hasFaces: Bool {
+        (EMOJI_GROUPS.first { $0.name == group }?.glyphs ?? []).contains { SkinTone.supportsTone($0) }
     }
 
     var body: some View {
@@ -49,6 +58,26 @@ struct EmojiPicker: View {
                 .padding(.bottom, 12)
             }
 
+            if hasFaces {
+                HStack(spacing: 8) {
+                    ForEach(SkinTone.allCases, id: \.rawValue) { option in
+                        Button { pick(option) } label: {
+                            Circle()
+                                .fill(palette.tile)
+                                .overlay(Circle().strokeBorder(
+                                    option == tone ? ORANGE : palette.tileEdge,
+                                    lineWidth: option == tone ? 2.5 : 1))
+                                .overlay(Text(option.sample).font(.system(size: 20)))
+                                .frame(width: 38, height: 38)
+                        }
+                        .buttonStyle(.smallPress)
+                        .accessibilityLabel(option.sample)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(.bottom, 12)
+            }
+
             let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 6)
             LazyVGrid(columns: columns, spacing: 8) {
                 ForEach(Array(glyphs.enumerated()), id: \.offset) { (_, glyph) in
@@ -66,5 +95,12 @@ struct EmojiPicker: View {
                 }
             }
         }
+    }
+
+    /// Een andere kleur kleurt de hele rij, en wat er al gekozen was mee.
+    private func pick(_ option: SkinTone) {
+        tone = option
+        SkinTone.remembered = option
+        if SkinTone.supportsTone(SkinTone.bare(value)) { value = option.apply(to: value) }
     }
 }
