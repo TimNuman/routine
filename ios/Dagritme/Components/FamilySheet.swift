@@ -21,7 +21,7 @@ struct FamilySheet: View {
 
     var body: some View {
         ZStack {
-            Sheet(title: String(localized: "Gezin"), alert: alert, onCancel: onClose) {
+            Sheet(title: String(localized: "Ouders en verzorgers"), alert: alert, onCancel: onClose) {
                 FormHead(String(localized: "Wie doet mee"), first: true)
                 EditCard {
                     ForEach(Array(members.enumerated()), id: \.element.id) { i, member in
@@ -67,7 +67,7 @@ struct FamilySheet: View {
                     .padding(.top, 12)
                     .accessibilityIdentifier("family.share")
                 } else {
-                    Note(String(localized: "Maak een code en stuur die naar de ander. Die tikt hem in bij Gezin op zijn eigen telefoon."))
+                    Note(String(localized: "Maak een code en stuur die naar de ander. Die tikt hem in bij Ouders en verzorgers op zijn eigen telefoon."))
                     CardButton(String(localized: "Maak een code"), plus: true, id: "family.invite") {
                         guard !making else { return }
                         making = true
@@ -158,7 +158,7 @@ struct FamilySheet: View {
     }
 
     private func shareText(_ invite: Invite) -> String {
-        String(localized: "Doe mee in Routines: zet de app op je telefoon, log in en tik bij Instellingen → Gezin deze code in: \(invite.pretty)")
+        String(localized: "Doe mee in Routines: zet de app op je telefoon, log in en tik bij Instellingen → Ouders en verzorgers deze code in: \(invite.pretty)")
     }
 }
 

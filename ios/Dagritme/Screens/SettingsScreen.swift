@@ -48,7 +48,7 @@ struct SettingsScreen: View {
 
             CardList {
                 if let account = session.account {
-                    CardRow(icon: "👥", title: String(localized: "Gezin"),
+                    CardRow(icon: "👥", title: String(localized: "Ouders en verzorgers"),
                             note: String(localized: "iemand erbij, of zelf meedoen"),
                             first: true, id: "settings.family") {
                         family = true

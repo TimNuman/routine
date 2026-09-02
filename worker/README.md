@@ -202,7 +202,7 @@ POST /api/v2/homes                       { name } → { home }
 
 Elk huis is een eigen Durable Object, `home:<id>`.
 
-### Gezin
+### Ouders en verzorgers
 
 Wie in een huis zit kan iemand erbij halen met een code: acht tekens zonder
 0/O en 1/I, één keer te gebruiken, een week geldig. De ander logt in op zijn

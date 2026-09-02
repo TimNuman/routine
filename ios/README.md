@@ -54,7 +54,7 @@ dat een 401 krijgt ruilt de refresh-token één keer in en probeert het opnieuw;
 de WebSocket verbindt gewoon opnieuw met het nieuwe token. Uitloggen staat
 onderaan *Instellingen*.
 
-**Gezin** (ook onder *Instellingen*, `Components/FamilySheet.swift`): wie er
+**Ouders en verzorgers** (ook onder *Instellingen*, `Components/FamilySheet.swift`): wie er
 in het huis zit, elk met een gezicht, een kleur en de naam die de kinderen
 gebruiken (papa, oma); je eigen regel aanraken opent dat blad. *Maak een
 code* geeft een code van een week die één keer werkt, met een deelknop; *Ik
