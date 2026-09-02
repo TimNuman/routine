@@ -54,7 +54,8 @@ struct SettingsScreen: View {
                         family = true
                         household.sheetOpen = true
                     }
-                    CardRow(icon: "👤", title: String(localized: "Ingelogd als \(account.label)"),
+                    CardRow(icon: session.me?.face ?? "👤",
+                            title: String(localized: "Ingelogd als \(session.me?.label ?? account.label)"),
                             note: String(localized: "tik om uit te loggen"),
                             id: "settings.account") { askSignOut = true }
                 } else {

@@ -84,6 +84,11 @@ final class Session {
     var error = ""
     /// Een code uit een uitnodigingslink, tot hij gebruikt of weggeklikt is.
     var pendingInvite: String?
+    /// Wie er in het huis zit, zoals het laatst opgehaald.
+    private(set) var members: [Member] = []
+
+    /// Jijzelf in dit huis: je gezicht en hoe de kinderen je noemen.
+    var me: Member? { members.first { $0.id == account?.id } }
 
     @ObservationIgnored private var access = ""
     @ObservationIgnored private var refreshToken = ""
@@ -189,6 +194,7 @@ final class Session {
             error = ""
             state = .signedIn
             if homes.isEmpty { await ensureHome() }
+            try? await members()
         } catch {
             self.error = error.localizedDescription
         }
@@ -237,9 +243,11 @@ final class Session {
 
     // MARK: - Gezin
 
+    @discardableResult
     func members() async throws -> [Member] {
         guard let home else { return [] }
-        return membersFrom(try await request("GET", "homes/\(home.id)/members", nil))
+        members = membersFrom(try await request("GET", "homes/\(home.id)/members", nil))
+        return members
     }
 
     /// Je eigen gezicht en naam in dit huis. Geeft de hele lijst terug.
@@ -247,12 +255,14 @@ final class Session {
         guard let home else { return [] }
         let out = try await request("PUT", "homes/\(home.id)/members/me",
                                     ["nickname": nickname, "emoji": emoji, "color": color])
-        return membersFrom(out)
+        members = membersFrom(out)
+        return members
     }
 
     func removeMember(_ id: String) async throws -> [Member] {
         guard let home else { return [] }
-        return membersFrom(try await request("DELETE", "homes/\(home.id)/members/\(id)", nil))
+        members = membersFrom(try await request("DELETE", "homes/\(home.id)/members/\(id)", nil))
+        return members
     }
 
     private func membersFrom(_ out: Json) -> [Member] {
@@ -284,6 +294,7 @@ final class Session {
         defer { busy = false }
         do {
             _ = try await post("invites/\(code)/accept", [:])
+            members = []
             await sync()
             return nil
         } catch let error as StoreError {
@@ -316,6 +327,7 @@ final class Session {
             let out = try await request("GET", "me", nil)
             take(out)
             if homes.isEmpty { await ensureHome() }
+            try? await members()
         } catch let error as StoreError {
             if case .http(401) = error {
                 forget()
@@ -359,6 +371,7 @@ final class Session {
         issued = .distantPast
         account = nil
         homes = []
+        members = []
         Keychain.clear()
     }
 
