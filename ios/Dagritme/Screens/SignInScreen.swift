@@ -7,6 +7,10 @@ struct SignInScreen: View {
 
     var body: some View {
         Welcome {
+            if session.pendingInvite != nil {
+                Note(String(localized: "Je hebt een uitnodiging. Log in, dan doe je meteen mee."))
+                    .padding(.bottom, 16)
+            }
             VStack(spacing: 12) {
                 if Capabilities.signInWithApple {
                     SignInWithAppleButton(.continue) { request in

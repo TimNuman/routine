@@ -438,6 +438,29 @@ describe('invites', () => {
   });
 });
 
+describe('the invite link', () => {
+  it('shows the code and offers to open the app', async () => {
+    const res = await call('/join/abcd-efgh');
+    expect(res.status).toBe(200);
+    expect(res.headers.get('Content-Type')).toMatch(/text\/html/);
+    const html = await res.text();
+    expect(html).toContain('ABCD-EFGH');
+    expect(html).toContain('href="routines://join/ABCDEFGH"');
+  });
+
+  it('says so when the code is not a code', async () => {
+    expect(await (await call('/join/xy')).text()).toContain('klopt niet');
+  });
+
+  it('tells iOS which app owns /join', async () => {
+    const res = await call('/.well-known/apple-app-site-association');
+    expect(res.headers.get('Content-Type')).toMatch(/application\/json/);
+    expect(await res.json()).toEqual({
+      applinks: { details: [{ appIDs: ['B78S7QYAZC.app.dagritme'], components: [{ '/': '/join/*' }] }] },
+    });
+  });
+});
+
 describe('the assistant', () => {
   it('lets a signed-in user in without the shared key', async () => {
     const s = await signIn('apple', 'apple-reader');

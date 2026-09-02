@@ -61,6 +61,14 @@ code* geeft een code van een week die één keer werkt, met een deelknop; *Ik
 heb een code* is de andere kant, en daarna laat de app het huis van de ander
 zien. Wie het huis begon veegt de anderen weg.
 
+De deelknop stuurt een link, `https://<worker>/join/ABCD-EFGH`. Die pagina
+opent `routines://join/…` (het URL-schema staat in `Info.plist`); de app
+onthoudt de code (`Session.handle`) en biedt hem aan: op het inlogscherm als
+melding, en ingelogd als blad met één knop *Doe mee*. Met een betaald
+developer-account komt daar *Associated Domains* bij
+(`applinks:routine.tim-numan.workers.dev`, staat al in het
+entitlements-bestand) en opent de https-link de app rechtstreeks.
+
 De Driver start de app met `SESSION=legacy`, dus zonder inlogscherm; zet
 `TEST_RUNNER_DRIVER_SESSION=fresh` om dat scherm wel te zien.
 

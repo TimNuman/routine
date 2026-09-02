@@ -28,7 +28,13 @@ struct DagritmeApp: App {
                     RootScreen()
                         .task { await Script.run(household) }
                 }
+
+                if let code = session.pendingInvite, session.state == .signedIn, !session.needsHome {
+                    InviteSheet(code: code)
+                        .environment(\.palette, Palette(dark: false))
+                }
             }
+            .onOpenURL { session.handle($0) }
             .environment(session)
             .environment(household)
             .preferredColorScheme(household.evening ? .dark : .light)

@@ -23,6 +23,7 @@ import {
 } from './auth';
 import { dateOr } from './dates';
 import type { House } from './house';
+import { joinPage, siteAssociation } from './join';
 import { isRoutine } from './types';
 import type { Content } from './types';
 
@@ -349,6 +350,15 @@ app.post('/api/v2/read', requireAnyone, async (c) => {
     return c.json({ error: 'Something went wrong in the assistant.' }, 500);
   }
 });
+
+// ---- invite links --------------------------------------------------------
+
+app.get('/join/:code', (c) => c.html(joinPage(cleanInviteCode(c.req.param('code')), c.env)));
+
+// Tells iOS which app may open /join/* links. Must be JSON, no redirect.
+const aasa = (c: { env: Env; json: (body: unknown) => Response }) => c.json(siteAssociation(c.env));
+app.get('/.well-known/apple-app-site-association', aasa);
+app.get('/apple-app-site-association', aasa);
 
 // ---- the rest ------------------------------------------------------------
 

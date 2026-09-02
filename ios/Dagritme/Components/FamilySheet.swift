@@ -158,7 +158,45 @@ struct FamilySheet: View {
     }
 
     private func shareText(_ invite: Invite) -> String {
-        String(localized: "Doe mee in Routines: zet de app op je telefoon, log in en tik bij Instellingen → Ouders en verzorgers deze code in: \(invite.pretty)")
+        String(localized: "Doe mee in Routines: \(Config.baseURL)/join/\(invite.pretty)\n\nLukt de link niet? Log in de app in en tik bij Instellingen → Ouders en verzorgers deze code in: \(invite.pretty)")
+    }
+}
+
+/// Iemand tikte op een uitnodigingslink: de code staat klaar, één tik doet mee.
+struct InviteSheet: View {
+    let code: String
+
+    @Environment(Session.self) private var session
+    @Environment(\.palette) private var palette
+    @State private var alert = ""
+
+    private var pretty: String { code.prefix(4) + "-" + code.suffix(4) }
+
+    var body: some View {
+        Sheet(title: String(localized: "Uitnodiging"), alert: alert,
+              button: String(localized: "Doe mee"), busy: session.busy,
+              onCancel: { session.pendingInvite = nil },
+              onButton: {
+                  Task {
+                      if let problem = await session.accept(code: code) {
+                          alert = problem
+                      } else {
+                          session.pendingInvite = nil
+                      }
+                  }
+              }) {
+            VStack(spacing: 6) {
+                Text(pretty)
+                    .textStyle(TextStyle(font: Fonts.balooHeavy(30), tracking: 2))
+                    .foregroundStyle(palette.ink)
+                Text("Je bent uitgenodigd in een huis. Doe je mee, dan laat de app voortaan dat huis zien.")
+                    .textStyle(Fonts.note).foregroundStyle(palette.muted)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+        }
     }
 }
 

@@ -349,6 +349,9 @@
         }
       }
     },
+    "begonnen" : {
+
+    },
     "Bewaar" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -393,6 +396,12 @@
         }
       }
     },
+    "Dan zie je voortaan het huis van de ander." : {
+
+    },
+    "Dat is geen hele code." : {
+
+    },
     "Datum" : {
 
     },
@@ -409,6 +418,9 @@
           }
         }
       }
+    },
+    "Deel de code" : {
+
     },
     "Deze dag staat er niets in de agenda." : {
       "extractionState" : "manual",
@@ -431,6 +443,12 @@
           }
         }
       }
+    },
+    "Die code bestaat niet." : {
+
+    },
+    "Die code is al gebruikt of verlopen." : {
+
     },
     "Dieren" : {
       "extractionState" : "manual",
@@ -464,6 +482,15 @@
           }
         }
       }
+    },
+    "Doe mee" : {
+
+    },
+    "Doe mee in Routines: zet de app op je telefoon, log in en tik bij Instellingen → Ouders en verzorgers deze code in: %@" : {
+
+    },
+    "Eén keer te gebruiken, een week geldig." : {
+
     },
     "Eenmalig" : {
       "extractionState" : "manual",
@@ -511,6 +538,12 @@
           }
         }
       }
+    },
+    "Er is nog geen huis." : {
+
+    },
+    "Er kwam geen code terug." : {
+
     },
     "Er moet minstens één kind overblijven." : {
       "extractionState" : "manual",
@@ -739,6 +772,9 @@
         }
       }
     },
+    "Hoe noemen de kinderen je?" : {
+
+    },
     "Hoe vaak" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -783,6 +819,12 @@
         }
       }
     },
+    "Iemand erbij" : {
+
+    },
+    "iemand erbij, of zelf meedoen" : {
+
+    },
     "Iets bijzonders toevoegen" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -815,6 +857,9 @@
           }
         }
       }
+    },
+    "Ik heb een code" : {
+
     },
     "In welk ritme" : {
       "extractionState" : "manual",
@@ -868,6 +913,12 @@
           }
         }
       }
+    },
+    "jij" : {
+
+    },
+    "Jij" : {
+
     },
     "Kenmerk toevoegen" : {
       "extractionState" : "manual",
@@ -978,6 +1029,15 @@
           }
         }
       }
+    },
+    "lid" : {
+
+    },
+    "Maak een code" : {
+
+    },
+    "Maak een code en stuur die naar de ander. Die tikt hem in bij Ouders en verzorgers op zijn eigen telefoon." : {
+
     },
     "Mensen" : {
       "extractionState" : "manual",
@@ -1230,6 +1290,9 @@
     "Opslaan lukte niet (%@)." : {
 
     },
+    "Ouders en verzorgers" : {
+
+    },
     "Over %lld weken" : {
 
     },
@@ -1243,6 +1306,9 @@
           }
         }
       }
+    },
+    "papa, mama, oma…" : {
+
     },
     "Plak een mail of appje, of typ het gewoon:\n\niedere dinsdag om 18:00 tennis Emma" : {
 
@@ -1364,6 +1430,9 @@
       }
     },
     "tik om uit te loggen" : {
+
+    },
+    "Tik op jezelf om te kiezen hoe de kinderen je noemen." : {
 
     },
     "Toch niet" : {
@@ -1652,6 +1721,9 @@
           }
         }
       }
+    },
+    "Wie doet mee" : {
+
     },
     "Zet er %lld in de app" : {
 

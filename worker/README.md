@@ -217,6 +217,15 @@ POST   /api/v2/homes/:home/invites            → { code, expiresAt }
 POST   /api/v2/invites/:code/accept           → { home }, of 404/410 met reden
 ```
 
+De code gaat ook als link: `https://<worker>/join/ABCD-EFGH`. Die pagina
+(`join.ts`) laat de code zien en heeft een knop *Open in Routines* die
+`routines://join/ABCDEFGH` opent; de app zet de code dan klaar. Daarnaast
+staat `/.well-known/apple-app-site-association` klaar, met `APPLE_TEAM_ID`
+uit `wrangler.toml`: met een betaald developer-account en *Associated
+Domains* in de app opent iOS zo'n link meteen in de app, zonder de pagina.
+`APP_STORE_URL` is de knop voor wie de app nog niet heeft; leeg tot hij in
+de store staat.
+
 De eerste in een huis is `owner`; de rest is `member`. Alleen de owner zet
 iemand eruit. Wie eruit is gezet krijgt 403 op alles van dat huis en ziet
 bij de volgende `/me` het huis niet meer.

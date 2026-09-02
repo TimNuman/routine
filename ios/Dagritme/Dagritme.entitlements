@@ -6,5 +6,9 @@
 	<array>
 		<string>Default</string>
 	</array>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:routine.tim-numan.workers.dev</string>
+	</array>
 </dict>
 </plist>

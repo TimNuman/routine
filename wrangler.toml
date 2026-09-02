@@ -30,6 +30,10 @@ HOUSEHOLD = "huis-9f3k2a"
 # Google one is the iOS client id from console.cloud.google.com. Leave the
 # Google one empty and that provider says "not configured".
 APPLE_BUNDLE_ID = "app.dagritme"
+# For the universal-link file at /.well-known/apple-app-site-association.
+APPLE_TEAM_ID = "B78S7QYAZC"
+# Where an invite page sends someone without the app. Empty until it is listed.
+APP_STORE_URL = ""
 GOOGLE_CLIENT_ID = "166041020343-iiueet9rmmun867tno2v6vnmfhc6gvq0.apps.googleusercontent.com"
 
 # The directory: users, homes, who belongs where. The houses themselves are

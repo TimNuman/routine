@@ -82,6 +82,8 @@ final class Session {
     private(set) var homes: [Home] = []
     var busy = false
     var error = ""
+    /// Een code uit een uitnodigingslink, tot hij gebruikt of weggeklikt is.
+    var pendingInvite: String?
 
     @ObservationIgnored private var access = ""
     @ObservationIgnored private var refreshToken = ""
@@ -291,6 +293,18 @@ final class Session {
         } catch {
             return error.localizedDescription
         }
+    }
+
+    /// `routines://join/ABCD-EFGH` of `https://…/join/ABCD-EFGH`: onthoud de
+    /// code; het scherm biedt hem aan zodra er iemand ingelogd is.
+    func handle(_ url: URL) {
+        let parts = url.pathComponents.filter { $0 != "/" }
+        let fromPath = parts.first == "join" ? parts.dropFirst().first : nil
+        let fromHost = url.host == "join" ? parts.first : nil
+        guard let raw = fromPath ?? fromHost else { return }
+        let code = raw.uppercased().filter { $0.isLetter || $0.isNumber }
+        guard code.count == 8 else { return }
+        pendingInvite = code
     }
 
     // MARK: - Onder de motorkap
