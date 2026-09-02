@@ -54,6 +54,9 @@
         }
       }
     },
+    "☀️" : {
+
+    },
     "☀️ ochtend" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -313,6 +316,9 @@
         }
       }
     },
+    "Apple gaf geen token terug." : {
+
+    },
     "avond" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -462,6 +468,9 @@
         }
       }
     },
+    "Een huis beginnen" : {
+
+    },
     "Eenmalig" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -495,6 +504,9 @@
         }
       }
     },
+    "Er is geen huis om in te bewaren." : {
+
+    },
     "Er is nog geen adres voor de uitlezer." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -505,6 +517,9 @@
           }
         }
       }
+    },
+    "Er kwam geen huis terug." : {
+
     },
     "Er moet minstens één kind overblijven." : {
       "extractionState" : "manual",
@@ -616,6 +631,9 @@
         }
       }
     },
+    "Ga door met Google" : {
+
+    },
     "Ga verder" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -671,6 +689,12 @@
         }
       }
     },
+    "Google gaf geen code terug." : {
+
+    },
+    "Google wees het af (%@)." : {
+
+    },
     "Groep" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -696,6 +720,9 @@
     "Haal eerst de stappen uit '%@'." : {
 
     },
+    "Het dagritme van jullie huis, op elke telefoon tegelijk." : {
+
+    },
     "Het uitlezen lukte niet (%@)." : {
 
     },
@@ -709,6 +736,9 @@
           }
         }
       }
+    },
+    "Hoe heet jullie huis?" : {
+
     },
     "Hoe laat" : {
       "extractionState" : "manual",
@@ -809,6 +839,15 @@
         }
       }
     },
+    "ingelogd als %@" : {
+
+    },
+    "Inloggen" : {
+
+    },
+    "Inloggen met Google is nog niet ingesteld." : {
+
+    },
     "Instellingen" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -841,6 +880,9 @@
           }
         }
       }
+    },
+    "Jullie huizen" : {
+
     },
     "Kenmerk toevoegen" : {
       "extractionState" : "manual",
@@ -951,6 +993,12 @@
           }
         }
       }
+    },
+    "lid" : {
+
+    },
+    "Maak het huis" : {
+
     },
     "Mensen" : {
       "extractionState" : "manual",
@@ -1098,6 +1146,9 @@
         }
       }
     },
+    "Nog een huis" : {
+
+    },
     "nog niemand" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1108,6 +1159,9 @@
           }
         }
       }
+    },
+    "nu zonder account" : {
+
     },
     "ochtend" : {
       "extractionState" : "manual",
@@ -1261,6 +1315,9 @@
         }
       }
     },
+    "Routines" : {
+
+    },
     "school, sport en wat er verder is" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1352,6 +1409,9 @@
         }
       }
     },
+    "Uitloggen" : {
+
+    },
     "van" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1362,6 +1422,9 @@
           }
         }
       }
+    },
+    "van jou" : {
+
     },
     "Vanavond" : {
       "extractionState" : "manual",
@@ -1606,6 +1669,12 @@
       }
     },
     "Zet er %lld in de app" : {
+
+    },
+    "Zonder account verder" : {
+
+    },
+    "zonder naam" : {
 
     }
   },

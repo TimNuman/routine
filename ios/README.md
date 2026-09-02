@@ -32,10 +32,14 @@ toestel, en op de simulator alleen omdat die dezelfde machine is.
 
 De app opent met een inlogscherm: Apple, Google, of *zonder account verder*.
 
-- **Apple** gaat via `SignInWithAppleButton`; daarvoor staat
-  `com.apple.developer.applesignin` in `Dagritme/Dagritme.entitlements`, en
-  moet de capability aanstaan bij het App ID in de developer-portal (Xcode
-  regelt dat bij automatisch signen).
+- **Apple** gaat via `SignInWithAppleButton`. Daarvoor is een betaald
+  Apple Developer-account nodig: een persoonlijk (gratis) team mag de
+  capability niet, en de build faalt dan. Daarom staat
+  `Dagritme/Dagritme.entitlements` er wel, maar is hij nog niet aan het
+  target gekoppeld. Zodra het account er is: *Signing & Capabilities → +
+  Sign in with Apple* (dat zet `CODE_SIGN_ENTITLEMENTS` op dat bestand). Tot
+  die tijd ziet `Core/Capabilities.swift` in het profiel dat de entitlement
+  ontbreekt en laat de knop weg.
 - **Google** gaat zonder hun sdk: `Core/GoogleSignIn.swift` doet de
   OAuth-dans met PKCE in een `ASWebAuthenticationSession`. Het client-id staat
   als `GOOGLE_CLIENT_ID` in `Info.plist`, met het omgekeerde id als

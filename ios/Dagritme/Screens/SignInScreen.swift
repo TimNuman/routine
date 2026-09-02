@@ -8,15 +8,17 @@ struct SignInScreen: View {
     var body: some View {
         Welcome {
             VStack(spacing: 12) {
-                SignInWithAppleButton(.continue) { request in
-                    request.requestedScopes = [.fullName, .email]
-                } onCompletion: { result in
-                    Task { await apple(result) }
+                if Capabilities.signInWithApple {
+                    SignInWithAppleButton(.continue) { request in
+                        request.requestedScopes = [.fullName, .email]
+                    } onCompletion: { result in
+                        Task { await apple(result) }
+                    }
+                    .signInWithAppleButtonStyle(.black)
+                    .frame(height: 52)
+                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .accessibilityIdentifier("signin.apple")
                 }
-                .signInWithAppleButtonStyle(.black)
-                .frame(height: 52)
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .accessibilityIdentifier("signin.apple")
 
                 BigButton(String(localized: "Ga door met Google"), glyph: "G", id: "signin.google") {
                     Task { await session.signInWithGoogle() }
