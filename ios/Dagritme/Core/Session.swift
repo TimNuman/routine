@@ -28,6 +28,11 @@ struct Member: Identifiable, Equatable {
     var label: String { nickname ?? name ?? email ?? String(localized: "zonder naam") }
     var face: String { emoji ?? "🙂" }
     var owner: Bool { role == "owner" }
+
+    /// Dezelfde vorm als een kind, voor de gestapelde gezichtjes op een rij.
+    var asPerson: Person {
+        Person(id: id, name: label, emoji: face, color: color ?? COLORS[0], traits: [:])
+    }
 }
 
 struct Invite {

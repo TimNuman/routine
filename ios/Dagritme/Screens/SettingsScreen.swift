@@ -49,8 +49,12 @@ struct SettingsScreen: View {
             CardList {
                 if let account = session.account {
                     CardRow(icon: "👥", title: String(localized: "Ouders en verzorgers"),
-                            note: String(localized: "iemand erbij, of zelf meedoen"),
-                            first: true, id: "settings.family") {
+                            note: session.members.isEmpty
+                                ? String(localized: "iemand erbij, of zelf meedoen")
+                                : ListFormatter.localizedString(byJoining: session.members.map(\.label)),
+                            first: true,
+                            faces: session.members.map(\.asPerson),
+                            id: "settings.family") {
                         family = true
                         household.sheetOpen = true
                     }
