@@ -1,5 +1,12 @@
 import Foundation
 
+/// "Emma", "Emma en Mads", "Emma, Mads en Julia".
+func namesOf(_ people: [Person]) -> String {
+    let names = people.map(\.name).filter { !$0.isEmpty }
+    if names.isEmpty { return String(localized: "nog niemand") }
+    return ListFormatter.localizedString(byJoining: names)
+}
+
 enum Spoken {
     static func step(_ step: String, _ person: String) -> String {
         String(format: NSLocalizedString(

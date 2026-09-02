@@ -30,6 +30,7 @@ export { House } from './house';
 
 const MAX_KEY = 200;
 const MAX_NAME = 80;
+const DEFAULT_HOME = 'Thuis';
 const MAX_CONTENT_BYTES = 512 * 1024;
 
 type App = {
@@ -113,11 +114,15 @@ app.post('/api/v2/auth/sign-in', async (c) => {
     ? await accounts.complete(found, known)
     : await accounts.signUp({ ...identity, ...known });
 
-  return c.json({
-    ...(await session(user, accounts, c.env)),
-    user,
-    homes: await accounts.homesOf(user.id),
-  });
+  // One home per person for now; the app never asks for a name.
+  let homes = await accounts.homesOf(user.id);
+  if (!homes.length) {
+    const home = await accounts.createHome(user.id, DEFAULT_HOME);
+    await seed(c.env, houseNamed(c.env, 'home:' + home.id));
+    homes = [home];
+  }
+
+  return c.json({ ...(await session(user, accounts, c.env)), user, homes });
 });
 
 app.post('/api/v2/auth/refresh', async (c) => {

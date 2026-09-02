@@ -2,7 +2,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 enum EditKind: String, Identifiable {
-    case children, day, night, week, oneOff, general
+    case children, day, night, week, oneOff
     var id: String { rawValue }
 
     var title: String {
@@ -12,7 +12,6 @@ enum EditKind: String, Identifiable {
         case .night: return String(localized: "Avondritme")
         case .week: return String(localized: "Weekritme")
         case .oneOff: return String(localized: "Eenmalig")
-        case .general: return String(localized: "Naam")
         }
     }
 }
@@ -83,7 +82,7 @@ struct EditScreen: View {
 
         ZStack {
             FullSheet(title: kind.title, alert: alert, busy: busy,
-                      ownScroll: kind != .general,
+                      ownScroll: true,
                       onCancel: onCancel, onDone: done) {
                 switch kind {
                 case .children:
@@ -94,8 +93,6 @@ struct EditScreen: View {
                     weekList
                 case .oneOff:
                     oneOffList
-                case .general:
-                    generalList
                 }
             }
 
@@ -584,19 +581,6 @@ struct EditScreen: View {
             }
         }
         return out.sorted { ($0.date, $0.time) < ($1.date, $1.time) }
-    }
-
-    @ViewBuilder
-    private var generalList: some View {
-        EditCard {
-            HStack(spacing: 10) {
-                Text("🏡").font(.system(size: 24)).frame(width: 46)
-                Field(value: bind(draft, \.title), placeholder: String(localized: "Naam van de app"))
-            }
-            .padding(.vertical, 8)
-            .padding(.horizontal, 12)
-            .frame(minHeight: 58)
-        }
     }
 }
 

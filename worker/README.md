@@ -190,8 +190,9 @@ Apple stuurt de naam alleen de allereerste keer, en alleen aan de app; die
 geeft hem mee als `name`. Een e-mailadres wordt alleen bewaard als de provider
 zegt dat het gecontroleerd is.
 
-Wie ingelogd is kan een huis maken en zit dan als `owner` in dat huis. De
-opslag van zo'n huis staat onder het huis:
+Wie voor het eerst inlogt krijgt meteen een huis (`Thuis`, als `owner`); de
+app vraagt geen naam. Meer huizen maken kan, maar de app doet dat nu niet. De
+opslag van een huis staat onder het huis:
 
 ```
 POST /api/v2/homes                       { name } → { home }

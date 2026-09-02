@@ -52,41 +52,20 @@ struct SignInScreen: View {
     }
 }
 
-/// Ingelogd, maar nog geen huis gekozen: kies er een, of maak er een.
-struct HomeScreen: View {
+/// Ingelogd, maar de server gaf geen huis terug. Hoort niet te gebeuren;
+/// dan is dit de uitweg.
+struct NoHomeScreen: View {
     @Environment(Session.self) private var session
-    @Environment(\.palette) private var palette
-
-    @State private var name = ""
-    @State private var problem = ""
 
     var body: some View {
         Welcome(subtitle: session.account?.label ?? "") {
-            if !session.homes.isEmpty {
-                FormHead(String(localized: "Jullie huizen"), first: true)
-                CardList {
-                    ForEach(Array(session.homes.enumerated()), id: \.element.id) { i, home in
-                        CardRow(icon: "🏠", title: home.name,
-                                note: home.role == "owner" ? String(localized: "van jou") : String(localized: "lid"),
-                                first: i == 0, id: "home.\(home.id)") { session.choose(home) }
-                    }
-                }
-                .padding(.top, -8)
-            }
-
-            FormHead(session.homes.isEmpty ? String(localized: "Een huis beginnen")
-                                           : String(localized: "Nog een huis"))
-            Field(value: $name, placeholder: String(localized: "Hoe heet jullie huis?"), id: "home.name")
-            if !problem.isEmpty { AlertBox(problem).padding(.top, 12) }
-            BigButton(String(localized: "Maak het huis"), id: "home.create") {
-                Task {
-                    problem = await session.createHome(name.trimmingCharacters(in: .whitespaces)) ?? ""
+            if session.busy {
+                ProgressView().tint(ORANGE).frame(maxWidth: .infinity).padding(.top, 12)
+            } else {
+                BigButton(String(localized: "Probeer opnieuw"), id: "home.retry") {
+                    Task { await session.ensureHome() }
                 }
             }
-            .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || session.busy)
-            .opacity(name.trimmingCharacters(in: .whitespaces).isEmpty ? 0.5 : 1)
-            .padding(.top, 12)
-
             TextButton(String(localized: "Uitloggen"), id: "home.signout") {
                 Task { await session.signOut() }
             }

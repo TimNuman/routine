@@ -23,7 +23,7 @@ struct DagritmeApp: App {
                 case .signedOut:
                     SignInScreen()
                 case .signedIn where session.needsHome:
-                    HomeScreen()
+                    NoHomeScreen()
                 case .legacy, .signedIn:
                     RootScreen()
                         .task { await Script.run(household) }

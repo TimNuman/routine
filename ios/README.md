@@ -49,10 +49,10 @@ De app opent met een inlogscherm: Apple, Google, of *zonder account verder*.
 
 Wat er terugkomt bewaart `Core/Session.swift` in de sleutelhanger: de
 access-token (een uur), de refresh-token (90 dagen, eenmalig te gebruiken),
-wie je bent en welke huizen er zijn. Elk verzoek dat een 401 krijgt ruilt de
-refresh-token één keer in en probeert het opnieuw; de WebSocket verbindt
-gewoon opnieuw met het nieuwe token. Welk huis de app laat zien staat in
-`UserDefaults`; de rij onderaan *Instellingen* brengt je terug naar de keuze.
+wie je bent en het huis dat de server bij het inloggen aanmaakt. Elk verzoek
+dat een 401 krijgt ruilt de refresh-token één keer in en probeert het opnieuw;
+de WebSocket verbindt gewoon opnieuw met het nieuwe token. Uitloggen staat
+onderaan *Instellingen*.
 
 De Driver start de app met `SESSION=legacy`, dus zonder inlogscherm; zet
 `TEST_RUNNER_DRIVER_SESSION=fresh` om dat scherm wel te zien.

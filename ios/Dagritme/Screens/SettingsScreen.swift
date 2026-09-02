@@ -7,15 +7,15 @@ struct SettingsScreen: View {
     @Environment(\.metrics) private var m
 
     @State private var sheet: EditKind?
+    @State private var askSignOut = false
 
     var body: some View {
-        Screen(title: String(localized: "Instellingen"), subtitle: household.content?.title ?? "", narrow: true) {
+        Screen(title: String(localized: "Instellingen"),
+               subtitle: household.content.map { namesOf($0.people) } ?? "", narrow: true) {
             if let content = household.content {
                 CardList {
                     CardRow(icon: "🧒", title: String(localized: "Kinderen"),
-                            note: content.people.isEmpty
-                                ? String(localized: "nog niemand")
-                                : content.people.map { $0.name }.joined(separator: ", "),
+                            note: namesOf(content.people),
                             first: true,
                             faces: content.people,
                             id: "settings.children") { sheet = .children }
@@ -31,30 +31,22 @@ struct SettingsScreen: View {
                             note: oneOffText(content),
                             id: "settings.oneOff") { sheet = .oneOff }
                         .entrance(4)
-                    CardRow(icon: "⚙️", title: String(localized: "Naam"), note: content.title,
-                            id: "settings.general") {
-                        sheet = .general
-                    }
-                    .entrance(5)
                 }
                 .entrance(1)
             }
 
             CardList {
-                if let account = session.account, let home = session.home {
-                    CardRow(icon: "🏠", title: home.name,
-                            note: String(localized: "ingelogd als \(account.label)"),
-                            first: true, id: "settings.account") {
-                        // Terug naar de keuze: een ander huis, of uitloggen.
-                        session.homeId = nil
-                    }
+                if let account = session.account {
+                    CardRow(icon: "👤", title: String(localized: "Ingelogd als \(account.label)"),
+                            note: String(localized: "tik om uit te loggen"),
+                            first: true, id: "settings.account") { askSignOut = true }
                 } else {
                     CardRow(icon: "👤", title: String(localized: "Inloggen"),
                             note: String(localized: "nu zonder account"),
                             first: true, id: "settings.account") { session.showSignIn() }
                 }
             }
-            .entrance(6)
+            .entrance(5)
 
             Text("testversie")
                 .textStyle(Fonts.footnote)
@@ -62,7 +54,13 @@ struct SettingsScreen: View {
                 .opacity(0.75)
                 .frame(maxWidth: .infinity)
                 .padding(.top, 20)
-                .entrance(7)
+                .entrance(6)
+        }
+        .confirmationDialog(String(localized: "Uitloggen?"), isPresented: $askSignOut, titleVisibility: .visible) {
+            Button(String(localized: "Uitloggen"), role: .destructive) {
+                Task { await session.signOut() }
+            }
+            Button(String(localized: "Toch niet"), role: .cancel) {}
         }
         .fullScreenCover(item: $sheet) { kind in
             if let content = household.content {
@@ -75,7 +73,6 @@ struct SettingsScreen: View {
             }
         }
     }
-
 
     private func oneOffText(_ content: Content) -> String {
         let count = oneOffEntries(content).count

@@ -57,12 +57,6 @@ final class Session {
     var busy = false
     var error = ""
 
-    /// Welk huis de app laat zien. Bewaard buiten de sleutelhanger, want het
-    /// is geen geheim en mag per toestel verschillen.
-    var homeId: String? {
-        didSet { UserDefaults.standard.set(homeId, forKey: "home") }
-    }
-
     @ObservationIgnored private var access = ""
     @ObservationIgnored private var refreshToken = ""
     @ObservationIgnored private var issued = Date.distantPast
@@ -71,7 +65,8 @@ final class Session {
     private static let accessLifetime: TimeInterval = 60 * 60
     private static let legacyKey = "legacy"
 
-    var home: Home? { homes.first { $0.id == homeId } }
+    /// Eén huis per persoon, voorlopig: het eerste dat de server noemt.
+    var home: Home? { homes.first }
     var needsHome: Bool { state == .signedIn && home == nil }
 
     /// Verandert zodra er iets anders geladen moet worden: een ander huis, of
@@ -87,7 +82,6 @@ final class Session {
     init() { restore() }
 
     private func restore() {
-        homeId = UserDefaults.standard.string(forKey: "home")
         if ProcessInfo.processInfo.environment["SESSION"] == "legacy" {
             state = .legacy
             return
@@ -166,7 +160,7 @@ final class Session {
             UserDefaults.standard.set(false, forKey: Self.legacyKey)
             error = ""
             state = .signedIn
-            if homes.count == 1, let only = homes.first { homeId = only.id }
+            if homes.isEmpty { await ensureHome() }
         } catch {
             self.error = error.localizedDescription
         }
@@ -192,27 +186,25 @@ final class Session {
         }
     }
 
-    // MARK: - Huizen
+    // MARK: - Het huis
 
-    func createHome(_ name: String) async -> String? {
+    /// De server maakt bij het inloggen een huis; mocht dat toch ontbreken,
+    /// dan hier alsnog.
+    func ensureHome() async {
+        guard state == .signedIn, homes.isEmpty else { return }
         busy = true
         defer { busy = false }
         do {
-            let out = try await post("homes", ["name": name])
+            let out = try await post("homes", ["name": "Thuis"])
             let home = Home(id: out["home"]["id"].text, name: out["home"]["name"].text,
                             role: out["home"]["role"].text)
-            guard !home.id.isEmpty else { return String(localized: "Er kwam geen huis terug.") }
-            homes.append(home)
+            guard !home.id.isEmpty else { return }
+            homes = [home]
             persist()
-            homeId = home.id
-            return nil
+            error = ""
         } catch {
-            return error.localizedDescription
+            self.error = error.localizedDescription
         }
-    }
-
-    func choose(_ home: Home) {
-        homeId = home.id
     }
 
     // MARK: - Onder de motorkap
@@ -223,6 +215,7 @@ final class Session {
         do {
             let out = try await request("GET", "me", nil)
             take(out)
+            if homes.isEmpty { await ensureHome() }
         } catch let error as StoreError {
             if case .http(401) = error {
                 forget()

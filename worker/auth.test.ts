@@ -86,7 +86,7 @@ describe('signing in', () => {
   it('creates an account from an Apple id token', async () => {
     const s = await signIn('apple', 'apple-1', { email: 'emma@example.com', name: 'Emma' });
     expect(s.user).toEqual({ id: expect.any(String), email: 'emma@example.com', name: 'Emma' });
-    expect(s.homes).toEqual([]);
+    expect(s.homes).toEqual([{ id: expect.any(String), name: 'Thuis', role: 'owner' }]);
     expect(s.expiresIn).toBe(3600);
     expect(s.accessToken.split('.')).toHaveLength(3);
     expect(s.refreshToken.length).toBeGreaterThan(30);
@@ -98,6 +98,7 @@ describe('signing in', () => {
     const again = await signIn('google', 'google-1', { name: 'Mads' });
     expect(again.user.id).toBe(first.user.id);
     expect(again.user.name).toBe('Mads');
+    expect(again.homes).toEqual(first.homes);
   });
 
   it('ignores an unverified email', async () => {
@@ -161,7 +162,7 @@ describe('the access token', () => {
     const s = await signIn('apple', 'apple-me', { name: 'Emma' });
     const res = await call('/api/v2/me', withToken(s.accessToken));
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ user: s.user, homes: [] });
+    expect(await res.json()).toEqual({ user: s.user, homes: s.homes });
   });
 
   it('is required, and checked', async () => {
@@ -209,7 +210,7 @@ describe('homes', () => {
     expect(home).toEqual({ id: expect.any(String), name: 'Ons huis', role: 'owner' });
 
     const me = (await (await call('/api/v2/me', withToken(s.accessToken))).json()) as Session;
-    expect(me.homes).toEqual([home]);
+    expect(me.homes).toEqual([...s.homes, home]);
   });
 
   it('need a name and a user', async () => {
