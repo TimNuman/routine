@@ -14,7 +14,9 @@ struct DagritmeApp: App {
 
     var body: some Scene {
         WindowGroup {
-            Group {
+            // Een echte container om de switch: een kale switch als body
+            // wordt bij een @Observable-update soms niet opnieuw opgevraagd.
+            ZStack {
                 switch session.state {
                 case .unknown:
                     Sky(dark: false)
