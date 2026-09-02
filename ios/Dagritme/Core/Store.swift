@@ -18,14 +18,43 @@ func checkKey(_ routine: Routine, _ step: String, _ person: String) -> String {
     "\(routine.rawValue)/\(step)/\(person)"
 }
 
-enum Store {
-    private static var headers: [String: String] {
-        Config.key.isEmpty ? [:] : ["X-Routine-Key": Config.key]
+/// Waar de opslag van dit huis staat en wat er in de kopjes moet. Komt uit
+/// `Session`; met een account zit er een bearer-token in, en `refresh` haalt
+/// een nieuwe als die om is.
+struct Endpoint {
+    var store: URL
+    var headers: [String: String]
+    var refresh: (() async -> String?)?
+
+    var stream: URL? {
+        guard var parts = URLComponents(url: store.appendingPathComponent("stream"),
+                                        resolvingAgainstBaseURL: false)
+        else { return nil }
+        parts.scheme = parts.scheme == "http" ? "ws" : "wss"
+        return parts.url
     }
 
-    private static func url(_ path: String, _ query: [String: String] = [:]) throws -> URL {
-        guard let base = Config.storeURL,
-              var parts = URLComponents(url: base.appendingPathComponent(path),
+    var assistant: URL? { Config.assistantURL }
+
+    /// Doet het verzoek; op een 401 met een token één keer vernieuwen en
+    /// opnieuw proberen.
+    func perform(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
+        var request = request
+        headers.forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
+        var (data, response) = try await URLSession.shared.data(for: request)
+        if (response as? HTTPURLResponse)?.statusCode == 401, let refresh, let fresh = await refresh() {
+            request.setValue("Bearer " + fresh, forHTTPHeaderField: "Authorization")
+            (data, response) = try await URLSession.shared.data(for: request)
+        }
+        guard let http = response as? HTTPURLResponse else { throw StoreError.noAddress }
+        return (data, http)
+    }
+}
+
+enum Store {
+    private static func url(_ endpoint: Endpoint, _ path: String,
+                            _ query: [String: String] = [:]) throws -> URL {
+        guard var parts = URLComponents(url: endpoint.store.appendingPathComponent(path),
                                         resolvingAgainstBaseURL: false)
         else { throw StoreError.noAddress }
         if !query.isEmpty {
@@ -35,50 +64,49 @@ enum Store {
         return out
     }
 
-    private static func get(_ path: String, _ query: [String: String] = [:]) async throws -> Json {
-        var request = URLRequest(url: try url(path, query))
-        headers.forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
-        let (data, response) = try await URLSession.shared.data(for: request)
+    private static func get(_ endpoint: Endpoint, _ path: String,
+                            _ query: [String: String] = [:]) async throws -> Json {
+        let request = URLRequest(url: try url(endpoint, path, query))
+        let (data, response) = try await endpoint.perform(request)
         try check(response)
         return Json.parse(data)
     }
 
-    private static func send(_ path: String, _ method: String, _ body: [String: Any]) async throws {
-        var request = URLRequest(url: try url(path))
+    private static func send(_ endpoint: Endpoint, _ path: String, _ method: String,
+                             _ body: [String: Any]) async throws {
+        var request = URLRequest(url: try url(endpoint, path))
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        headers.forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        let (_, response) = try await URLSession.shared.data(for: request)
+        let (_, response) = try await endpoint.perform(request)
         try check(response)
     }
 
-    private static func check(_ response: URLResponse) throws {
-        guard let http = response as? HTTPURLResponse else { return }
+    private static func check(_ http: HTTPURLResponse) throws {
         guard (200..<300).contains(http.statusCode) else { throw StoreError.http(http.statusCode) }
     }
 
-    static func loadContent() async throws -> Content {
-        normalize(try await get("content")["content"])
+    static func loadContent(_ endpoint: Endpoint) async throws -> Content {
+        normalize(try await get(endpoint, "content")["content"])
     }
 
-    static func saveContent(_ content: [String: Any]) async throws {
-        try await send("content", "PUT", content)
+    static func saveContent(_ endpoint: Endpoint, _ content: [String: Any]) async throws {
+        try await send(endpoint, "content", "PUT", content)
     }
 
-    static func loadChecks(_ date: String) async throws -> Checks {
-        let raw = try await get("day", ["date": date])["checks"]
+    static func loadChecks(_ endpoint: Endpoint, _ date: String) async throws -> Checks {
+        let raw = try await get(endpoint, "day", ["date": date])["checks"]
         var checks: Checks = [:]
         for key in raw.keys where raw[key].flag { checks[key] = true }
         return checks
     }
 
-    static func writeCheck(date: String, key: String, on: Bool) async throws {
-        try await send("check", "PUT", ["date": date, "key": key, "on": on])
+    static func writeCheck(_ endpoint: Endpoint, date: String, key: String, on: Bool) async throws {
+        try await send(endpoint, "check", "PUT", ["date": date, "key": key, "on": on])
     }
 
-    static func clearRoutine(date: String, routine: Routine) async throws {
-        try await send("routine", "DELETE", ["date": date, "routine": routine.rawValue])
+    static func clearRoutine(_ endpoint: Endpoint, date: String, routine: Routine) async throws {
+        try await send(endpoint, "routine", "DELETE", ["date": date, "routine": routine.rawValue])
     }
 }
 
@@ -116,10 +144,14 @@ final class LiveStream {
     private var attempts = 0
     private var retry: Task<Void, Never>?
     private var day: String
+    /// Elke keer opnieuw gevraagd, want het token erin kan intussen vernieuwd zijn.
+    private let endpoint: () -> Endpoint?
     private let onMessage: (StreamMessage) -> Void
 
-    init(date: String, onMessage: @escaping (StreamMessage) -> Void) {
+    init(date: String, endpoint: @escaping () -> Endpoint?,
+         onMessage: @escaping (StreamMessage) -> Void) {
         self.day = date
+        self.endpoint = endpoint
         self.onMessage = onMessage
         connect()
     }
@@ -144,15 +176,13 @@ final class LiveStream {
     }
 
     private func connect() {
-        guard !closed, var address = Config.streamURL else { return }
+        guard !closed, let endpoint = endpoint(), var address = endpoint.stream else { return }
         if var parts = URLComponents(url: address, resolvingAgainstBaseURL: false) {
             parts.queryItems = [URLQueryItem(name: "date", value: day)]
             if let out = parts.url { address = out }
         }
         var request = URLRequest(url: address)
-        if !Config.key.isEmpty {
-            request.setValue(Config.key, forHTTPHeaderField: "X-Routine-Key")
-        }
+        endpoint.headers.forEach { request.setValue($0.value, forHTTPHeaderField: $0.key) }
         let fresh = URLSession.shared.webSocketTask(with: request)
         task = fresh
         fresh.resume()

@@ -34,20 +34,37 @@ final class Household {
 
     var evening: Bool { routine == .night && tab == .routine }
 
+    @ObservationIgnored let session: Session
     @ObservationIgnored private var stream: LiveStream?
     @ObservationIgnored private var clock: Task<Void, Never>?
     @ObservationIgnored private var chosen = false
 
-    init() {
+    var endpoint: Endpoint? { session.endpoint }
+
+    init(session: Session) {
+        self.session = session
+        start()
+    }
+
+    /// Van voren af aan, voor dit huis: bij de start, en zodra de sessie een
+    /// ander huis aanwijst.
+    func start() {
+        stream?.stop()
+        stream = nil
+        content = nil
+        checks = [:]
+        error = ""
+        guard endpoint != nil else { return }
         Task { await reload() }
         listen()
-        tick()
+        if clock == nil { tick() }
     }
 
     func reload() async {
+        guard let endpoint else { return }
         do {
-            async let fresh = Store.loadContent()
-            async let stored = Store.loadChecks(date)
+            async let fresh = Store.loadContent(endpoint)
+            async let stored = Store.loadChecks(endpoint, date)
             let (c, v) = try await (fresh, stored)
             content = c
             checks = v
@@ -61,6 +78,8 @@ final class Household {
     }
 
     func wake() {
+        guard endpoint != nil else { return }
+        session.wake()
         if stream == nil { listen() } else { stream?.watch(date) }
         if clock == nil { tick() }
         Task { await reload() }
@@ -100,9 +119,10 @@ final class Household {
         set(key, on)
         lastTick = Tick(key: key, on: on, n: (lastTick?.n ?? 0) + 1)
         let day = date
+        guard let endpoint else { return }
         Task {
             do {
-                try await Store.writeCheck(date: day, key: key, on: on)
+                try await Store.writeCheck(endpoint, date: day, key: key, on: on)
             } catch {
                 set(key, !on)
             }
@@ -113,13 +133,15 @@ final class Household {
         let which = routine
         checks = checks.filter { !$0.key.hasPrefix(which.rawValue + "/") }
         let day = date
-        Task { try? await Store.clearRoutine(date: day, routine: which) }
+        guard let endpoint else { return }
+        Task { try? await Store.clearRoutine(endpoint, date: day, routine: which) }
     }
 
     func save(_ draft: Draft) async -> String? {
         let fresh = cleaned(draft)
+        guard let endpoint else { return String(localized: "Er is geen huis om in te bewaren.") }
         do {
-            try await Store.saveContent(fresh)
+            try await Store.saveContent(endpoint, fresh)
         } catch {
             return String(localized: "Opslaan lukte niet (\(error.localizedDescription)).")
         }
@@ -132,7 +154,7 @@ final class Household {
     }
 
     private func listen() {
-        stream = LiveStream(date: date) { [weak self] message in
+        stream = LiveStream(date: date, endpoint: { [weak self] in self?.endpoint }) { [weak self] message in
             guard let self else { return }
             switch message {
             // Alleen toekennen wat echt anders is: elke herverbinding begint

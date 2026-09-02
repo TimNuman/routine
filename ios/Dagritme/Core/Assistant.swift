@@ -37,23 +37,20 @@ struct ReadError: LocalizedError {
     var errorDescription: String? { message }
 }
 
-func askAssistant(_ payload: Payload) async throws -> Json {
-    guard let address = Config.assistantURL else {
+func askAssistant(_ payload: Payload, _ endpoint: Endpoint?) async throws -> Json {
+    guard let endpoint, let address = endpoint.assistant else {
         throw ReadError(message: String(localized: "Er is nog geen adres voor de uitlezer."),
                         fromServer: false)
     }
     var request = URLRequest(url: address)
     request.httpMethod = "POST"
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-    if !Config.key.isEmpty {
-        request.setValue(Config.key, forHTTPHeaderField: "X-Routine-Key")
-    }
     request.httpBody = try JSONSerialization.data(withJSONObject: payload.body)
     request.timeoutInterval = 90
 
-    let (data, response) = try await URLSession.shared.data(for: request)
+    let (data, http) = try await endpoint.perform(request)
     let out = Json.parse(data)
-    if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+    if !(200..<300).contains(http.statusCode) {
         let reason = out["error"].text
         throw ReadError(message: reason.isEmpty ? "HTTP \(http.statusCode)" : reason,
                         fromServer: !reason.isEmpty)

@@ -14,6 +14,8 @@ final class Driver: XCTestCase {
             switch action {
             case "launch":
                 app.launchEnvironment["SCRIPT"] = environment("DRIVER_SCRIPT") ?? ""
+                // Zonder account, tenzij het plan het inlogscherm wil zien.
+                app.launchEnvironment["SESSION"] = environment("DRIVER_SESSION") ?? "legacy"
                 app.launch()
             case "wait":
                 Thread.sleep(forTimeInterval: number(step["s"]) ?? 1)

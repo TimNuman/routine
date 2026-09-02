@@ -241,6 +241,37 @@ describe('homes', () => {
     ).toBe(403);
   });
 
+  it('start as a copy of the shared household, for now', async () => {
+    const legacy = { version: 2, title: 'Het oude huis', people: [{ id: 'emma' }] };
+    await call('/api/v2/storage/content', { method: 'PUT', body: JSON.stringify(legacy) });
+
+    const s = await signIn('apple', 'apple-seeded');
+    const { home } = (await (await post('/api/v2/homes', { name: 'Nieuw' }, s.accessToken)).json()) as {
+      home: { id: string };
+    };
+    const got = await (
+      await call(`/api/v2/homes/${home.id}/storage/content`, withToken(s.accessToken))
+    ).json();
+    expect(got).toEqual({ content: legacy });
+
+    const bare = await signIn('apple', 'apple-unseeded');
+    const ctx = createExecutionContext();
+    const created = await app.fetch(
+      new Request('https://house/api/v2/homes', {
+        method: 'POST',
+        body: JSON.stringify({ name: 'Leeg' }),
+        headers: { Authorization: 'Bearer ' + bare.accessToken },
+      }),
+      { ...env, HOUSEHOLD: '' },
+      ctx,
+    );
+    const empty = ((await created.json()) as { home: { id: string } }).home;
+    const nothing = await (
+      await call(`/api/v2/homes/${empty.id}/storage/content`, withToken(bare.accessToken))
+    ).json();
+    expect(nothing).toEqual({ content: null });
+  });
+
   it('each have their own house', async () => {
     const s = await signIn('apple', 'apple-two-homes');
     const a = (await (await post('/api/v2/homes', { name: 'A' }, s.accessToken)).json()) as {
@@ -256,7 +287,7 @@ describe('homes', () => {
     const other = await (
       await call(`/api/v2/homes/${b.home.id}/storage/content`, withToken(s.accessToken))
     ).json();
-    expect(other).toEqual({ content: null });
+    expect((other as { content: { title?: string } | null }).content?.title).not.toBe('A');
   });
 
   it('stream with the same token', async () => {

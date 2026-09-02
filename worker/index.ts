@@ -153,8 +153,18 @@ app.post('/api/v2/homes', requireUser, async (c) => {
   const name = text((await body(c)).name, MAX_NAME);
   if (!name) return c.json({ error: 'A home needs a name.' }, 400);
   const home = await new Accounts(c.env.DB).createHome(c.get('userId'), name);
+  await seed(c.env, houseNamed(c.env, 'home:' + home.id));
   return c.json({ home }, 201);
 });
+
+// TEMPORARY: a new home starts as a copy of the one shared household, so the
+// family keeps its routines while the app moves to accounts. Replace with a
+// small scaffold (a morning, an evening, a few steps) once that has happened.
+async function seed(env: Env, house: DurableObjectStub<House>): Promise<void> {
+  if (!env.HOUSEHOLD) return;
+  const content = await houseNamed(env, env.HOUSEHOLD).getContent();
+  if (content) await house.putContent(content);
+}
 
 /** Signed in, and a member of this home. Puts the home's house on the context. */
 app.use('/api/v2/homes/:home/*', requireUser, async (c, next) => {

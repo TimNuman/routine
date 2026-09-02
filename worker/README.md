@@ -202,6 +202,11 @@ POST /api/v2/homes                       { name } → { home }
 Elk huis is een eigen Durable Object, `home:<id>`. Uitnodigen komt hierna;
 tot die tijd is een huis van één persoon.
 
+**Voorlopig** begint een nieuw huis als kopie van het ene gedeelde huis uit
+`HOUSEHOLD`, zodat het gezin zijn ritme houdt tijdens de overstap naar
+accounts. Dat wordt straks een klein startsjabloon: een ochtend, een avond,
+een paar stappen.
+
 ### De oude weg
 
 `/api/v2/storage/*` bedient nog steeds het ene huis uit `HOUSEHOLD` in

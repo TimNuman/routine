@@ -28,10 +28,30 @@ Tegen `wrangler dev` op de laptop draaien kan ook: zet dan
 toestel, en op de simulator alleen omdat die dezelfde machine is.
 `NSAllowsLocalNetworking` staat daarvoor al in `Info.plist`.
 
-Staat er een `SLEUTEL` als secret bij de Worker, zet hem dan bij
-`defaultKey` of in `ROUTINE_KEY`. Hij gaat mee als
-`X-Routine-Sleutel`-kopje — ook bij de WebSocket, want buiten een browser mag dat
-gewoon.
+## Inloggen
+
+De app opent met een inlogscherm: Apple, Google, of *zonder account verder*.
+
+- **Apple** gaat via `SignInWithAppleButton`; daarvoor staat
+  `com.apple.developer.applesignin` in `Dagritme/Dagritme.entitlements`, en
+  moet de capability aanstaan bij het App ID in de developer-portal (Xcode
+  regelt dat bij automatisch signen).
+- **Google** gaat zonder hun sdk: `Core/GoogleSignIn.swift` doet de
+  OAuth-dans met PKCE in een `ASWebAuthenticationSession`. Het client-id staat
+  als `GOOGLE_CLIENT_ID` in `Info.plist`, met het omgekeerde id als
+  URL-schema erbij. Een iOS-client heeft geen geheim.
+- **Zonder account** is de oude weg: het ene huis uit de Worker, met
+  `ROUTINE_KEY` als `X-Routine-Key`-kopje als daar een `SLEUTEL` staat.
+
+Wat er terugkomt bewaart `Core/Session.swift` in de sleutelhanger: de
+access-token (een uur), de refresh-token (90 dagen, eenmalig te gebruiken),
+wie je bent en welke huizen er zijn. Elk verzoek dat een 401 krijgt ruilt de
+refresh-token één keer in en probeert het opnieuw; de WebSocket verbindt
+gewoon opnieuw met het nieuwe token. Welk huis de app laat zien staat in
+`UserDefaults`; de rij onderaan *Instellingen* brengt je terug naar de keuze.
+
+De Driver start de app met `SESSION=legacy`, dus zonder inlogscherm; zet
+`TEST_RUNNER_DRIVER_SESSION=fresh` om dat scherm wel te zien.
 
 ## Hoe het in elkaar zit
 

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct SettingsScreen: View {
     @Environment(Household.self) private var household
+    @Environment(Session.self) private var session
     @Environment(\.palette) private var palette
     @Environment(\.metrics) private var m
 
@@ -38,6 +39,22 @@ struct SettingsScreen: View {
                 }
                 .entrance(1)
             }
+
+            CardList {
+                if let account = session.account, let home = session.home {
+                    CardRow(icon: "🏠", title: home.name,
+                            note: String(localized: "ingelogd als \(account.label)"),
+                            first: true, id: "settings.account") {
+                        // Terug naar de keuze: een ander huis, of uitloggen.
+                        session.homeId = nil
+                    }
+                } else {
+                    CardRow(icon: "👤", title: String(localized: "Inloggen"),
+                            note: String(localized: "nu zonder account"),
+                            first: true, id: "settings.account") { session.showSignIn() }
+                }
+            }
+            .entrance(6)
 
             Text("testversie")
                 .textStyle(Fonts.footnote)

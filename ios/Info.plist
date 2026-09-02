@@ -28,6 +28,21 @@
 	<string>https://routine.tim-numan.workers.dev</string>
 	<key>ROUTINE_KEY</key>
 	<string></string>
+	<key>GOOGLE_CLIENT_ID</key>
+	<string>166041020343-iiueet9rmmun867tno2v6vnmfhc6gvq0.apps.googleusercontent.com</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>google-sign-in</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.166041020343-iiueet9rmmun867tno2v6vnmfhc6gvq0</string>
+			</array>
+		</dict>
+	</array>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

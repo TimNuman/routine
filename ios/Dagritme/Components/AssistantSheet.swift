@@ -3,6 +3,7 @@ import SwiftUI
 private let MAX_QUESTIONS = 2
 
 struct AssistantSheet: View {
+    @Environment(Household.self) private var household
     let content: Content
     let onCancel: () -> Void
     let onSave: (Draft) async -> String?
@@ -169,7 +170,7 @@ struct AssistantSheet: View {
                 today: dateString(Date()),
                 round: round + 1,
                 children: content.people
-            ))
+            ), household.endpoint)
         } catch let problem as ReadError {
             phase = .paste
             alert = problem.fromServer ? problem.message
