@@ -54,6 +54,13 @@ dat een 401 krijgt ruilt de refresh-token één keer in en probeert het opnieuw;
 de WebSocket verbindt gewoon opnieuw met het nieuwe token. Uitloggen staat
 onderaan *Instellingen*.
 
+**Gezin** (ook onder *Instellingen*, `Components/FamilySheet.swift`): wie er
+in het huis zit, elk met een gezicht, een kleur en de naam die de kinderen
+gebruiken (papa, oma); je eigen regel aanraken opent dat blad. *Maak een
+code* geeft een code van een week die één keer werkt, met een deelknop; *Ik
+heb een code* is de andere kant, en daarna laat de app het huis van de ander
+zien. Wie het huis begon veegt de anderen weg.
+
 De Driver start de app met `SESSION=legacy`, dus zonder inlogscherm; zet
 `TEST_RUNNER_DRIVER_SESSION=fresh` om dat scherm wel te zien.
 

@@ -200,8 +200,26 @@ POST /api/v2/homes                       { name } → { home }
                                          voor wie lid is (anders 403)
 ```
 
-Elk huis is een eigen Durable Object, `home:<id>`. Uitnodigen komt hierna;
-tot die tijd is een huis van één persoon.
+Elk huis is een eigen Durable Object, `home:<id>`.
+
+### Gezin
+
+Wie in een huis zit kan iemand erbij halen met een code: acht tekens zonder
+0/O en 1/I, één keer te gebruiken, een week geldig. De ander logt in op zijn
+eigen telefoon en tikt de code in; daarna is dat huis het huis dat zijn app
+laat zien (`homes` staat op volgorde van meest recent lid geworden).
+
+```
+GET    /api/v2/homes/:home/members            { members: [{ id, name, email, role, nickname, emoji, color }] }
+PUT    /api/v2/homes/:home/members/me         { nickname, emoji, color } — hoe de kinderen je noemen
+DELETE /api/v2/homes/:home/members/:user      alleen de owner; niet zichzelf
+POST   /api/v2/homes/:home/invites            → { code, expiresAt }
+POST   /api/v2/invites/:code/accept           → { home }, of 404/410 met reden
+```
+
+De eerste in een huis is `owner`; de rest is `member`. Alleen de owner zet
+iemand eruit. Wie eruit is gezet krijgt 403 op alles van dat huis en ziet
+bij de volgende `/me` het huis niet meer.
 
 **Voorlopig** begint een nieuw huis als kopie van het ene gedeelde huis uit
 `HOUSEHOLD`, zodat het gezin zijn ritme houdt tijdens de overstap naar
@@ -218,12 +236,10 @@ allebei: een bearer-token óf de sleutel.
 
 ### Hierna
 
-1. **Uitnodigen**: een code of link waarmee een tweede ouder bij hetzelfde
-   huis komt.
-2. **Mail**: per huis een adres waar je een schoolmail naar doorstuurt.
+1. **Mail**: per huis een adres waar je een schoolmail naar doorstuurt.
    Cloudflare Email Routing levert die af bij de Worker, die hem uitleest en
    de voorstellen in het huis zet.
-3. **MCP**, zodat een assistent buiten de app bij het huis kan.
+2. **MCP**, zodat een assistent buiten de app bij het huis kan.
 
 ## Een reservekopie
 

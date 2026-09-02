@@ -15,6 +15,32 @@ struct Home: Codable, Equatable, Identifiable {
     var role: String
 }
 
+struct Member: Identifiable, Equatable {
+    var id: String
+    var name: String?
+    var email: String?
+    var role: String
+    /// Hoe de kinderen deze persoon noemen: papa, oma.
+    var nickname: String?
+    var emoji: String?
+    var color: String?
+
+    var label: String { nickname ?? name ?? email ?? String(localized: "zonder naam") }
+    var face: String { emoji ?? "🙂" }
+    var owner: Bool { role == "owner" }
+}
+
+struct Invite {
+    var code: String
+    var expires: Date?
+
+    /// `ABCDEFGH` → `ABCD-EFGH`, om over te tikken.
+    var pretty: String {
+        let half = code.count / 2
+        return code.count == 8 ? code.prefix(half) + "-" + code.suffix(half) : code
+    }
+}
+
 enum SignInProvider: String {
     case apple
     case google
@@ -204,6 +230,66 @@ final class Session {
             error = ""
         } catch {
             self.error = error.localizedDescription
+        }
+    }
+
+    // MARK: - Gezin
+
+    func members() async throws -> [Member] {
+        guard let home else { return [] }
+        return membersFrom(try await request("GET", "homes/\(home.id)/members", nil))
+    }
+
+    /// Je eigen gezicht en naam in dit huis. Geeft de hele lijst terug.
+    func updateMember(nickname: String, emoji: String, color: String) async throws -> [Member] {
+        guard let home else { return [] }
+        let out = try await request("PUT", "homes/\(home.id)/members/me",
+                                    ["nickname": nickname, "emoji": emoji, "color": color])
+        return membersFrom(out)
+    }
+
+    func removeMember(_ id: String) async throws -> [Member] {
+        guard let home else { return [] }
+        return membersFrom(try await request("DELETE", "homes/\(home.id)/members/\(id)", nil))
+    }
+
+    private func membersFrom(_ out: Json) -> [Member] {
+        out["members"].array.map {
+            Member(id: $0["id"].text,
+                   name: $0["name"].text.isEmpty ? nil : $0["name"].text,
+                   email: $0["email"].text.isEmpty ? nil : $0["email"].text,
+                   role: $0["role"].text,
+                   nickname: $0["nickname"].text.isEmpty ? nil : $0["nickname"].text,
+                   emoji: $0["emoji"].text.isEmpty ? nil : $0["emoji"].text,
+                   color: $0["color"].text.isEmpty ? nil : $0["color"].text)
+        }
+    }
+
+    func invite() async throws -> Invite {
+        guard let home else { throw SignInError(message: String(localized: "Er is nog geen huis.")) }
+        let out = try await post("homes/\(home.id)/invites", [:])
+        let code = out["code"].text
+        guard !code.isEmpty else { throw SignInError(message: String(localized: "Er kwam geen code terug.")) }
+        return Invite(code: code, expires: ISO8601DateFormatter().date(from: out["expiresAt"].text))
+    }
+
+    /// Doet mee in het huis van iemand anders. Daarna is dat het huis dat de
+    /// app laat zien. Nil als het lukte, anders de reden.
+    func accept(code raw: String) async -> String? {
+        let code = raw.uppercased().filter { $0.isLetter || $0.isNumber }
+        guard code.count >= 6 else { return String(localized: "Dat is geen hele code.") }
+        busy = true
+        defer { busy = false }
+        do {
+            _ = try await post("invites/\(code)/accept", [:])
+            await sync()
+            return nil
+        } catch let error as StoreError {
+            if case .http(404) = error { return String(localized: "Die code bestaat niet.") }
+            if case .http(410) = error { return String(localized: "Die code is al gebruikt of verlopen.") }
+            return error.localizedDescription
+        } catch {
+            return error.localizedDescription
         }
     }
 

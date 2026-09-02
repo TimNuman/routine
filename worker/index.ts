@@ -7,7 +7,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { Hono } from 'hono';
 import { createMiddleware } from 'hono/factory';
-import { Accounts, type User } from './accounts';
+import { Accounts, type Profile, type Role, type User } from './accounts';
 import { askAssistant, cleanPayload, NOTHING } from './assistant';
 import {
   ACCESS_TTL_SECONDS,
@@ -31,12 +31,17 @@ export { House } from './house';
 const MAX_KEY = 200;
 const MAX_NAME = 80;
 const DEFAULT_HOME = 'Thuis';
+const INVITE_DAYS = 7;
+// No 0/O or 1/I: the code gets read out loud and typed on a phone.
+const INVITE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const INVITE_LENGTH = 8;
 const MAX_CONTENT_BYTES = 512 * 1024;
 
 type App = {
   Bindings: Env;
   Variables: {
     userId: string;
+    role: Role;
     house: DurableObjectStub<House>;
   };
 };
@@ -176,8 +181,98 @@ app.use('/api/v2/homes/:home/*', requireUser, async (c, next) => {
   const homeId = c.req.param('home') ?? '';
   const role = await new Accounts(c.env.DB).roleIn(homeId, c.get('userId'));
   if (!role) return c.json({ error: 'Not a member of this home.' }, 403);
+  c.set('role', role);
   c.set('house', houseNamed(c.env, 'home:' + homeId));
   await next();
+});
+
+// ---- inviting ------------------------------------------------------------
+
+function newInviteCode(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(INVITE_LENGTH));
+  return Array.from(bytes, (b) => INVITE_ALPHABET[b % INVITE_ALPHABET.length]).join('');
+}
+
+/** `abcd-efgh ` → `ABCDEFGH`. */
+function cleanInviteCode(raw: unknown): string {
+  return String(raw ?? '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
+}
+
+function inviteExpiry(): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + INVITE_DAYS);
+  return d.toISOString();
+}
+
+app.get('/api/v2/homes/:home/members', async (c) => {
+  return c.json({ members: await new Accounts(c.env.DB).members(c.req.param('home')) });
+});
+
+const COLOR = /^#[0-9a-fA-F]{6}$/;
+
+function cleanProfile(raw: Record<string, unknown>): Profile {
+  const emoji = text(raw.emoji, 8);
+  const color = text(raw.color, 7);
+  return {
+    nickname: text(raw.nickname, MAX_NAME) || null,
+    emoji: emoji || null,
+    color: COLOR.test(color) ? color.toUpperCase() : null,
+  };
+}
+
+/** Your own face and name in this home; the owner may set anyone's. */
+app.put('/api/v2/homes/:home/members/:user', async (c) => {
+  const target = c.req.param('user') === 'me' ? c.get('userId') : c.req.param('user');
+  if (target !== c.get('userId') && c.get('role') !== 'owner') {
+    return c.json({ error: 'Only the owner can change someone else.' }, 403);
+  }
+  const accounts = new Accounts(c.env.DB);
+  const done = await accounts.updateMember(c.req.param('home'), target, cleanProfile(await body(c)));
+  if (!done) return c.json({ error: 'No such member.' }, 404);
+  return c.json({ members: await accounts.members(c.req.param('home')) });
+});
+
+/** The owner shows someone the door. Not themselves: a home keeps its owner. */
+app.delete('/api/v2/homes/:home/members/:user', async (c) => {
+  if (c.get('role') !== 'owner') return c.json({ error: 'Only the owner can remove someone.' }, 403);
+  const target = c.req.param('user');
+  if (target === c.get('userId')) return c.json({ error: 'The owner cannot leave their own home.' }, 400);
+  const accounts = new Accounts(c.env.DB);
+  const done = await accounts.removeMember(c.req.param('home'), target);
+  if (!done) return c.json({ error: 'No such member.' }, 404);
+  return c.json({ members: await accounts.members(c.req.param('home')) });
+});
+
+app.post('/api/v2/homes/:home/invites', async (c) => {
+  const accounts = new Accounts(c.env.DB);
+  const invite = await accounts.createInvite(
+    c.req.param('home'),
+    c.get('userId'),
+    newInviteCode(),
+    inviteExpiry(),
+  );
+  return c.json({ code: invite.code, expiresAt: invite.expiresAt }, 201);
+});
+
+app.post('/api/v2/invites/:code/accept', requireUser, async (c) => {
+  const code = cleanInviteCode(c.req.param('code'));
+  const accounts = new Accounts(c.env.DB);
+  const invite = await accounts.invite(code);
+  if (!invite) return c.json({ error: 'That code is not valid.' }, 404);
+
+  const already = await accounts.roleIn(invite.homeId, c.get('userId'));
+  if (already) {
+    const home = (await accounts.homesOf(c.get('userId'))).find((h) => h.id === invite.homeId);
+    return c.json({ home, already: true });
+  }
+  if (invite.usedAt) return c.json({ error: 'That code has already been used.' }, 410);
+  if (invite.expiresAt <= new Date().toISOString()) return c.json({ error: 'That code has expired.' }, 410);
+
+  const home = await accounts.join(code, c.get('userId'));
+  if (!home) return c.json({ error: 'That code has already been used.' }, 410);
+  return c.json({ home });
 });
 
 // ---- the house -----------------------------------------------------------

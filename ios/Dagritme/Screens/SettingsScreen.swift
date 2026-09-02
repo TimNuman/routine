@@ -8,8 +8,19 @@ struct SettingsScreen: View {
 
     @State private var sheet: EditKind?
     @State private var askSignOut = false
+    @State private var family = false
 
     var body: some View {
+        ZStack {
+            settings
+            if family {
+                FamilySheet(onClose: { family = false; household.sheetOpen = false })
+                    .environment(\.palette, Palette(dark: false))
+            }
+        }
+    }
+
+    private var settings: some View {
         Screen(title: String(localized: "Instellingen"),
                subtitle: household.content.map { namesOf($0.people) } ?? "", narrow: true) {
             if let content = household.content {
@@ -37,9 +48,15 @@ struct SettingsScreen: View {
 
             CardList {
                 if let account = session.account {
+                    CardRow(icon: "👥", title: String(localized: "Gezin"),
+                            note: String(localized: "iemand erbij, of zelf meedoen"),
+                            first: true, id: "settings.family") {
+                        family = true
+                        household.sheetOpen = true
+                    }
                     CardRow(icon: "👤", title: String(localized: "Ingelogd als \(account.label)"),
                             note: String(localized: "tik om uit te loggen"),
-                            first: true, id: "settings.account") { askSignOut = true }
+                            id: "settings.account") { askSignOut = true }
                 } else {
                     CardRow(icon: "👤", title: String(localized: "Inloggen"),
                             note: String(localized: "nu zonder account"),

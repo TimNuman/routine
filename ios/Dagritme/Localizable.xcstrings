@@ -93,9 +93,6 @@
         }
       }
     },
-    "🏡" : {
-
-    },
     "📌 één keer" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -468,9 +465,6 @@
         }
       }
     },
-    "Een huis beginnen" : {
-
-    },
     "Eenmalig" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -517,9 +511,6 @@
           }
         }
       }
-    },
-    "Er kwam geen huis terug." : {
-
     },
     "Er moet minstens één kind overblijven." : {
       "extractionState" : "manual",
@@ -737,9 +728,6 @@
         }
       }
     },
-    "Hoe heet jullie huis?" : {
-
-    },
     "Hoe laat" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -839,7 +827,7 @@
         }
       }
     },
-    "ingelogd als %@" : {
+    "Ingelogd als %@" : {
 
     },
     "Inloggen" : {
@@ -880,9 +868,6 @@
           }
         }
       }
-    },
-    "Jullie huizen" : {
-
     },
     "Kenmerk toevoegen" : {
       "extractionState" : "manual",
@@ -993,12 +978,6 @@
           }
         }
       }
-    },
-    "lid" : {
-
-    },
-    "Maak het huis" : {
-
     },
     "Mensen" : {
       "extractionState" : "manual",
@@ -1146,9 +1125,6 @@
         }
       }
     },
-    "Nog een huis" : {
-
-    },
     "nog niemand" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1293,6 +1269,9 @@
         }
       }
     },
+    "Probeer opnieuw" : {
+
+    },
     "ritme" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1384,6 +1363,12 @@
         }
       }
     },
+    "tik om uit te loggen" : {
+
+    },
+    "Toch niet" : {
+
+    },
     "tot" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1412,6 +1397,9 @@
     "Uitloggen" : {
 
     },
+    "Uitloggen?" : {
+
+    },
     "van" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1422,9 +1410,6 @@
           }
         }
       }
-    },
-    "van jou" : {
-
     },
     "Vanavond" : {
       "extractionState" : "manual",

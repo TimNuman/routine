@@ -16,6 +16,29 @@ export interface Home {
   role: Role;
 }
 
+export interface Member {
+  id: string;
+  name: string | null;
+  email: string | null;
+  role: Role;
+  nickname: string | null;
+  emoji: string | null;
+  color: string | null;
+}
+
+export interface Profile {
+  nickname: string | null;
+  emoji: string | null;
+  color: string | null;
+}
+
+export interface Invite {
+  code: string;
+  homeId: string;
+  expiresAt: string;
+  usedAt: string | null;
+}
+
 export interface NewIdentity {
   provider: Provider;
   subject: string;
@@ -74,7 +97,7 @@ export class Accounts {
       .prepare(
         `SELECT h.id, h.name, m.role FROM homes h
          JOIN memberships m ON m.home_id = h.id
-         WHERE m.user_id = ? ORDER BY m.created_at`,
+         WHERE m.user_id = ? ORDER BY m.created_at DESC`,
       )
       .bind(userId)
       .all<Home>();
@@ -91,6 +114,76 @@ export class Accounts {
         .bind(home.id, userId, home.role, at),
     ]);
     return home;
+  }
+
+  async members(homeId: string): Promise<Member[]> {
+    const { results } = await this.db
+      .prepare(
+        `SELECT u.id, u.name, u.email, m.role, m.nickname, m.emoji, m.color FROM users u
+         JOIN memberships m ON m.user_id = u.id
+         WHERE m.home_id = ? ORDER BY m.created_at`,
+      )
+      .bind(homeId)
+      .all<Member>();
+    return results;
+  }
+
+  async updateMember(homeId: string, userId: string, profile: Profile): Promise<boolean> {
+    const { meta } = await this.db
+      .prepare('UPDATE memberships SET nickname = ?, emoji = ?, color = ? WHERE home_id = ? AND user_id = ?')
+      .bind(profile.nickname, profile.emoji, profile.color, homeId, userId)
+      .run();
+    return meta.changes > 0;
+  }
+
+  async removeMember(homeId: string, userId: string): Promise<boolean> {
+    const { meta } = await this.db
+      .prepare('DELETE FROM memberships WHERE home_id = ? AND user_id = ?')
+      .bind(homeId, userId)
+      .run();
+    return meta.changes > 0;
+  }
+
+  async createInvite(homeId: string, userId: string, code: string, expiresAt: string): Promise<Invite> {
+    await this.db
+      .prepare(
+        'INSERT INTO invites (code, home_id, created_by, created_at, expires_at) VALUES (?, ?, ?, ?, ?)',
+      )
+      .bind(code, homeId, userId, now(), expiresAt)
+      .run();
+    return { code, homeId, expiresAt, usedAt: null };
+  }
+
+  async invite(code: string): Promise<Invite | null> {
+    const row = await this.db
+      .prepare('SELECT code, home_id, expires_at, used_at FROM invites WHERE code = ?')
+      .bind(code)
+      .first<{ code: string; home_id: string; expires_at: string; used_at: string | null }>();
+    return row
+      ? { code: row.code, homeId: row.home_id, expiresAt: row.expires_at, usedAt: row.used_at }
+      : null;
+  }
+
+  /** Uses the code up and lets the user in. False when someone else got there first. */
+  async join(code: string, userId: string): Promise<Home | null> {
+    const at = now();
+    const used = await this.db
+      .prepare(
+        `UPDATE invites SET used_by = ?, used_at = ?
+         WHERE code = ? AND used_at IS NULL AND expires_at > ? RETURNING home_id`,
+      )
+      .bind(userId, at, code, at)
+      .first<{ home_id: string }>();
+    if (!used) return null;
+    await this.db
+      .prepare('INSERT OR IGNORE INTO memberships (home_id, user_id, role, created_at) VALUES (?, ?, ?, ?)')
+      .bind(used.home_id, userId, 'member', at)
+      .run();
+    const home = await this.db
+      .prepare('SELECT id, name FROM homes WHERE id = ?')
+      .bind(used.home_id)
+      .first<Home>();
+    return home ? { ...home, role: 'member' } : null;
   }
 
   async roleIn(homeId: string, userId: string): Promise<Role | null> {

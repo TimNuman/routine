@@ -210,7 +210,7 @@ describe('homes', () => {
     expect(home).toEqual({ id: expect.any(String), name: 'Ons huis', role: 'owner' });
 
     const me = (await (await call('/api/v2/me', withToken(s.accessToken))).json()) as Session;
-    expect(me.homes).toEqual([...s.homes, home]);
+    expect(me.homes).toEqual([home, ...s.homes]);
   });
 
   it('need a name and a user', async () => {
@@ -303,6 +303,138 @@ describe('homes', () => {
     expect(res.status).toBe(101);
     res.webSocket?.accept();
     res.webSocket?.close();
+  });
+});
+
+describe('invites', () => {
+  async function ownerWithHome() {
+    const owner = await signIn('apple', 'apple-inviter-' + crypto.randomUUID());
+    const home = owner.homes[0]!;
+    return { owner, home };
+  }
+
+  async function makeCode(owner: Session, homeId: string) {
+    const res = await post(`/api/v2/homes/${homeId}/invites`, {}, owner.accessToken);
+    expect(res.status).toBe(201);
+    return (await res.json()) as { code: string; expiresAt: string };
+  }
+
+  it('let someone into the home, once', async () => {
+    const { owner, home } = await ownerWithHome();
+    const { code, expiresAt } = await makeCode(owner, home.id);
+    expect(code).toMatch(/^[A-HJ-NP-Z2-9]{8}$/);
+    expect(new Date(expiresAt).getTime()).toBeGreaterThan(Date.now() + 6 * 24 * 3600 * 1000);
+
+    const guest = await signIn('google', 'google-guest-' + crypto.randomUUID());
+    const typed = code.slice(0, 4).toLowerCase() + '-' + code.slice(4);
+    const accepted = await post(`/api/v2/invites/${typed}/accept`, {}, guest.accessToken);
+    expect(accepted.status).toBe(200);
+    expect(await accepted.json()).toEqual({ home: { id: home.id, name: home.name, role: 'member' } });
+
+    const content = await call(`/api/v2/homes/${home.id}/storage/content`, withToken(guest.accessToken));
+    expect(content.status).toBe(200);
+
+    // The joined home comes first, so the app shows it.
+    const me = (await (await call('/api/v2/me', withToken(guest.accessToken))).json()) as Session;
+    expect(me.homes[0]?.id).toBe(home.id);
+    expect(me.homes).toHaveLength(2);
+
+    const again = await post(`/api/v2/invites/${code}/accept`, {}, guest.accessToken);
+    expect(((await again.json()) as { already?: boolean }).already).toBe(true);
+
+    const other = await signIn('google', 'google-late-' + crypto.randomUUID());
+    const late = await post(`/api/v2/invites/${code}/accept`, {}, other.accessToken);
+    expect(late.status).toBe(410);
+  });
+
+  it('list the members', async () => {
+    const { owner, home } = await ownerWithHome();
+    const { code } = await makeCode(owner, home.id);
+    const guest = await signIn('google', 'google-member-' + crypto.randomUUID(), { name: 'Mads' });
+    await post(`/api/v2/invites/${code}/accept`, {}, guest.accessToken);
+
+    const res = await call(`/api/v2/homes/${home.id}/members`, withToken(guest.accessToken));
+    const { members } = (await res.json()) as {
+      members: { id: string; role: string; name: string | null }[];
+    };
+    expect(members.map((m) => [m.id, m.role])).toEqual([
+      [owner.user.id, 'owner'],
+      [guest.user.id, 'member'],
+    ]);
+  });
+
+  it('let everyone pick their own face and name, and the owner remove people', async () => {
+    const { owner, home } = await ownerWithHome();
+    const { code } = await makeCode(owner, home.id);
+    const guest = await signIn('google', 'google-papa-' + crypto.randomUUID());
+    await post(`/api/v2/invites/${code}/accept`, {}, guest.accessToken);
+
+    const me = await call(`/api/v2/homes/${home.id}/members/me`, {
+      method: 'PUT',
+      body: JSON.stringify({ nickname: ' papa ', emoji: '🧔', color: '#7c6bd6', extra: 'x' }),
+      headers: { Authorization: 'Bearer ' + guest.accessToken },
+    });
+    expect(me.status).toBe(200);
+    const { members } = (await me.json()) as { members: Record<string, unknown>[] };
+    expect(members[1]).toMatchObject({ id: guest.user.id, nickname: 'papa', emoji: '🧔', color: '#7C6BD6' });
+
+    const badColor = await call(`/api/v2/homes/${home.id}/members/me`, {
+      method: 'PUT',
+      body: JSON.stringify({ nickname: 'papa', color: 'blue' }),
+      headers: { Authorization: 'Bearer ' + guest.accessToken },
+    });
+    const cleaned = (await badColor.json()) as { members: Record<string, unknown>[] };
+    expect(cleaned.members[1]?.color).toBeNull();
+
+    const notMine = await call(`/api/v2/homes/${home.id}/members/${owner.user.id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ nickname: 'hacked' }),
+      headers: { Authorization: 'Bearer ' + guest.accessToken },
+    });
+    expect(notMine.status).toBe(403);
+
+    const guestRemoves = await call(`/api/v2/homes/${home.id}/members/${owner.user.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: 'Bearer ' + guest.accessToken },
+    });
+    expect(guestRemoves.status).toBe(403);
+
+    const ownerLeaves = await call(`/api/v2/homes/${home.id}/members/${owner.user.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: 'Bearer ' + owner.accessToken },
+    });
+    expect(ownerLeaves.status).toBe(400);
+
+    const removed = await call(`/api/v2/homes/${home.id}/members/${guest.user.id}`, {
+      method: 'DELETE',
+      headers: { Authorization: 'Bearer ' + owner.accessToken },
+    });
+    expect(removed.status).toBe(200);
+    expect(((await removed.json()) as { members: unknown[] }).members).toHaveLength(1);
+    expect(
+      (await call(`/api/v2/homes/${home.id}/storage/content`, withToken(guest.accessToken))).status,
+    ).toBe(403);
+  });
+
+  it('refuse a wrong, expired, or unauthenticated code', async () => {
+    const { owner, home } = await ownerWithHome();
+    const guest = await signIn('google', 'google-refused-' + crypto.randomUUID());
+    expect((await post('/api/v2/invites/NOPE1234/accept', {}, guest.accessToken)).status).toBe(404);
+    expect((await post('/api/v2/invites/NOPE1234/accept', {})).status).toBe(401);
+
+    const { code } = await makeCode(owner, home.id);
+    await env.DB.prepare('UPDATE invites SET expires_at = ? WHERE code = ?')
+      .bind('2020-01-01T00:00:00Z', code)
+      .run();
+    const expired = await post(`/api/v2/invites/${code}/accept`, {}, guest.accessToken);
+    expect(expired.status).toBe(410);
+    expect(await expired.json()).toEqual({ error: 'That code has expired.' });
+  });
+
+  it('can only be made by a member', async () => {
+    const { home } = await ownerWithHome();
+    const stranger = await signIn('google', 'google-stranger-' + crypto.randomUUID());
+    expect((await post(`/api/v2/homes/${home.id}/invites`, {}, stranger.accessToken)).status).toBe(403);
   });
 });
 
