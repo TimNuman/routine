@@ -1,12 +1,8 @@
 # De iOS-versie
 
-Dezelfde app in Swift en SwiftUI: dezelfde drie schermen, dezelfde vormtaal en
-dezelfde achterkant. Niets is nagebouwd op een eigen server — hij praat met
-`/api/opslag` en `/api/lees` op de Worker uit deze repo, dus wat je op de
-telefoon afvinkt staat een seconde later ook in de browser.
-
-Naast `mobiel/` (React Native) is dit de tweede proef, om te zien wat het glas,
-het ritme en de stroom doen als er geen laag javascript meer tussen zit.
+De app, in Swift en SwiftUI. Niets is nagebouwd op een eigen server: hij praat
+met `/api/v2/storage` en `/api/v2/read` op de Worker uit deze repo, dus wat je
+op de ene telefoon afvinkt staat een seconde later ook op de andere.
 
 ## Draaien
 
@@ -24,7 +20,7 @@ projectbestand hoeft bij te werken als er een bestand bij komt.
    Liever niet in de code? Vul dan `ROUTINE_URL` in [`Info.plist`](Info.plist);
    die wint als hij gevuld is.
 2. Open `ios/Dagritme.xcodeproj`, kies bij *Signing & Capabilities* je eigen team
-   (het bundel-id `app.dagritme` is hetzelfde als in `mobiel/app.json`) en druk
+   (het bundel-id is `app.dagritme`) en druk
    op ⌘R.
 
 Tegen `wrangler dev` op de laptop draaien kan ook: zet dan
@@ -43,7 +39,7 @@ gewoon.
 Dagritme/
   Config.swift         waar de Worker staat
   Localizable.xcstrings  de teksten; nl nu, de/da/en straks
-  Core/                de logica, één op één uit mobiel/onderdelen
+  Core/                de logica: inhoud, opslag, de assistent
   Style/               kleuren, letters, maten, timing, het glas
   Components/          de losse stukken van de schermen
   Screens/             ritme, week, instellingen
@@ -60,7 +56,7 @@ vorm waar de schermen mee werken.
 |---|---|
 | schermen | SwiftUI, iOS 17 en hoger |
 | toestand | één `@Observable` klasse (`Core/Household.swift`) in de omgeving |
-| opslag | `URLSession` naar `/api/opslag`, met `URLSessionWebSocketTask` voor de stroom |
+| opslag | `URLSession` naar `/api/v2/storage`, met `URLSessionWebSocketTask` voor de stroom |
 | bewerken | `List` met `.swipeActions` en `.onMove`; de rest van de app is eigen glas |
 | bladeren | vegen over ochtend – avond – week – instellingen (`Components/Slide.swift`, `PageSwipe.swift`); op de dagen van de weekstrook bladert een veeg door de weken |
 | animatie | gewone SwiftUI-animaties, timing in `Style/Motion.swift` |
@@ -71,7 +67,7 @@ vorm waar de schermen mee werken.
 Swift niet. `Core/Json.swift` is die tussenstap: een waarde die opneemt wat er
 uit het huis komt — een lijst die eigenlijk een woordenboek is, een getal dat als
 tekst is bewaard — zodat `Content.swift` daarna precies dezelfde regels kan
-toepassen als de webversie.
+toepassen.
 
 **Het concept bestaat uit klassen, de rest uit structs.** Een bewerkscherm werkt
 op een losse kopie en moet één regel kunnen aanwijzen — *deze stap, in deze
@@ -82,8 +78,8 @@ de schermen tonen is wél gewone waarde-code.
 
 ## Het glas
 
-`Style/Glass.swift` is de vertaling van `.glas` uit de webversie, met dezelfde val
-erin als bij React Native: **het materiaal is voor de blur, niet voor de kleur.**
+`Style/Glass.swift` is het glas, met één val erin: **het materiaal is voor de
+blur, niet voor de kleur.**
 `.ultraThinMaterial` brengt zijn eigen grijs mee; gebruik je dat als vulling, dan
 worden de kaartjes vlakke dozen. De kleur komt daarom uit het palet eronder.
 
@@ -141,8 +137,8 @@ bestaande sleutels.
 
 ## Lettertypes
 
-`Fonts/` bevat dezelfde bijgeknipte bestanden als `mobiel/assets/fonts/`,
-gemaakt door `mobiel/lettertypes.mjs`. Ze staan in `UIAppFonts` in `Info.plist`;
+`Fonts/` bevat bijgeknipte lettertypes (alleen de tekens die de app gebruikt).
+Ze staan in `UIAppFonts` in `Info.plist`;
 in de code gaan ze op hun PostScript-naam (`Baloo2-ExtraBold`, niet de
 bestandsnaam).
 
@@ -256,7 +252,4 @@ filmstrip van die je in één keer kunt bekijken.
   eerste kwartier op een iPhone nog een paar dingen rechtzet.
 - **Aanmelden.** Wie het adres kent, kan meelezen en meeschrijven; `SLEUTEL` is
   een drempel, geen slot. Voor een app in een store is dat te weinig — zie
-  *Straks* in [`worker/README.md`](../worker/README.md).
-
-Wat er wél is en in `mobiel/` niet: een echte datumkiezer, trek-om-te-verversen,
-en een app-icoon dat uit dezelfde `icon.svg` komt als de webversie.
+  *Wie mag erbij* in [`worker/README.md`](../worker/README.md).

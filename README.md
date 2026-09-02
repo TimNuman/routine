@@ -3,7 +3,8 @@
 Een visueel dagritme voor kinderen: een ochtend- en een avondroutine met
 afvinkbare stappen, één per kind, gedeeld tussen alle telefoons in huis.
 
-**Live:** bij Cloudflare, op je eigen `workers.dev`-adres — zie *Publiceren*.
+Een iOS-app in Swift, met een achterkant op Cloudflare. Zie *Hoe het in elkaar
+zit* onderaan.
 
 ## Hoe het werkt
 
@@ -145,138 +146,49 @@ de kinderen — die zijn nodig om te weten bij wie iets hoort. Verder niets: de 
 kent zelf ook geen achternamen, adressen of mailadressen. Wat terugkomt zijn ids
 die de app al had.
 
-Het echte uitlezen doet Claude, op `/api/lees` — hetzelfde adres als de app, dus
-Dat draait in de Worker en niet in de pagina, om één reden: de sleutel van de
-Claude-api hoort niet in iets wat iedereen kan openen. Hoe je hem neerzet, wat hij
-kost en welk protocol hij spreekt staat in [`worker/README.md`](worker/README.md).
-
-Maak je dat veld leeg, dan neemt een ingebouwde namaak-assistent het over. Die
-kent maar een handvol patronen — een datum, een groep als `1-2B`, en een paar
-woorden — genoeg om de schermen te proberen zonder achterkant.
+Het echte uitlezen doet Claude, op `/api/v2/read`. Dat draait in de Worker en
+niet in de app, om één reden: de sleutel van de Claude-api hoort niet in iets
+wat iedereen kan openen. Hoe je hem neerzet, wat hij kost en welk protocol hij
+spreekt staat in [`worker/README.md`](worker/README.md).
 
 
 ## Opslag
 
-Alles staat achter `/api/opslag` op dezelfde Worker die de app uitserveert. Daar
-zit één *huis* — een Durable Object — met twee soorten gegevens:
+Alles staat achter `/api/v2/storage` op de Worker. Daar zit één *huis*, een
+Durable Object, met twee soorten gegevens: de inhoud die je in de app bewerkt,
+en per dag de vinkjes. Een eigen sleutel per dag betekent dat het ritme
+'s ochtends vanzelf leeg is; dagen ouder dan een week ruimt het huis zelf op.
 
-```
-inhoud                de inhoud die je in de app bewerkt
-dag:<jjjj-mm-dd>      { "<dag|nacht>/<stap>/<persoon>": true, ... }
-```
+Naast lezen en schrijven is er een WebSocket die openblijft zolang de app
+openstaat. Wie iets afvinkt schrijft het naar het huis, en dat huis vertelt het
+meteen aan iedereen die verbonden is: geen gepoll, en binnen een seconde staat
+het ook op de andere telefoon. Het protocol staat in
+[`worker/README.md`](worker/README.md).
 
-Een eigen sleutel per dag betekent dat het ritme 's ochtends vanzelf leeg is;
-dagen ouder dan een week ruimt het huis zelf op. Aan- en afvinken schrijft precies
-één persoon bij één stap, dus twee telefoons die tegelijk iets aantikken
-overschrijven elkaar niet.
-
-### Live, op elke telefoon tegelijk
-
-Naast lezen en schrijven is er `/api/opslag/stroom`: een WebSocket die openblijft
-zolang de app openstaat. Wie iets afvinkt schrijft het naar het huis, en dat huis
-vertelt het meteen aan iedereen die verbonden is — dus geen gepoll, en binnen een
-seconde staat het ook op de andere telefoon.
-
-Een Durable Object is de enige plek in het verhaal die twee dingen tegelijk kan:
-gegevens bewaren en weten wie er op dat moment meekijkt. Vandaar dat het daar
-staat en niet in een losse database.
-
-Dat het een WebSocket is en geen EventSource heeft één reden: `EventSource`
-bestaat niet in React Native. Een WebSocket kennen de browser en de app allebei,
-dus is het één stuk code voor allebei.
-
-Berichten die over de stroom komen:
-
-| soort    | wanneer                          | wat erin zit                    |
-| -------- | -------------------------------- | ------------------------------- |
-| `begin`  | zodra je verbindt, en na een dagwissel | de hele inhoud en de vinkjes van die dag |
-| `inhoud` | iemand heeft iets bewerkt        | de hele nieuwe inhoud           |
-| `vink`   | iemand vinkt aan of af           | `datum`, `sleutel`, `aan`       |
-| `ritme`  | iemand begint opnieuw            | `datum`, `ritme`                |
-
-De verbinding maakt zichzelf opnieuw als hij wegvalt, met een pauze die oploopt
-tot een halve minuut. Een telefoon die uit zijn slaap komt heeft geen verbinding
-meer, en dat merk je pas als je het probeert.
-
-### Eenmalig opzetten
-
-Er is niets op te zetten: het huis wordt vanzelf gemaakt bij het eerste bezoek.
-Twee dingen staan in `wrangler.toml`:
-
-```toml
-[vars]
-HOUSEHOLD = "een-eigen-woord"      # welk huis; de naam staat op de server
-IMPORT_FROM = ""                   # eenmalig, om te verhuizen — zie hieronder
-```
-
-`HOUSEHOLD` staat met opzet op de server en niet in de app: de app hoeft niet te weten
-in welk huis hij kijkt, dus hoeft er ook niets over de lijn dat je zou moeten
-raden.
-
-**Verhuizen vanaf een oude database.** Zet in `IMPORT_FROM` het adres waar de oude
-inhoud staat (bijvoorbeeld de `config.json` van een Firebase Realtime Database).
-De eerste keer dat het huis leeg blijkt haalt hij die er één keer bij en bewaart
-hem. Daarna wordt er niet meer gekeken en mag de regel weg. De vinkjes van vandaag
-verhuizen niet mee; die zijn morgen toch weg.
-
-**Let op:** iedereen die het adres van de app kent, kan meelezen en meeschrijven.
-Voor een afvinklijstje thuis is dat prima, maar zet er geen gevoelige dingen in.
-Wil je het dicht, zet dan `SLEUTEL` als secret — dan moet elk verzoek
-`X-Routine-Sleutel` meesturen (of `?sleutel=` bij de WebSocket, want daar kan een
-browser geen kopjes meegeven).
-
-Werkt het huis even niet, dan blijft de pagina gewoon werken: de laatst bekende
-inhoud en de vinkjes van vandaag staan ook in de browser zelf.
-
-## Op je telefoon zetten
-
-Open de pagina en kies *Deel → Zet op beginscherm* (iOS) of *Toevoegen aan
-startscherm* (Android). Hij verschijnt als **Dagritme** met een eigen icoon — een
-zon boven een bed — en opent zonder browserbalk.
-
-Omdat de app-weergave geen browserbalk heeft, is er ook geen ingebouwd
-trek-om-te-verversen. Die beweging zit daarom zelf in de pagina: sleep vanaf
-bovenaan naar beneden tot het rondje verschijnt en laat los.
-
-Bijwerken gaat zoals bij elke pagina: een nieuwe uitgave staat er na een
-herlading. Het stempelen van commit-nummers dat de oude handgeschreven versie
-gebruikte is weg, samen met die versie.
-
-Het icoon is `icon.svg`; de PNG's ernaast zijn daaruit gerenderd (32, 180, 192 en
-512px, plus een ruimer opgezette `maskable`-versie voor Android, dat er een cirkel
-uit snijdt).
+**Let op:** iedereen die het adres kent, kan meelezen en meeschrijven. Wil je
+het dicht, zet dan `SLEUTEL` als secret op de Worker en hetzelfde woord als
+`ROUTINE_KEY` in de app. Echt inloggen komt eraan; ook dat staat in de README
+van de Worker.
 
 ## Hoe het in elkaar zit
 
 ```
-public/     de webversie: de export van mobiel/, plus de iconen
-worker/     de achterkant: /api/*, en hij serveert public/ uit
-mobiel/     de bron van die webversie, in React Native — zie mobiel/README.md
-ios/        dezelfde app in Swift, voor de iPhone — zie ios/README.md
+ios/        de app, in Swift — zie ios/README.md
+worker/     de achterkant: /api/*, in TypeScript — zie worker/README.md
+backup.mjs  een reservekopie van het huis maken of terugzetten
 wrangler.toml
 ```
 
-De webversie wordt nu gebouwd: `public/` is de uitvoer van `npm run bouw` in
-`mobiel/` en hoort niet met de hand bewerkt te worden. De Worker heeft
-`npm install` nodig, voor de Claude-sdk.
+De webversie en de React Native-versie zijn weg; de iOS-app en de Worker zijn
+wat er is.
 
 ## Publiceren
 
-Alles draait bij Cloudflare, op één adres: de app als statische bestanden (gratis
-en ongemeten) en `/api/*` in dezelfde Worker. Elke push naar `main` rolt vanzelf
-uit — Cloudflare bouwt zelf uit deze repo.
-
-Zelf uitrollen kan ook: `npm run deploy`.
-
-`.github/workflows/deploy.yml` is er alleen nog voor wie het liever via GitHub
-Actions doet; bouwt Cloudflare zelf, dan mag dat bestand weg.
-
-Zie [`worker/README.md`](worker/README.md) voor het opzetten, en voor waar dit
-heen gaat nu er apps naast de webversie staan.
+De Worker draait bij Cloudflare. Elke push naar `main` draait de proeven en
+rolt daarna uit via `.github/workflows/deploy.yml`; zelf kan het met
+`npm run deploy`. De app gaat via Xcode, zie [`ios/README.md`](ios/README.md).
 
 ## Ontwerpen
 
 De schermontwerpen staan als canvas op
 [claude.ai](https://claude.ai/code/artifact/60939a36-177b-4690-ad4f-2b847ddff646).
-De web-versie volgt die vormtaal: melkglazen kaarten, een zwevende menubalk en
-een verlopend behang dat 's avonds donker wordt.

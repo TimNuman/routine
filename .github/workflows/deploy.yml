@@ -10,10 +10,23 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Eerst de proeven en de typecontrole; rood betekent niet uitrollen.
+  controle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+
   # Alleen nodig als Cloudflare níét zelf uit deze repo bouwt. Doet hij dat wel
-  # (Workers & Pages → Import a repository), dan is deze hele workflow overbodig
-  # en mag hij weg.
+  # (Workers & Pages → Import a repository), dan mag deze baan weg.
   cloudflare:
+    needs: controle
     runs-on: ubuntu-latest
     # De secrets-context bestaat niet in een step-if; via env wel.
     env:
@@ -21,10 +34,10 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
+          cache: npm
 
       # Overslaan zolang het token er nog niet is, in plaats van rood worden.
       - name: Uitrollen naar Cloudflare

@@ -1,22 +1,16 @@
 name = "routine"
-main = "worker/index.js"
+main = "worker/index.ts"
 compatibility_date = "2026-08-01"
 compatibility_flags = ["nodejs_compat"]
 
-# De app zelf. Statische bestanden zijn gratis en ongemeten; alleen /api/*
-# komt bij de Worker langs.
-[assets]
-directory = "./public"
-binding = "ASSETS"
-
-# ANTHROPIC_API_KEY en SLEUTEL zijn geheimen, geen vars:
+# Secrets, not vars:
 #   npx wrangler secret put ANTHROPIC_API_KEY
-#   npx wrangler secret put SLEUTEL      (optioneel: dan moet elk verzoek aan
-#                                         /api hem meesturen)
+#   npx wrangler secret put SLEUTEL      (optional: then every /api request
+#                                         must send it as X-Routine-Key)
 
-# Het huis: alle gegevens van dit gezin bij elkaar, met de telefoons die
-# meekijken. Een Durable Object is de enige plek die tegelijk kan bewaren en
-# weten wie er verbonden is, dus daar hoeft niemand te pollen.
+# The house: everything one household shares, plus the phones watching it. A
+# Durable Object is the only place that can both keep state and know who is
+# connected, so nobody has to poll.
 [[durable_objects.bindings]]
 name = "HOUSE"
 class_name = "House"
@@ -30,8 +24,5 @@ tag = "v2"
 renamed_classes = [{ from = "Huis", to = "House" }]
 
 [vars]
-# Welk huis. Eén naam, hier op de server: dan hoeft de app hem niet te kennen.
+# Which house. One name, here on the server, so the app never needs to know it.
 HOUSEHOLD = "huis-9f3k2a"
-# Eenmalig, om te verhuizen: hier staat de oude inhoud. Zodra het huis eenmaal
-# gevuld is wordt hier niet meer gekeken en mag deze regel weg.
-IMPORT_FROM = "https://routine-35aaa-default-rtdb.europe-west1.firebasedatabase.app/huis-9f3k2a/config.json"
