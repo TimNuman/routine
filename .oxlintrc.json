@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "vitest", "promise"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "warn"
+  },
+  "rules": {
+    "no-unused-vars": "error",
+    "eqeqeq": "error",
+    "prefer-const": "error"
+  },
+  "ignorePatterns": ["backups/**", "ios/**", "worker-configuration.d.ts"]
+}

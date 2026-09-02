@@ -36,8 +36,13 @@ gaan die rood, dan wordt er niet uitgerold.
 ```bash
 npm start          # wrangler dev, op http://localhost:8787
 npm test           # vitest, in workerd
-npm run check      # wrangler types + tsc
+npm run check      # wrangler types, tsc, oxlint en oxfmt --check
+npm run format     # oxfmt schrijft de opmaak zelf
 ```
+
+Opmaak en lint komen van [oxc](https://oxc.rs): `.oxfmtrc.json` en
+`.oxlintrc.json`. De lint staat op de categorieën *correctness* en *suspicious*
+als fout; wat daarbuiten valt is smaak en staat uit.
 
 Secrets komen lokaal uit `.dev.vars`:
 

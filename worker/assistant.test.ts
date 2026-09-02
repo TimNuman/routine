@@ -23,8 +23,15 @@ function claudeSays(answer: unknown, status = 200) {
   const asked: unknown[] = [];
   const body =
     status === 200
-      ? { id: 'msg', type: 'message', role: 'assistant', model: 'claude-opus-5', stop_reason: 'end_turn',
-          content: [{ type: 'text', text: JSON.stringify(answer) }], usage: { input_tokens: 1, output_tokens: 1 } }
+      ? {
+          id: 'msg',
+          type: 'message',
+          role: 'assistant',
+          model: 'claude-opus-5',
+          stop_reason: 'end_turn',
+          content: [{ type: 'text', text: JSON.stringify(answer) }],
+          usage: { input_tokens: 1, output_tokens: 1 },
+        }
       : answer;
   vi.stubGlobal('fetch', async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input instanceof Request ? input.url : input);
@@ -79,10 +86,15 @@ describe('the prompt', () => {
   });
 
   it('lists each child with its traits', () => {
-    const text = promptText(cleanPayload({
-      text: 'hi',
-      children: [{ id: 'emma', name: 'Emma', traits: { group: '1-2B' } }, { id: 'mads', name: '' }],
-    }));
+    const text = promptText(
+      cleanPayload({
+        text: 'hi',
+        children: [
+          { id: 'emma', name: 'Emma', traits: { group: '1-2B' } },
+          { id: 'mads', name: '' },
+        ],
+      }),
+    );
     expect(text).toContain('- id emma, Emma — group: 1-2B');
     expect(text).toContain('- id mads, naamloos — nog niets bekend');
   });
@@ -103,15 +115,32 @@ describe('POST /api/v2/read', () => {
   it("passes Claude's answer through", async () => {
     const answer = {
       type: 'suggestions',
-      items: [{ kind: 'weekly', icon: '🎾', text: 'Tennis', days: ['tue'], time: '18:00', who: ['emma'], source: 'Every Tuesday' }],
+      items: [
+        {
+          kind: 'weekly',
+          icon: '🎾',
+          text: 'Tennis',
+          days: ['tue'],
+          time: '18:00',
+          who: ['emma'],
+          source: 'Every Tuesday',
+        },
+      ],
     };
     const asked = claudeSays(answer);
-    const res = await read({ text: 'Every Tuesday 18:00 tennis Emma', children: [{ id: 'emma', name: 'Emma' }] });
+    const res = await read({
+      text: 'Every Tuesday 18:00 tennis Emma',
+      children: [{ id: 'emma', name: 'Emma' }],
+    });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual(answer);
 
     expect(asked).toHaveLength(1);
-    const request = asked[0] as { model: string; output_config: { format: { type: string } }; messages: { content: string }[] };
+    const request = asked[0] as {
+      model: string;
+      output_config: { format: { type: string } };
+      messages: { content: string }[];
+    };
     expect(request.model).toBe('claude-opus-5');
     expect(request.output_config.format.type).toBe('json_schema');
     expect(request.messages[0]?.content).toContain('Every Tuesday 18:00 tennis Emma');

@@ -38,12 +38,14 @@ async function backup() {
   const { content } = await get('/api/v2/storage/content');
   if (!content) throw new Error('The house is empty; nothing to save.');
 
-  const days = {};
-  for (let i = 0; i < KEEP_DAYS; i++) {
+  const dates = Array.from({ length: KEEP_DAYS }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - i);
-    const date = localDate(d);
-    const { checks } = await get('/api/v2/storage/day?date=' + date);
+    return localDate(d);
+  });
+  const days = {};
+  const results = await Promise.all(dates.map((date) => get('/api/v2/storage/day?date=' + date)));
+  for (const { date, checks } of results) {
     if (checks && Object.keys(checks).length) days[date] = checks;
   }
 
@@ -51,13 +53,20 @@ async function backup() {
   const name = `${localDate(now)}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
   mkdirSync(DIR, { recursive: true });
   const path = `${DIR}/${name}.json`;
-  writeFileSync(path, JSON.stringify({ made: now.toISOString(), url: URL_BASE, content, days }, null, 2) + '\n');
+  writeFileSync(
+    path,
+    JSON.stringify({ made: now.toISOString(), url: URL_BASE, content, days }, null, 2) + '\n',
+  );
 
   const steps = ['day', 'night'].reduce(
-    (n, which) => n + (content[which] || []).reduce((m, g) => m + (g.steps || []).length, 0), 0);
+    (n, which) => n + (content[which] || []).reduce((m, g) => m + (g.steps || []).length, 0),
+    0,
+  );
   console.log(path);
-  console.log(`  ${(content.people || []).length} children, ${steps} steps, ` +
-              `${(content.week || []).length} weekly, ${(content.events || []).length} one-off`);
+  console.log(
+    `  ${(content.people || []).length} children, ${steps} steps, ` +
+      `${(content.week || []).length} weekly, ${(content.events || []).length} one-off`,
+  );
   console.log(`  checks for ${Object.keys(days).length} day(s)`);
 }
 

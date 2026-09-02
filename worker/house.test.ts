@@ -103,7 +103,11 @@ describe('the shared key', () => {
   it('locks every /api route when set', async () => {
     expect((await call('/api/v2/storage/content', {}, { SLEUTEL: 's3cret' })).status).toBe(401);
     expect((await call('/api/v2/read', { method: 'POST' }, { SLEUTEL: 's3cret' })).status).toBe(401);
-    const ok = await call('/api/v2/storage/content', { headers: { 'X-Routine-Key': 's3cret' } }, { SLEUTEL: 's3cret' });
+    const ok = await call(
+      '/api/v2/storage/content',
+      { headers: { 'X-Routine-Key': 's3cret' } },
+      { SLEUTEL: 's3cret' },
+    );
     expect(ok.status).toBe(200);
   });
 });
@@ -144,7 +148,12 @@ describe('the live stream', () => {
     await call('/api/v2/storage/content', json(CONTENT));
     await call('/api/v2/storage/check', json({ date: TODAY, key: 'day/wake-up/emma', on: true }));
     const { ws, next } = await open();
-    expect(await next()).toEqual({ kind: 'start', date: TODAY, content: CONTENT, checks: { 'day/wake-up/emma': true } });
+    expect(await next()).toEqual({
+      kind: 'start',
+      date: TODAY,
+      content: CONTENT,
+      checks: { 'day/wake-up/emma': true },
+    });
     ws.close();
   });
 
@@ -179,7 +188,12 @@ describe('the live stream', () => {
     expect(other.pending()).toBe(0);
 
     other.ws.send(JSON.stringify({ kind: 'day', date: TODAY }));
-    expect(await other.next()).toEqual({ kind: 'start', date: TODAY, content: CONTENT, checks: { 'day/wake-up/emma': true } });
+    expect(await other.next()).toEqual({
+      kind: 'start',
+      date: TODAY,
+      content: CONTENT,
+      checks: { 'day/wake-up/emma': true },
+    });
     other.ws.close();
   });
 

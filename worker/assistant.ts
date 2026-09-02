@@ -129,7 +129,10 @@ export function cleanPayload(raw: unknown): Payload {
     today: isDate(r.today) ? r.today : today(),
     round: Number.isFinite(round) ? Math.max(1, Math.floor(round)) : 1,
     language: typeof r.language === 'string' && LANGUAGE.test(r.language) ? r.language : DEFAULT_LANGUAGE,
-    children: children.slice(0, MAX_CHILDREN).map(cleanChild).filter((child) => child.id),
+    children: children
+      .slice(0, MAX_CHILDREN)
+      .map(cleanChild)
+      .filter((child) => child.id),
   };
 }
 
