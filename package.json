@@ -9,11 +9,12 @@
     "test": "vitest run",
     "lint": "oxlint",
     "format": "oxfmt",
-    "check": "wrangler types && tsc --noEmit && oxlint && oxfmt --check",
+    "check": "wrangler types --strict-vars=false && tsc --noEmit && oxlint && oxfmt --check",
     "backup": "node backup.mjs"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.121.0"
+    "@anthropic-ai/sdk": "^0.121.0",
+    "jose": "^6.2.10"
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.22.0",

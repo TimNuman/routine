@@ -165,10 +165,10 @@ meteen aan iedereen die verbonden is: geen gepoll, en binnen een seconde staat
 het ook op de andere telefoon. Het protocol staat in
 [`worker/README.md`](worker/README.md).
 
-**Let op:** iedereen die het adres kent, kan meelezen en meeschrijven. Wil je
-het dicht, zet dan `SLEUTEL` als secret op de Worker en hetzelfde woord als
-`ROUTINE_KEY` in de app. Echt inloggen komt eraan; ook dat staat in de README
-van de Worker.
+Inloggen gaat met Apple of Google; de Worker geeft daar eigen tokens voor
+terug, en elk huis is alleen voor zijn leden. De app zelf zit nog op de oude
+weg met één gedeelde sleutel (`SLEUTEL` op de Worker, `ROUTINE_KEY` in de
+app); hoe allebei werken staat in de README van de Worker.
 
 ## Hoe het in elkaar zit
 

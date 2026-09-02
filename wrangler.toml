@@ -26,3 +26,17 @@ renamed_classes = [{ from = "Huis", to = "House" }]
 [vars]
 # Which house. One name, here on the server, so the app never needs to know it.
 HOUSEHOLD = "huis-9f3k2a"
+# Which app may sign in. The bundle id is the audience of Apple's id token; the
+# Google one is the iOS client id from console.cloud.google.com. Leave the
+# Google one empty and that provider says "not configured".
+APPLE_BUNDLE_ID = "app.dagritme"
+GOOGLE_CLIENT_ID = ""
+
+# The directory: users, homes, who belongs where. The houses themselves are
+# Durable Objects; this only says which ones exist.
+#   npx wrangler d1 migrations apply routine --remote
+[[d1_databases]]
+binding = "DB"
+database_name = "routine"
+database_id = "cbe220ba-82d4-4709-883b-5bb07eb98b5d"
+migrations_dir = "migrations"

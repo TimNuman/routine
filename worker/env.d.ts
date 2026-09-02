@@ -3,7 +3,9 @@
 interface Env {
   /** Secret. Without it the assistant refuses to read. */
   ANTHROPIC_API_KEY?: string;
-  /** Secret, optional. When set, every /api request must send it as X-Routine-Key. */
+  /** Secret, at least 32 characters. Signs our access tokens; without it nobody can sign in. */
+  AUTH_SECRET?: string;
+  /** Secret, optional. When set, the shared-key path must send it as X-Routine-Key. */
   SLEUTEL?: string;
   /** Optional overrides, mostly for tests. */
   ANTHROPIC_BASE_URL?: string;

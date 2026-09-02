@@ -6,14 +6,17 @@ bestanden.
 
 ```
 worker/
-  index.ts        de routes (Hono): sleutelcontrole, /api/v2/storage/*, /api/v2/read
+  index.ts        de routes (Hono): aanmelden, huizen, opslag, uitlezen
+  auth.ts         id-tokens van Apple en Google controleren; eigen tokens maken
+  accounts.ts     de gids in D1: gebruikers, huizen, wie waar bij hoort
   house.ts        het huis: een Durable Object met de inhoud, de vinkjes en de
                   telefoons die meekijken
   assistant.ts    het uitlezen van een bericht door Claude
   types.ts        de vormen die app en server delen
   dates.ts        datumhulpjes
   env.d.ts        de secrets die wrangler.toml niet kent
-  *.test.ts       de proeven; draaien in echte workerd
+  *.test.ts       de proeven; draaien in echte workerd, met een echte D1
+migrations/       het schema van D1
 ```
 
 ## Neerzetten
@@ -21,10 +24,13 @@ worker/
 ```bash
 npm install
 npx wrangler secret put ANTHROPIC_API_KEY     # van console.anthropic.com
+npx wrangler secret put AUTH_SECRET           # minstens 32 tekens, bv. openssl rand -base64 48
+npx wrangler d1 migrations apply routine --remote
 npx wrangler deploy
 ```
 
-Meer is het niet. `SLEUTEL` is optioneel, zie *Wie mag erbij*.
+De D1-database heet `routine`; het id staat in `wrangler.toml`. `SLEUTEL` is
+optioneel, zie *De oude weg* onder *Wie mag erbij*.
 
 Elke push naar `main` rolt vanzelf uit via `.github/workflows/deploy.yml`, zodra
 `CLOUDFLARE_API_TOKEN` en `CLOUDFLARE_ACCOUNT_ID` bij **Settings → Secrets and
@@ -159,30 +165,59 @@ EFFORT = "medium"
 
 ## Wie mag erbij
 
-Nu geldt: wie het adres kent, kan meelezen en meeschrijven. `SLEUTEL` maakt
-daar één gedeeld wachtwoord van:
+De app meldt zich aan met Apple of Google en stuurt het id-token door. De
+Worker controleert dat tegen de publieke sleutels van Apple
+(`appleid.apple.com/auth/keys`) of Google (`googleapis.com/oauth2/v3/certs`),
+met het bundel-id of het client-id uit `wrangler.toml` als audience. Klopt het,
+dan komen er twee eigen tokens terug:
 
-```bash
-npx wrangler secret put SLEUTEL
+- een **access token**: een JWT (HS256 met `AUTH_SECRET`), een uur geldig,
+  nergens opgeslagen. Gaat als `Authorization: Bearer …` mee met elk verzoek,
+  ook de WebSocket.
+- een **refresh token**: 32 willekeurige bytes, 90 dagen geldig, alleen als
+  hash in D1. Eén keer te gebruiken: inruilen levert een nieuw paar op en de
+  oude is dan weg.
+
+```
+POST /api/v2/auth/sign-in    { provider: "apple"|"google", idToken, name? }
+                             → { accessToken, expiresIn, refreshToken, user, homes }
+POST /api/v2/auth/refresh    { refreshToken } → { accessToken, expiresIn, refreshToken }
+POST /api/v2/auth/sign-out   { refreshToken } → { ok }
+GET  /api/v2/me              → { user, homes }
 ```
 
-Dan wil `/api/*` een `X-Routine-Key`-kopje met dat woord, ook op de WebSocket.
-Zet hetzelfde woord in de app (`ROUTINE_KEY` in `Info.plist`).
+Apple stuurt de naam alleen de allereerste keer, en alleen aan de app; die
+geeft hem mee als `name`. Een e-mailadres wordt alleen bewaard als de provider
+zegt dat het gecontroleerd is.
 
-Dat is een drempel, geen slot: één woord voor iedereen. Voor een afvinklijstje
-thuis is dat genoeg; voor een app in een store niet. Wat er dan komt, in deze
-volgorde:
+Wie ingelogd is kan een huis maken en zit dan als `owner` in dat huis. De
+opslag van zo'n huis staat onder het huis:
 
-1. **Aanmelden** met Apple en Google. De app stuurt het id-token, de Worker
-   controleert het tegen de publieke sleutels van Apple en Google en geeft een
-   eigen, kortlopend JWT terug. Gebruikers, huizen en wie bij welk huis hoort
-   komen in D1; het huis zelf blijft een Durable Object, per huis één.
-2. **Uitnodigen**: een code of link waarmee een tweede ouder bij hetzelfde huis
-   komt.
-3. **Mail**: per huis een adres waar je een schoolmail naar doorstuurt.
+```
+POST /api/v2/homes                       { name } → { home }
+*    /api/v2/homes/:home/storage/…       dezelfde routes als hierboven, alleen
+                                         voor wie lid is (anders 403)
+```
+
+Elk huis is een eigen Durable Object, `home:<id>`. Uitnodigen komt hierna;
+tot die tijd is een huis van één persoon.
+
+### De oude weg
+
+`/api/v2/storage/*` bedient nog steeds het ene huis uit `HOUSEHOLD` in
+`wrangler.toml`, achter `SLEUTEL` als die er staat (dan wil hij een
+`X-Routine-Key`-kopje). Dat blijft tot de app op `/homes` zit; daarna gaat
+`HOUSEHOLD` weg en geeft die route 410. Het uitlezen (`/api/v2/read`) neemt
+allebei: een bearer-token óf de sleutel.
+
+### Hierna
+
+1. **Uitnodigen**: een code of link waarmee een tweede ouder bij hetzelfde
+   huis komt.
+2. **Mail**: per huis een adres waar je een schoolmail naar doorstuurt.
    Cloudflare Email Routing levert die af bij de Worker, die hem uitleest en
    de voorstellen in het huis zet.
-4. **MCP**, zodat een assistent buiten de app bij het huis kan.
+3. **MCP**, zodat een assistent buiten de app bij het huis kan.
 
 ## Een reservekopie
 

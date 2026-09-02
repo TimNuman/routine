@@ -1,0 +1,299 @@
+import { createExecutionContext, env, waitOnExecutionContext } from 'cloudflare:test';
+import { exportJWK, generateKeyPair, SignJWT } from 'jose';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import app from './index';
+
+// A pretend Apple and Google: one key pair, served as a JWKS where the real
+// ones live, so the worker's verification runs the real code path.
+const keys = await generateKeyPair('RS256', { extractable: true });
+const jwk = { ...(await exportJWK(keys.publicKey)), kid: 'test-key', alg: 'RS256', use: 'sig' };
+
+const JWKS_URLS = new Set([
+  'https://appleid.apple.com/auth/keys',
+  'https://www.googleapis.com/oauth2/v3/certs',
+]);
+
+beforeAll(() => {
+  vi.stubGlobal('fetch', async (input: RequestInfo | URL) => {
+    const url = String(input instanceof Request ? input.url : input);
+    if (!JWKS_URLS.has(url)) throw new Error('unexpected fetch: ' + url);
+    return new Response(JSON.stringify({ keys: [jwk] }), { headers: { 'Content-Type': 'application/json' } });
+  });
+});
+afterAll(() => vi.unstubAllGlobals());
+
+interface TokenOptions {
+  issuer?: string;
+  audience?: string;
+  expiresIn?: string;
+  email?: string;
+  emailVerified?: boolean | string;
+  kid?: string;
+}
+
+async function idToken(provider: 'apple' | 'google', subject: string, options: TokenOptions = {}) {
+  const issuer =
+    options.issuer ?? (provider === 'apple' ? 'https://appleid.apple.com' : 'https://accounts.google.com');
+  const audience = options.audience ?? (provider === 'apple' ? env.APPLE_BUNDLE_ID : env.GOOGLE_CLIENT_ID);
+  return await new SignJWT({ email: options.email, email_verified: options.emailVerified ?? true })
+    .setProtectedHeader({ alg: 'RS256', kid: options.kid ?? 'test-key' })
+    .setIssuer(issuer)
+    .setAudience(audience)
+    .setSubject(subject)
+    .setIssuedAt()
+    .setExpirationTime(options.expiresIn ?? '1h')
+    .sign(keys.privateKey);
+}
+
+async function call(path: string, init: RequestInit = {}, extra: Partial<Env> = {}) {
+  const ctx = createExecutionContext();
+  const res = await app.fetch(new Request('https://house' + path, init), { ...env, ...extra }, ctx);
+  await waitOnExecutionContext(ctx);
+  return res;
+}
+
+const post = (path: string, body: unknown, token?: string) =>
+  call(path, {
+    method: 'POST',
+    body: JSON.stringify(body),
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+  });
+
+const withToken = (token: string, init: RequestInit = {}): RequestInit => ({
+  ...init,
+  headers: { ...(init.headers as Record<string, string>), Authorization: 'Bearer ' + token },
+});
+
+interface Session {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  user: { id: string; email: string | null; name: string | null };
+  homes: { id: string; name: string; role: string }[];
+}
+
+async function signIn(provider: 'apple' | 'google', subject: string, extra: Record<string, unknown> = {}) {
+  const res = await post('/api/v2/auth/sign-in', {
+    provider,
+    idToken: await idToken(provider, subject, extra),
+    ...extra,
+  });
+  expect(res.status).toBe(200);
+  return (await res.json()) as Session;
+}
+
+describe('signing in', () => {
+  it('creates an account from an Apple id token', async () => {
+    const s = await signIn('apple', 'apple-1', { email: 'emma@example.com', name: 'Emma' });
+    expect(s.user).toEqual({ id: expect.any(String), email: 'emma@example.com', name: 'Emma' });
+    expect(s.homes).toEqual([]);
+    expect(s.expiresIn).toBe(3600);
+    expect(s.accessToken.split('.')).toHaveLength(3);
+    expect(s.refreshToken.length).toBeGreaterThan(30);
+  });
+
+  it('finds the same account again, and fills in a name it learns later', async () => {
+    const first = await signIn('google', 'google-1');
+    expect(first.user.name).toBeNull();
+    const again = await signIn('google', 'google-1', { name: 'Mads' });
+    expect(again.user.id).toBe(first.user.id);
+    expect(again.user.name).toBe('Mads');
+  });
+
+  it('ignores an unverified email', async () => {
+    const s = await signIn('apple', 'apple-2', { email: 'nope@example.com', emailVerified: false });
+    expect(s.user.email).toBeNull();
+  });
+
+  it('refuses a token for another app', async () => {
+    const res = await post('/api/v2/auth/sign-in', {
+      provider: 'apple',
+      idToken: await idToken('apple', 'x', { audience: 'com.other.app' }),
+    });
+    expect(res.status).toBe(401);
+    expect(((await res.json()) as { error: string }).error).toMatch(/not valid/);
+  });
+
+  it('refuses an expired token, a wrong issuer, and an unknown key', async () => {
+    const bad: TokenOptions[] = [{ expiresIn: '-1s' }, { issuer: 'https://evil.example' }, { kid: 'other' }];
+    const results = await Promise.all(
+      bad.map(async (options) =>
+        post('/api/v2/auth/sign-in', { provider: 'google', idToken: await idToken('google', 'x', options) }),
+      ),
+    );
+    expect(results.map((res) => res.status)).toEqual([401, 401, 401]);
+  });
+
+  it('refuses junk', async () => {
+    expect((await post('/api/v2/auth/sign-in', { provider: 'facebook', idToken: 'x' })).status).toBe(400);
+    expect((await post('/api/v2/auth/sign-in', { provider: 'apple' })).status).toBe(400);
+    expect((await post('/api/v2/auth/sign-in', { provider: 'apple', idToken: 'not.a.jwt' })).status).toBe(
+      401,
+    );
+  });
+
+  it('says so when a provider is not configured', async () => {
+    const ctx = createExecutionContext();
+    const res = await app.fetch(
+      new Request('https://house/api/v2/auth/sign-in', {
+        method: 'POST',
+        body: JSON.stringify({ provider: 'google', idToken: await idToken('google', 'x') }),
+      }),
+      { ...env, GOOGLE_CLIENT_ID: '' },
+      ctx,
+    );
+    expect(res.status).toBe(500);
+    expect(await res.json()).toEqual({ error: 'Sign-in with google is not configured.' });
+  });
+
+  it('is off without a proper AUTH_SECRET', async () => {
+    const res = await call(
+      '/api/v2/auth/sign-in',
+      { method: 'POST', body: JSON.stringify({ provider: 'apple', idToken: await idToken('apple', 'x') }) },
+      { AUTH_SECRET: 'short' },
+    );
+    expect(res.status).toBe(500);
+  });
+});
+
+describe('the access token', () => {
+  it('opens /me', async () => {
+    const s = await signIn('apple', 'apple-me', { name: 'Emma' });
+    const res = await call('/api/v2/me', withToken(s.accessToken));
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ user: s.user, homes: [] });
+  });
+
+  it('is required, and checked', async () => {
+    expect((await call('/api/v2/me')).status).toBe(401);
+    expect((await call('/api/v2/me', withToken('garbage'))).status).toBe(401);
+    const s = await signIn('apple', 'apple-other-secret');
+    const other = await call('/api/v2/me', withToken(s.accessToken), {
+      AUTH_SECRET: 'a-different-secret-of-enough-length',
+    });
+    expect(other.status).toBe(401);
+  });
+});
+
+describe('the refresh token', () => {
+  it('trades for a new pair, once', async () => {
+    const s = await signIn('google', 'google-refresh');
+    const res = await post('/api/v2/auth/refresh', { refreshToken: s.refreshToken });
+    expect(res.status).toBe(200);
+    const next = (await res.json()) as Session;
+    expect(next.refreshToken).not.toBe(s.refreshToken);
+    expect((await call('/api/v2/me', withToken(next.accessToken))).status).toBe(200);
+
+    const reuse = await post('/api/v2/auth/refresh', { refreshToken: s.refreshToken });
+    expect(reuse.status).toBe(401);
+  });
+
+  it('dies on sign-out', async () => {
+    const s = await signIn('google', 'google-out');
+    expect((await post('/api/v2/auth/sign-out', { refreshToken: s.refreshToken })).status).toBe(200);
+    expect((await post('/api/v2/auth/refresh', { refreshToken: s.refreshToken })).status).toBe(401);
+  });
+
+  it('refuses nonsense', async () => {
+    expect((await post('/api/v2/auth/refresh', {})).status).toBe(400);
+    expect((await post('/api/v2/auth/refresh', { refreshToken: 'never-issued' })).status).toBe(401);
+  });
+});
+
+describe('homes', () => {
+  it('can be created, and then show up', async () => {
+    const s = await signIn('apple', 'apple-home');
+    const res = await post('/api/v2/homes', { name: '  Ons huis  ' }, s.accessToken);
+    expect(res.status).toBe(201);
+    const { home } = (await res.json()) as { home: { id: string; name: string; role: string } };
+    expect(home).toEqual({ id: expect.any(String), name: 'Ons huis', role: 'owner' });
+
+    const me = (await (await call('/api/v2/me', withToken(s.accessToken))).json()) as Session;
+    expect(me.homes).toEqual([home]);
+  });
+
+  it('need a name and a user', async () => {
+    const s = await signIn('apple', 'apple-home-2');
+    expect((await post('/api/v2/homes', { name: '' }, s.accessToken)).status).toBe(400);
+    expect((await post('/api/v2/homes', { name: 'x' })).status).toBe(401);
+  });
+
+  it('keep their house to their members', async () => {
+    const owner = await signIn('apple', 'apple-owner');
+    const stranger = await signIn('apple', 'apple-stranger');
+    const { home } = (await (await post('/api/v2/homes', { name: 'Thuis' }, owner.accessToken)).json()) as {
+      home: { id: string };
+    };
+    const path = `/api/v2/homes/${home.id}/storage`;
+
+    const put = await call(
+      path + '/content',
+      withToken(owner.accessToken, { method: 'PUT', body: JSON.stringify({ version: 2, title: 'Thuis' }) }),
+    );
+    expect(put.status).toBe(200);
+    const got = await (await call(path + '/content', withToken(owner.accessToken))).json();
+    expect(got).toEqual({ content: { version: 2, title: 'Thuis' } });
+
+    expect((await call(path + '/content', withToken(stranger.accessToken))).status).toBe(403);
+    expect((await call(path + '/content')).status).toBe(401);
+    expect(
+      (await call('/api/v2/homes/no-such-home/storage/content', withToken(owner.accessToken))).status,
+    ).toBe(403);
+  });
+
+  it('each have their own house', async () => {
+    const s = await signIn('apple', 'apple-two-homes');
+    const a = (await (await post('/api/v2/homes', { name: 'A' }, s.accessToken)).json()) as {
+      home: { id: string };
+    };
+    const b = (await (await post('/api/v2/homes', { name: 'B' }, s.accessToken)).json()) as {
+      home: { id: string };
+    };
+    await call(
+      `/api/v2/homes/${a.home.id}/storage/content`,
+      withToken(s.accessToken, { method: 'PUT', body: JSON.stringify({ title: 'A' }) }),
+    );
+    const other = await (
+      await call(`/api/v2/homes/${b.home.id}/storage/content`, withToken(s.accessToken))
+    ).json();
+    expect(other).toEqual({ content: null });
+  });
+
+  it('stream with the same token', async () => {
+    const s = await signIn('apple', 'apple-stream');
+    const { home } = (await (await post('/api/v2/homes', { name: 'S' }, s.accessToken)).json()) as {
+      home: { id: string };
+    };
+    const res = await call(
+      `/api/v2/homes/${home.id}/storage/stream`,
+      withToken(s.accessToken, { headers: { Upgrade: 'websocket' } }),
+    );
+    expect(res.status).toBe(101);
+    res.webSocket?.accept();
+    res.webSocket?.close();
+  });
+});
+
+describe('the assistant', () => {
+  it('lets a signed-in user in without the shared key', async () => {
+    const s = await signIn('apple', 'apple-reader');
+    const res = await post('/api/v2/read', { text: '' }, s.accessToken);
+    expect(res.status).toBe(200);
+    const locked = await call(
+      '/api/v2/read',
+      {
+        method: 'POST',
+        body: JSON.stringify({ text: '' }),
+        headers: { Authorization: 'Bearer ' + s.accessToken },
+      },
+      { SLEUTEL: 's3cret' },
+    );
+    expect(locked.status).toBe(200);
+  });
+});
+
+describe('the shared-key path', () => {
+  it('is gone when no household is configured', async () => {
+    expect((await call('/api/v2/storage/content', {}, { HOUSEHOLD: '' })).status).toBe(410);
+  });
+});
