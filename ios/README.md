@@ -169,6 +169,13 @@ worden de kaartjes vlakke dozen. De kleur komt daarom uit het palet eronder.
 | `inset 0 1px 0` / `inset 0 -1px 0` | boven- en onderkant van datzelfde verloop |
 | `0 16px 38px rgba(126,84,42,.16)` | `.shadow(radius: 19, y: 16)` |
 
+Wat op een kaartje van een paar centimeter klopt, oogt op de grote kaart dun
+en scherp. Daarom kent het glas drie knoppen die verder overal op hun standaard
+blijven staan: `line` maakt de rand dikker, `lift` de schaduw dieper, en `bulge`
+zet een lichtrand net binnen de bovenkant met een schaduwtje binnen de onderkant
+— dat laatste is de bolling, en zonder die twee blijft het een velletje glas met
+een randje eromheen.
+
 De overgang van ochtend naar avond is één vlag in het palet. SwiftUI kan kleuren
 zelf tussenstanden geven, dus één `.animation(Motion.night, value: evening)`
 bovenin `RootScreen` laat het hele scherm in dezelfde 420 ms omgaan — daar is

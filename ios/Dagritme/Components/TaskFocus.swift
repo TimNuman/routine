@@ -54,6 +54,10 @@ struct TaskFocus: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     @State private var shown = false
+    /// De buren doen pas mee als de kaart er helemaal is. Tijdens het groeien
+    /// staat de hele rij klein op de plek van één kaartje, en dan zouden ze
+    /// ernaast in beeld staan mee te groeien.
+    @State private var ready = false
     @State private var drag = CGSize.zero
     @State private var axis: Axis?
 
@@ -89,7 +93,13 @@ struct TaskFocus: View {
             .gesture(swipe(width))
         }
         .onAppear {
-            withAnimation(reduceMotion ? Motion.fade : Motion.spring) { shown = true }
+            withAnimation(reduceMotion ? Motion.fade : Motion.spring) {
+                shown = true
+            } completion: {
+                // Op een breed scherm staat een buur nog net in beeld; daar
+                // komt hij zacht op, in plaats van er ineens te staan.
+                withAnimation(Motion.fade) { ready = true }
+            }
         }
     }
 
@@ -100,6 +110,7 @@ struct TaskFocus: View {
             ForEach(Array(focus.tasks.enumerated()), id: \.offset) { (i, step) in
                 if abs(i - focus.index) <= 1 {
                     card(step, width: width, icon: icon, current: i == focus.index)
+                        .opacity(i == focus.index || ready ? 1 : 0)
                 } else {
                     Color.clear.frame(width: width)
                 }
@@ -119,7 +130,10 @@ struct TaskFocus: View {
                       current: Bool) -> some View {
         let taking = participants(step, people).filter { visible.contains($0.id) }
 
-        return Glass(radius: corner(width), floating: true) {
+        // Een dikkere rand en een diepere schaduw: op dit formaat mag de
+        // kaart bol staan in plaats van als een velletje glas.
+        return Glass(radius: corner(width), floating: true,
+                     line: 3, lift: 1.5, bulge: 9) {
             VStack(spacing: 0) {
                 Text(step.icon)
                     .font(.system(size: icon))
@@ -248,6 +262,8 @@ struct TaskFocus: View {
     }
 
     private func close() {
+        // Eerst de buren weg, dan pas krimpen: anders zakken ze mee.
+        ready = false
         withAnimation(Motion.short) {
             shown = false
             drag = .zero
