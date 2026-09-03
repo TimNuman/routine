@@ -4,7 +4,8 @@ tags:
   - smoke
 ---
 - launchApp
-- tapOn: "^Ritme$"
+- tapOn:
+    id: "tab.routine"
 
 - tapOn:
     id: "segment.night"

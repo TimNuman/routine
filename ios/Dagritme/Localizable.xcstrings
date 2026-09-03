@@ -385,6 +385,17 @@
         }
       }
     },
+    "Dag" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dag"
+          }
+        }
+      }
+    },
     "Dagritme" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1362,17 +1373,6 @@
         }
       }
     },
-    "Ritme" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ritme"
-          }
-        }
-      }
-    },
     "Routines" : {
 
     },
@@ -1624,6 +1624,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vul een naam in."
+          }
+        }
+      }
+    },
+    "Week" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Week"
           }
         }
       }

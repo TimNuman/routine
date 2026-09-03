@@ -33,16 +33,7 @@ final class Driver: XCTestCase {
                     thenHoldForDuration: number(step["hold"]) ?? 0
                 )
             case "tapId":
-                // De knoppen van de app dragen een identifier; die van de
-                // menubalk komt van iOS zelf en heeft alleen wat erop staat.
-                let name = step["id"] as? String ?? ""
-                let any = app.descendants(matching: .any)
-                let byId = any[name].firstMatch
-                if byId.waitForExistence(timeout: 2) {
-                    byId.tap()
-                } else {
-                    any.matching(NSPredicate(format: "label == %@", name)).firstMatch.tap()
-                }
+                app.descendants(matching: .any)[step["id"] as? String ?? ""].firstMatch.tap()
             case "type":
                 app.typeText(step["text"] as? String ?? "")
             case "home":

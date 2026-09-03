@@ -46,9 +46,6 @@ struct Screen<Inner: View>: View {
         // toestel, en die zet zijn eigen ondergrond onder de bladzijden.
         .background { Sky(dark: household.evening) }
         .overlay { fades }
-        // Een blad legt zich over het hele scherm; de menubalk hoort daar
-        // niet bovenop te blijven staan.
-        .toolbar(household.sheetOpen ? .hidden : .visible, for: .tabBar)
     }
 
     /// Boven en onder zakt de hemel weg, zodat wat wegscrolt niet hard tegen
@@ -99,45 +96,69 @@ struct Screen<Inner: View>: View {
 
 /// De drie bladzijden onder de menubalk van iOS zelf: op iOS 26 is dat de
 /// zwevende balk van vloeibaar glas, met de veeg erover die van tabblad
-/// wisselt; daarvóór de gewone balk. Wat de app zelf tekende — een eigen balk
-/// en een veeg over de hele bladzijde — is daarmee weg.
+/// wisselt. Welke bladzijde erbij hoort schuift van opzij in beeld — zie
+/// `Components/Tabs.swift`.
 struct RootScreen: View {
     @Environment(Household.self) private var household
+    @Environment(Session.self) private var session
     @State private var launching = true
 
-    private var chosen: Binding<Tab> {
-        Binding(get: { household.tab }, set: { household.go($0) })
+    /// Het pictogram van de dag volgt het ritme: de zon in de ochtend, de
+    /// maan zodra het avond is.
+    private var items: [TabItem] {
+        [
+            TabItem(tab: .routine, name: String(localized: "Dag"),
+                    symbol: household.routine == .night ? "moon.stars" : "sun.max",
+                    id: "tab.routine"),
+            TabItem(tab: .week, name: String(localized: "Week"),
+                    symbol: "calendar", id: "tab.week"),
+            TabItem(tab: .settings, name: String(localized: "Instellingen"),
+                    symbol: "gearshape", id: "tab.settings"),
+        ]
     }
 
     var body: some View {
         GeometryReader { space in
             let m = Metrics(width: space.size.width)
 
-            TabView(selection: chosen) {
-                RoutineScreen()
-                    .tabItem { Label("Ritme", systemImage: "checklist") }
-                    .tag(Tab.routine)
-
-                WeekScreen()
-                    .tabItem { Label("Deze week", systemImage: "calendar") }
-                    .tag(Tab.week)
-
-                SettingsScreen()
-                    .tabItem { Label("Instellingen", systemImage: "gearshape") }
-                    .tag(Tab.settings)
+            GlassTabs(chosen: household.tab, onPick: { household.go($0) },
+                      items: items, barHidden: household.sheetOpen) { tab in
+                TabPage(tab: tab)
+                    .environment(household)
+                    .environment(session)
+                    .environment(\.metrics, m)
+                    // De intrede-animatie is voor de start; wat daarna in
+                    // beeld komt, komt al van opzij.
+                    .environment(\.entranceOn, launching)
             }
-            .environment(\.metrics, m)
-            .environment(\.palette, Palette(dark: household.evening))
-            // De intrede-animatie is voor de start; wat daarna in beeld komt,
-            // komt zonder.
-            .environment(\.entranceOn, launching)
-            .animation(Motion.night, value: household.evening)
+            .ignoresSafeArea()
             .task(id: household.content == nil) {
                 guard household.content != nil else { return }
                 try? await Task.sleep(for: .seconds(2))
                 launching = false
             }
         }
+    }
+}
+
+/// Eén bladzijde in de balk. Het palet en de overgang van dag naar avond
+/// zitten hierbinnen en niet erboven: een SwiftUI-animatie komt niet door
+/// UIKit heen, dus moet hij aan deze kant van het hostingscherm staan.
+private struct TabPage: View {
+    let tab: Tab
+
+    @Environment(Household.self) private var household
+
+    var body: some View {
+        Group {
+            switch tab {
+            case .routine: RoutineScreen()
+            case .week: WeekScreen()
+            case .settings: SettingsScreen()
+            }
+        }
+        .environment(\.palette, Palette(dark: household.evening))
+        .animation(Motion.night, value: household.evening)
     }
 }
 

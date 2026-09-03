@@ -3,15 +3,15 @@
   { "do": "wait", "s": 3 },
   { "do": "shot", "name": "1-ritme" },
 
-  { "do": "tapId", "id": "Deze week" },
+  { "do": "tapId", "id": "tab.week" },
   { "do": "wait", "s": 1.2 },
   { "do": "shot", "name": "2-deze-week" },
 
-  { "do": "tapId", "id": "Instellingen" },
+  { "do": "tapId", "id": "tab.settings" },
   { "do": "wait", "s": 1.2 },
   { "do": "shot", "name": "3-instellingen" },
 
-  { "do": "tapId", "id": "Ritme" },
+  { "do": "tapId", "id": "tab.routine" },
   { "do": "wait", "s": 1.2 },
   { "do": "shot", "name": "4-terug-op-ritme" }
 ]

@@ -99,7 +99,7 @@ vorm waar de schermen mee werken.
 | toestand | één `@Observable` klasse (`Core/Household.swift`) in de omgeving |
 | opslag | `URLSession` naar `/api/v2/storage`, met `URLSessionWebSocketTask` voor de stroom |
 | bewerken | `List` met `.swipeActions` en `.onMove`; de rest van de app is eigen glas |
-| bladeren | de menubalk van iOS zelf (`TabView`); binnen het ritme schuift de schakelaar ochtend en avond langs (`Components/Slide.swift`); op de dagen van de weekstrook bladert een veeg door de weken |
+| bladeren | de menubalk van iOS zelf (`Components/Tabs.swift`), met de bladzijden die van opzij in beeld schuiven; binnen het ritme schuift de schakelaar ochtend en avond langs (`Components/Slide.swift`); op de dagen van de weekstrook bladert een veeg door de weken |
 | animatie | gewone SwiftUI-animaties, timing in `Style/Motion.swift` |
 
 ### Twee dingen die anders moesten
@@ -119,12 +119,13 @@ de schermen tonen is wél gewone waarde-code.
 
 ## De menubalk
 
-Onderaan staat de balk van iOS zelf — een gewone `TabView` met drie
-`tabItem`s in `Components/Screen.swift`. Op iOS 26 is dat de zwevende balk van
-vloeibaar glas die je ook in de App Store en Signal ziet, met alles wat daarbij
-hoort zonder dat de app er iets voor doet: het glas dat meekleurt met wat
-eronder scrolt, en de veeg over de balk waarmee je van tabblad naar tabblad
-schuift. Op een ouder toestel is het dezelfde balk in het oude jasje.
+Onderaan staat de balk van iOS zelf: *Dag*, *Week* en *Instellingen*. Op
+iOS 26 is dat de zwevende balk van vloeibaar glas die je ook in de App Store en
+Signal ziet, met alles wat daarbij hoort zonder dat de app er iets voor doet:
+het glas dat meekleurt met wat eronder scrolt, en de veeg over de balk waarmee
+je van tabblad naar tabblad schuift. Op een ouder toestel is het dezelfde balk
+in het oude jasje. Het pictogram van *Dag* volgt het ritme — de zon 's ochtends,
+de maan zodra het avond is.
 
 Daarmee is de eigen balk weg, en met hem de veeg over de hele bladzijde: van
 tabblad wisselen doe je op de balk. Binnen het ritme blijft de schakelaar
@@ -132,11 +133,27 @@ boven de kaartjes ochtend en avond langs schuiven — dat is dezelfde schuif als
 altijd (`Components/Slide.swift`), alleen niet meer met een vinger op de
 bladzijde.
 
-De bladzijden hangen niet meer onder één hemel: `Screen` zet zijn eigen `Sky`
-en de twee wegzakkende randen neer, want de balk van het toestel staat tussen
-de app en de bladzijden in. Onderaan houdt iOS zelf ruimte vrij voor de balk;
-`Metrics.bottomPad` is alleen nog wat er daarboven bij komt. Gaat er een blad
-open, dan gaat de balk weg met `.toolbar(.hidden, for: .tabBar)`.
+**En dit is het ene stukje UIKit dat het kost.** SwiftUI's `TabView` wisselt
+van bladzijde zonder beweging, en er is geen knop om dat om te zetten;
+`UITabBarController` heeft er wél een haakje voor
+(`animationControllerForTransitionFrom`) en krijgt op iOS 26 precies dezelfde
+balk. Dus staat de balk in `Components/Tabs.swift` in UIKit, met elk scherm in
+een `UIHostingController` en een animatie van 0,44 s die de nieuwe bladzijde
+van rechts binnenschuift en de oude naar links het beeld uit — welke kant op,
+zegt de plek in de balk. Dat levert er twee dingen bij op: de tabbladen dragen
+weer een `accessibilityIdentifier` (in SwiftUI valt daar niets op te plakken),
+en een blad dat opengaat laat de balk gewoon wegvagen.
+
+Wat er van buiten in gaat — het huis, de sessie, de maten, de intrede — moet
+er per hostingscherm in worden gezet: SwiftUI's omgeving loopt niet door UIKit
+heen. Om dezelfde reden zit het palet met de overgang van dag naar avond in
+`TabPage`, binnen het hostingscherm, en niet erboven; anders gaat het licht in
+één keer aan in plaats van in 420 ms.
+
+De bladzijden hangen ook niet meer onder één hemel: `Screen` zet zijn eigen
+`Sky` en de twee wegzakkende randen neer, want de balk van het toestel staat
+tussen de app en de bladzijden in. Onderaan houdt iOS zelf ruimte vrij voor de
+balk; `Metrics.bottomPad` is alleen nog wat er daarboven bij komt.
 
 ## Het glas
 
@@ -233,15 +250,10 @@ De stromen staan in [`maestro/`](maestro):
 | `add-something.yaml` | het formulier openen, invullen en annuleren |
 
 Ze wijzen aan op `accessibilityIdentifier`, en die staan overal waar je op kunt
-tikken: `segment.night`, `ring.<stap>.<kind>`,
+tikken: `tab.routine`, `segment.night`, `ring.<stap>.<kind>`,
 `settings.children`, `sheet.cancel`, `week.addOneOff`. Die namen zijn Engels en
 worden nooit voorgelezen — ze horen bij de code. Wat VoiceOver zegt staat er
 apart naast, in het Nederlands, en gaat mee in de vertaling.
-
-Eén ding heeft geen identifier: de menubalk onderaan is die van iOS zelf, en
-daar valt er geen op te plakken. De stromen wijzen hem aan op wat erop staat —
-`tapOn: "^Ritme$"`, `"^Deze week$"`, `"^Instellingen$"` — met de haakjes erbij,
-zodat `Ritme` niet ook `Dagritme` op het instellingenscherm raakt.
 
 Let op: `tick-a-step.yaml` en `add-something.yaml` draaien tegen het echte huis.
 De eerste zet een vinkje en haalt het weer weg, de tweede annuleert het
@@ -295,8 +307,7 @@ De stappen zijn `wait <s>`, `ritme`, `week`, `instellingen`, `ochtend`, `avond`,
 het echte huis) en `herlaad` (alsof de app wakker wordt).
 In een plan kunnen ook `home` (naar het beginscherm) en `activate` (terug naar de
 app) staan, om slapen en wakker worden na te spelen.
-Verder `tapId` (tik op een `accessibilityIdentifier`, en anders op wat er
-staat — zo komt de menubalk van iOS ook aan de beurt) en `type` (typ in het veld
+Verder `tapId` (tik op een `accessibilityIdentifier`) en `type` (typ in het veld
 dat de focus heeft).
 Neem het op met `xcrun simctl io <simulator> recordVideo` en trek er beelden uit;
 de opname heeft geen vaste beeldsnelheid, dus zet hem eerst om (`ffmpeg -vf

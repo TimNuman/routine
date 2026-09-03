@@ -4,20 +4,24 @@ tags:
   - smoke
 ---
 - launchApp
-- assertVisible: "^Ritme$"
+- assertVisible:
+    id: "tab.routine"
 - takeScreenshot: 1-ritme
 
-- tapOn: "^Deze week$"
+- tapOn:
+    id: "tab.week"
 - assertVisible:
     id: "week.today"
 - takeScreenshot: 2-deze-week
 
-- tapOn: "^Instellingen$"
+- tapOn:
+    id: "tab.settings"
 - assertVisible:
     id: "settings.children"
 - takeScreenshot: 3-instellingen
 
-- tapOn: "^Ritme$"
+- tapOn:
+    id: "tab.routine"
 - assertVisible:
     id: "segment.day"
 - takeScreenshot: 4-terug-op-ritme
