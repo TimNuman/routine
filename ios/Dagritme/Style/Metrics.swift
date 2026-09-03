@@ -31,7 +31,6 @@ struct Metrics {
 
     // De stap groot in beeld: over de volle breedte, met de rand eromheen.
     var focusWidth: CGFloat { 520 }
-    var focusHeight: CGFloat { 580 }
     var focusIcon: CGFloat { tight ? 96 : roomy ? 168 : 128 }
     var focusName: CGFloat { tight ? 24 : roomy ? 34 : 28 }
     var focusFace: CGFloat { tight ? 50 : roomy ? 74 : 62 }

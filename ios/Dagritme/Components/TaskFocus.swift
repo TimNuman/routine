@@ -69,7 +69,9 @@ struct TaskFocus: View {
     var body: some View {
         GeometryReader { space in
             let width = min(space.size.width - m.gutter * 2, m.focusWidth)
-            let height = min(max(space.size.height * 0.66, 300), m.focusHeight)
+            // Het plaatje is zo groot als het mag, maar nooit zo groot dat de
+            // kaart niet meer op een laag scherm past.
+            let icon = min(m.focusIcon, space.size.height * 0.24)
             // De kaarten liggen precies een schermbreedte uit elkaar, dus de
             // buren staan in rust net buiten beeld.
             let span = width + m.gutter
@@ -85,8 +87,8 @@ struct TaskFocus: View {
                     .accessibilityLabel(Spoken.close)
                     .accessibilityAddTraits(.isButton)
 
-                row(width: width, height: height, span: span)
-                    .frame(width: space.size.width, height: height)
+                row(width: width, icon: icon, span: span)
+                    .frame(width: space.size.width)
                     .scaleEffect(shown ? 1 : from.scale)
                     .offset(x: shown ? 0 : from.offset.width,
                             y: shown ? 0 : from.offset.height)
@@ -102,13 +104,13 @@ struct TaskFocus: View {
 
     /// De kaarten naast elkaar; alleen die in beeld kan komen wordt echt
     /// getekend, de rest houdt zijn plek vrij.
-    private func row(width: CGFloat, height: CGFloat, span: CGFloat) -> some View {
+    private func row(width: CGFloat, icon: CGFloat, span: CGFloat) -> some View {
         HStack(spacing: m.gutter) {
             ForEach(Array(focus.tasks.enumerated()), id: \.offset) { (i, task) in
                 if abs(i - focus.index) <= 1 {
-                    card(task, width: width, height: height, current: i == focus.index)
+                    card(task, width: width, icon: icon, current: i == focus.index)
                 } else {
-                    Color.clear.frame(width: width, height: height)
+                    Color.clear.frame(width: width)
                 }
             }
         }
@@ -122,12 +124,12 @@ struct TaskFocus: View {
         return (middle - CGFloat(focus.index)) * span + drag.width
     }
 
-    private func card(_ task: FocusTask, width: CGFloat, height: CGFloat,
+    private func card(_ task: FocusTask, width: CGFloat, icon: CGFloat,
                       current: Bool) -> some View {
         let step = task.step
         let taking = participants(step, people).filter { visible.contains($0.id) }
 
-        return Glass(radius: corner(width, height), floating: true) {
+        return Glass(radius: corner(width), floating: true) {
             VStack(spacing: 0) {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     Text(task.group).textStyle(Fonts.group)
@@ -141,42 +143,43 @@ struct TaskFocus: View {
                 // Genoeg ruimte voor het kruisje in de hoek ernaast.
                 .padding(.trailing, 26)
 
-                Spacer(minLength: 0)
-
                 Text(step.icon)
-                    .font(.system(size: m.focusIcon))
+                    .font(.system(size: icon))
+                    .padding(.top, 10)
                     .accessibilityHidden(true)
                 Text(step.label)
                     .textStyle(Fonts.taskName(m.focusName))
                     .foregroundStyle(palette.ink)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
-                    .padding(.top, 24)
-
-                Spacer(minLength: 0)
+                    .minimumScaleFactor(0.85)
+                    // Een emoji laat zelf al een stuk wit onder zich; dat telt
+                    // mee als ruimte, dus de naam schuift er weer in.
+                    .padding(.top, -8)
 
                 Flow(gap: 12, rowGap: 10, centered: true) {
                     ForEach(taking) { person in
                         face(step, person)
                     }
                 }
+                .padding(.top, 18)
             }
             // De bocht van de squircle loopt ver door, dus de tekst begint
             // ruimer van de rand af dan op een gewoon kaartje.
             .padding(.horizontal, 26)
-            .padding(.vertical, 26)
-            .frame(width: width, height: height)
+            .padding(.vertical, 24)
+            .frame(width: width)
         }
         .overlay(alignment: .topTrailing) {
-            if current { closeButton(corner(width, height)) }
+            if current { closeButton(corner(width)) }
         }
         .accessibilityIdentifier(current ? "focus.card" : "")
     }
 
     /// De ronding van de kaart: groot genoeg om er een squircle van te maken,
     /// en hij groeit mee met de kaart.
-    private func corner(_ width: CGFloat, _ height: CGFloat) -> CGFloat {
-        min(width, height) * 0.17
+    private func corner(_ width: CGFloat) -> CGFloat {
+        width * 0.17
     }
 
     private func face(_ step: Step, _ person: Person) -> some View {
