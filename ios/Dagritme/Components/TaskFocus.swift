@@ -130,8 +130,9 @@ struct TaskFocus: View {
                       current: Bool) -> some View {
         let taking = participants(step, people).filter { visible.contains($0.id) }
 
-        // Een dikkere rand en een diepere schaduw: op dit formaat mag de
-        // kaart bol staan in plaats van als een velletje glas.
+        // Een diepere schaduw, en op een toestel zonder Liquid Glass ook een
+        // dikkere rand met een bolling erin: op dit formaat is een haarlijn
+        // dun en scherp. Het echte materiaal doet dat zelf.
         return Glass(radius: corner(width), floating: true,
                      line: 3, lift: 1.5, bulge: 9) {
             VStack(spacing: 0) {

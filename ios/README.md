@@ -8,9 +8,9 @@ op de ene telefoon afvinkt staat een seconde later ook op de andere.
 
 Je hebt een Mac met Xcode 16 of nieuwer nodig; het project gebruikt de
 gesynchroniseerde mappen die Xcode 16 introduceerde, zodat er niets in het
-projectbestand hoeft bij te werken als er een bestand bij komt. Wil je de
-menubalk van vloeibaar glas zien, dan bouw je met Xcode 26 (de iOS 26-sdk); met
-een oudere sdk of op een ouder toestel is het dezelfde balk in het oude jasje.
+projectbestand hoeft bij te werken als er een bestand bij komt. Met Xcode 26
+erop krijgt de app op iOS 26 het echte Liquid Glass; in een oudere Xcode, of op
+een ouder toestel, valt hij terug op het nagebouwde glas — zie *Het glas*.
 
 1. Zet in [`Dagritme/Config.swift`](Dagritme/Config.swift) het adres
    van je eigen Worker:
@@ -95,7 +95,7 @@ vorm waar de schermen mee werken.
 
 | | keuze |
 |---|---|
-| schermen | SwiftUI, iOS 17 en hoger |
+| schermen | SwiftUI, iOS 17 en hoger; Liquid Glass vanaf iOS 26 |
 | toestand | één `@Observable` klasse (`Core/Household.swift`) in de omgeving |
 | opslag | `URLSession` naar `/api/v2/storage`, met `URLSessionWebSocketTask` voor de stroom |
 | bewerken | `List` met `.swipeActions` en `.onMove`; de rest van de app is eigen glas |
@@ -156,8 +156,21 @@ balk; `Metrics.bottomPad` is alleen nog wat er daarboven bij komt.
 
 ## Het glas
 
-`Style/Glass.swift` is het glas, met één val erin: **het materiaal is voor de
-blur, niet voor de kleur.**
+`Style/Glass.swift` is het glas, en het is twee dingen tegelijk.
+
+**Op iOS 26 is het Apples eigen Liquid Glass.** `.glassEffect(in:)` zet het
+echte materiaal neer: het buigt en weerkaatst wat eronder langs schuift, licht
+zijn eigen randen op en stelt zijn contrast zelf bij. Daar hoeven wij niets
+voor te tekenen, en de knoppen hieronder (`line`, `bulge`) doen daar dan ook
+niets.
+
+**Daaronder blijft de nagebouwde versie staan**, want die API bestaat er niet:
+een blur met een kleur eroverheen en een randje met een verloop erin. De vraag
+`#if compiler(>=6.2)` eromheen is Xcode 26 — zonder die vraag bouwt de app niet
+meer in een oudere Xcode, want die kent `glassEffect` niet.
+
+In dat nagebouwde glas zit één val: **het materiaal is voor de blur, niet voor
+de kleur.**
 `.ultraThinMaterial` brengt zijn eigen grijs mee; gebruik je dat als vulling, dan
 worden de kaartjes vlakke dozen. De kleur komt daarom uit het palet eronder.
 
@@ -173,8 +186,8 @@ Wat op een kaartje van een paar centimeter klopt, oogt op de grote kaart dun
 en scherp. Daarom kent het glas drie knoppen die verder overal op hun standaard
 blijven staan: `line` maakt de rand dikker, `lift` de schaduw dieper, en `bulge`
 zet een lichtrand net binnen de bovenkant met een schaduwtje binnen de onderkant
-— dat laatste is de bolling, en zonder die twee blijft het een velletje glas met
-een randje eromheen.
+— dat laatste is de bolling. `lift` geldt altijd; de andere twee alleen voor het
+nagebouwde glas, want Liquid Glass staat vanzelf al bol.
 
 De overgang van ochtend naar avond is één vlag in het palet. SwiftUI kan kleuren
 zelf tussenstanden geven, dus één `.animation(Motion.night, value: evening)`
