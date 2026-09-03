@@ -40,7 +40,6 @@ struct GlassTabs<Page: View>: UIViewControllerRepresentable {
             return host
         }
         bars.selectedIndex = place(of: chosen)
-        context.coordinator.symbols = items.map(\.symbol)
         return bars
     }
 
@@ -52,11 +51,6 @@ struct GlassTabs<Page: View>: UIViewControllerRepresentable {
             // Opnieuw opbouwen, zodat wat er van buiten in gaat — de maten,
             // de intrede — meeloopt. De toestand binnenin houdt SwiftUI vast.
             host.rootView = page(item.tab)
-            if context.coordinator.symbols.indices.contains(i),
-               context.coordinator.symbols[i] != item.symbol {
-                context.coordinator.symbols[i] = item.symbol
-                host.tabBarItem.image = UIImage(systemName: item.symbol)
-            }
         }
 
         let want = place(of: chosen)
@@ -82,7 +76,6 @@ struct GlassTabs<Page: View>: UIViewControllerRepresentable {
 
     final class Coordinator: NSObject, UITabBarControllerDelegate {
         var tabs: GlassTabs
-        var symbols: [String] = []
         private var barShown: Bool?
 
         init(_ tabs: GlassTabs) { self.tabs = tabs }

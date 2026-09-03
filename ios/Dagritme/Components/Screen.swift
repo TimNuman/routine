@@ -103,13 +103,10 @@ struct RootScreen: View {
     @Environment(Session.self) private var session
     @State private var launching = true
 
-    /// Het pictogram van de dag volgt het ritme: de zon in de ochtend, de
-    /// maan zodra het avond is.
     private var items: [TabItem] {
         [
             TabItem(tab: .routine, name: String(localized: "Dag"),
-                    symbol: household.routine == .night ? "moon.stars" : "sun.max",
-                    id: "tab.routine"),
+                    symbol: "sun.max", id: "tab.routine"),
             TabItem(tab: .week, name: String(localized: "Week"),
                     symbol: "calendar", id: "tab.week"),
             TabItem(tab: .settings, name: String(localized: "Instellingen"),

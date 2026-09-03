@@ -124,8 +124,7 @@ iOS 26 is dat de zwevende balk van vloeibaar glas die je ook in de App Store en
 Signal ziet, met alles wat daarbij hoort zonder dat de app er iets voor doet:
 het glas dat meekleurt met wat eronder scrolt, en de veeg over de balk waarmee
 je van tabblad naar tabblad schuift. Op een ouder toestel is het dezelfde balk
-in het oude jasje. Het pictogram van *Dag* volgt het ritme — de zon 's ochtends,
-de maan zodra het avond is.
+in het oude jasje.
 
 Daarmee is de eigen balk weg, en met hem de veeg over de hele bladzijde: van
 tabblad wisselen doe je op de balk. Binnen het ritme blijft de schakelaar
