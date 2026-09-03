@@ -31,6 +31,11 @@ struct GlassTabs<Page: View>: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UITabBarController {
         let bars = UITabBarController()
         bars.delegate = context.coordinator
+        // Overdag inkt op het lichte glas: het oranje van de app loopt daar
+        // weg tegen het grijs van de gekozen knop. 's Avonds mag het wel.
+        bars.tabBar.tintColor = UIColor { traits in
+            UIColor(traits.userInterfaceStyle == .dark ? ORANGE : INK)
+        }
         bars.viewControllers = items.map { item in
             let host = UIHostingController(rootView: page(item.tab))
             // De bladzijde tekent haar eigen hemel; daaronder hoeft niets.
