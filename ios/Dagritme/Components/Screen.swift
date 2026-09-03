@@ -48,20 +48,14 @@ struct Screen<Inner: View>: View {
         .overlay { fades }
     }
 
-    /// Boven en onder zakt de hemel weg, zodat wat wegscrolt niet hard tegen
-    /// de klok of de menubalk aan loopt.
+    /// Boven zakt de hemel weg, zodat wat wegscrolt niet hard tegen de klok
+    /// aan loopt. Onder doet de menubalk van iOS dat zelf.
     private var fades: some View {
-        ZStack {
-            EdgeFade(dark: household.evening)
-                .frame(height: 72)
-                .frame(maxHeight: .infinity, alignment: .top)
-
-            EdgeFade(dark: household.evening, bottom: true)
-                .frame(height: 130)
-                .frame(maxHeight: .infinity, alignment: .bottom)
-        }
-        .ignoresSafeArea()
-        .allowsHitTesting(false)
+        EdgeFade(dark: household.evening)
+            .frame(height: 72)
+            .frame(maxHeight: .infinity, alignment: .top)
+            .ignoresSafeArea()
+            .allowsHitTesting(false)
     }
 
     @ViewBuilder

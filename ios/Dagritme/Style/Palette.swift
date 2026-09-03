@@ -67,25 +67,21 @@ extension EnvironmentValues {
     }
 }
 
-/// Een zachte overloop van de hemelkleur naar niets, boven en onder het
-/// scherm, zodat wat eronderdoor scrolt wegzakt voor het bij de klok of de
-/// menubalk komt.
+/// Een zachte overloop van de hemelkleur naar niets, boven aan het scherm,
+/// zodat wat eronderdoor scrolt wegzakt voor het bij de klok komt.
 struct EdgeFade: View {
     var dark: Bool
-    var bottom: Bool = false
 
     var body: some View {
-        let color = bottom
-            ? Color(hex: dark ? "#171A33" : "#D9E8F5")
-            : Color(hex: dark ? "#3B3F70" : "#FFE3B8")
+        let color = Color(hex: dark ? "#3B3F70" : "#FFE3B8")
         LinearGradient(
             stops: [
                 .init(color: color.opacity(0.95), location: 0),
                 .init(color: color.opacity(0.75), location: 0.45),
                 .init(color: color.opacity(0), location: 1),
             ],
-            startPoint: bottom ? .bottom : .top,
-            endPoint: bottom ? .top : .bottom
+            startPoint: .top,
+            endPoint: .bottom
         )
         .allowsHitTesting(false)
     }
