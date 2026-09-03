@@ -9,7 +9,6 @@ struct WeekStrip: View {
     let onShift: (Int) -> Void
 
     @Namespace private var space
-    @Environment(SwipeZones.self) private var zones
 
     var body: some View {
         let days = weekOf(now, weekShift)
@@ -39,12 +38,7 @@ struct WeekStrip: View {
             .padding(.horizontal, 4)
         }
         .padding(.top, 16)
-        // Een veeg over de dagen bladert door de weken; de veeg die van
-        // bladzijde wisselt blijft hier weg.
-        .onGeometryChange(for: CGRect.self, of: { $0.frame(in: .global) }) { frame in
-            zones.blocked["week"] = frame
-        }
-        .onDisappear { zones.blocked["week"] = nil }
+        // Een veeg over de dagen bladert door de weken.
         .highPriorityGesture(
             DragGesture(minimumDistance: 15)
                 .onEnded { value in

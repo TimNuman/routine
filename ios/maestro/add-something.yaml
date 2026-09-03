@@ -2,8 +2,7 @@ appId: app.dagritme
 name: Iets bijzonders toevoegen en annuleren
 ---
 - launchApp
-- tapOn:
-    id: "tab.week"
+- tapOn: "^Deze week$"
 - tapOn:
     id: "week.addOneOff"
 

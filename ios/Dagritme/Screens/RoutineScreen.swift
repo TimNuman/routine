@@ -15,7 +15,8 @@ private struct Plan {
 
 struct RoutineScreen: View {
     @Environment(Household.self) private var household
-    @Environment(Slide<Routine>.self) private var panes
+    /// De schuif tussen ochtend en avond; de schakelaar zet hem in gang.
+    @State private var panes = Slide<Routine>(.day)
     @State private var live = false
     @Environment(\.metrics) private var m
     @Environment(\.palette) private var palette

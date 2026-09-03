@@ -30,8 +30,6 @@ enum Fonts {
     static let agendaName = TextStyle(font: baloo(15.5))
     static let agendaTime = TextStyle(font: nunitoHeavy(12.5))
     static let tag = TextStyle(font: balooHeavy(12.5))
-    static let tab = TextStyle(font: nunitoHeavy(10.5))
-    static let tabWide = TextStyle(font: nunitoHeavy(13.5))
     static let weekLetter = TextStyle(font: balooHeavy(12))
     static let weekDay = TextStyle(font: balooHeavy(17))
     static let cardButton = TextStyle(font: balooHeavy(15.5))

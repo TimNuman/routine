@@ -8,7 +8,9 @@ op de ene telefoon afvinkt staat een seconde later ook op de andere.
 
 Je hebt een Mac met Xcode 16 of nieuwer nodig; het project gebruikt de
 gesynchroniseerde mappen die Xcode 16 introduceerde, zodat er niets in het
-projectbestand hoeft bij te werken als er een bestand bij komt.
+projectbestand hoeft bij te werken als er een bestand bij komt. Wil je de
+menubalk van vloeibaar glas zien, dan bouw je met Xcode 26 (de iOS 26-sdk); met
+een oudere sdk of op een ouder toestel is het dezelfde balk in het oude jasje.
 
 1. Zet in [`Dagritme/Config.swift`](Dagritme/Config.swift) het adres
    van je eigen Worker:
@@ -97,7 +99,7 @@ vorm waar de schermen mee werken.
 | toestand | één `@Observable` klasse (`Core/Household.swift`) in de omgeving |
 | opslag | `URLSession` naar `/api/v2/storage`, met `URLSessionWebSocketTask` voor de stroom |
 | bewerken | `List` met `.swipeActions` en `.onMove`; de rest van de app is eigen glas |
-| bladeren | vegen over ochtend – avond – week – instellingen (`Components/Slide.swift`, `PageSwipe.swift`); op de dagen van de weekstrook bladert een veeg door de weken |
+| bladeren | de menubalk van iOS zelf (`TabView`); binnen het ritme schuift de schakelaar ochtend en avond langs (`Components/Slide.swift`); op de dagen van de weekstrook bladert een veeg door de weken |
 | animatie | gewone SwiftUI-animaties, timing in `Style/Motion.swift` |
 
 ### Twee dingen die anders moesten
@@ -114,6 +116,27 @@ groep* — om hem daarna ergens anders neer te zetten. Met waarden zou dat een
 rijtje volgnummers worden dat bij elke wijziging verschuift; met verwijzingen
 (`Core/Draft.swift`) blijft het gewoon dat ene ding, net als in javascript. Wat
 de schermen tonen is wél gewone waarde-code.
+
+## De menubalk
+
+Onderaan staat de balk van iOS zelf — een gewone `TabView` met drie
+`tabItem`s in `Components/Screen.swift`. Op iOS 26 is dat de zwevende balk van
+vloeibaar glas die je ook in de App Store en Signal ziet, met alles wat daarbij
+hoort zonder dat de app er iets voor doet: het glas dat meekleurt met wat
+eronder scrolt, en de veeg over de balk waarmee je van tabblad naar tabblad
+schuift. Op een ouder toestel is het dezelfde balk in het oude jasje.
+
+Daarmee is de eigen balk weg, en met hem de veeg over de hele bladzijde: van
+tabblad wisselen doe je op de balk. Binnen het ritme blijft de schakelaar
+boven de kaartjes ochtend en avond langs schuiven — dat is dezelfde schuif als
+altijd (`Components/Slide.swift`), alleen niet meer met een vinger op de
+bladzijde.
+
+De bladzijden hangen niet meer onder één hemel: `Screen` zet zijn eigen `Sky`
+en de twee wegzakkende randen neer, want de balk van het toestel staat tussen
+de app en de bladzijden in. Onderaan houdt iOS zelf ruimte vrij voor de balk;
+`Metrics.bottomPad` is alleen nog wat er daarboven bij komt. Gaat er een blad
+open, dan gaat de balk weg met `.toolbar(.hidden, for: .tabBar)`.
 
 ## Het glas
 
@@ -210,10 +233,15 @@ De stromen staan in [`maestro/`](maestro):
 | `add-something.yaml` | het formulier openen, invullen en annuleren |
 
 Ze wijzen aan op `accessibilityIdentifier`, en die staan overal waar je op kunt
-tikken: `tab.routine`, `segment.night`, `ring.<stap>.<kind>`,
+tikken: `segment.night`, `ring.<stap>.<kind>`,
 `settings.children`, `sheet.cancel`, `week.addOneOff`. Die namen zijn Engels en
 worden nooit voorgelezen — ze horen bij de code. Wat VoiceOver zegt staat er
 apart naast, in het Nederlands, en gaat mee in de vertaling.
+
+Eén ding heeft geen identifier: de menubalk onderaan is die van iOS zelf, en
+daar valt er geen op te plakken. De stromen wijzen hem aan op wat erop staat —
+`tapOn: "^Ritme$"`, `"^Deze week$"`, `"^Instellingen$"` — met de haakjes erbij,
+zodat `Ritme` niet ook `Dagritme` op het instellingenscherm raakt.
 
 Let op: `tick-a-step.yaml` en `add-something.yaml` draaien tegen het echte huis.
 De eerste zet een vinkje en haalt het weer weg, de tweede annuleert het
@@ -267,7 +295,8 @@ De stappen zijn `wait <s>`, `ritme`, `week`, `instellingen`, `ochtend`, `avond`,
 het echte huis) en `herlaad` (alsof de app wakker wordt).
 In een plan kunnen ook `home` (naar het beginscherm) en `activate` (terug naar de
 app) staan, om slapen en wakker worden na te spelen.
-Verder `tapId` (tik op een `accessibilityIdentifier`) en `type` (typ in het veld
+Verder `tapId` (tik op een `accessibilityIdentifier`, en anders op wat er
+staat — zo komt de menubalk van iOS ook aan de beurt) en `type` (typ in het veld
 dat de focus heeft).
 Neem het op met `xcrun simctl io <simulator> recordVideo` en trek er beelden uit;
 de opname heeft geen vaste beeldsnelheid, dus zet hem eerst om (`ffmpeg -vf

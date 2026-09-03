@@ -53,7 +53,6 @@ struct Palette {
     var tileEdge: Color { pick(.white.opacity(0.9), .white.opacity(0.16)) }
     var chip: Color { pick(.white.opacity(0.55), .white.opacity(0.08)) }
     var chipEdge: Color { pick(.white.opacity(0.7), .white.opacity(0.14)) }
-    var idleTab: Color { pick(INK.opacity(0.52), .white.opacity(0.55)) }
     var special: Color { pick(ORANGE.opacity(0.13), ORANGE.opacity(0.16)) }
 }
 

@@ -4,8 +4,7 @@ env:
   RING: "ring.tanden-poetsen.emma"
 ---
 - launchApp
-- tapOn:
-    id: "tab.routine"
+- tapOn: "^Ritme$"
 - tapOn:
     id: "segment.night"
 

@@ -13,7 +13,9 @@ struct Metrics {
     var gutter: CGFloat { tight ? 16 : wide ? 26 : 22 }
     // Meteen onder de statusbalk.
     var topPad: CGFloat { 0 }
-    var bottomPad: CGFloat { wide ? 40 : 120 }
+    // De menubalk van iOS houdt zelf ruimte vrij onderaan; dit is wat er
+    // daarboven nog bij komt, zodat het laatste kaartje niet in de waas valt.
+    var bottomPad: CGFloat { 40 }
     var perRow: Int { roomy ? 5 : 3 }
     var gridGap: CGFloat { roomy ? 14 : 10 }
     var cardX: CGFloat { roomy ? 10 : 6 }
