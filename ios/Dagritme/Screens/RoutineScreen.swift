@@ -13,7 +13,7 @@ private struct Plan {
     var resetSlot: Int = 0
     /// Alle stappen van dit ritme achter elkaar, om er groot doorheen te
     /// vegen, met per groep waar hij in die rij begint.
-    var tasks: [FocusTask] = []
+    var tasks: [Step] = []
     var taskStarts: [Int] = []
 }
 
@@ -80,9 +80,7 @@ struct RoutineScreen: View {
 
         for group in out.groups {
             out.taskStarts.append(out.tasks.count)
-            out.tasks += group.steps.map {
-                FocusTask(step: $0, group: group.name, time: group.time)
-            }
+            out.tasks += group.steps
         }
 
         var side = 0
@@ -310,7 +308,7 @@ private struct Card: View {
     let visible: Set<String>
     let slot: Int
     let focus: Focus
-    let tasks: [FocusTask]
+    let tasks: [Step]
     let at: Int
 
     @Environment(Household.self) private var household

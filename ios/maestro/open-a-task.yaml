@@ -23,7 +23,8 @@ env:
     direction: LEFT
 - takeScreenshot: volgende-stap
 
+# Naast de kaart tikken legt hem weg; een knop is er niet.
 - tapOn:
-    id: "focus.close"
+    point: "50%,93%"
 - assertNotVisible:
     id: "focus.card"

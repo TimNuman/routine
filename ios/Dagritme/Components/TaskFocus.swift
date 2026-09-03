@@ -1,20 +1,11 @@
 import SwiftUI
 
-/// Eén stap zoals hij groot in beeld komt, met de groep waar hij bij hoort:
-/// los van het raster is *tanden poetsen* zonder *voor het slapen* de helft
-/// van het verhaal.
-struct FocusTask: Hashable {
-    var step: Step
-    var group: String
-    var time: String
-}
-
 /// Welke stap er groot staat, en waar de kaartjes in het raster liggen om
 /// uit te groeien en weer in terug te zakken.
 @MainActor
 @Observable
 final class Focus {
-    private(set) var tasks: [FocusTask] = []
+    private(set) var tasks: [Step] = []
     private(set) var routine: Routine = .day
     var index = 0
 
@@ -26,9 +17,9 @@ final class Focus {
 
     var open: Bool { !tasks.isEmpty }
 
-    var task: FocusTask? { tasks.indices.contains(index) ? tasks[index] : nil }
+    var task: Step? { tasks.indices.contains(index) ? tasks[index] : nil }
 
-    func show(_ tasks: [FocusTask], at index: Int, routine: Routine) {
+    func show(_ tasks: [Step], at index: Int, routine: Routine) {
         guard tasks.indices.contains(index) else { return }
         self.tasks = tasks
         self.index = index
@@ -106,9 +97,9 @@ struct TaskFocus: View {
     /// getekend, de rest houdt zijn plek vrij.
     private func row(width: CGFloat, icon: CGFloat, span: CGFloat) -> some View {
         HStack(spacing: m.gutter) {
-            ForEach(Array(focus.tasks.enumerated()), id: \.offset) { (i, task) in
+            ForEach(Array(focus.tasks.enumerated()), id: \.offset) { (i, step) in
                 if abs(i - focus.index) <= 1 {
-                    card(task, width: width, icon: icon, current: i == focus.index)
+                    card(step, width: width, icon: icon, current: i == focus.index)
                 } else {
                     Color.clear.frame(width: width)
                 }
@@ -124,28 +115,14 @@ struct TaskFocus: View {
         return (middle - CGFloat(focus.index)) * span + drag.width
     }
 
-    private func card(_ task: FocusTask, width: CGFloat, icon: CGFloat,
+    private func card(_ step: Step, width: CGFloat, icon: CGFloat,
                       current: Bool) -> some View {
-        let step = task.step
         let taking = participants(step, people).filter { visible.contains($0.id) }
 
         return Glass(radius: corner(width), floating: true) {
             VStack(spacing: 0) {
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Text(task.group).textStyle(Fonts.group)
-                    if !task.time.isEmpty {
-                        Text(task.time).textStyle(Fonts.groupTime)
-                    }
-                    Spacer(minLength: 0)
-                }
-                .foregroundStyle(palette.muted)
-                .lineLimit(1)
-                // Genoeg ruimte voor het kruisje in de hoek ernaast.
-                .padding(.trailing, 26)
-
                 Text(step.icon)
                     .font(.system(size: icon))
-                    .padding(.top, 10)
                     .accessibilityHidden(true)
                 Text(step.label)
                     .textStyle(Fonts.taskName(m.focusName))
@@ -167,11 +144,9 @@ struct TaskFocus: View {
             // De bocht van de squircle loopt ver door, dus de tekst begint
             // ruimer van de rand af dan op een gewoon kaartje.
             .padding(.horizontal, 26)
-            .padding(.vertical, 24)
+            .padding(.top, 20)
+            .padding(.bottom, 26)
             .frame(width: width)
-        }
-        .overlay(alignment: .topTrailing) {
-            if current { closeButton(corner(width)) }
         }
         .accessibilityIdentifier(current ? "focus.card" : "")
     }
@@ -202,28 +177,12 @@ struct TaskFocus: View {
         }
     }
 
-    /// Het kruisje ligt op de schuine lijn van de hoek, midden in de bocht:
-    /// even ver van de bovenkant als van de zijkant.
-    private func closeButton(_ corner: CGFloat) -> some View {
-        let touch: CGFloat = 44
-        let inset = corner * 0.56 - touch / 2
-        return Button { close() } label: {
-            Cross(color: palette.muted, size: 15)
-                .frame(width: touch, height: touch)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.smallPress)
-        .offset(x: -inset, y: inset)
-        .accessibilityIdentifier("focus.close")
-        .accessibilityLabel(Spoken.close)
-    }
-
     /// Waar de kaart uit groeit: het kaartje in het raster, als dat nog in
     /// beeld staat. Weet niemand waar het ligt, dan doemt hij op zijn plek op.
     private func start(_ space: GeometryProxy, _ width: CGFloat)
         -> (scale: CGFloat, offset: CGSize) {
         guard !reduceMotion else { return (1, .zero) }
-        guard let key = focus.task?.step.key, let spot = focus.spot(key), spot.width > 0 else {
+        guard let key = focus.task?.key, let spot = focus.spot(key), spot.width > 0 else {
             return (0.9, .zero)
         }
         let mine = space.frame(in: .global)

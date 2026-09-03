@@ -251,7 +251,7 @@ De stromen staan in [`maestro/`](maestro):
 
 Ze wijzen aan op `accessibilityIdentifier`, en die staan overal waar je op kunt
 tikken: `tab.routine`, `segment.night`, `ring.<stap>.<kind>`,
-`card.open.<stap>`, `focus.card`, `focus.close`,
+`card.open.<stap>`, `focus.card`,
 `settings.children`, `sheet.cancel`, `week.addOneOff`. Die namen zijn Engels en
 worden nooit voorgelezen — ze horen bij de code. Wat VoiceOver zegt staat er
 apart naast, in het Nederlands, en gaat mee in de vertaling.
