@@ -379,11 +379,16 @@ private struct Card: View {
         .accessibilityIdentifier("card.\(key)")
         .entrance(slot)
         // Staat deze stap groot in beeld, dan is hij hier weg: het is
-        // dezelfde kaart, en die ligt zolang ergens anders. Kort, want het
-        // moet lijken alsof hij opstijgt — niet alsof hij achterblijft en
-        // langzaam vervaagt.
+        // dezelfde kaart, en die ligt zolang ergens anders.
+        //
+        // Dat gaat ineens, zonder overgang. De grote kaart vervaagt bij het
+        // landen wél, en die twee tegelijk laten vervagen gaf een knippering:
+        // twee halfdoorzichtige kaarten over elkaar zijn samen niet één hele,
+        // dus zakt het beeld er middenin even doorheen. Nu staat het kaartje
+        // er meteen weer en vervaagt de kaart daar overheen — hetzelfde
+        // plaatje twee keer, dus je ziet er niets van.
         .opacity(focus.lifted(routine, key) ? 0 : 1)
-        .animation(Motion.quick, value: focus.lifted(routine, key))
+        .animation(nil, value: focus.lifted(routine, key))
         .contentShape(Rectangle())
         .onTapGesture {
             Haptics.tap()
