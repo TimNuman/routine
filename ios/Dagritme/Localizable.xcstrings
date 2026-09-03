@@ -41,6 +41,9 @@
     "%lld stappen" : {
 
     },
+    "%lld van %lld" : {
+
+    },
     "%lld weken terug" : {
 
     },
@@ -276,6 +279,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld van %2$lld af"
+          }
+        }
+      }
+    },
+    "a11y.task.next" : {
+      "comment" : "Arrow right of the enlarged step card",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Volgende stap"
+          }
+        }
+      }
+    },
+    "a11y.task.previous" : {
+      "comment" : "Arrow left of the enlarged step card",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vorige stap"
           }
         }
       }

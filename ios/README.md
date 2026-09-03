@@ -99,7 +99,7 @@ vorm waar de schermen mee werken.
 | toestand | één `@Observable` klasse (`Core/Household.swift`) in de omgeving |
 | opslag | `URLSession` naar `/api/v2/storage`, met `URLSessionWebSocketTask` voor de stroom |
 | bewerken | `List` met `.swipeActions` en `.onMove`; de rest van de app is eigen glas |
-| bladeren | de menubalk van iOS zelf (`Components/Tabs.swift`), met de bladzijden die van opzij in beeld schuiven; binnen het ritme schuift de schakelaar ochtend en avond langs (`Components/Slide.swift`); op de dagen van de weekstrook bladert een veeg door de weken |
+| bladeren | de menubalk van iOS zelf (`Components/Tabs.swift`), met de bladzijden die van opzij in beeld schuiven; binnen het ritme schuift de schakelaar ochtend en avond langs (`Components/Slide.swift`); op de dagen van de weekstrook bladert een veeg door de weken, en op een stap die groot staat door de stappen (`Components/TaskFocus.swift`) |
 | animatie | gewone SwiftUI-animaties, timing in `Style/Motion.swift` |
 
 ### Twee dingen die anders moesten
@@ -247,9 +247,11 @@ De stromen staan in [`maestro/`](maestro):
 | `morning-evening.yaml` | de schakelaar heen en terug |
 | `tick-a-step.yaml` | een rondje afvinken en weer uitzetten |
 | `add-something.yaml` | het formulier openen, invullen en annuleren |
+| `open-a-task.yaml` | een stap groot bekijken, doorvegen en weer sluiten |
 
 Ze wijzen aan op `accessibilityIdentifier`, en die staan overal waar je op kunt
 tikken: `tab.routine`, `segment.night`, `ring.<stap>.<kind>`,
+`card.open.<stap>`, `focus.card`, `focus.close`,
 `settings.children`, `sheet.cancel`, `week.addOneOff`. Die namen zijn Engels en
 worden nooit voorgelezen — ze horen bij de code. Wat VoiceOver zegt staat er
 apart naast, in het Nederlands, en gaat mee in de vertaling.

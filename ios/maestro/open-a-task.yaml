@@ -1,0 +1,29 @@
+appId: app.dagritme
+name: Een stap groot bekijken
+env:
+  CARD: "card.open.tanden-poetsen"
+---
+- launchApp
+- tapOn:
+    id: "tab.routine"
+- tapOn:
+    id: "segment.night"
+
+- assertVisible:
+    id: "${CARD}"
+- tapOn:
+    id: "${CARD}"
+- assertVisible:
+    id: "focus.card"
+- takeScreenshot: groot
+
+- swipe:
+    from:
+      id: "focus.card"
+    direction: LEFT
+- takeScreenshot: volgende-stap
+
+- tapOn:
+    id: "focus.close"
+- assertNotVisible:
+    id: "focus.card"

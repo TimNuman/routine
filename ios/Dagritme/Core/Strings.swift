@@ -53,6 +53,10 @@ enum Spoken {
                              comment: "The date picker in the entry form")
     static let message = String(localized: "a11y.message", defaultValue: "Bericht om uit te lezen",
                                 comment: "The paste box in the assistant sheet")
+    static let previousTask = String(localized: "a11y.task.previous", defaultValue: "Vorige stap",
+                                     comment: "Arrow left of the enlarged step card")
+    static let nextTask = String(localized: "a11y.task.next", defaultValue: "Volgende stap",
+                                 comment: "Arrow right of the enlarged step card")
     static let previousWeek = String(localized: "a11y.week.previous", defaultValue: "Vorige week",
                                      comment: "Arrow left of the week strip")
     static let nextWeek = String(localized: "a11y.week.next", defaultValue: "Volgende week",

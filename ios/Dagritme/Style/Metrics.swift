@@ -28,6 +28,15 @@ struct Metrics {
     var faceSize: CGFloat { tight ? 30 : roomy ? 44 : 34 }
     var glyphSize: CGFloat { tight ? 19 : roomy ? 27 : 21 }
     var maxWidth: CGFloat { 1280 }
+
+    // De stap groot in beeld: over de volle breedte, met de rand eromheen.
+    var focusWidth: CGFloat { 520 }
+    var focusHeight: CGFloat { 560 }
+    var focusIcon: CGFloat { tight ? 84 : roomy ? 132 : 100 }
+    var focusName: CGFloat { tight ? 24 : roomy ? 34 : 28 }
+    var focusRing: CGFloat { tight ? 60 : roomy ? 84 : 70 }
+    var focusFace: CGFloat { tight ? 52 : roomy ? 74 : 62 }
+    var focusGlyph: CGFloat { tight ? 32 : roomy ? 46 : 38 }
 }
 
 private struct MetricsKey: EnvironmentKey {

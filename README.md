@@ -14,7 +14,10 @@ Onderin zweeft een menubalk met drie plekken:
   tussen **Ochtend** en **Avond**; de app opent zelf op het ritme dat bij de klok
   hoort en kleurt 's avonds donker. Elk kaartje heeft een rond gezichtje per kind
   dat meedoet: tik het aan en het staat binnen een seconde ook op de andere
-  telefoon. Daarboven staat per kind hoever het is. Elke dag begint vanzelf leeg.
+  telefoon. Tik op de stap zelf en het kaartje groeit over de volle breedte van
+  het scherm, met het plaatje, de naam en de gezichtjes groot; vegen gaat naar de
+  vorige of de volgende stap, en naast de kaart tikken — of hem omlaag vegen —
+  legt hem terug op zijn plek. Daarboven staat per kind hoever het is. Elke dag begint vanzelf leeg.
   Wat er die dag verder is staat er meteen bij: 's ochtends *Vandaag*, 's avonds
   *Vanavond* en *Morgen*.
 - **Deze week** — de week van maandag tot en met zondag: bovenin kies je een

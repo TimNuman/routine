@@ -11,6 +11,10 @@ private struct Plan {
     var laterStarts: [Int] = []
     var groupStarts: [Int] = []
     var resetSlot: Int = 0
+    /// Alle stappen van dit ritme achter elkaar, om er groot doorheen te
+    /// vegen, met per groep waar hij in die rij begint.
+    var tasks: [FocusTask] = []
+    var taskStarts: [Int] = []
 }
 
 struct RoutineScreen: View {
@@ -22,6 +26,7 @@ struct RoutineScreen: View {
     @Environment(\.palette) private var palette
 
     @State private var heights: [Routine: CGFloat] = [:]
+    @State private var focus = Focus()
 
     private var everyone: Set<String> {
         Set((household.content?.people ?? []).map(\.id))
@@ -73,6 +78,13 @@ struct RoutineScreen: View {
                 .filter { !$0.steps.isEmpty }
             : out.all
 
+        for group in out.groups {
+            out.taskStarts.append(out.tasks.count)
+            out.tasks += group.steps.map {
+                FocusTask(step: $0, group: group.name, time: group.time)
+            }
+        }
+
         var side = 0
         for block in out.blocks {
             out.sideStarts.append(side)
@@ -118,14 +130,24 @@ struct RoutineScreen: View {
     }
 
     var body: some View {
-        Screen(
-            title: household.routine == .night ? String(localized: "Avond") : String(localized: "Ochtend"),
-            subtitle: dateText(household.now),
-            center: AnyView(Segment(routine: household.routine, onSelect: select,
-                                    topPad: m.wide ? 0 : 16))
-        ) {
-            pages
+        ZStack {
+            Screen(
+                title: household.routine == .night ? String(localized: "Avond") : String(localized: "Ochtend"),
+                subtitle: dateText(household.now),
+                center: AnyView(Segment(routine: household.routine, onSelect: select,
+                                        topPad: m.wide ? 0 : 16))
+            ) {
+                pages
+            }
+
+            if focus.open, let content = household.content {
+                TaskFocus(focus: focus, people: content.people, visible: visible)
+            }
         }
+        // Zolang een stap groot staat bladert een veeg niet van bladzijde en
+        // blijft de menubalk weg, net als bij een blad.
+        .onChange(of: focus.open) { _, open in household.sheetOpen = open }
+        .onDisappear { household.sheetOpen = false }
     }
 
     private func toggleChild(_ id: String) {
@@ -237,7 +259,8 @@ struct RoutineScreen: View {
             ) {
                 ForEach(Array(group.steps.enumerated()), id: \.element) { (si, step) in
                     Card(step: step, content: content, routine: r, visible: visible,
-                         slot: start + 1 + si)
+                         slot: start + 1 + si,
+                         focus: focus, tasks: plan.tasks, at: plan.taskStarts[gi] + si)
                 }
             }
         }
@@ -286,6 +309,9 @@ private struct Card: View {
     let routine: Routine
     let visible: Set<String>
     let slot: Int
+    let focus: Focus
+    let tasks: [FocusTask]
+    let at: Int
 
     @Environment(Household.self) private var household
     @Environment(\.metrics) private var m
@@ -308,17 +334,28 @@ private struct Card: View {
 
         Glass(radius: 22) {
             VStack(spacing: m.cardGap) {
-                Spacer(minLength: 0)
-                Text(step.icon)
-                    .font(.system(size: m.iconSize))
-                    .scaleEffect(allDone ? 1.12 : 1)
-                    .accessibilityHidden(true)
-                Text(step.label)
-                    .textStyle(Fonts.taskName(m.nameSize))
-                    .foregroundStyle(palette.ink)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                Spacer(minLength: 0)
+                VStack(spacing: m.cardGap) {
+                    Spacer(minLength: 0)
+                    Text(step.icon)
+                        .font(.system(size: m.iconSize))
+                        .scaleEffect(allDone ? 1.12 : 1)
+                        .accessibilityHidden(true)
+                    Text(step.label)
+                        .textStyle(Fonts.taskName(m.nameSize))
+                        .foregroundStyle(palette.ink)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                    Spacer(minLength: 0)
+                }
+                .frame(maxWidth: .infinity)
+                // De naam en het plaatje zijn de knop naar de grote kaart;
+                // de gezichtjes eronder blijven van het vinkje.
+                .contentShape(Rectangle())
+                .accessibilityElement()
+                .accessibilityLabel(step.label)
+                .accessibilityAddTraits(.isButton)
+                .accessibilityIdentifier("card.open.\(key)")
+
                 Flow(gap: 2, rowGap: 2, centered: true) {
                     ForEach(taking) { person in
                         Ring(
@@ -340,5 +377,16 @@ private struct Card: View {
         .animation(Motion.pop, value: allDone)
         .accessibilityIdentifier("card.\(key)")
         .entrance(slot)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            Haptics.tap()
+            focus.show(tasks, at: at, routine: routine)
+        }
+        // Waar het kaartje staat, zodat de grote kaart eruit groeit en er
+        // straks weer in terugzakt.
+        .onGeometryChange(for: CGRect.self, of: { $0.frame(in: .global) }) {
+            focus.place(routine, key, $0)
+        }
+        .onDisappear { focus.place(routine, key, nil) }
     }
 }
