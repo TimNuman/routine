@@ -322,21 +322,30 @@ private struct MorphCard: View, Animatable {
     var body: some View {
         Glass(radius: mix(22, full * 0.17), floating: true,
               lift: mix(0.25, 1.5), rim: mix(0, 5)) {
+            // Precies de opbouw van het kaartje in het raster: het plaatje
+            // en de naam tussen twee veren, en de gezichtjes daaronder. Dus
+            // ook dezelfde verdeling van de ruimte die overblijft — die valt
+            // boven het plaatje en tussen de naam en de gezichtjes, en niet
+            // onder de gezichtjes.
             VStack(spacing: mix(m.cardGap, 0)) {
-                Text(step.icon)
-                    .font(.system(size: mix(m.iconSize, icon)))
-                    .scaleEffect(allDone ? 1.12 : 1)
-                    .animation(Motion.pop, value: allDone)
-                    .accessibilityHidden(true)
-                Text(step.label)
-                    .textStyle(Fonts.taskName(mix(m.nameSize, m.focusName)))
-                    .foregroundStyle(palette.ink)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.85)
-                    // Een emoji laat zelf al een stuk wit onder zich; dat telt
-                    // mee als ruimte, dus de naam schuift er weer in.
-                    .padding(.top, mix(0, -8))
+                VStack(spacing: mix(m.cardGap, 0)) {
+                    Spacer(minLength: 0)
+                    Text(step.icon)
+                        .font(.system(size: mix(m.iconSize, icon)))
+                        .scaleEffect(allDone ? 1.12 : 1)
+                        .animation(Motion.pop, value: allDone)
+                        .accessibilityHidden(true)
+                    Text(step.label)
+                        .textStyle(Fonts.taskName(mix(m.nameSize, m.focusName)))
+                        .foregroundStyle(palette.ink)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        // Een emoji laat zelf al een stuk wit onder zich; dat
+                        // telt mee als ruimte, dus de naam schuift er weer in.
+                        .padding(.top, mix(0, -8))
+                    Spacer(minLength: 0)
+                }
+                .frame(maxWidth: .infinity)
 
                 faces
                     .padding(.top, mix(0, 18))
@@ -350,13 +359,14 @@ private struct MorphCard: View, Animatable {
             // Op zijn plek is de kaart precies zo hoog als het kaartje, en
             // groot is hij minstens zo hoog als breed: een vierkant. Staat er
             // meer op dan daarin past — een naam over twee regels, twee rijen
-            // gezichtjes — dan rekt hij mee. Wat overblijft valt boven en
-            // onder de inhoud, want die staat in het midden.
-            //
-            // Geen `Spacer` hierbinnen: die neemt alle hoogte die het scherm
-            // aanbiedt, en dan wordt de kaart zo lang als de bladzijde.
+            // gezichtjes — dan rekt hij mee.
             .frame(minHeight: mix(nest.size.height, full))
         }
+        // Een veer pakt alles wat er aan hoogte aangeboden wordt, en hier
+        // biedt het scherm zijn volle hoogte aan. Op zijn eigen maat vastzetten
+        // maakt ze weer wat ze op het kaartje zijn: verdelers van wat er
+        // overblijft, niet van wat er is.
+        .fixedSize(horizontal: false, vertical: true)
         .opacity(seen ? 1 : 0)
         // Een kaart die onzichtbaar op zijn plek ligt te wachten mag geen tik
         // opvangen; daar hoort de achtergrond te sluiten.
