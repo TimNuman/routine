@@ -71,6 +71,37 @@ final class Focus {
     func spot(_ step: String) -> CGRect? { spots["\(routine.rawValue)/\(step)"] }
 }
 
+/// Waar de gezichtjes liggen in één opstelling, gerekend vanaf het midden van
+/// de tros, en hoe hoog die opstelling is.
+private struct Spots {
+    var places: [CGPoint]
+    var height: CGFloat
+}
+
+/// Zoveel gezichtjes van deze maat in deze breedte: hoeveel er op een rij
+/// passen, waar ze dan liggen, en hoe hoog dat wordt. Dezelfde indeling als
+/// `Flow` maakt, maar uitgerekend in plaats van gelegd, zodat er tussen twee
+/// van die uitkomsten in gerekend kan worden.
+private func spots(_ count: Int, width: CGFloat, item: CGFloat,
+                   itemHeight: CGFloat, gap: CGFloat, rowGap: CGFloat) -> Spots {
+    guard count > 0 else { return Spots(places: [], height: 0) }
+    let perRow = max(1, Int((width + gap) / (item + gap)))
+    let rows = (count + perRow - 1) / perRow
+    let height = CGFloat(rows) * itemHeight + CGFloat(rows - 1) * rowGap
+    var places: [CGPoint] = []
+    for i in 0..<count {
+        let row = i / perRow
+        let column = i % perRow
+        let onRow = min(perRow, count - row * perRow)
+        let rowWidth = CGFloat(onRow) * item + CGFloat(onRow - 1) * gap
+        places.append(CGPoint(
+            x: CGFloat(column) * (item + gap) - (rowWidth - item) / 2,
+            y: CGFloat(row) * (itemHeight + rowGap) - (height - itemHeight) / 2
+        ))
+    }
+    return Spots(places: places, height: height)
+}
+
 /// Waar het kaartje van deze stap in het raster ligt, gerekend vanaf het
 /// midden van het scherm.
 private struct Nest {
@@ -307,12 +338,8 @@ private struct MorphCard: View, Animatable {
                     // mee als ruimte, dus de naam schuift er weer in.
                     .padding(.top, mix(0, -8))
 
-                Flow(gap: mix(2, 12), rowGap: mix(2, 10), centered: true) {
-                    ForEach(taking) { person in
-                        face(person)
-                    }
-                }
-                .padding(.top, mix(0, 18))
+                faces
+                    .padding(.top, mix(0, 18))
             }
             // De bocht van de squircle loopt ver door, dus de tekst begint
             // ruimer van de rand af dan op een gewoon kaartje.
@@ -337,6 +364,29 @@ private struct MorphCard: View, Animatable {
         .animation(Motion.quick, value: seen)
         .offset(x: mix(nest.shift.width, 0), y: mix(nest.shift.height, 0))
         .accessibilityIdentifier(current ? "focus.card" : "")
+    }
+
+    /// De gezichtjes staan niet in een laag die ze opnieuw indeelt, maar elk
+    /// op een plek tussen twee plekken in. Op het kaartje passen er twee naast
+    /// elkaar en valt de derde eronder; groot staan ze op één rij. Liet je een
+    /// gewone laag dat halverwege omgooien, dan sprong de hele tros in één
+    /// beeld van twee rijen naar één — en dat is de klik die je zag.
+    private var faces: some View {
+        let small = spots(taking.count, width: nest.size.width - m.cardX * 2,
+                          item: m.ringSize, itemHeight: m.ringSize,
+                          gap: 2, rowGap: 2)
+        let big = spots(taking.count, width: full - 52,
+                        item: m.focusRing, itemHeight: m.focusRing + 6 + 15,
+                        gap: 12, rowGap: 10)
+
+        return ZStack {
+            ForEach(Array(taking.enumerated()), id: \.element.id) { (i, person) in
+                face(person)
+                    .offset(x: mix(small.places[i].x, big.places[i].x),
+                            y: mix(small.places[i].y, big.places[i].y))
+            }
+        }
+        .frame(height: mix(small.height, big.height))
     }
 
     private func face(_ person: Person) -> some View {
