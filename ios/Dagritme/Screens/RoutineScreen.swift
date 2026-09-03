@@ -145,8 +145,8 @@ struct RoutineScreen: View {
                     .transition(.opacity)
             }
         }
-        // Zolang een stap groot staat bladert een veeg niet van bladzijde en
-        // blijft de menubalk weg, net als bij een blad.
+        // Zolang een stap groot staat blijft de menubalk weg, net als bij
+        // een blad.
         .onChange(of: focus.open) { _, open in household.sheetOpen = open }
         .onDisappear { household.sheetOpen = false }
     }

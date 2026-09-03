@@ -15,6 +15,11 @@ enum Motion {
     static let spark = Animation.easeOut(duration: 0.52)
     static let back = Animation.snappy(duration: 0.20, extraBounce: 0)
 
+    /// Een stap die uit het raster omhoog komt, ernaartoe terugzakt, of de
+    /// een die voor de ander plaatsmaakt. Kort, want het is dezelfde kaart
+    /// die van vorm wisselt en niet een bladzijde die langsschuift.
+    static let lift = Animation.snappy(duration: 0.28, extraBounce: 0.08)
+
     static let slide = Animation.snappy(duration: 0.42, extraBounce: 0.04)
     static let sheetUp = Animation.snappy(duration: 0.38, extraBounce: 0.12)
     static let sheetDown = Animation.snappy(duration: 0.20, extraBounce: 0)

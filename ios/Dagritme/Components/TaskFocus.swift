@@ -71,31 +71,32 @@ final class Focus {
     func spot(_ step: String) -> CGRect? { spots["\(routine.rawValue)/\(step)"] }
 }
 
+/// Waar het kaartje van deze stap in het raster ligt, gerekend vanaf het
+/// midden van het scherm.
+private struct Nest {
+    var size: CGSize
+    var shift: CGSize
+}
+
 /// De stap groot: over de volle breedte van het scherm, met een rand eromheen.
 /// Hij komt omhoog uit zijn eigen kaartje in het raster en zakt daar ook weer
 /// in terug. Vegen wisselt van stap: de ene gaat terug op zijn plek terwijl de
 /// volgende van de zijne omhoog komt. Omlaag vegen of naast de kaart tikken
-/// legt hem weg. De gezichtjes werken hier net zo als op het kaartje, alleen
-/// groter.
+/// legt hem weg.
 struct TaskFocus: View {
     let focus: Focus
     let people: [Person]
     let visible: Set<String>
 
-    @Environment(Household.self) private var household
     @Environment(\.metrics) private var m
-    @Environment(\.palette) private var palette
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// Staat de kaart op het toneel? Zo niet, dan ligt hij op zijn plek in
-    /// het raster — dat is waar hij vandaan komt en waar hij heen gaat.
+    /// Staat de kaart groot in het midden? Zo niet, dan ligt hij als kaartje
+    /// op zijn plek in het raster — dat is waar hij vandaan komt en waar hij
+    /// heen gaat.
     @State private var shown = false
     @State private var drag = CGSize.zero
     @State private var axis: Axis?
-    /// Hoe hoog elke kaart van zichzelf is. De kaart is zo hoog als wat erop
-    /// staat, dus dat weten we pas als hij er is — en zonder die maat kan hij
-    /// niet precies op zijn kaartje in het raster passen.
-    @State private var tall: [Int: CGFloat] = [:]
 
     var body: some View {
         GeometryReader { space in
@@ -115,34 +116,31 @@ struct TaskFocus: View {
                     .accessibilityAddTraits(.isButton)
 
                 // De kaart die er staat, en die net vertrokken is. De buren
-                // staan er alvast op hun plek in het raster bij, zodat ze
-                // daarvandaan omhoog kunnen komen in plaats van uit het niets
-                // te verschijnen.
+                // liggen er als kaartje op hun plek in het raster bij, zodat
+                // ze daarvandaan omhoog kunnen komen in plaats van uit het
+                // niets te verschijnen.
                 ForEach(Array(focus.tasks.enumerated()), id: \.offset) { (i, step) in
                     if abs(i - focus.index) <= 1 {
+                        let home = nest(space, step)
                         // Opgetild is te zien: de kaart die er staat, en de
-                        // kaart die onderweg is terug naar zijn plek. De rest
-                        // wacht onzichtbaar op de zijne.
+                        // kaart die onderweg is terug naar zijn plek.
                         let up = i == focus.index || i == focus.leaving
-                        let rest = nest(space, width, step, tall: tall[i],
-                                        home: !(shown && i == focus.index))
                         let held = i == (focus.leaving ?? focus.index)
+                        let grown: CGFloat = (reduceMotion || home == nil)
+                            ? 1 : (shown && i == focus.index ? 1 : 0)
 
-                        card(step, width: width, icon: icon, current: i == focus.index)
-                            // De eigen hoogte, buiten alle vergroting om:
-                            // `scaleEffect` verandert niets aan de opmaak.
-                            .onGeometryChange(for: CGFloat.self, of: { $0.size.height }) {
-                                tall[i] = $0
-                            }
-                            .opacity(up ? 1 : 0)
-                            // Een kaart die onzichtbaar op zijn plek ligt te
-                            // wachten mag geen tik opvangen; daar hoort de
-                            // achtergrond te sluiten.
-                            .allowsHitTesting(up)
-                            .animation(Motion.quick, value: up)
-                            .scaleEffect(x: rest.scale.width, y: rest.scale.height)
-                            .offset(x: rest.offset.width + (held ? drag.width : 0),
-                                    y: rest.offset.height + (held ? drag.height : 0))
+                        // Het opdoemen zit binnen de kaart en niet hier: een
+                        // `animation` om een `Animatable` view heen neemt ook
+                        // de vervorming zelf over, en die hoort bij de veer
+                        // van de veeg.
+                        MorphCard(t: grown, seen: up, step: step, full: width, icon: icon,
+                                  nest: home ?? Nest(size: .zero, shift: .zero),
+                                  taking: taking(step), routine: focus.routine,
+                                  current: i == focus.index)
+                            .offset(x: held ? drag.width : 0, y: held ? drag.height : 0)
+                            // Wie omhoog komt gaat over wie terugzakt, welke
+                            // kant je ook op veegt.
+                            .zIndex(i == focus.index ? 2 : (i == focus.leaving ? 1 : 0))
                     }
                 }
             }
@@ -150,103 +148,25 @@ struct TaskFocus: View {
             .gesture(swipe(width))
         }
         .onAppear {
-            // Eén tel wachten: de kaart moet eerst gemeten zijn, anders ligt
-            // hij die ene tel te kort op zijn kaartje en begint het tillen
-            // alsnog met een sprongetje.
-            DispatchQueue.main.async {
-                withAnimation(reduceMotion ? Motion.fade : Motion.spring) { shown = true }
-            }
+            withAnimation(reduceMotion ? Motion.fade : Motion.lift) { shown = true }
         }
     }
 
-    /// Waar een kaart ligt als hij niet op het toneel staat: precies op zijn
-    /// kaartje in het raster. Weet niemand waar dat ligt — het is uit beeld
-    /// gescrold — dan doemt hij op zijn plek op.
-    ///
-    /// De breedte en de hoogte krimpen elk met hun eigen factor. Een kaartje
-    /// in het raster is hoger dan breed en de grote kaart is bijna vierkant;
-    /// met één factor voor allebei zou de kaart op het moment van overnemen
-    /// een stuk korter zijn dan het kaartje eronder, en dat is precies de
-    /// sprong die je ziet. Nu dekken ze elkaar, en trekt de kaart zich in de
-    /// eerste tienden van een seconde recht.
-    private func nest(_ space: GeometryProxy, _ width: CGFloat, _ step: Step,
-                      tall: CGFloat?, home: Bool) -> (scale: CGSize, offset: CGSize) {
-        guard home else { return (CGSize(width: 1, height: 1), .zero) }
-        guard !reduceMotion, let spot = focus.spot(step.key), spot.width > 0 else {
-            let same: CGFloat = reduceMotion ? 1 : 0.9
-            return (CGSize(width: same, height: same), .zero)
-        }
+    private func taking(_ step: Step) -> [Person] {
+        participants(step, people).filter { visible.contains($0.id) }
+    }
+
+    /// Waar het kaartje van deze stap ligt. Weet niemand dat — het is uit
+    /// beeld gescrold — dan is er niets om uit op te komen, en staat de kaart
+    /// er meteen.
+    private func nest(_ space: GeometryProxy, _ step: Step) -> Nest? {
+        guard !reduceMotion, let spot = focus.spot(step.key), spot.width > 0 else { return nil }
         let mine = space.frame(in: .global)
-        let across = max(0.15, spot.width / width)
-        // Zonder eigen maat: dezelfde factor als in de breedte.
-        let down = tall.map { max(0.15, spot.height / $0) } ?? across
-        return (
-            CGSize(width: across, height: down),
-            CGSize(width: spot.midX - mine.minX - space.size.width / 2,
-                   height: spot.midY - mine.minY - space.size.height / 2)
+        return Nest(
+            size: spot.size,
+            shift: CGSize(width: spot.midX - mine.minX - space.size.width / 2,
+                          height: spot.midY - mine.minY - space.size.height / 2)
         )
-    }
-
-    private func card(_ step: Step, width: CGFloat, icon: CGFloat,
-                      current: Bool) -> some View {
-        let taking = participants(step, people).filter { visible.contains($0.id) }
-
-        return Glass(radius: corner(width), floating: true, lift: 1.5) {
-            VStack(spacing: 0) {
-                Text(step.icon)
-                    .font(.system(size: icon))
-                    .accessibilityHidden(true)
-                Text(step.label)
-                    .textStyle(Fonts.taskName(m.focusName))
-                    .foregroundStyle(palette.ink)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.85)
-                    // Een emoji laat zelf al een stuk wit onder zich; dat telt
-                    // mee als ruimte, dus de naam schuift er weer in.
-                    .padding(.top, -8)
-
-                Flow(gap: 12, rowGap: 10, centered: true) {
-                    ForEach(taking) { person in
-                        face(step, person)
-                    }
-                }
-                .padding(.top, 18)
-            }
-            // De bocht van de squircle loopt ver door, dus de tekst begint
-            // ruimer van de rand af dan op een gewoon kaartje.
-            .padding(.horizontal, 26)
-            .padding(.top, 20)
-            .padding(.bottom, 26)
-            .frame(width: width)
-        }
-        .accessibilityIdentifier(current ? "focus.card" : "")
-    }
-
-    /// De ronding van de kaart: groot genoeg om er een squircle van te maken,
-    /// en hij groeit mee met de kaart.
-    private func corner(_ width: CGFloat) -> CGFloat {
-        width * 0.17
-    }
-
-    private func face(_ step: Step, _ person: Person) -> some View {
-        let key = checkKey(focus.routine, step.key, person.id)
-        return VStack(spacing: 6) {
-            Ring(
-                person: person,
-                stepName: step.label,
-                stepId: "focus.\(step.key)",
-                on: household.checks[key] == true,
-                size: m.focusRing, faceSize: m.focusFace, glyphSize: m.focusGlyph,
-                stroke: m.focusStroke,
-                onTap: { household.toggle(key) }
-            )
-            Text(person.name)
-                .textStyle(Fonts.childName)
-                .foregroundStyle(palette.muted)
-                .lineLimit(1)
-                .accessibilityHidden(true)
-        }
     }
 
     private func swipe(_ width: CGFloat) -> some Gesture {
@@ -260,7 +180,7 @@ struct TaskFocus: View {
                 if which == .horizontal {
                     // De kaart geeft mee, maar hij schuift niet met de vinger
                     // mee weg: er ligt geen rij naast, hij gaat straks terug
-                    // op zijn eigen plek.
+                    // naar zijn eigen plek.
                     let sideways = move.translation.width * 0.55
                     let edge = (sideways > 0 && focus.index == 0)
                         || (sideways < 0 && focus.index >= focus.tasks.count - 1)
@@ -287,7 +207,7 @@ struct TaskFocus: View {
                 if far || flick {
                     go(to: focus.index + side)
                 } else {
-                    withAnimation(Motion.glide) { drag = .zero }
+                    withAnimation(Motion.lift) { drag = .zero }
                 }
             }
     }
@@ -295,12 +215,12 @@ struct TaskFocus: View {
     /// De ene kaart terug op zijn plek, de volgende van de zijne omhoog.
     private func go(to target: Int) {
         guard focus.tasks.indices.contains(target) else {
-            withAnimation(Motion.glide) { drag = .zero }
+            withAnimation(Motion.lift) { drag = .zero }
             return
         }
         Haptics.select()
         let from = focus.index
-        withAnimation(Motion.glide) {
+        withAnimation(Motion.lift) {
             focus.go(to: target)
             drag = .zero
         } completion: {
@@ -312,11 +232,134 @@ struct TaskFocus: View {
 
     private func close() {
         axis = nil
-        withAnimation(Motion.short) {
+        withAnimation(Motion.lift) {
             shown = false
             drag = .zero
         } completion: {
             withAnimation(Motion.quick) { focus.close() }
+        }
+    }
+}
+
+/// De kaart onderweg tussen twee vormen. Op `t = 0` is hij het kaartje in het
+/// raster — even breed, even hoog, met dezelfde letters en dezelfde gezichtjes
+/// — en op `t = 1` staat hij groot in het midden. Alles ertussenin loopt mee:
+/// de plek, de maat, de ronding, de rand, het plaatje, de naam, de gezichtjes
+/// en de namen eronder, die er op het kaartje niet zijn.
+///
+/// Daarom is dit een `Animatable` view: SwiftUI geeft hem elk beeld de
+/// tussenstand van `t`, en dan is elke maat erin gewoon een getal tussen twee
+/// getallen. Met alleen een `scaleEffect` zou de hele kaart als één plaatje
+/// worden uitgerekt — een kaartje is hoger dan breed en de kaart is bijna
+/// vierkant, dus dat trok alles scheef.
+private struct MorphCard: View, Animatable {
+    var t: CGFloat
+    /// Is deze kaart opgetild? Alleen de kaart die er staat en de kaart die
+    /// terugzakt zijn te zien; de rest wacht onzichtbaar op zijn plek.
+    var seen: Bool
+    var step: Step
+    var full: CGFloat
+    var icon: CGFloat
+    var nest: Nest
+    var taking: [Person]
+    var routine: Routine
+    var current: Bool
+
+    @Environment(Household.self) private var household
+    @Environment(\.metrics) private var m
+    @Environment(\.palette) private var palette
+
+    var animatableData: CGFloat {
+        get { t }
+        set { t = newValue }
+    }
+
+    /// De veer mag een tikje doorschieten, maar geen maat mag negatief worden.
+    private var part: CGFloat { min(1.12, max(0, t)) }
+
+    private func mix(_ small: CGFloat, _ big: CGFloat) -> CGFloat {
+        small + (big - small) * part
+    }
+
+    private var allDone: Bool {
+        guard !taking.isEmpty else { return false }
+        return taking.allSatisfy {
+            household.checks[checkKey(routine, step.key, $0.id)] == true
+        }
+    }
+
+    var body: some View {
+        Glass(radius: mix(22, full * 0.17), floating: true,
+              lift: mix(0.25, 1.5), rim: mix(0, 5)) {
+            VStack(spacing: mix(m.cardGap, 0)) {
+                Spacer(minLength: 0)
+
+                Text(step.icon)
+                    .font(.system(size: mix(m.iconSize, icon)))
+                    .scaleEffect(allDone ? 1.12 : 1)
+                    .animation(Motion.pop, value: allDone)
+                    .accessibilityHidden(true)
+                Text(step.label)
+                    .textStyle(Fonts.taskName(mix(m.nameSize, m.focusName)))
+                    .foregroundStyle(palette.ink)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.85)
+                    // Een emoji laat zelf al een stuk wit onder zich; dat telt
+                    // mee als ruimte, dus de naam schuift er weer in.
+                    .padding(.top, mix(0, -8))
+
+                Spacer(minLength: 0)
+
+                Flow(gap: mix(2, 12), rowGap: mix(2, 10), centered: true) {
+                    ForEach(taking) { person in
+                        face(person)
+                    }
+                }
+                .padding(.top, mix(0, 18))
+            }
+            // De bocht van de squircle loopt ver door, dus de tekst begint
+            // ruimer van de rand af dan op een gewoon kaartje.
+            .padding(.horizontal, mix(m.cardX, 26))
+            .padding(.top, mix(m.cardY, 20))
+            .padding(.bottom, mix(m.cardY, 26))
+            .frame(width: mix(nest.size.width, full))
+            // Op zijn plek is de kaart precies zo hoog als het kaartje; groot
+            // is hij zo hoog als wat erop staat.
+            .frame(minHeight: mix(nest.size.height, 0))
+        }
+        .opacity(seen ? 1 : 0)
+        // Een kaart die onzichtbaar op zijn plek ligt te wachten mag geen tik
+        // opvangen; daar hoort de achtergrond te sluiten.
+        .allowsHitTesting(seen)
+        .animation(Motion.quick, value: seen)
+        .offset(x: mix(nest.shift.width, 0), y: mix(nest.shift.height, 0))
+        .accessibilityIdentifier(current ? "focus.card" : "")
+    }
+
+    private func face(_ person: Person) -> some View {
+        let key = checkKey(routine, step.key, person.id)
+        return VStack(spacing: mix(0, 6)) {
+            Ring(
+                person: person,
+                stepName: step.label,
+                stepId: "focus.\(step.key)",
+                on: household.checks[key] == true,
+                size: mix(m.ringSize, m.focusRing),
+                faceSize: mix(m.faceSize, m.focusFace),
+                glyphSize: mix(m.glyphSize, m.focusGlyph),
+                stroke: mix(2.5, m.focusStroke),
+                onTap: { household.toggle(key) }
+            )
+            // De naam staat niet op het kaartje; hij komt er in de tweede
+            // helft van de beweging bij.
+            Text(person.name)
+                .textStyle(Fonts.childName)
+                .foregroundStyle(palette.muted)
+                .lineLimit(1)
+                .opacity(Double(min(1, max(0, part * 1.6 - 0.6))))
+                .frame(height: mix(0, 15))
+                .accessibilityHidden(true)
         }
     }
 }

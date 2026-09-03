@@ -18,6 +18,12 @@ struct Glass<Inner: View>: View {
     var floating: Bool = false
     /// Hoeveel die schaduw meegroeit met de kaart.
     var lift: CGFloat = 1
+    /// Een dikke glazen rand over het materiaal heen: een lichtstreep die
+    /// bovenaan begint, in het midden wegvalt en onderaan terugkomt, zoals
+    /// het licht op de rand van een dik stuk glas. 0 laat het materiaal zijn
+    /// eigen dunne randje doen, en dat is overal goed genoeg behalve op een
+    /// kaart die het halve scherm vult.
+    var rim: CGFloat = 0
     @ViewBuilder var content: () -> Inner
 
     @Environment(\.palette) private var palette
@@ -42,6 +48,32 @@ struct Glass<Inner: View>: View {
     }
 
     private var pane: some View {
-        content().glassEffect(in: shape)
+        content()
+            .glassEffect(in: shape)
+            .overlay { edge }
+    }
+
+    @ViewBuilder
+    private var edge: some View {
+        if rim > 0 {
+            let dark = palette.dark
+            shape.strokeBorder(
+                LinearGradient(
+                    stops: [
+                        .init(color: .white.opacity(dark ? 0.55 : 0.92), location: 0),
+                        .init(color: .white.opacity(dark ? 0.10 : 0.24), location: 0.4),
+                        .init(color: .white.opacity(dark ? 0.06 : 0.16), location: 0.62),
+                        .init(color: .white.opacity(dark ? 0.34 : 0.66), location: 1),
+                    ],
+                    startPoint: .top, endPoint: .bottom
+                ),
+                lineWidth: rim
+            )
+            // De binnenkant van die dikke rand, waar het licht weer opvangt.
+            .overlay {
+                shape.inset(by: rim)
+                    .strokeBorder(.white.opacity(dark ? 0.12 : 0.3), lineWidth: 1)
+            }
+        }
     }
 }
