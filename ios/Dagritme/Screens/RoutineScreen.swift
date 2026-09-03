@@ -140,6 +140,9 @@ struct RoutineScreen: View {
 
             if focus.open, let content = household.content {
                 TaskFocus(focus: focus, people: content.people, visible: visible)
+                    // Bij het sluiten vervaagt de kaart precies waar het
+                    // kaartje weer verschijnt, dus zonder sprong.
+                    .transition(.opacity)
             }
         }
         // Zolang een stap groot staat bladert een veeg niet van bladzijde en
@@ -375,6 +378,12 @@ private struct Card: View {
         .animation(Motion.pop, value: allDone)
         .accessibilityIdentifier("card.\(key)")
         .entrance(slot)
+        // Staat deze stap groot in beeld, dan is hij hier weg: het is
+        // dezelfde kaart, en die ligt zolang ergens anders. Kort, want het
+        // moet lijken alsof hij opstijgt — niet alsof hij achterblijft en
+        // langzaam vervaagt.
+        .opacity(focus.lifted(routine, key) ? 0 : 1)
+        .animation(Motion.quick, value: focus.lifted(routine, key))
         .contentShape(Rectangle())
         .onTapGesture {
             Haptics.tap()

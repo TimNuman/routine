@@ -1,34 +1,67 @@
 import SwiftUI
 
-/// Welke stap er groot staat, en waar de kaartjes in het raster liggen om
-/// uit te groeien en weer in terug te zakken.
+/// Welke stap er groot staat, en waar de kaartjes in het raster liggen.
+///
+/// Een stap die groot staat is niet een kopie van het kaartje maar het
+/// kaartje zelf: zolang hij boven het raster zweeft blijft zijn plek daar
+/// leeg, en bij het sluiten zakt hij daar weer in terug. Bij het doorvegen
+/// gebeuren die twee tegelijk — de een gaat terug op zijn plek, de ander komt
+/// van de zijne omhoog.
 @MainActor
 @Observable
 final class Focus {
     private(set) var tasks: [Step] = []
     private(set) var routine: Routine = .day
-    var index = 0
+    private(set) var index = 0
+    /// De stap die op dit moment terugzakt naar zijn plek in het raster.
+    private(set) var leaving: Int?
 
     /// De plek van elk kaartje op het scherm. Die schuift bij elke scrolstap
     /// op, dus hij staat bewust buiten de tekentoestand: niemand hoeft
-    /// daarvoor opnieuw getekend te worden, het wordt alleen gelezen op het
-    /// moment dat de grote kaart open- of dichtgaat.
+    /// daarvoor opnieuw getekend te worden, het wordt alleen gelezen als een
+    /// kaart opstijgt of landt.
     @ObservationIgnored private var spots: [String: CGRect] = [:]
 
     var open: Bool { !tasks.isEmpty }
 
-    var task: Step? { tasks.indices.contains(index) ? tasks[index] : nil }
+    func step(_ i: Int?) -> Step? {
+        guard let i, tasks.indices.contains(i) else { return nil }
+        return tasks[i]
+    }
 
     func show(_ tasks: [Step], at index: Int, routine: Routine) {
         guard tasks.indices.contains(index) else { return }
         self.tasks = tasks
         self.index = index
         self.routine = routine
+        leaving = nil
+    }
+
+    /// Naar de buurstap: deze vertrekt, die komt.
+    func go(to target: Int) {
+        guard tasks.indices.contains(target), target != index else { return }
+        leaving = index
+        index = target
+    }
+
+    /// De vertrokken kaart ligt weer op zijn plek. Is er ondertussen alweer
+    /// een andere vertrokken, dan gaat dit bericht over een oudere wissel en
+    /// laten we het liggen.
+    func landed(_ from: Int) {
+        guard leaving == from else { return }
+        leaving = nil
     }
 
     func close() {
         tasks = []
         index = 0
+        leaving = nil
+    }
+
+    /// Zweeft deze stap nu boven het raster? Dan blijft zijn plek daar leeg.
+    func lifted(_ routine: Routine, _ key: String) -> Bool {
+        guard open, routine == self.routine else { return false }
+        return key == step(index)?.key || key == step(leaving)?.key
     }
 
     func place(_ routine: Routine, _ step: String, _ frame: CGRect?) {
@@ -39,10 +72,11 @@ final class Focus {
 }
 
 /// De stap groot: over de volle breedte van het scherm, met een rand eromheen.
-/// Hij groeit uit het kaartje waar de vinger op stond en zakt daar ook weer in
-/// terug. Vegen gaat naar de vorige of de volgende stap, omlaag vegen of naast
-/// de kaart tikken legt hem weg. De gezichtjes werken hier net zo als op het
-/// kaartje, alleen groter.
+/// Hij komt omhoog uit zijn eigen kaartje in het raster en zakt daar ook weer
+/// in terug. Vegen wisselt van stap: de ene gaat terug op zijn plek terwijl de
+/// volgende van de zijne omhoog komt. Omlaag vegen of naast de kaart tikken
+/// legt hem weg. De gezichtjes werken hier net zo als op het kaartje, alleen
+/// groter.
 struct TaskFocus: View {
     let focus: Focus
     let people: [Person]
@@ -53,11 +87,9 @@ struct TaskFocus: View {
     @Environment(\.palette) private var palette
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    /// Staat de kaart op het toneel? Zo niet, dan ligt hij op zijn plek in
+    /// het raster — dat is waar hij vandaan komt en waar hij heen gaat.
     @State private var shown = false
-    /// De buren doen pas mee als de kaart er helemaal is. Tijdens het groeien
-    /// staat de hele rij klein op de plek van één kaartje, en dan zouden ze
-    /// ernaast in beeld staan mee te groeien.
-    @State private var ready = false
     @State private var drag = CGSize.zero
     @State private var axis: Axis?
 
@@ -67,10 +99,6 @@ struct TaskFocus: View {
             // Het plaatje is zo groot als het mag, maar nooit zo groot dat de
             // kaart niet meer op een laag scherm past.
             let icon = min(m.focusIcon, space.size.height * 0.24)
-            // De kaarten liggen precies een schermbreedte uit elkaar, dus de
-            // buren staan in rust net buiten beeld.
-            let span = width + m.gutter
-            let from = start(space, width)
 
             ZStack {
                 Color.black.opacity(0.34)
@@ -82,59 +110,63 @@ struct TaskFocus: View {
                     .accessibilityLabel(Spoken.close)
                     .accessibilityAddTraits(.isButton)
 
-                row(width: width, icon: icon, span: span)
-                    .frame(width: space.size.width)
-                    .scaleEffect(shown ? 1 : from.scale)
-                    .offset(x: shown ? 0 : from.offset.width,
-                            y: shown ? 0 : from.offset.height)
-                    .opacity(shown ? 1 : 0)
+                // De kaart die er staat, en die net vertrokken is. De buren
+                // staan er alvast op hun plek in het raster bij, zodat ze
+                // daarvandaan omhoog kunnen komen in plaats van uit het niets
+                // te verschijnen.
+                ForEach(Array(focus.tasks.enumerated()), id: \.offset) { (i, step) in
+                    if abs(i - focus.index) <= 1 {
+                        // Opgetild is te zien: de kaart die er staat, en de
+                        // kaart die onderweg is terug naar zijn plek. De rest
+                        // wacht onzichtbaar op de zijne.
+                        let up = i == focus.index || i == focus.leaving
+                        let rest = nest(space, width, step,
+                                        home: !(shown && i == focus.index))
+                        let held = i == (focus.leaving ?? focus.index)
+
+                        card(step, width: width, icon: icon, current: i == focus.index)
+                            .opacity(up ? 1 : 0)
+                            // Een kaart die onzichtbaar op zijn plek ligt te
+                            // wachten mag geen tik opvangen; daar hoort de
+                            // achtergrond te sluiten.
+                            .allowsHitTesting(up)
+                            .animation(Motion.quick, value: up)
+                            .scaleEffect(rest.scale)
+                            .offset(x: rest.offset.width + (held ? drag.width : 0),
+                                    y: rest.offset.height + (held ? drag.height : 0))
+                    }
+                }
             }
             .contentShape(Rectangle())
             .gesture(swipe(width))
         }
         .onAppear {
-            withAnimation(reduceMotion ? Motion.fade : Motion.spring) {
-                shown = true
-            } completion: {
-                // Op een breed scherm staat een buur nog net in beeld; daar
-                // komt hij zacht op, in plaats van er ineens te staan.
-                withAnimation(Motion.fade) { ready = true }
-            }
+            withAnimation(reduceMotion ? Motion.fade : Motion.spring) { shown = true }
         }
     }
 
-    /// De kaarten naast elkaar; alleen die in beeld kan komen wordt echt
-    /// getekend, de rest houdt zijn plek vrij.
-    private func row(width: CGFloat, icon: CGFloat, span: CGFloat) -> some View {
-        HStack(spacing: m.gutter) {
-            ForEach(Array(focus.tasks.enumerated()), id: \.offset) { (i, step) in
-                if abs(i - focus.index) <= 1 {
-                    card(step, width: width, icon: icon, current: i == focus.index)
-                        .opacity(i == focus.index || ready ? 1 : 0)
-                } else {
-                    Color.clear.frame(width: width)
-                }
-            }
+    /// Waar een kaart ligt als hij niet op het toneel staat: precies op zijn
+    /// kaartje in het raster, zo klein als dat kaartje. Weet niemand waar dat
+    /// ligt — het is uit beeld gescrold — dan doemt hij op zijn plek op.
+    private func nest(_ space: GeometryProxy, _ width: CGFloat, _ step: Step,
+                      home: Bool) -> (scale: CGFloat, offset: CGSize) {
+        guard home else { return (1, .zero) }
+        guard !reduceMotion, let spot = focus.spot(step.key), spot.width > 0 else {
+            return (reduceMotion ? 1 : 0.9, .zero)
         }
-        .offset(x: lane(span), y: drag.height)
-    }
-
-    /// Hoe ver de rij opzij staat: de kaart waar je bent in het midden, plus
-    /// wat de vinger er nu bij trekt.
-    private func lane(_ span: CGFloat) -> CGFloat {
-        let middle = CGFloat(focus.tasks.count - 1) / 2
-        return (middle - CGFloat(focus.index)) * span + drag.width
+        let mine = space.frame(in: .global)
+        return (
+            max(0.15, spot.width / width),
+            CGSize(width: spot.midX - mine.minX - space.size.width / 2,
+                   height: spot.midY - mine.minY - space.size.height / 2)
+        )
     }
 
     private func card(_ step: Step, width: CGFloat, icon: CGFloat,
                       current: Bool) -> some View {
         let taking = participants(step, people).filter { visible.contains($0.id) }
 
-        // Een diepere schaduw, en op een toestel zonder Liquid Glass ook een
-        // dikkere rand met een bolling erin: op dit formaat is een haarlijn
-        // dun en scherp. Het echte materiaal doet dat zelf.
-        return Glass(radius: corner(width), floating: true,
-                     line: 3, lift: 1.5, bulge: 9) {
+        return Glass(radius: corner(width), floating: true, lift: 1.5) {
             VStack(spacing: 0) {
                 Text(step.icon)
                     .font(.system(size: icon))
@@ -192,22 +224,6 @@ struct TaskFocus: View {
         }
     }
 
-    /// Waar de kaart uit groeit: het kaartje in het raster, als dat nog in
-    /// beeld staat. Weet niemand waar het ligt, dan doemt hij op zijn plek op.
-    private func start(_ space: GeometryProxy, _ width: CGFloat)
-        -> (scale: CGFloat, offset: CGSize) {
-        guard !reduceMotion else { return (1, .zero) }
-        guard let key = focus.task?.key, let spot = focus.spot(key), spot.width > 0 else {
-            return (0.9, .zero)
-        }
-        let mine = space.frame(in: .global)
-        return (
-            max(0.15, spot.width / width),
-            CGSize(width: spot.midX - mine.minX - space.size.width / 2,
-                   height: spot.midY - mine.minY - space.size.height / 2)
-        )
-    }
-
     private func swipe(_ width: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 12)
             .onChanged { move in
@@ -217,9 +233,10 @@ struct TaskFocus: View {
                     ? Axis.horizontal : Axis.vertical)
                 axis = which
                 if which == .horizontal {
-                    let sideways = move.translation.width
-                    // Aan het begin en het eind is er geen buur: dan geeft de
-                    // rij een beetje mee en veert hij zo terug.
+                    // De kaart geeft mee, maar hij schuift niet met de vinger
+                    // mee weg: er ligt geen rij naast, hij gaat straks terug
+                    // op zijn eigen plek.
+                    let sideways = move.translation.width * 0.55
                     let edge = (sideways > 0 && focus.index == 0)
                         || (sideways < 0 && focus.index >= focus.tasks.count - 1)
                     drag = CGSize(width: edge ? sideways / 3 : sideways, height: 0)
@@ -239,7 +256,7 @@ struct TaskFocus: View {
                     return
                 }
                 let side = drag.width < 0 ? 1 : -1
-                let far = abs(drag.width) > width * 0.3
+                let far = abs(drag.width) > width * 0.16
                 let flick = abs(move.predictedEndTranslation.width) > width * 0.8
                     && (move.predictedEndTranslation.width < 0) == (side == 1)
                 if far || flick {
@@ -250,26 +267,31 @@ struct TaskFocus: View {
             }
     }
 
+    /// De ene kaart terug op zijn plek, de volgende van de zijne omhoog.
     private func go(to target: Int) {
         guard focus.tasks.indices.contains(target) else {
             withAnimation(Motion.glide) { drag = .zero }
             return
         }
         Haptics.select()
+        let from = focus.index
         withAnimation(Motion.glide) {
-            focus.index = target
+            focus.go(to: target)
             drag = .zero
+        } completion: {
+            // Geland: het kaartje in het raster mag zijn plek weer innemen,
+            // en de kaart erboven vervaagt er precies overheen.
+            withAnimation(Motion.quick) { focus.landed(from) }
         }
     }
 
     private func close() {
-        // Eerst de buren weg, dan pas krimpen: anders zakken ze mee.
-        ready = false
+        axis = nil
         withAnimation(Motion.short) {
             shown = false
             drag = .zero
+        } completion: {
+            withAnimation(Motion.quick) { focus.close() }
         }
-        axis = nil
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.24) { focus.close() }
     }
 }

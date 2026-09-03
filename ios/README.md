@@ -6,11 +6,11 @@ op de ene telefoon afvinkt staat een seconde later ook op de andere.
 
 ## Draaien
 
-Je hebt een Mac met Xcode 16 of nieuwer nodig; het project gebruikt de
-gesynchroniseerde mappen die Xcode 16 introduceerde, zodat er niets in het
-projectbestand hoeft bij te werken als er een bestand bij komt. Met Xcode 26
-erop krijgt de app op iOS 26 het echte Liquid Glass; in een oudere Xcode, of op
-een ouder toestel, valt hij terug op het nagebouwde glas — zie *Het glas*.
+Je hebt een Mac met **Xcode 26** nodig, en een toestel of simulator op
+**iOS 26**: het glas van de app is Apples Liquid Glass, en dat bestaat daar
+niet onder — zie *Het glas*. Het project gebruikt verder de gesynchroniseerde
+mappen die Xcode 16 introduceerde, zodat er niets in het projectbestand hoeft
+bij te werken als er een bestand bij komt.
 
 1. Zet in [`Dagritme/Config.swift`](Dagritme/Config.swift) het adres
    van je eigen Worker:
@@ -95,7 +95,7 @@ vorm waar de schermen mee werken.
 
 | | keuze |
 |---|---|
-| schermen | SwiftUI, iOS 17 en hoger; Liquid Glass vanaf iOS 26 |
+| schermen | SwiftUI, iOS 26 en hoger — het glas is Liquid Glass |
 | toestand | één `@Observable` klasse (`Core/Household.swift`) in de omgeving |
 | opslag | `URLSession` naar `/api/v2/storage`, met `URLSessionWebSocketTask` voor de stroom |
 | bewerken | `List` met `.swipeActions` en `.onMove`; de rest van de app is eigen glas |
@@ -156,38 +156,24 @@ balk; `Metrics.bottomPad` is alleen nog wat er daarboven bij komt.
 
 ## Het glas
 
-`Style/Glass.swift` is het glas, en het is twee dingen tegelijk.
+`Style/Glass.swift` is het glas, en het is een dun laagje om Apples eigen
+**Liquid Glass** heen: een vorm, `.glassEffect(in:)`, en een schaduw eronder
+als het ergens boven zweeft. Meer is het niet, en dat is het punt.
 
-**Op iOS 26 is het Apples eigen Liquid Glass.** `.glassEffect(in:)` zet het
-echte materiaal neer: het buigt en weerkaatst wat eronder langs schuift, licht
-zijn eigen randen op en stelt zijn contrast zelf bij. Daar hoeven wij niets
-voor te tekenen, en de knoppen hieronder (`line`, `bulge`) doen daar dan ook
-niets.
+Het is er lang anders geweest. De app kwam van het web, en daar was het glas
+nagebouwd: een blur met een kleur eroverheen en een randje met een verloop
+erin, overgezet naar `.ultraThinMaterial` met een vlak uit het palet. Dat lijkt
+op glas, maar het buigt niets — er zit geen licht in dat meebeweegt met wat
+eronder langs schuift. Nu vraagt de app het echte materiaal aan, en dat doet
+zijn randen, zijn licht en zijn contrast zelf. Daarom staat de ondergrens op
+iOS 26: dit bestaat daaronder niet, en het nabouwen was precies wat weg moest.
 
-**Daaronder blijft de nagebouwde versie staan**, want die API bestaat er niet:
-een blur met een kleur eroverheen en een randje met een verloop erin. De vraag
-`#if compiler(>=6.2)` eromheen is Xcode 26 — zonder die vraag bouwt de app niet
-meer in een oudere Xcode, want die kent `glassEffect` niet.
+`lift` is wat er over is aan knoppen: hoeveel de schaduw meegroeit met de kaart.
+De grote kaart zet hem op anderhalf, de rest laat hem staan.
 
-In dat nagebouwde glas zit één val: **het materiaal is voor de blur, niet voor
-de kleur.**
-`.ultraThinMaterial` brengt zijn eigen grijs mee; gebruik je dat als vulling, dan
-worden de kaartjes vlakke dozen. De kleur komt daarom uit het palet eronder.
-
-| css | hier |
-|---|---|
-| `backdrop-filter: blur(44px)` | `RoundedRectangle().fill(.ultraThinMaterial)` |
-| `background: rgba(255,255,255,.62)` | een tweede vlak in de kleur uit `Palette` |
-| `border: 1px rgba(255,255,255,.75)` | `strokeBorder`, met een verloop erin |
-| `inset 0 1px 0` / `inset 0 -1px 0` | boven- en onderkant van datzelfde verloop |
-| `0 16px 38px rgba(126,84,42,.16)` | `.shadow(radius: 19, y: 16)` |
-
-Wat op een kaartje van een paar centimeter klopt, oogt op de grote kaart dun
-en scherp. Daarom kent het glas drie knoppen die verder overal op hun standaard
-blijven staan: `line` maakt de rand dikker, `lift` de schaduw dieper, en `bulge`
-zet een lichtrand net binnen de bovenkant met een schaduwtje binnen de onderkant
-— dat laatste is de bolling. `lift` geldt altijd; de andere twee alleen voor het
-nagebouwde glas, want Liquid Glass staat vanzelf al bol.
+SwiftUI heeft zelf ook een type dat `Glass` heet — de *soort* glas (`.regular`,
+`.clear`). Binnen deze app wint die van ons; het materiaal vragen we aan met
+`.glassEffect(in:)`, dus die twee zitten elkaar niet in de weg.
 
 De overgang van ochtend naar avond is één vlag in het palet. SwiftUI kan kleuren
 zelf tussenstanden geven, dus één `.animation(Motion.night, value: evening)`

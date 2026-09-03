@@ -34,11 +34,6 @@ struct Palette {
     var muted: Color { pick(SOFT_INK, .white.opacity(0.6)) }
     var subtle: Color { pick(SOFT_INK, .white.opacity(0.7)) }
 
-    var glass: Color { pick(.white.opacity(0.62), .white.opacity(0.09)) }
-    var glassFloating: Color { pick(.white.opacity(0.82), .white.opacity(0.13)) }
-    var glassEdge: Color { pick(.white.opacity(0.75), .white.opacity(0.14)) }
-    var sheenTop: Color { pick(.white.opacity(0.9), .white.opacity(0.22)) }
-    var sheenBottom: Color { pick(.white.opacity(0.4), .white.opacity(0.06)) }
     var shadow: Color {
         dark ? Color(.sRGB, red: 4 / 255, green: 6 / 255, blue: 26 / 255, opacity: 0.46)
              : Color(.sRGB, red: 126 / 255, green: 84 / 255, blue: 42 / 255, opacity: 0.16)
