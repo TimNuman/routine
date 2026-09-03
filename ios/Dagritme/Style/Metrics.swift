@@ -31,12 +31,13 @@ struct Metrics {
 
     // De stap groot in beeld: over de volle breedte, met de rand eromheen.
     var focusWidth: CGFloat { 520 }
-    var focusHeight: CGFloat { 560 }
-    var focusIcon: CGFloat { tight ? 84 : roomy ? 132 : 100 }
+    var focusHeight: CGFloat { 580 }
+    var focusIcon: CGFloat { tight ? 96 : roomy ? 168 : 128 }
     var focusName: CGFloat { tight ? 24 : roomy ? 34 : 28 }
-    var focusRing: CGFloat { tight ? 60 : roomy ? 84 : 70 }
-    var focusFace: CGFloat { tight ? 52 : roomy ? 74 : 62 }
-    var focusGlyph: CGFloat { tight ? 32 : roomy ? 46 : 38 }
+    var focusFace: CGFloat { tight ? 50 : roomy ? 74 : 62 }
+    var focusRing: CGFloat { focusFace + 16 }
+    var focusGlyph: CGFloat { tight ? 31 : roomy ? 46 : 38 }
+    var focusStroke: CGFloat { tight ? 4 : roomy ? 6 : 5 }
 }
 
 private struct MetricsKey: EnvironmentKey {

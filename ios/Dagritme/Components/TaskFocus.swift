@@ -69,7 +69,7 @@ struct TaskFocus: View {
     var body: some View {
         GeometryReader { space in
             let width = min(space.size.width - m.gutter * 2, m.focusWidth)
-            let height = min(max(space.size.height * 0.62, 300), m.focusHeight)
+            let height = min(max(space.size.height * 0.66, 300), m.focusHeight)
             // De kaarten liggen precies een schermbreedte uit elkaar, dus de
             // buren staan in rust net buiten beeld.
             let span = width + m.gutter
@@ -90,10 +90,6 @@ struct TaskFocus: View {
                     .scaleEffect(shown ? 1 : from.scale)
                     .offset(x: shown ? 0 : from.offset.width,
                             y: shown ? 0 : from.offset.height)
-                    .opacity(shown ? 1 : 0)
-
-                pager
-                    .offset(y: height / 2 + 26)
                     .opacity(shown ? 1 : 0)
             }
             .contentShape(Rectangle())
@@ -131,7 +127,7 @@ struct TaskFocus: View {
         let step = task.step
         let taking = participants(step, people).filter { visible.contains($0.id) }
 
-        return Glass(radius: 30, floating: true) {
+        return Glass(radius: corner(width, height), floating: true) {
             VStack(spacing: 0) {
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     Text(task.group).textStyle(Fonts.group)
@@ -142,6 +138,8 @@ struct TaskFocus: View {
                 }
                 .foregroundStyle(palette.muted)
                 .lineLimit(1)
+                // Genoeg ruimte voor het kruisje in de hoek ernaast.
+                .padding(.trailing, 26)
 
                 Spacer(minLength: 0)
 
@@ -153,7 +151,7 @@ struct TaskFocus: View {
                     .foregroundStyle(palette.ink)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
-                    .padding(.top, 12)
+                    .padding(.top, 24)
 
                 Spacer(minLength: 0)
 
@@ -163,14 +161,22 @@ struct TaskFocus: View {
                     }
                 }
             }
-            .padding(.horizontal, 22)
-            .padding(.vertical, 20)
+            // De bocht van de squircle loopt ver door, dus de tekst begint
+            // ruimer van de rand af dan op een gewoon kaartje.
+            .padding(.horizontal, 26)
+            .padding(.vertical, 26)
             .frame(width: width, height: height)
         }
         .overlay(alignment: .topTrailing) {
-            if current { closeButton }
+            if current { closeButton(corner(width, height)) }
         }
         .accessibilityIdentifier(current ? "focus.card" : "")
+    }
+
+    /// De ronding van de kaart: groot genoeg om er een squircle van te maken,
+    /// en hij groeit mee met de kaart.
+    private func corner(_ width: CGFloat, _ height: CGFloat) -> CGFloat {
+        min(width, height) * 0.17
     }
 
     private func face(_ step: Step, _ person: Person) -> some View {
@@ -182,6 +188,7 @@ struct TaskFocus: View {
                 stepId: "focus.\(step.key)",
                 on: household.checks[key] == true,
                 size: m.focusRing, faceSize: m.focusFace, glyphSize: m.focusGlyph,
+                stroke: m.focusStroke,
                 onTap: { household.toggle(key) }
             )
             Text(person.name)
@@ -192,43 +199,20 @@ struct TaskFocus: View {
         }
     }
 
-    private var closeButton: some View {
-        Button { close() } label: {
-            Cross(color: palette.muted)
-                .padding(14)
+    /// Het kruisje ligt op de schuine lijn van de hoek, midden in de bocht:
+    /// even ver van de bovenkant als van de zijkant.
+    private func closeButton(_ corner: CGFloat) -> some View {
+        let touch: CGFloat = 44
+        let inset = corner * 0.56 - touch / 2
+        return Button { close() } label: {
+            Cross(color: palette.muted, size: 15)
+                .frame(width: touch, height: touch)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.smallPress)
+        .offset(x: -inset, y: inset)
         .accessibilityIdentifier("focus.close")
         .accessibilityLabel(Spoken.close)
-    }
-
-    /// Waar je bent, en de weg heen en terug zonder te vegen.
-    private var pager: some View {
-        HStack(spacing: 6) {
-            arrow(-1, Spoken.previousTask, "focus.previous")
-            Text("\(focus.index + 1) van \(focus.tasks.count)")
-                .textStyle(Fonts.pill)
-                .foregroundStyle(.white.opacity(0.92))
-                .frame(minWidth: 78)
-            arrow(1, Spoken.nextTask, "focus.next")
-        }
-    }
-
-    private func arrow(_ side: Int, _ title: String, _ id: String) -> some View {
-        let target = focus.index + side
-        let can = focus.tasks.indices.contains(target)
-        return Button { go(to: target) } label: {
-            Chevron(color: .white.opacity(0.92))
-                .scaleEffect(x: side < 0 ? -1 : 1, y: 1)
-                .frame(width: 36, height: 36)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.smallPress)
-        .disabled(!can)
-        .opacity(can ? 1 : 0.3)
-        .accessibilityIdentifier(id)
-        .accessibilityLabel(title)
     }
 
     /// Waar de kaart uit groeit: het kaartje in het raster, als dat nog in

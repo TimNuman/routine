@@ -8,6 +8,9 @@ struct Ring: View {
     var size: CGFloat = 40
     var faceSize: CGFloat = 34
     var glyphSize: CGFloat = 21
+    /// Hoe dik de groene rand om een afgevinkt gezichtje is; de randjes
+    /// eromheen lopen mee, zodat een groter gezichtje niet dunner oogt.
+    var stroke: CGFloat = 2.5
     let onTap: () -> Void
 
     @Environment(\.palette) private var palette
@@ -27,15 +30,15 @@ struct Ring: View {
             }
 
             Circle()
-                .strokeBorder(GREEN, lineWidth: 2.5)
-                .frame(width: faceSize + 5, height: faceSize + 5)
+                .strokeBorder(GREEN, lineWidth: stroke)
+                .frame(width: faceSize + stroke * 2, height: faceSize + stroke * 2)
                 .shadow(color: .black.opacity(0.16), radius: 5, x: 0, y: 4)
                 .opacity(on ? 1 : 0)
                 .scaleEffect(on ? 1 : 1.35)
 
             Circle()
                 .fill(soft(person.color, 0.16))
-                .overlay(Circle().strokeBorder(edgeColor, lineWidth: 1.5))
+                .overlay(Circle().strokeBorder(edgeColor, lineWidth: stroke * 0.6))
                 .frame(width: faceSize, height: faceSize)
                 .overlay {
                     Text(person.emoji)
