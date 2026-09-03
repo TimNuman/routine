@@ -292,8 +292,6 @@ private struct MorphCard: View, Animatable {
         Glass(radius: mix(22, full * 0.17), floating: true,
               lift: mix(0.25, 1.5), rim: mix(0, 5)) {
             VStack(spacing: mix(m.cardGap, 0)) {
-                Spacer(minLength: 0)
-
                 Text(step.icon)
                     .font(.system(size: mix(m.iconSize, icon)))
                     .scaleEffect(allDone ? 1.12 : 1)
@@ -309,8 +307,6 @@ private struct MorphCard: View, Animatable {
                     // mee als ruimte, dus de naam schuift er weer in.
                     .padding(.top, mix(0, -8))
 
-                Spacer(minLength: 0)
-
                 Flow(gap: mix(2, 12), rowGap: mix(2, 10), centered: true) {
                     ForEach(taking) { person in
                         face(person)
@@ -324,9 +320,15 @@ private struct MorphCard: View, Animatable {
             .padding(.top, mix(m.cardY, 20))
             .padding(.bottom, mix(m.cardY, 26))
             .frame(width: mix(nest.size.width, full))
-            // Op zijn plek is de kaart precies zo hoog als het kaartje; groot
-            // is hij zo hoog als wat erop staat.
-            .frame(minHeight: mix(nest.size.height, 0))
+            // Op zijn plek is de kaart precies zo hoog als het kaartje, en
+            // groot is hij minstens zo hoog als breed: een vierkant. Staat er
+            // meer op dan daarin past — een naam over twee regels, twee rijen
+            // gezichtjes — dan rekt hij mee. Wat overblijft valt boven en
+            // onder de inhoud, want die staat in het midden.
+            //
+            // Geen `Spacer` hierbinnen: die neemt alle hoogte die het scherm
+            // aanbiedt, en dan wordt de kaart zo lang als de bladzijde.
+            .frame(minHeight: mix(nest.size.height, full))
         }
         .opacity(seen ? 1 : 0)
         // Een kaart die onzichtbaar op zijn plek ligt te wachten mag geen tik
