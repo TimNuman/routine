@@ -258,7 +258,7 @@ private struct TodayCard: View {
     var body: some View {
         let when = timeText(item)
 
-        Glass(radius: m.cardRadius) {
+        Paper(radius: m.cardRadius) {
             VStack(spacing: 4) {
                 Spacer(minLength: 0)
                 Text(item.icon)

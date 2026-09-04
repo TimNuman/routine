@@ -177,6 +177,14 @@ iOS 26: dit bestaat daaronder niet, en het nabouwen was precies wat weg moest.
 `lift` is wat er over is aan knoppen: hoeveel de schaduw meegroeit met de kaart.
 De grote kaart zet hem op anderhalf, de rest laat hem staan.
 
+**Een kaart is geen glas.** `Style/Paper.swift` is het tegenovergestelde: een
+vlak in de kleur van papier, een haarlijn eromheen en dezelfde schaduw eronder.
+Het glas hoort bij het scherm — de balken, de knoppen, de randen van de app —
+maar een kaart is het ding zelf, dat je oppakt en weglegt. Daar hoort geen
+doorkijk bij: je leest wat erop staat, niet wat eronder ligt. En een stapel van
+doorzichtige kaarten wordt letterlijk één wolk, want Liquid Glass laat vormen
+die over elkaar liggen in elkaar overlopen.
+
 SwiftUI heeft zelf ook een type dat `Glass` heet — de *soort* glas (`.regular`,
 `.clear`). Binnen deze app wint die van ons; het materiaal vragen we aan met
 `.glassEffect(in:)`, dus die twee zitten elkaar niet in de weg.
@@ -197,6 +205,24 @@ op een liggende. Op die liggende iPad staat de kop op één regel — de dag met
 schakelaar eronder links, de kinderen met hun balkje rechts — en scrolt hij
 gewoon mee: het is een bladzijde, geen balk. Wat er vandaag verder nog is staat
 daar niet in een lijst maar in dezelfde kaartjes, onder het ritme.
+
+## De stapel
+
+Tik je een stap aan, dan komt hij uit zijn kaartje omhoog en ligt het raster
+leeg: de kaartjes liggen dan als stapel in het midden van het scherm, elk een
+beetje scheef en een beetje verschoven. Dat beetje komt uit de naam van de stap
+(`scatter` in `Components/TaskFocus.swift`), dus het is elke keer hetzelfde
+beetje — een kaart blijft liggen zoals hij ligt terwijl de stapel onder hem
+slinkt.
+
+Naar links vegen legt de bovenste kaart weg: hij zwiert het beeld uit en de
+volgende schuift op zijn plek. Naar rechts vegen is precies de weg terug — de
+bovenste blijft liggen en de vorige kaart schuift met je vinger mee terug de
+stapel op. Elke kaart weet alleen zijn plek in de stapel (`lie`); het wisselen
+is niets meer dan die plek opnieuw uitrekenen met een veer eromheen.
+
+Omlaag vegen of naast de stapel tikken legt hem weg: de bovenste kaart zakt
+terug in zijn eigen kaartje en het raster komt weer op.
 
 ## Talen
 

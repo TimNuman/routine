@@ -36,7 +36,6 @@ struct Metrics {
 
     var cardX: CGFloat { max(8, cardWidth * 0.08) }
     var cardY: CGFloat { max(8, cardWidth * 0.07) }
-    var cardGap: CGFloat { roomy ? 6 : 5 }
     var iconSize: CGFloat { min(64, cardWidth * 0.30) }
     var nameSize: CGFloat { tight ? 14 : roomy ? 17 : 15 }
     var ringSize: CGFloat { tight ? 38 : roomy ? 50 : 44 }

@@ -49,6 +49,11 @@ struct Palette {
     var chip: Color { pick(.white.opacity(0.55), .white.opacity(0.08)) }
     var chipEdge: Color { pick(.white.opacity(0.7), .white.opacity(0.14)) }
     var special: Color { pick(ORANGE.opacity(0.13), ORANGE.opacity(0.16)) }
+
+    /// Het papier van een kaartje: warm wit overdag, diep blauw 's avonds.
+    /// Niet doorzichtig — zie `Style/Paper.swift`.
+    var paper: Color { pick(Color(hex: "#FFFBF5"), Color(hex: "#262B4E")) }
+    var paperEdge: Color { pick(INK.opacity(0.06), .white.opacity(0.13)) }
 }
 
 private struct PaletteKey: EnvironmentKey {

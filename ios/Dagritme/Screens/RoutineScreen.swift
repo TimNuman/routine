@@ -238,6 +238,10 @@ struct RoutineScreen: View {
             .padding(.horizontal, m.indent)
             .padding(.bottom, 10)
             .entrance(start)
+            // De kopjes horen bij het raster, dus die gaan met de kaartjes
+            // mee weg zolang de stapel er ligt.
+            .opacity(focus.hides(r) ? 0 : 1)
+            .animation(Motion.quick, value: focus.hides(r))
 
             LazyVGrid(
                 columns: Array(repeating: GridItem(.flexible(), spacing: m.gridGap),
@@ -324,14 +328,17 @@ private struct Card: View {
     var body: some View {
         let key = step.key
 
-        Glass(radius: m.cardRadius) {
-            VStack(spacing: m.cardGap) {
-                VStack(spacing: m.cardGap) {
+        Paper(radius: m.cardRadius) {
+            VStack(spacing: 0) {
+                // Drie veren om dezelfde ruimte: boven het plaatje, tussen
+                // het plaatje en de naam, en tussen de naam en de gezichtjes.
+                VStack(spacing: 0) {
                     Spacer(minLength: 0)
                     Text(step.icon)
                         .font(.system(size: m.iconSize))
                         .scaleEffect(allDone ? 1.12 : 1)
                         .accessibilityHidden(true)
+                    Spacer(minLength: 0)
                     Text(step.label)
                         .textStyle(Fonts.taskName(m.nameSize))
                         .foregroundStyle(palette.ink)
@@ -373,17 +380,20 @@ private struct Card: View {
         .animation(Motion.pop, value: allDone)
         .accessibilityIdentifier("card.\(key)")
         .entrance(slot)
-        // Staat deze stap groot in beeld, dan is hij hier weg: het is
-        // dezelfde kaart, en die ligt zolang ergens anders.
+        // Zolang de stapel er ligt is het raster leeg: alle kaartjes liggen
+        // dan in het midden op elkaar.
         //
-        // Dat gaat ineens, zonder overgang. De grote kaart vervaagt bij het
+        // Het kaartje van de kaart die bovenop ligt gaat ineens weg en komt
+        // ineens terug, zonder overgang. De grote kaart vervaagt bij het
         // landen wél, en die twee tegelijk laten vervagen gaf een knippering:
         // twee halfdoorzichtige kaarten over elkaar zijn samen niet één hele,
         // dus zakt het beeld er middenin even doorheen. Nu staat het kaartje
         // er meteen weer en vervaagt de kaart daar overheen — hetzelfde
-        // plaatje twee keer, dus je ziet er niets van.
-        .opacity(focus.lifted(routine, key) ? 0 : 1)
-        .animation(nil, value: focus.lifted(routine, key))
+        // plaatje twee keer, dus je ziet er niets van. De rest van het raster
+        // heeft dat niet en vervaagt gewoon mee.
+        .opacity(focus.hides(routine) ? 0 : 1)
+        .animation(focus.swapped(routine, key) ? nil : Motion.quick,
+                   value: focus.hides(routine))
         .contentShape(Rectangle())
         .onTapGesture {
             Haptics.tap()

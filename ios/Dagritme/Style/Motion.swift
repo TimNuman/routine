@@ -20,6 +20,10 @@ enum Motion {
     /// die van vorm wisselt en niet een bladzijde die langsschuift.
     static let lift = Animation.snappy(duration: 0.28, extraBounce: 0.08)
 
+    /// Een kaart die van de stapel af gaat of er weer bij komt, met de
+    /// stapel die eronder opschuift.
+    static let deal = Animation.snappy(duration: 0.34, extraBounce: 0.14)
+
     static let slide = Animation.snappy(duration: 0.42, extraBounce: 0.04)
     static let sheetUp = Animation.snappy(duration: 0.38, extraBounce: 0.12)
     static let sheetDown = Animation.snappy(duration: 0.20, extraBounce: 0)

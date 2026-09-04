@@ -1,20 +1,21 @@
 import SwiftUI
 
-/// Welke stap er groot staat, en waar de kaartjes in het raster liggen.
+/// Welke stap er boven op de stapel ligt, en waar de kaartjes in het raster
+/// liggen.
 ///
-/// Een stap die groot staat is niet een kopie van het kaartje maar het
-/// kaartje zelf: zolang hij boven het raster zweeft blijft zijn plek daar
-/// leeg, en bij het sluiten zakt hij daar weer in terug. Bij het doorvegen
-/// gebeuren die twee tegelijk — de een gaat terug op zijn plek, de ander komt
-/// van de zijne omhoog.
+/// Zolang er een stap groot staat is het raster leeg: de kaartjes liggen dan
+/// als stapel in het midden van het scherm. De stap die je opende komt uit
+/// zijn eigen kaartje omhoog en zakt daar ook weer in terug.
 @MainActor
 @Observable
 final class Focus {
     private(set) var tasks: [Step] = []
     private(set) var routine: Routine = .day
     private(set) var index = 0
-    /// De stap die op dit moment terugzakt naar zijn plek in het raster.
-    private(set) var leaving: Int?
+    /// Het kaartje waar de kaart net in terugzakte. Dat ene kaartje moet er
+    /// meteen weer liggen — de kaart vervaagt eroverheen — terwijl de rest
+    /// van het raster rustig terugkomt.
+    private(set) var landing: String?
 
     /// De plek van elk kaartje op het scherm. Die schuift bij elke scrolstap
     /// op, dus hij staat bewust buiten de tekentoestand: niemand hoeft
@@ -34,34 +35,31 @@ final class Focus {
         self.tasks = tasks
         self.index = index
         self.routine = routine
-        leaving = nil
+        landing = nil
     }
 
-    /// Naar de buurstap: deze vertrekt, die komt.
+    /// Eén kaart verder op de stapel, of er eentje terug.
     func go(to target: Int) {
         guard tasks.indices.contains(target), target != index else { return }
-        leaving = index
         index = target
     }
 
-    /// De vertrokken kaart ligt weer op zijn plek. Is er ondertussen alweer
-    /// een andere vertrokken, dan gaat dit bericht over een oudere wissel en
-    /// laten we het liggen.
-    func landed(_ from: Int) {
-        guard leaving == from else { return }
-        leaving = nil
-    }
-
     func close() {
+        landing = step(index)?.key
         tasks = []
         index = 0
-        leaving = nil
     }
 
-    /// Zweeft deze stap nu boven het raster? Dan blijft zijn plek daar leeg.
-    func lifted(_ routine: Routine, _ key: String) -> Bool {
-        guard open, routine == self.routine else { return false }
-        return key == step(index)?.key || key == step(leaving)?.key
+    /// Ligt het raster van dit ritme even weg? De kaartjes en de kopjes zijn
+    /// dan niet te zien: ze liggen op de stapel.
+    func hides(_ routine: Routine) -> Bool { open && routine == self.routine }
+
+    /// Is dit het kaartje van de kaart die boven op de stapel ligt, of dat
+    /// waar hij net in terugzakte? Dat kaartje gaat ineens weg en komt ineens
+    /// terug; de rest van het raster vervaagt.
+    func swapped(_ routine: Routine, _ key: String) -> Bool {
+        guard routine == self.routine else { return false }
+        return key == step(index)?.key || key == landing
     }
 
     func place(_ routine: Routine, _ step: String, _ frame: CGRect?) {
@@ -110,11 +108,12 @@ private struct Nest {
     var shift: CGSize
 }
 
-/// De stap groot: over de volle breedte van het scherm, met een rand eromheen.
-/// Hij komt omhoog uit zijn eigen kaartje in het raster en zakt daar ook weer
-/// in terug. Vegen wisselt van stap: de ene gaat terug op zijn plek terwijl de
-/// volgende van de zijne omhoog komt. Omlaag vegen of naast de kaart tikken
-/// legt hem weg.
+/// De stapel: de stap die aan de beurt is ligt bovenop, de volgende liggen
+/// eronder — elk een beetje scheef, maar altijd hetzelfde beetje. Naar links
+/// vegen legt de bovenste weg en geeft de volgende, naar rechts vegen haalt de
+/// vorige er weer bij. De kaart die je opende komt uit zijn kaartje in het
+/// raster omhoog en zakt daar bij het sluiten weer in terug; omlaag vegen of
+/// naast de stapel tikken doet dat ook.
 struct TaskFocus: View {
     let focus: Focus
     let people: [Person]
@@ -123,12 +122,20 @@ struct TaskFocus: View {
     @Environment(\.metrics) private var m
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    /// Staat de kaart groot in het midden? Zo niet, dan ligt hij als kaartje
+    /// Ligt de stapel er? Zo niet, dan ligt de bovenste kaart nog als kaartje
     /// op zijn plek in het raster — dat is waar hij vandaan komt en waar hij
     /// heen gaat.
     @State private var shown = false
     @State private var drag = CGSize.zero
     @State private var axis: Axis?
+
+    /// Wat er van de stapel te zien is: de kaart die net weggelegd is, de
+    /// bovenste, en een paar die eronder liggen.
+    private var deck: [Int] {
+        let first = max(0, focus.index - 1)
+        let last = min(focus.tasks.count - 1, focus.index + 3)
+        return first <= last ? Array(first...last) : []
+    }
 
     var body: some View {
         GeometryReader { space in
@@ -136,6 +143,12 @@ struct TaskFocus: View {
             // Het plaatje is zo groot als het mag, maar nooit zo groot dat de
             // kaart niet meer op een laag scherm past.
             let icon = min(m.focusIcon, space.size.height * 0.24)
+            let away = space.size.width / 2 + width
+            // Naar rechts vegen haalt de vorige kaart terug: die schuift met
+            // de vinger mee terug op de stapel terwijl de bovenste blijft
+            // liggen. Precies de weg terug van het weggeven, dus.
+            let pulling = drag.width > 0 && focus.index > 0
+            let pull = pulling ? min(1, drag.width / max(1, width * 0.5)) : 0
 
             ZStack {
                 Color.black.opacity(0.34)
@@ -147,33 +160,41 @@ struct TaskFocus: View {
                     .accessibilityLabel(Spoken.close)
                     .accessibilityAddTraits(.isButton)
 
-                // De kaart die er staat, en die net vertrokken is. De buren
-                // liggen er als kaartje op hun plek in het raster bij, zodat
-                // ze daarvandaan omhoog kunnen komen in plaats van uit het
-                // niets te verschijnen.
-                ForEach(Array(focus.tasks.enumerated()), id: \.offset) { (i, step) in
-                    if abs(i - focus.index) <= 1 {
-                        let home = nest(space, step)
-                        // Opgetild is te zien: de kaart die er staat, en de
-                        // kaart die onderweg is terug naar zijn plek.
-                        let up = i == focus.index || i == focus.leaving
-                        let held = i == (focus.leaving ?? focus.index)
-                        let grown: CGFloat = (reduceMotion || home == nil)
-                            ? 1 : (shown && i == focus.index ? 1 : 0)
+                ForEach(deck, id: \.self) { i in
+                    let step = focus.tasks[i]
+                    let depth = i - focus.index
+                    let rest = depth == -1 && pulling
+                        ? blend(lie(step.key, depth: -1, away: away),
+                                lie(step.key, depth: 0, away: away), pull)
+                        : lie(step.key, depth: depth, away: away)
+                    let top = depth == 0
+                    // De bovenste kaart loopt alleen met de vinger mee als je
+                    // hem weggeeft, niet als je de vorige terughaalt.
+                    let follows = top && !pulling
+                    let home = nest(space, step)
+                    // Alleen de bovenste kaart groeit uit zijn kaartje; de
+                    // rest van de stapel ligt er meteen als kaart bij.
+                    let grown: CGFloat = (reduceMotion || home == nil)
+                        ? 1 : (shown && top ? 1 : 0)
 
-                        // Het opdoemen zit binnen de kaart en niet hier: een
-                        // `animation` om een `Animatable` view heen neemt ook
-                        // de vervorming zelf over, en die hoort bij de veer
-                        // van de veeg.
-                        MorphCard(t: grown, seen: up, step: step, full: width, icon: icon,
-                                  nest: home ?? Nest(size: .zero, shift: .zero),
-                                  taking: taking(step), routine: focus.routine,
-                                  current: i == focus.index)
-                            .offset(x: held ? drag.width : 0, y: held ? drag.height : 0)
-                            // Wie omhoog komt gaat over wie terugzakt, welke
-                            // kant je ook op veegt.
-                            .zIndex(i == focus.index ? 2 : (i == focus.leaving ? 1 : 0))
-                    }
+                    MorphCard(t: top ? grown : 1, seen: true, step: step,
+                              full: width, icon: icon,
+                              nest: home ?? Nest(size: .zero, shift: .zero),
+                              taking: taking(step), routine: focus.routine, current: top)
+                        .scaleEffect(rest.scale)
+                        // De kaart draait met de vinger mee, zoals een kaart
+                        // die je van de stapel af schuift.
+                        .rotationEffect(.degrees(rest.angle + (follows ? Double(drag.width) / 24 : 0)))
+                        .offset(x: rest.x + (follows ? drag.width : 0),
+                                y: rest.y + (top ? drag.height : 0))
+                        // De kaarten onder de bovenste horen bij de stapel en
+                        // niet bij het raster: ze komen erbij als de stapel
+                        // er is, en gaan met de stapel weer weg.
+                        .opacity(top ? 1 : (shown && depth <= 2 ? 1 : 0))
+                        // Wie weggelegd wordt gaat over de stapel heen; de
+                        // rest ligt op volgorde.
+                        .zIndex(depth < 0 ? 9 : Double(3 - depth))
+                        .allowsHitTesting(top)
                 }
             }
             .contentShape(Rectangle())
@@ -210,13 +231,13 @@ struct TaskFocus: View {
                     ? Axis.horizontal : Axis.vertical)
                 axis = which
                 if which == .horizontal {
-                    // De kaart geeft mee, maar hij schuift niet met de vinger
-                    // mee weg: er ligt geen rij naast, hij gaat straks terug
-                    // naar zijn eigen plek.
-                    let sideways = move.translation.width * 0.55
+                    // De kaart gaat mee met de vinger. Is er niets meer om
+                    // weg te leggen of terug te halen, dan geeft hij alleen
+                    // een beetje mee.
+                    let sideways = move.translation.width
                     let edge = (sideways > 0 && focus.index == 0)
                         || (sideways < 0 && focus.index >= focus.tasks.count - 1)
-                    drag = CGSize(width: edge ? sideways / 3 : sideways, height: 0)
+                    drag = CGSize(width: edge ? sideways / 3.5 : sideways, height: 0)
                 } else {
                     drag = CGSize(width: 0, height: max(0, move.translation.height))
                 }
@@ -233,7 +254,9 @@ struct TaskFocus: View {
                     return
                 }
                 let side = drag.width < 0 ? 1 : -1
-                let far = abs(drag.width) > width * 0.16
+                // Weggeven mag met een klein duwtje; terughalen pas als de
+                // vorige kaart er half op ligt.
+                let far = side == 1 ? drag.width < -width * 0.22 : drag.width > width * 0.25
                 let flick = abs(move.predictedEndTranslation.width) > width * 0.8
                     && (move.predictedEndTranslation.width < 0) == (side == 1)
                 if far || flick {
@@ -244,21 +267,16 @@ struct TaskFocus: View {
             }
     }
 
-    /// De ene kaart terug op zijn plek, de volgende van de zijne omhoog.
+    /// De bovenste kaart gaat van de stapel af, of komt erop terug.
     private func go(to target: Int) {
         guard focus.tasks.indices.contains(target) else {
             withAnimation(Motion.lift) { drag = .zero }
             return
         }
         Haptics.select()
-        let from = focus.index
-        withAnimation(Motion.lift) {
+        withAnimation(Motion.deal) {
             focus.go(to: target)
             drag = .zero
-        } completion: {
-            // Geland: het kaartje in het raster mag zijn plek weer innemen,
-            // en de kaart erboven vervaagt er precies overheen.
-            withAnimation(Motion.quick) { focus.landed(from) }
         }
     }
 
@@ -271,6 +289,51 @@ struct TaskFocus: View {
             withAnimation(Motion.quick) { focus.close() }
         }
     }
+}
+
+/// Hoe een kaart op de stapel ligt: een beetje verschoven en een beetje
+/// scheef, dieper in de stapel wat meer. Het hoort bij de kaart zelf — het
+/// komt uit zijn naam — dus hij blijft liggen zoals hij ligt terwijl de
+/// stapel onder hem slinkt.
+private struct Lie {
+    var x: CGFloat = 0
+    var y: CGFloat = 0
+    var angle: Double = 0
+    var scale: CGFloat = 1
+}
+
+private func scatter(_ key: String) -> (Double, Double, Double) {
+    var seed: UInt64 = 5381
+    for byte in key.utf8 { seed = seed &* 33 &+ UInt64(byte) }
+    let spread = { (shift: UInt64) in Double((seed >> shift) % 997) / 498.5 - 1 }
+    return (spread(3), spread(13), spread(23))
+}
+
+/// Half toeval, half zekerheid: de kaart wijkt altijd minstens een halve
+/// slag uit, zodat er geen kaart precies recht onder de bovenste verdwijnt.
+private func nudge(_ part: Double, _ span: Double) -> Double {
+    (part * 0.5 + (part < 0 ? -0.5 : 0.5)) * span
+}
+
+/// Onderweg tussen twee plekken op de stapel: zo komt de vorige kaart met de
+/// vinger mee terug.
+private func blend(_ from: Lie, _ to: Lie, _ part: CGFloat) -> Lie {
+    Lie(x: from.x + (to.x - from.x) * part,
+        y: from.y + (to.y - from.y) * part,
+        angle: from.angle + (to.angle - from.angle) * Double(part),
+        scale: from.scale + (to.scale - from.scale) * part)
+}
+
+private func lie(_ key: String, depth: Int, away: CGFloat) -> Lie {
+    let (x, y, angle) = scatter(key)
+    // Van de stapel af: naar links het beeld uit, met een zwaai.
+    guard depth >= 0 else {
+        return Lie(x: -away, y: y * 12 + 24, angle: angle * 5 - 15)
+    }
+    let deep = Double(min(depth, 3))
+    return Lie(x: CGFloat(nudge(Double(x), 7 + deep * 7)),
+               y: CGFloat(nudge(Double(y), 5 + deep * 6)) + deep * 4,
+               angle: nudge(angle, 2.6 + deep * 2))
 }
 
 /// De kaart onderweg tussen twee vormen. Op `t = 0` is hij het kaartje in het
@@ -321,21 +384,25 @@ private struct MorphCard: View, Animatable {
     }
 
     var body: some View {
-        Glass(radius: mix(m.cardRadius, full * 0.17), floating: true,
-              lift: mix(0.25, 1.5), rim: mix(0, 5)) {
+        Paper(radius: mix(m.cardRadius, full * 0.17), floating: true,
+              lift: mix(0.25, 1.5)) {
             // Precies de opbouw van het kaartje in het raster: het plaatje
             // en de naam tussen twee veren, en de gezichtjes daaronder. Dus
             // ook dezelfde verdeling van de ruimte die overblijft — die valt
             // boven het plaatje en tussen de naam en de gezichtjes, en niet
             // onder de gezichtjes.
-            VStack(spacing: mix(m.cardGap, 0)) {
-                VStack(spacing: mix(m.cardGap, 0)) {
+            VStack(spacing: 0) {
+                // Drie veren om dezelfde ruimte: boven het plaatje, tussen
+                // het plaatje en de naam, en tussen de naam en de gezichtjes.
+                // Wat er overblijft valt zo overal even ruim uit.
+                VStack(spacing: 0) {
                     Spacer(minLength: 0)
                     Text(step.icon)
                         .font(.system(size: mix(m.iconSize, icon)))
                         .scaleEffect(allDone ? 1.12 : 1)
                         .animation(Motion.pop, value: allDone)
                         .accessibilityHidden(true)
+                    Spacer(minLength: 0)
                     Text(step.label)
                         .textStyle(Fonts.taskName(mix(m.nameSize, m.focusName)))
                         .foregroundStyle(palette.ink)
@@ -343,13 +410,12 @@ private struct MorphCard: View, Animatable {
                         .lineLimit(2)
                         // Een emoji laat zelf al een stuk wit onder zich; dat
                         // telt mee als ruimte, dus de naam schuift er weer in.
-                        .padding(.top, mix(0, -8))
+                        .padding(.top, mix(0, -10))
                     Spacer(minLength: 0)
                 }
                 .frame(maxWidth: .infinity)
 
                 faces
-                    .padding(.top, mix(0, 18))
             }
             // De bocht van de squircle loopt ver door, dus de tekst begint
             // ruimer van de rand af dan op een gewoon kaartje.
@@ -383,12 +449,17 @@ private struct MorphCard: View, Animatable {
     /// gewone laag dat halverwege omgooien, dan sprong de hele tros in één
     /// beeld van twee rijen naar één — en dat is de klik die je zag.
     private var faces: some View {
+        let room = full - 52
+        // Groot staan ze het liefst op één rij — op een iPad passen er vier —
+        // en anders breken ze af zoals op het kaartje.
+        let side = CGFloat(taking.count) * m.focusRing + CGFloat(taking.count - 1) * 12
         let small = spots(taking.count, width: nest.size.width - m.cardX * 2,
                           item: m.ringSize, itemHeight: m.ringSize,
                           gap: 2, rowGap: 2, perRow: childrenPerRow(taking.count))
-        let big = spots(taking.count, width: full - 52,
+        let big = spots(taking.count, width: room,
                         item: m.focusRing, itemHeight: m.focusRing + 6 + 15,
-                        gap: 12, rowGap: 10)
+                        gap: 12, rowGap: 10,
+                        perRow: side <= room ? taking.count : childrenPerRow(taking.count))
 
         return ZStack {
             ForEach(Array(taking.enumerated()), id: \.element.id) { (i, person) in
