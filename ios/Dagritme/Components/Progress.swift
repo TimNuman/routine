@@ -15,43 +15,51 @@ struct ProgressBars: View {
     var filtered: Bool = false
     var onSelect: ((String) -> Void)? = nil
 
-    private var many: Bool { people.count > 2 }
+    @Environment(\.metrics) private var m
+
+    /// Hoeveel kinderen er naast elkaar staan. Naast het ritme past er een
+    /// rij van drie; met z'n vieren wordt het een blokje van twee bij twee,
+    /// want vier op een rij worden strookjes. Op de telefoon blijven het er
+    /// twee naast elkaar.
+    private var perRow: Int {
+        let count = max(1, people.count)
+        guard m.wide else { return min(2, count) }
+        return count == 4 ? 2 : min(3, count)
+    }
 
     var body: some View {
         Glass(radius: 26) {
-            if many {
-                VStack(spacing: 0) {
-                    ForEach(Array(rows.enumerated()), id: \.offset) { (row, pair) in
-                        HStack(spacing: 0) {
-                            ForEach(Array(pair.enumerated()), id: \.element.id) { (column, person) in
-                                Tile(person: person, tally: tallies[person.id] ?? Tally(),
-                                     left: column > 0, top: row > 0,
-                                     on: !filtered || visible.contains(person.id),
-                                     filtered: filtered, onSelect: onSelect)
-                                    .frame(maxWidth: .infinity)
-                            }
-                            if pair.count == 1 { Color.clear.frame(maxWidth: .infinity) }
+            VStack(spacing: 0) {
+                ForEach(Array(rows.enumerated()), id: \.offset) { (row, group) in
+                    HStack(spacing: 0) {
+                        ForEach(Array(group.enumerated()), id: \.element.id) { (column, person) in
+                            Tile(person: person, tally: tallies[person.id] ?? Tally(),
+                                 left: column > 0, top: row > 0, slim: m.wide,
+                                 on: !filtered || visible.contains(person.id),
+                                 filtered: filtered, onSelect: onSelect)
+                                .frame(maxWidth: .infinity)
                         }
-                    }
-                }
-            } else {
-                HStack(spacing: 0) {
-                    ForEach(Array(people.enumerated()), id: \.element.id) { (i, person) in
-                        Tile(person: person, tally: tallies[person.id] ?? Tally(),
-                             left: i > 0, top: false,
-                             on: !filtered || visible.contains(person.id),
-                             filtered: filtered, onSelect: onSelect)
-                            .frame(maxWidth: .infinity)
+                        // De laatste rij vult zich met lucht aan, zodat de
+                        // kinderen erboven op hun plek blijven staan.
+                        if group.count < perRow {
+                            ForEach(group.count..<perRow, id: \.self) { _ in
+                                Color.clear.frame(maxWidth: .infinity)
+                            }
+                        }
                     }
                 }
             }
         }
+        // Eén maat voor een kind, of ze nu met z'n tweeën, drieën of vieren
+        // zijn: het blokje groeit met de rij mee in plaats van de kinderen
+        // uit te rekken.
+        .frame(maxWidth: m.wide ? CGFloat(perRow) * 186 : .infinity, alignment: .trailing)
         .padding(.top, topPad)
     }
 
     private var rows: [[Person]] {
-        stride(from: 0, to: people.count, by: 2).map {
-            Array(people[$0..<min($0 + 2, people.count)])
+        stride(from: 0, to: people.count, by: perRow).map {
+            Array(people[$0..<min($0 + perRow, people.count)])
         }
     }
 }
@@ -61,6 +69,8 @@ private struct Tile: View {
     let tally: Tally
     let left: Bool
     let top: Bool
+    /// Naast het ritme staat hij smaller, zodat er drie naast elkaar passen.
+    var slim: Bool = false
     var on: Bool = true
     var filtered: Bool = false
     var onSelect: ((String) -> Void)?
@@ -96,13 +106,13 @@ private struct Tile: View {
     }
 
     private var tile: some View {
-        HStack(spacing: 11) {
+        HStack(spacing: slim ? 9 : 11) {
             ZStack {
                 Circle().fill(soft(person.color, tally.complete ? 0.30 : 0.18))
-                Text(person.emoji).font(.system(size: 26))
+                Text(person.emoji).font(.system(size: slim ? 23 : 26))
             }
             .accessibilityHidden(true)
-            .frame(width: 46, height: 46)
+            .frame(width: slim ? 40 : 46, height: slim ? 40 : 46)
             .scaleEffect(pop)
 
             VStack(alignment: .leading, spacing: 6) {
@@ -123,8 +133,8 @@ private struct Tile: View {
                       color: Color(hex: person.color))
             }
         }
-        .padding(.vertical, 13)
-        .padding(.horizontal, 14)
+        .padding(.vertical, slim ? 12 : 13)
+        .padding(.horizontal, slim ? 11 : 14)
         .overlay(alignment: .leading) {
             if left { Rectangle().fill(palette.divider).frame(width: 1) }
         }

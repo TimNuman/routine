@@ -63,7 +63,9 @@ struct Screen<Inner: View>: View {
     /// aan loopt. Onder doet de menubalk van iOS dat zelf.
     private var fades: some View {
         EdgeFade(dark: household.evening)
-            .frame(height: 72)
+            // Op een breed scherm net genoeg om onder de klok te blijven; op
+            // de telefoon mag hij verder doorlopen, daar scrolt er meer langs.
+            .frame(height: m.wide ? 34 : 72)
             .frame(maxHeight: .infinity, alignment: .top)
             .ignoresSafeArea()
             .allowsHitTesting(false)
@@ -91,13 +93,13 @@ struct Screen<Inner: View>: View {
     @ViewBuilder
     private var header: some View {
         if m.wide {
-            HStack(alignment: .top, spacing: 20) {
+            HStack(alignment: .bottom, spacing: 20) {
                 VStack(alignment: .leading, spacing: 0) {
                     names
                     if let center { center.frame(width: 280) }
                 }
                 Spacer(minLength: 0)
-                if let aside { aside.frame(maxWidth: 440).padding(.top, 6) }
+                if let aside { aside.frame(maxWidth: 600, alignment: .trailing) }
             }
             .entrance(0)
             .padding(.bottom, 6)
