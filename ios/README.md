@@ -126,6 +126,12 @@ het glas dat meekleurt met wat eronder scrolt, en de veeg over de balk waarmee
 je van tabblad naar tabblad schuift. Op een ouder toestel is het dezelfde balk
 in het oude jasje.
 
+Op de iPad hangt die balk sinds iOS 26 bovenaan, naast de titel. Hier is hij geen
+bladwijzer maar een knop voor kinderduimen, dus vraagt `Components/Tabs.swift` de
+balk die de iPhone krijgt (`traitOverrides.horizontalSizeClass = .compact`):
+dezelfde zwevende balk, midden onderaan. De bladzijden zelf blijven wél
+iPad-bladzijden.
+
 Daarmee is de eigen balk weg, en met hem de veeg over de hele bladzijde: van
 tabblad wisselen doe je op de balk. Binnen het ritme blijft de schakelaar
 boven de kaartjes ochtend en avond langs schuiven — dat is dezelfde schuif als
@@ -182,7 +188,15 @@ geen gedeelde waarde per onderdeel voor nodig zoals in Reanimated.
 
 De maten groeien mee met het scherm (`Style/Metrics.swift`), met dezelfde drie
 grenzen als op web: krapper onder 360, een maatje groter vanaf 700, en vanaf 1000
-komt het weekritme als kolom ernaast — dat is een iPad in liggende stand.
+gaat het over op de indeling voor een iPad in liggende stand.
+
+Een kaartje is vierkant, met de squircle van de kaart die er groot uit komt: de
+breedte volgt uit het raster en de hoogte is dezelfde, dus één maat regelt alles.
+Er passen er twee naast elkaar op een telefoon, vier op een staande iPad en vijf
+op een liggende. Op die liggende iPad staat de kop stil in het bovenste kwart van
+het scherm — de dag links, de schakelaar in het midden, de kinderen rechts — en
+schuiven de kaarten eronderdoor. Wat er vandaag verder nog is staat daar niet in
+een lijst maar in dezelfde kaartjes, onder het ritme.
 
 ## Talen
 
@@ -314,8 +328,10 @@ De stappen zijn `wait <s>`, `ritme`, `week`, `instellingen`, `ochtend`, `avond`,
 het echte huis) en `herlaad` (alsof de app wakker wordt).
 In een plan kunnen ook `home` (naar het beginscherm) en `activate` (terug naar de
 app) staan, om slapen en wakker worden na te spelen.
-Verder `tapId` (tik op een `accessibilityIdentifier`) en `type` (typ in het veld
-dat de focus heeft).
+Verder `tapId` (tik op een `accessibilityIdentifier`), `type` (typ in het veld
+dat de focus heeft), `rotate` (`"side": "landscape"` of `"portrait"`, om de iPad
+te kantelen) en `dump` (zet de hele boom van het scherm in de uitvoer van de
+test, met de plekken en de namen erbij).
 Neem het op met `xcrun simctl io <simulator> recordVideo` en trek er beelden uit;
 de opname heeft geen vaste beeldsnelheid, dus zet hem eerst om (`ffmpeg -vf
 fps=30`) voordat je op beeldnummer zoekt.

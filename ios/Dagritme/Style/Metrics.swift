@@ -2,12 +2,14 @@ import SwiftUI
 
 struct Metrics {
     let width: CGFloat
+    /// De hoogte van het scherm, niet van de bladzijde: hij bepaalt op de
+    /// iPad hoeveel de kop bovenaan mag innemen.
+    var height: CGFloat = 844
 
     private var tight: Bool { width <= 360 }
     private var roomy: Bool { width >= 700 }
     var wide: Bool { width >= 1000 }
 
-    var sideColumn: CGFloat { 372 }
     var columnGap: CGFloat { 26 }
     var indent: CGFloat { 16 }
     var gutter: CGFloat { tight ? 16 : wide ? 26 : 22 }
@@ -16,18 +18,42 @@ struct Metrics {
     // De menubalk van iOS houdt zelf ruimte vrij onderaan; dit is wat er
     // daarboven nog bij komt, zodat het laatste kaartje niet in de waas valt.
     var bottomPad: CGFloat { 40 }
-    var perRow: Int { roomy ? 5 : 3 }
-    var gridGap: CGFloat { roomy ? 14 : 10 }
-    var cardX: CGFloat { roomy ? 10 : 6 }
-    var cardY: CGFloat { roomy ? 10 : 8 }
-    var cardGap: CGFloat { roomy ? 6 : 5 }
-    var cardHeight: CGFloat { roomy ? 172 : 142 }
-    var iconSize: CGFloat { roomy ? 46 : 36 }
-    var nameSize: CGFloat { roomy ? 15 : 13 }
-    var ringSize: CGFloat { tight ? 34 : roomy ? 50 : 40 }
-    var faceSize: CGFloat { tight ? 30 : roomy ? 44 : 34 }
-    var glyphSize: CGFloat { tight ? 19 : roomy ? 27 : 21 }
     var maxWidth: CGFloat { 1280 }
+
+    /// De kop van het dagritme op een breed scherm: een kwart van de hoogte,
+    /// met de titel, de schakelaar en de kinderen naast elkaar. Hij scrolt
+    /// niet mee — de kaarten schuiven eronderdoor.
+    var band: CGFloat { max(150, height * 0.25) }
+
+    /// Hoeveel er van links naar rechts naast elkaar past. Op de telefoon
+    /// twee, zodat een kaart groot genoeg is om met een kinderduim te raken.
+    var perRow: Int { wide ? 5 : roomy ? 4 : 2 }
+    var gridGap: CGFloat { roomy ? 16 : 12 }
+
+    /// De ruimte die het raster heeft: het scherm min de marges.
+    var contentWidth: CGFloat { min(width, maxWidth) - gutter * 2 }
+
+    /// Een kaart is vierkant, net als de kaart die groot in beeld komt: de
+    /// breedte volgt uit het raster, de hoogte is dezelfde.
+    var cardWidth: CGFloat {
+        max(80, (contentWidth - gridGap * CGFloat(perRow - 1)) / CGFloat(perRow))
+    }
+    var cardHeight: CGFloat { cardWidth }
+    /// De squircle van de grote kaart, op de maat van het kaartje.
+    var cardRadius: CGFloat { cardWidth * 0.17 }
+
+    var cardX: CGFloat { max(8, cardWidth * 0.08) }
+    var cardY: CGFloat { max(8, cardWidth * 0.07) }
+    var cardGap: CGFloat { roomy ? 6 : 5 }
+    var iconSize: CGFloat { min(64, cardWidth * 0.30) }
+    var nameSize: CGFloat { tight ? 14 : roomy ? 17 : 15 }
+    var ringSize: CGFloat { tight ? 38 : roomy ? 50 : 44 }
+    var faceSize: CGFloat { tight ? 33 : roomy ? 44 : 38 }
+    var glyphSize: CGFloat { tight ? 21 : roomy ? 27 : 23 }
+
+    /// De kaartjes van vandaag onderaan: even breed als een taakkaartje, maar
+    /// lager — er hoeft niets afgevinkt te worden.
+    var todayHeight: CGFloat { cardWidth * 0.72 }
 
     // De stap groot in beeld: over de volle breedte, met de rand eromheen.
     var focusWidth: CGFloat { 520 }

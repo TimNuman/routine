@@ -143,9 +143,11 @@ struct BlockHead: View {
         self.topPad = topPad
     }
 
+    @Environment(\.metrics) private var m
+
     var body: some View {
         Text(text)
-            .textStyle(Fonts.blockHead)
+            .textStyle(Fonts.blockHead(m.wide ? 20 : 16))
             .foregroundStyle(palette.ink)
             .padding(.top, topPad)
             .padding(.horizontal, 16)
@@ -206,5 +208,92 @@ private struct EdgeMark: Shape {
                               control: CGPoint(x: r.minX, y: r.maxY))
         }
         return path
+    }
+}
+
+/// Wat er vandaag verder nog is, als kaartjes in plaats van een lijst: op een
+/// breed scherm staan ze onder het dagritme, met hetzelfde grote plaatje en
+/// dezelfde squircle als een taak. Er valt niets af te vinken — school gaat
+/// door of je het nu aanvinkt of niet — dus ze zijn wat lager.
+struct AgendaCards: View {
+    let block: Block
+    let people: [Person]
+    var slot: Int? = nil
+
+    @Environment(\.metrics) private var m
+
+    var body: some View {
+        if !block.items.isEmpty {
+            VStack(alignment: .leading, spacing: 0) {
+                BlockHead(block.heading, topPad: 26)
+                    .entrance(at: slot)
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.flexible(), spacing: m.gridGap),
+                                   count: m.perRow),
+                    spacing: m.gridGap
+                ) {
+                    ForEach(Array(block.items.enumerated()), id: \.offset) { (i, item) in
+                        TodayCard(item: item, people: people)
+                            .entrance(at: slot, extra: 1 + i)
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct TodayCard: View {
+    let item: AgendaItem
+    let people: [Person]
+
+    @Environment(\.metrics) private var m
+    @Environment(\.palette) private var palette
+
+    private var picked: [Person] {
+        item.who.compactMap { id in people.first { $0.id == id } }
+    }
+
+    private var showNames: Bool { !picked.isEmpty && picked.count < people.count }
+
+    var body: some View {
+        let when = timeText(item)
+
+        Glass(radius: m.cardRadius) {
+            VStack(spacing: 4) {
+                Spacer(minLength: 0)
+                Text(item.icon)
+                    .font(.system(size: m.iconSize * 0.86))
+                    .accessibilityHidden(true)
+                Text(item.text)
+                    .textStyle(Fonts.taskName(m.nameSize))
+                    .foregroundStyle(palette.ink)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                if !when.isEmpty {
+                    Text(when)
+                        .textStyle(Fonts.agendaTime)
+                        .foregroundStyle(palette.muted)
+                        .lineLimit(1)
+                }
+                if showNames {
+                    Flow(gap: 4, rowGap: 3, centered: true) {
+                        ForEach(picked) { Tag(person: $0) }
+                    }
+                    .padding(.top, 2)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, m.cardX)
+            .padding(.vertical, m.cardY)
+            .frame(maxWidth: .infinity, minHeight: m.todayHeight)
+            // Wat er los vandaag bij komt — een feestje, een fysio — krijgt
+            // hetzelfde tintje als in de lijst. Het glas snijdt zijn inhoud
+            // niet bij, dus loopt het tintje zelf om de bocht.
+            .background(
+                RoundedRectangle(cornerRadius: m.cardRadius, style: .continuous)
+                    .fill(item.special ? palette.special : .clear)
+            )
+        }
+        .accessibilityElement(children: .combine)
     }
 }

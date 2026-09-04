@@ -31,6 +31,11 @@ struct GlassTabs<Page: View>: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UITabBarController {
         let bars = UITabBarController()
         bars.delegate = context.coordinator
+        // Op de iPad hangt de balk van iOS 26 bovenaan, naast de titel. Hier
+        // is hij geen bladwijzer maar een knop voor kinderduimen, dus vragen
+        // we de balk die de iPhone krijgt: zwevend, met de knoppen midden
+        // onderaan. Dat is dezelfde balk, alleen op de smalle maat gezet.
+        bars.traitOverrides.horizontalSizeClass = .compact
         // Overdag inkt op het lichte glas: het oranje van de app loopt daar
         // weg tegen het grijs van de gekozen knop. 's Avonds mag het wel.
         bars.tabBar.tintColor = UIColor { traits in
@@ -38,6 +43,9 @@ struct GlassTabs<Page: View>: UIViewControllerRepresentable {
         }
         bars.viewControllers = items.map { item in
             let host = UIHostingController(rootView: page(item.tab))
+            // De bladzijde zelf blijft wél een iPad-bladzijde; alleen de balk
+            // doet of het scherm smal is.
+            host.traitOverrides.horizontalSizeClass = .regular
             // De bladzijde tekent haar eigen hemel; daaronder hoeft niets.
             host.view.backgroundColor = .clear
             host.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]

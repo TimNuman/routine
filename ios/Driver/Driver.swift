@@ -36,6 +36,12 @@ final class Driver: XCTestCase {
                 app.descendants(matching: .any)[step["id"] as? String ?? ""].firstMatch.tap()
             case "type":
                 app.typeText(step["text"] as? String ?? "")
+            case "rotate":
+                let side = step["side"] as? String ?? "landscape"
+                XCUIDevice.shared.orientation = side.hasPrefix("port") ? .portrait
+                                                                      : .landscapeLeft
+            case "dump":
+                print("=== BOOM ===\n" + app.debugDescription + "\n=== TOT ===")
             case "home":
                 XCUIDevice.shared.press(.home)
             case "activate":

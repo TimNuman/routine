@@ -320,7 +320,7 @@ private struct MorphCard: View, Animatable {
     }
 
     var body: some View {
-        Glass(radius: mix(22, full * 0.17), floating: true,
+        Glass(radius: mix(m.cardRadius, full * 0.17), floating: true,
               lift: mix(0.25, 1.5), rim: mix(0, 5)) {
             // Precies de opbouw van het kaartje in het raster: het plaatje
             // en de naam tussen twee veren, en de gezichtjes daaronder. Dus

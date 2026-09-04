@@ -5,6 +5,12 @@ struct Screen<Inner: View>: View {
     let subtitle: String
     var center: AnyView? = nil
     var trailing: AnyView? = nil
+    /// Wat er op een breed scherm rechts in de kop staat: de kinderen met hun
+    /// balkje, dat daar tegelijk de zeef is.
+    var aside: AnyView? = nil
+    /// Hoe hoog de kop op een breed scherm mag zijn. Is hij gezet, dan blijft
+    /// de kop staan en scrollen de kaarten eronderdoor.
+    var band: CGFloat? = nil
     var narrow: Bool = false
     @ViewBuilder var content: () -> Inner
 
@@ -12,10 +18,35 @@ struct Screen<Inner: View>: View {
     @Environment(\.metrics) private var m
     @Environment(\.palette) private var palette
 
+    private var pinned: Bool { band != nil && m.wide }
+
     var body: some View {
+        Group {
+            if let band, pinned {
+                VStack(spacing: 0) {
+                    bandHead
+                        .frame(height: max(96, band - SafeArea.top))
+                        .padding(.horizontal, m.gutter)
+                        .frame(maxWidth: m.maxWidth)
+                        .frame(maxWidth: .infinity)
+                    // Wat onder de kop door scrolt lost daar op, zodat er
+                    // niets hard tegen de kop aan loopt.
+                    pages.mask(hem)
+                }
+            } else {
+                pages
+            }
+        }
+        // De hemel hoort bij de bladzijde: de menubalk is de balk van het
+        // toestel, en die zet zijn eigen ondergrond onder de bladzijden.
+        .background { Sky(dark: household.evening) }
+        .overlay { if !pinned { fades } }
+    }
+
+    private var pages: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                header
+                if !pinned { header }
 
                 if household.content == nil && household.error.isEmpty {
                     ProgressView()
@@ -42,10 +73,6 @@ struct Screen<Inner: View>: View {
             .frame(maxWidth: .infinity)
         }
         .refreshable { await household.reload() }
-        // De hemel hoort bij de bladzijde: de menubalk is de balk van het
-        // toestel, en die zet zijn eigen ondergrond onder de bladzijden.
-        .background { Sky(dark: household.evening) }
-        .overlay { fades }
     }
 
     /// Boven zakt de hemel weg, zodat wat wegscrolt niet hard tegen de klok
@@ -58,18 +85,52 @@ struct Screen<Inner: View>: View {
             .allowsHitTesting(false)
     }
 
-    @ViewBuilder
-    private var header: some View {
-        let names = VStack(alignment: .leading, spacing: -3) {
-            Text(title).textStyle(Fonts.title).foregroundStyle(palette.ink)
+    /// Dezelfde zachte rand, maar dan in doorzichtigheid: de kleur onder de
+    /// kop is een andere dan die bovenaan het scherm, dus lost hier de inhoud
+    /// zelf op in plaats van dat er een kleur overheen ligt.
+    private var hem: LinearGradient {
+        LinearGradient(
+            stops: [
+                .init(color: .clear, location: 0),
+                .init(color: .black.opacity(0.35), location: 0.012),
+                .init(color: .black, location: 0.045),
+            ],
+            startPoint: .top, endPoint: .bottom
+        )
+    }
+
+    private var names: some View {
+        VStack(alignment: .leading, spacing: -3) {
+            Text(title)
+                .textStyle(Fonts.title(m.wide ? 46 : 36))
+                .foregroundStyle(palette.ink)
             HStack(spacing: 10) {
-                Text(subtitle).textStyle(Fonts.subtitle).foregroundStyle(palette.subtle)
+                Text(subtitle)
+                    .textStyle(Fonts.subtitle(m.wide ? 17 : 15))
+                    .foregroundStyle(palette.subtle)
                 if let trailing { trailing.frame(height: 20) }
                 Spacer(minLength: 0)
             }
         }
         .padding(.leading, m.indent)
+    }
 
+    /// De kop van een breed scherm: de dag links, de schakelaar in het midden
+    /// van het scherm, de kinderen rechts.
+    private var bandHead: some View {
+        HStack(alignment: .center, spacing: 20) {
+            names.fixedSize(horizontal: true, vertical: false)
+            Spacer(minLength: 0)
+            if let aside { aside.frame(maxWidth: 440) }
+        }
+        .overlay(alignment: .center) {
+            if let center { center.frame(width: 260) }
+        }
+        .entrance(0)
+    }
+
+    @ViewBuilder
+    private var header: some View {
         if m.wide {
             names
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -110,7 +171,7 @@ struct RootScreen: View {
 
     var body: some View {
         GeometryReader { space in
-            let m = Metrics(width: space.size.width)
+            let m = Metrics(width: space.size.width, height: space.size.height)
 
             GlassTabs(chosen: household.tab, onPick: { household.go($0) },
                       items: items, barHidden: household.sheetOpen) { tab in

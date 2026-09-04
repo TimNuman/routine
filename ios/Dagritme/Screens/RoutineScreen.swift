@@ -6,7 +6,9 @@ private struct Plan {
     var later: [Block] = []
     var all: [StepGroup] = []
     var groups: [StepGroup] = []
-    var sideStarts: [Int] = []
+    /// Waar de kaartjes van vandaag beginnen: onderaan op een breed scherm,
+    /// in een lijst op de telefoon.
+    var cardStarts: [Int] = []
     var earlyStarts: [Int] = []
     var laterStarts: [Int] = []
     var groupStarts: [Int] = []
@@ -83,27 +85,29 @@ struct RoutineScreen: View {
             out.tasks += group.steps
         }
 
-        var side = 0
-        for block in out.blocks {
-            out.sideStarts.append(side)
-            side += 1 + block.items.count
-        }
-
         var lead = 0
-        for block in out.early {
-            out.earlyStarts.append(lead)
-            lead += 1 + block.items.count
+        if !m.wide {
+            for block in out.early {
+                out.earlyStarts.append(lead)
+                lead += 1 + block.items.count
+            }
         }
-        if m.wide { lead = 0 }
 
         for group in out.groups {
             out.groupStarts.append(lead)
             lead += 1 + group.steps.count
         }
 
-        for block in out.later {
-            out.laterStarts.append(lead)
-            lead += 1 + block.items.count
+        if m.wide {
+            for block in out.blocks {
+                out.cardStarts.append(lead)
+                lead += 1 + block.items.count
+            }
+        } else {
+            for block in out.later {
+                out.laterStarts.append(lead)
+                lead += 1 + block.items.count
+            }
         }
         out.resetSlot = lead + 1
 
@@ -128,14 +132,19 @@ struct RoutineScreen: View {
     }
 
     var body: some View {
+        let today = Today(household.now)
+        let here = plan(household.routine, household.content, today)
+
         ZStack {
             Screen(
                 title: household.routine == .night ? String(localized: "Avond") : String(localized: "Ochtend"),
                 subtitle: dateText(household.now),
                 center: AnyView(Segment(routine: household.routine, onSelect: select,
-                                        topPad: m.wide ? 0 : 16))
+                                        topPad: m.wide ? 0 : 16)),
+                aside: m.wide ? AnyView(bars(here)) : nil,
+                band: m.wide ? m.band : nil
             ) {
-                pages
+                pages(here, today)
             }
 
             if focus.open, let content = household.content {
@@ -163,33 +172,9 @@ struct RoutineScreen: View {
     }
 
     @ViewBuilder
-    private var pages: some View {
-        let content = household.content
-        let today = Today(household.now)
-        let here = plan(household.routine, content, today)
-        let withSide = m.wide && !here.blocks.isEmpty
-
-        Group {
-            if m.wide {
-                HStack(alignment: .top, spacing: m.columnGap) {
-                    VStack(alignment: .leading, spacing: 0) {
-                        columns(content, here, today)
-                    }
-                    .padding(.top, withSide ? 31 : 0)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                    if withSide, let content {
-                        SlideView(slide: panes, span: m.width + 60) { r in
-                            sidePane(r, content, plan(r, content, today))
-                        }
-                        .frame(width: m.sideColumn)
-                    }
-                }
-            } else {
-                VStack(alignment: .leading, spacing: 0) {
-                    columns(content, here, today)
-                }
-            }
+    private func pages(_ here: Plan, _ today: Today) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            columns(household.content, here, today)
         }
         .onChange(of: household.routine, initial: true) { _, fresh in
             if live { panes.go(to: fresh) } else { panes.jump(to: fresh); live = true }
@@ -198,12 +183,7 @@ struct RoutineScreen: View {
 
     @ViewBuilder
     private func columns(_ content: Content?, _ here: Plan, _ today: Today) -> some View {
-        if let content {
-            ProgressBars(people: content.people, tallies: tallies(content, here.all),
-                         topPad: m.wide ? 0 : 14,
-                         visible: visible, filtered: filtered, onSelect: toggleChild)
-                .entrance(1)
-        }
+        if !m.wide { bars(here).entrance(1) }
 
         SlideView(slide: panes, span: m.width + 60) { r in
             pane(r, content, r == household.routine ? here : plan(r, content, today))
@@ -213,21 +193,24 @@ struct RoutineScreen: View {
         .animation(Motion.glide, value: panes.arriving)
     }
 
+    /// De kinderen met hun balkje: op een breed scherm rechts in de kop,
+    /// op de telefoon boven de kaartjes. Het is tegelijk de zeef — tik een
+    /// kind aan en alleen zijn stappen blijven staan.
+    @ViewBuilder
+    private func bars(_ here: Plan) -> some View {
+        if let content = household.content {
+            ProgressBars(people: content.people, tallies: tallies(content, here.all),
+                         topPad: m.wide ? 0 : 14,
+                         visible: visible, filtered: filtered, onSelect: toggleChild)
+        }
+    }
+
     private func pane(_ r: Routine, _ content: Content?, _ plan: Plan) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             if let content { column(r, content, plan) }
         }
         .onGeometryChange(for: CGFloat.self, of: { $0.size.height },
                           action: { heights[r] = $0 })
-    }
-
-    private func sidePane(_ r: Routine, _ content: Content, _ plan: Plan) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            ForEach(Array(plan.blocks.enumerated()), id: \.element.id) { (i, block) in
-                Agenda(block: block, people: content.people, side: true, first: i == 0,
-                       slot: plan.sideStarts[i])
-            }
-        }
     }
 
     @ViewBuilder
@@ -243,9 +226,13 @@ struct RoutineScreen: View {
             let start = plan.groupStarts[gi]
 
             HStack(alignment: .firstTextBaseline, spacing: 12) {
-                Text(group.name).textStyle(Fonts.group).foregroundStyle(palette.ink)
+                Text(group.name)
+                    .textStyle(Fonts.group(m.wide ? 22 : 17))
+                    .foregroundStyle(palette.ink)
                 if !group.time.isEmpty {
-                    Text(group.time).textStyle(Fonts.groupTime).foregroundStyle(palette.muted)
+                    Text(group.time)
+                        .textStyle(Fonts.groupTime(m.wide ? 15 : 13))
+                        .foregroundStyle(palette.muted)
                 }
             }
             .padding(.top, 20)
@@ -266,7 +253,12 @@ struct RoutineScreen: View {
             }
         }
 
-        if !m.wide {
+        if m.wide {
+            ForEach(Array(plan.blocks.enumerated()), id: \.element.id) { (i, block) in
+                AgendaCards(block: block, people: content.people,
+                            slot: plan.cardStarts[i])
+            }
+        } else {
             ForEach(Array(plan.later.enumerated()), id: \.element.id) { (i, block) in
                 Agenda(block: block, people: content.people,
                        slot: plan.laterStarts[i])
@@ -333,7 +325,7 @@ private struct Card: View {
     var body: some View {
         let key = step.key
 
-        Glass(radius: 22) {
+        Glass(radius: m.cardRadius) {
             VStack(spacing: m.cardGap) {
                 VStack(spacing: m.cardGap) {
                     Spacer(minLength: 0)
@@ -372,6 +364,7 @@ private struct Card: View {
             }
             .padding(.horizontal, m.cardX)
             .padding(.vertical, m.cardY)
+            // Vierkant, net als de kaart die er groot uit groeit.
             .frame(maxWidth: .infinity, minHeight: m.cardHeight)
         }
         .scaleEffect(allDone ? 0.985 : 1)

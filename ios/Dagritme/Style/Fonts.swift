@@ -17,16 +17,20 @@ enum Fonts {
     static func nunito(_ size: CGFloat) -> Font { .custom("Nunito-Bold", fixedSize: size) }
     static func nunitoHeavy(_ size: CGFloat) -> Font { .custom("Nunito-ExtraBold", fixedSize: size) }
 
-    static let title = TextStyle(font: balooHeavy(36), tracking: -0.5)
-    static let subtitle = TextStyle(font: nunito(15))
-    static let group = TextStyle(font: balooHeavy(17))
-    static let groupTime = TextStyle(font: nunito(13))
+    static func title(_ size: CGFloat = 36) -> TextStyle {
+        TextStyle(font: balooHeavy(size), tracking: -0.5)
+    }
+    static func subtitle(_ size: CGFloat = 15) -> TextStyle { TextStyle(font: nunito(size)) }
+    static func group(_ size: CGFloat = 17) -> TextStyle { TextStyle(font: balooHeavy(size)) }
+    static func groupTime(_ size: CGFloat = 13) -> TextStyle { TextStyle(font: nunito(size)) }
     static func taskName(_ size: CGFloat) -> TextStyle { TextStyle(font: baloo(size)) }
     static let name = TextStyle(font: balooHeavy(16))
     static let tally = TextStyle(font: nunitoHeavy(12.5))
     static let button = TextStyle(font: balooHeavy(15))
     static let childName = TextStyle(font: nunitoHeavy(11))
-    static let blockHead = TextStyle(font: balooHeavy(16))
+    static func blockHead(_ size: CGFloat = 16) -> TextStyle {
+        TextStyle(font: balooHeavy(size))
+    }
     static let agendaName = TextStyle(font: baloo(15.5))
     static let agendaTime = TextStyle(font: nunitoHeavy(12.5))
     static let tag = TextStyle(font: balooHeavy(12.5))

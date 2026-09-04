@@ -95,11 +95,11 @@ private struct Welcome<Inner: View>: View {
                     VStack(alignment: .leading, spacing: 0) {
                         VStack(alignment: .leading, spacing: -3) {
                             Text("☀️").font(.system(size: 54)).padding(.bottom, 6)
-                            Text("Routines").textStyle(Fonts.title).foregroundStyle(INK)
+                            Text("Routines").textStyle(Fonts.title()).foregroundStyle(INK)
                             Text(subtitle.isEmpty
                                  ? String(localized: "Het dagritme van jullie huis, op elke telefoon tegelijk.")
                                  : subtitle)
-                                .textStyle(Fonts.subtitle).foregroundStyle(SOFT_INK)
+                                .textStyle(Fonts.subtitle()).foregroundStyle(SOFT_INK)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         .padding(.leading, m.indent)
