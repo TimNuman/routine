@@ -5,6 +5,9 @@ private let MAX_QUESTIONS = 2
 struct AssistantSheet: View {
     @Environment(Household.self) private var household
     let content: Content
+    /// Tekst die al klaarstaat — dan slaat het blad het invulvak over en gaat
+    /// meteen lezen. Zo begint een leeg huis: je typt op de bladzijde zelf.
+    var opening: String = ""
     let onCancel: () -> Void
     let onSave: (Draft) async -> String?
 
@@ -81,26 +84,46 @@ struct AssistantSheet: View {
                     }
 
                 case .suggestions:
-                    FormHead(String(localized: "Voorstellen"), first: true)
-                    Glass(radius: 22) {
-                        VStack(spacing: 0) {
-                            ForEach(Array(items.enumerated()), id: \.element.id) { (i, item) in
-                                if i > 0 { HairLine() }
-                                Found(
-                                    item: item,
-                                    on: i < picked.count && picked[i],
-                                    people: content.people,
-                                    onCheck: { if i < picked.count { picked[i].toggle() } },
-                                    onOpen: { draft = asDraft(content); editing = i }
-                                )
+                    ForEach(Array(chapters.enumerated()), id: \.offset) { (c, chapter) in
+                        FormHead(chapter.title, first: c == 0)
+                        Glass(radius: 22) {
+                            VStack(spacing: 0) {
+                                ForEach(Array(chapter.rows.enumerated()), id: \.offset) { (row, i) in
+                                    if row > 0 { HairLine() }
+                                    Found(
+                                        item: items[i],
+                                        on: i < picked.count && picked[i],
+                                        people: everyone,
+                                        onCheck: { if i < picked.count { picked[i].toggle() } },
+                                        onOpen: { draft = asDraft(content); editing = i }
+                                    )
+                                }
                             }
                         }
+                        .padding(.top, 4)
                     }
-                    .padding(.top, 4)
                 }
             }
 
-            if let i = editing, i < items.count, let working = draft {
+            if let i = editing, i < items.count, let person = items[i].person {
+                ChildSheet(
+                    title: person.name.isEmpty ? String(localized: "Kind") : person.name,
+                    child: ChildData(id: person.id, name: person.name, emoji: person.emoji,
+                                     color: COLORS[0], traits: person.traits,
+                                     birthday: person.birthday),
+                    onCancel: { editing = nil },
+                    onSave: { fresh in
+                        items[i].person = NewPerson(id: person.id, name: fresh.name,
+                                                    emoji: fresh.emoji.isEmpty ? "🙂" : fresh.emoji,
+                                                    birthday: fresh.birthday,
+                                                    traits: fresh.traits)
+                        items[i].entry.icon = fresh.emoji.isEmpty ? "🙂" : fresh.emoji
+                        items[i].entry.text = fresh.name
+                        if i < picked.count { picked[i] = true }
+                        editing = nil
+                    }
+                )
+            } else if let i = editing, i < items.count, let working = draft {
                 EntrySheet(
                     title: items[i].entry.text.isEmpty ? String(localized: "Voorstel") : items[i].entry.text,
                     entry: withGroup(items[i].entry, working),
@@ -109,13 +132,49 @@ struct AssistantSheet: View {
                     people: content.people,
                     onCancel: { editing = nil },
                     onSave: { fresh in
-                        let source = items[i].source
-                        items[i] = Suggestion(entry: fresh, source: source)
+                        items[i].entry = fresh
                         if i < picked.count { picked[i] = true }
                         editing = nil
                     }
                 )
             }
+        }
+        .task {
+            guard !opening.isEmpty, message.isEmpty else { return }
+            message = opening
+            await read()
+        }
+    }
+
+    /// De kinderen zoals ze straks heten: die er al zijn plus die in deze
+    /// ronde voorgesteld worden. Alleen om namen te tonen bij een voorstel.
+    private var everyone: [Person] {
+        content.people + items.compactMap { item in
+            item.person.map {
+                Person(id: $0.id, name: $0.name, emoji: $0.emoji, color: COLORS[0],
+                       traits: $0.traits, birthday: $0.birthday)
+            }
+        }
+    }
+
+    /// De voorstellen op een hoop is een lijst waar niemand doorheen komt.
+    /// Dus in stukken, in de volgorde waarin ze in de app landen.
+    private struct Chapter {
+        var title: String
+        var rows: [Int]
+    }
+
+    private var chapters: [Chapter] {
+        let all = Array(items.indices)
+        let parts: [(String, (Suggestion) -> Bool)] = [
+            (String(localized: "Kinderen"), { $0.person != nil }),
+            (String(localized: "In het ritme"), { $0.person == nil && $0.entry.task }),
+            (String(localized: "Elke week"), { $0.person == nil && !$0.entry.task && $0.entry.weekly }),
+            (String(localized: "Eenmalig"), { $0.person == nil && !$0.entry.task && !$0.entry.weekly }),
+        ]
+        return parts.compactMap { (title, matches) in
+            let rows = all.filter { matches(items[$0]) }
+            return rows.isEmpty ? nil : Chapter(title: title, rows: rows)
         }
     }
 
@@ -169,7 +228,8 @@ struct AssistantSheet: View {
                 text: message,
                 today: dateString(Date()),
                 round: round + 1,
-                children: content.people
+                children: content.people,
+                house: content
             ), household.endpoint)
         } catch let problem as ReadError {
             phase = .paste
@@ -200,7 +260,10 @@ struct AssistantSheet: View {
             return
         }
 
-        let found = out["items"].array.compactMap { cleanSuggestion($0, content.people) }
+        // De kinderen eerst: de rest van de voorstellen wijst met "who" naar
+        // de ids die de uitlezer daar verzon.
+        let found = out["people"].array.compactMap(cleanPerson)
+            + out["items"].array.compactMap { cleanSuggestion($0, content.people) }
         items = found
         picked = found.map { _ in true }
         phase = found.isEmpty ? .nothing : .suggestions
@@ -237,29 +300,74 @@ struct AssistantSheet: View {
             return
         }
         let working = asDraft(content)
-        for suggestion in chosen where !alreadyKnown(working, suggestion.entry) {
-            placeEntry(working, suggestion.entry, "", nil)
+
+        // Eerst de kinderen. De uitlezer verzon hun id en wijst daar met "who"
+        // naar; hier wordt dat een echt id, en onthouden we welk id waarheen
+        // ging zodat de rest van de voorstellen bij de goede naam landt.
+        var real: [String: String] = [:]
+        for suggestion in chosen {
+            guard let person = suggestion.person else { continue }
+            if let existing = working.people.first(where: {
+                $0.name.lowercased() == person.name.lowercased()
+            }) {
+                real[person.id] = existing.id
+                continue
+            }
+            let id = freeId(person.id, working)
+            real[person.id] = id
+            working.people.append(DraftPerson(
+                id: id,
+                name: person.name,
+                emoji: person.emoji.isEmpty ? "🙂" : person.emoji,
+                color: COLORS[working.people.count % COLORS.count],
+                traits: person.traits,
+                birthday: person.birthday
+            ))
         }
+
+        let known = Set(working.people.map { $0.id })
+        for suggestion in chosen where suggestion.person == nil {
+            var entry = suggestion.entry
+            let wanted = entry.who
+            entry.who = wanted.map { real[$0] ?? $0 }.filter { known.contains($0) }
+            // Ging dit alleen over een kind dat niet meegaat, dan gaat het
+            // voorstel ook niet mee — anders werd het ineens voor iedereen.
+            if !wanted.isEmpty && entry.who.isEmpty { continue }
+            if alreadyKnown(working, entry) { continue }
+            placeEntry(working, entry, "", nil)
+        }
+
         if let problem = await onSave(working) { alert = problem } else { onCancel() }
+    }
+
+    /// Het id dat de uitlezer verzon, of hetzelfde met een cijfer erachter als
+    /// het al bezet is.
+    private func freeId(_ wanted: String, _ working: Draft) -> String {
+        let taken = Set(working.people.map { $0.id })
+        let base = wanted.isEmpty ? newId() : wanted
+        if !taken.contains(base) { return base }
+        for n in 2...20 where !taken.contains("\(base)\(n)") { return "\(base)\(n)" }
+        return newId()
     }
 }
 
-private struct PasteBox: View {
+struct PasteBox: View {
     @Binding var value: String
+    var hint: String = String(localized: """
+        Plak een mail of appje, typ het gewoon —
+
+        iedere dinsdag om 18:00 tennis Emma
+
+        — of vraag om iets:
+
+        maak een voedings- en slaapschema voor Filip
+        """)
     @Environment(\.palette) private var palette
 
     var body: some View {
         ZStack(alignment: .topLeading) {
             if value.isEmpty {
-                Text("""
-                    Plak een mail of appje, typ het gewoon —
-
-                    iedere dinsdag om 18:00 tennis Emma
-
-                    — of vraag om iets:
-
-                    maak een voedings- en slaapschema voor Filip
-                    """)
+                Text(hint)
                     .textStyle(TextStyle(font: Fonts.nunito(14)))
                     .foregroundStyle(SOFT_INK.opacity(0.7))
                     .padding(.horizontal, 16)
@@ -395,6 +503,16 @@ private struct Found: View {
     }
 
     private var meta: String {
+        // Een kind vertelt iets anders dan een afspraak: wanneer hij jarig is
+        // en wat er van hem bekend is.
+        if let person = item.person {
+            let age = person.birthday.isEmpty ? "" : longDate(person.birthday)
+            let known = person.traits.sorted { $0.key < $1.key }
+                .map { "\($0.key): \($0.value)" }
+                .joined(separator: " · ")
+            let both = [age, known].filter { !$0.isEmpty }
+            return both.isEmpty ? String(localized: "nieuw kind") : both.joined(separator: " · ")
+        }
         let e = item.entry
         let when = e.weekly ? (daysText(e.days).isEmpty ? String(localized: "elke dag") : daysText(e.days))
                             : longDate(e.date)

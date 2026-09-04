@@ -57,6 +57,7 @@ describe('cleaning the payload', () => {
       ],
     });
     expect(clean).toEqual({
+      house: { day: [], night: [], week: [] },
       text: 'Tennis on Tuesday',
       today: '2026-09-02',
       round: 2,
@@ -79,6 +80,46 @@ describe('cleaning the payload', () => {
 
   it('caps the text length', () => {
     expect(cleanPayload({ text: 'x'.repeat(30_000) }).text).toHaveLength(20_000);
+  });
+});
+
+describe('what already stands', () => {
+  it('keeps the shape of the house, not the one-off things', () => {
+    const clean = cleanPayload({
+      text: 'hi',
+      house: {
+        day: [{ name: ' Boven ', time: '6:00 – 6:30', steps: ['Wakker worden', '', 42] }, 'garbage'],
+        night: [],
+        week: ['School', ''],
+        events: [{ text: 'Fysio' }],
+      },
+    });
+    expect(clean.house).toEqual({
+      day: [{ name: 'Boven', time: '6:00 – 6:30', steps: ['Wakker worden', '42'] }],
+      night: [],
+      week: ['School'],
+    });
+    expect(clean.house).not.toHaveProperty('events');
+  });
+
+  it('tells the model what it does not have to propose again', () => {
+    const text = promptText(
+      cleanPayload({
+        text: 'hi',
+        house: {
+          day: [{ name: 'Boven', time: '6:00 – 6:30', steps: ['Tanden poetsen'] }],
+          week: ['School'],
+        },
+      }),
+    );
+    expect(text).toContain('- ochtend, Boven (6:00 – 6:30): Tanden poetsen');
+    expect(text).toContain('- elke week: School');
+  });
+
+  it('says so when the app is still empty', () => {
+    const text = promptText(cleanPayload({ text: 'wij zijn met z\'n drieën' }));
+    expect(text).toContain('- nog geen. De app is leeg.');
+    expect(text).toContain('- nog niets.');
   });
 });
 

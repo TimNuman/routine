@@ -125,6 +125,14 @@ School, voetbal, judo en de bso sturen mail. In plaats van die over te tikken
 plak je hem op **Deze week** onder *Typ of plak iets*. Zelf typen mag net zo
 goed: *iedere dinsdag om 18:00 tennis Emma* werkt precies zo.
 
+Is de app nog leeg — een nieuw account, een nieuw huis — dan begint hij daar
+meteen mee. In plaats van een leeg ritme staat er één groot vak met een
+voorbeeld erin: *Wij zijn met z'n vijven. Emma is van 3 juli 2020, groep 3B op
+de Vondelschool…* Wat je daar schrijft komt terug als voorstellen met vinkjes —
+de kinderen bovenaan, dan het ochtend- en avondritme, dan de week — en pas als
+je op de knop drukt staat het huis er. De kinderen worden dan als eerste
+aangemaakt, zodat de weekregels en de stappen naar de goede naam kunnen wijzen.
+
 Je kunt er ook gewoon om vragen. *Maak een voedings- en slaapschema voor Filip*
 is geen tekst om uit te lezen maar een opdracht, en dan bedenkt hij het zelf —
 met wat er van dat kind bekend is. Staat Filips geboortedag in zijn profiel, dan

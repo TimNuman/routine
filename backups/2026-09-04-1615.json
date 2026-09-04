@@ -1,0 +1,690 @@
+{
+  "made": "2026-09-04T14:15:09.065Z",
+  "url": "https://routine.tim-numan.workers.dev",
+  "content": {
+    "week": [
+      {
+        "icon": "🏫",
+        "text": "School",
+        "days": [
+          "mon",
+          "tue",
+          "thu",
+          "fri"
+        ]
+      },
+      {
+        "icon": "🏫",
+        "time": "12:30",
+        "days": [
+          "wed"
+        ],
+        "text": "Kort school"
+      },
+      {
+        "days": [
+          "tue",
+          "fri"
+        ],
+        "icon": "🚌",
+        "until": "17:00",
+        "time": "14:30",
+        "text": "BSO"
+      },
+      {
+        "icon": "🚌",
+        "days": [
+          "wed"
+        ],
+        "until": "17:00",
+        "text": "Lang BSO",
+        "time": "12:30"
+      },
+      {
+        "icon": "👨",
+        "text": "Papadag",
+        "days": [
+          "mon"
+        ]
+      },
+      {
+        "text": "Mamadag",
+        "icon": "👩🏻",
+        "days": [
+          "thu"
+        ]
+      },
+      {
+        "time": "14:45",
+        "icon": "🏊",
+        "until": "15:15",
+        "days": [
+          "mon"
+        ],
+        "who": [
+          "emma"
+        ],
+        "text": "Zwemmen"
+      },
+      {
+        "icon": "🏊",
+        "days": [
+          "mon"
+        ],
+        "text": "Zwemmen",
+        "until": "17:00",
+        "time": "16:15",
+        "who": [
+          "mads"
+        ]
+      },
+      {
+        "icon": "🏋️",
+        "text": "Papa sporten",
+        "time": "20:00",
+        "days": [
+          "mon",
+          "wed"
+        ],
+        "evening": true
+      },
+      {
+        "who": [
+          "mads"
+        ],
+        "days": [
+          "wed"
+        ],
+        "until": "16:45",
+        "text": "Voetbal",
+        "time": "15:45",
+        "icon": "⚽"
+      },
+      {
+        "time": "10:00",
+        "days": [
+          "sat"
+        ],
+        "text": "Turnen",
+        "icon": "🤸",
+        "who": [
+          "emma"
+        ]
+      },
+      {
+        "icon": "⚽",
+        "who": [
+          "mads"
+        ],
+        "text": "Voetbal",
+        "days": [
+          "sat"
+        ],
+        "time": "11:00"
+      },
+      {
+        "text": "Niks",
+        "days": [
+          "sun"
+        ],
+        "icon": "🏡"
+      },
+      {
+        "time": "9:30",
+        "icon": "✏️",
+        "text": "Bouw",
+        "days": [
+          "sat"
+        ],
+        "who": [
+          "emma"
+        ]
+      }
+    ],
+    "events": [
+      {
+        "id": "pygx1p3",
+        "icon": "🚲",
+        "text": "Verkeersles",
+        "date": "2026-09-04"
+      },
+      {
+        "icon": "🚸",
+        "text": "Verkeersles op het plein",
+        "date": "2026-09-04",
+        "id": "poxb3s9"
+      },
+      {
+        "who": [
+          "emma"
+        ],
+        "text": "Feestje Sara",
+        "date": "2026-09-06",
+        "id": "py8vq2r",
+        "icon": "🎉",
+        "time": "13:00"
+      },
+      {
+        "icon": "🤸",
+        "text": "Sportdag onderbouw",
+        "id": "pbo16gv",
+        "date": "2026-09-23"
+      },
+      {
+        "text": "Fysio",
+        "until": "13:30",
+        "date": "2026-09-25",
+        "time": "13:00",
+        "id": "pkp1r89",
+        "icon": "🩺",
+        "who": [
+          "emma"
+        ]
+      },
+      {
+        "text": "Cadeautje voor Emilia kopen",
+        "date": "2026-09-26",
+        "who": [
+          "emma"
+        ],
+        "id": "pe618f7",
+        "icon": "🎁"
+      },
+      {
+        "time": "11:30",
+        "until": "14:00",
+        "date": "2026-09-27",
+        "text": "Verjaardag Emilia café Leuk",
+        "id": "p00f99e",
+        "icon": "🍬",
+        "who": [
+          "emma"
+        ]
+      }
+    ],
+    "eveningFrom": 17,
+    "version": 2,
+    "day": [
+      {
+        "name": "Boven",
+        "time": "6:00 – 6:30",
+        "steps": [
+          {
+            "icon": "🛏️",
+            "label": "Wakker worden"
+          },
+          {
+            "icon": "🪥",
+            "label": "Tanden poetsen"
+          },
+          {
+            "icon": "👕",
+            "label": "Aankleden"
+          },
+          {
+            "label": "Sokken aan",
+            "icon": "🧦"
+          },
+          {
+            "date": "2026-09-03",
+            "icon": "❤️",
+            "label": "Test"
+          }
+        ]
+      },
+      {
+        "name": "Beneden",
+        "steps": [
+          {
+            "icon": "💇",
+            "label": "Haren kammen"
+          },
+          {
+            "icon": "🥣",
+            "label": "Ontbijt"
+          },
+          {
+            "label": "Spelen",
+            "icon": "🧸"
+          },
+          {
+            "icon": "💻",
+            "who": [
+              "emma"
+            ],
+            "days": [
+              "sat",
+              "wed"
+            ],
+            "label": "Bouw doen"
+          }
+        ],
+        "time": "6:30 – 7:30"
+      },
+      {
+        "time": "8:00 – 8:15",
+        "name": "Weggaan",
+        "steps": [
+          {
+            "icon": "👟",
+            "label": "Schoenen aan",
+            "days": [
+              "mon",
+              "tue",
+              "wed",
+              "thu",
+              "fri"
+            ]
+          },
+          {
+            "icon": "🐱",
+            "label": "Knuffel",
+            "days": [
+              "mon",
+              "tue",
+              "wed",
+              "thu",
+              "fri"
+            ]
+          },
+          {
+            "icon": "⚽",
+            "who": [
+              "mads"
+            ],
+            "days": [
+              "wed"
+            ],
+            "label": "Voetbaltas"
+          },
+          {
+            "icon": "🎒",
+            "label": "Tas & jas",
+            "days": [
+              "mon",
+              "tue",
+              "wed",
+              "thu",
+              "fri"
+            ]
+          },
+          {
+            "icon": "🚪",
+            "label": "Naar school!",
+            "days": [
+              "mon",
+              "tue",
+              "wed",
+              "thu",
+              "fri"
+            ]
+          },
+          {
+            "who": [
+              "emma"
+            ],
+            "label": "Fiets mee",
+            "date": "2026-09-04",
+            "icon": "🚲"
+          }
+        ]
+      }
+    ],
+    "night": [
+      {
+        "name": "Beneden",
+        "time": "18:00 – 18:45",
+        "steps": [
+          {
+            "icon": "🍽️",
+            "label": "Avondeten"
+          },
+          {
+            "icon": "🧸",
+            "label": "Even spelen"
+          }
+        ]
+      },
+      {
+        "name": "Boven",
+        "steps": [
+          {
+            "label": "Uitkleden",
+            "icon": "🧺"
+          },
+          {
+            "label": "Bad",
+            "icon": "🛁"
+          },
+          {
+            "icon": "🐢",
+            "label": "Afdrogen"
+          },
+          {
+            "icon": "👕",
+            "label": "Pyjama aan"
+          },
+          {
+            "label": "Tanden poetsen",
+            "icon": "🪥"
+          },
+          {
+            "icon": "🚽",
+            "label": "Plassen"
+          }
+        ],
+        "time": "18:45 – 19:15"
+      },
+      {
+        "time": "19:15 – 19:30",
+        "steps": [
+          {
+            "icon": "🤗",
+            "label": "Knuffel"
+          },
+          {
+            "icon": "📖",
+            "label": "Voorlezen"
+          },
+          {
+            "icon": "🌙",
+            "label": "Licht uit"
+          }
+        ],
+        "name": "Naar bed"
+      }
+    ],
+    "people": [
+      {
+        "id": "emma",
+        "emoji": "🐴",
+        "color": "#3B82C4",
+        "traits": {
+          "School": "Vondelschool",
+          "schoolgroep": "3B"
+        },
+        "name": "Emma"
+      },
+      {
+        "id": "mads",
+        "name": "Mads",
+        "traits": {
+          "schoolgroep": "1-2D",
+          "School": "Vondelschool"
+        },
+        "emoji": "🐱",
+        "color": "#2FA37C"
+      }
+    ],
+    "title": "Routine Emma en Mads"
+  },
+  "days": {
+    "2026-09-04": {
+      "day/schoenen-aan/p51bb2c": true,
+      "day/haren-kammen/emma": true,
+      "day/haren-kammen/mads": true,
+      "day/haren-kammen/p51bb2c": true,
+      "day/haren-kammen/pb2b4e6": true,
+      "day/sokken-aan/p51bb2c": true,
+      "day/sokken-aan/pb2b4e6": true,
+      "day/sokken-aan/mads": true,
+      "day/wakker-worden/emma": true,
+      "day/wakker-worden/mads": true,
+      "day/wakker-worden/p51bb2c": true,
+      "night/uitkleden/emma": true,
+      "day/spelen/mads": true,
+      "day/tanden-poetsen/emma": true,
+      "day/ontbijt/emma": true,
+      "day/ontbijt/mads": true,
+      "day/tas-jas/emma": true,
+      "day/tas-jas/mads": true,
+      "day/sokken-aan/emma": true,
+      "day/aankleden/emma": true,
+      "day/aankleden/mads": true,
+      "day/tanden-poetsen/mads": true
+    },
+    "2026-09-03": {
+      "day/aankleden/pc89f8f": true,
+      "day/aankleden/emma": true,
+      "night/even-spelen/pc89f8f": true,
+      "night/even-spelen/mads": true,
+      "night/avondeten/emma": true,
+      "night/avondeten/mads": true,
+      "night/uitkleden/emma": true,
+      "night/uitkleden/mads": true,
+      "night/tanden-poetsen/mads": true,
+      "day/aankleden/mads": true,
+      "night/afdrogen/emma": true,
+      "night/afdrogen/mads": true,
+      "night/pyjama-aan/mads": true,
+      "night/pyjama-aan/emma": true,
+      "night/tanden-poetsen/emma": true,
+      "night/plassen/emma": true,
+      "night/plassen/mads": true,
+      "night/knuffel/emma": true,
+      "night/knuffel/mads": true,
+      "night/voorlezen/emma": true,
+      "night/licht-uit/emma": true,
+      "night/licht-uit/mads": true,
+      "day/knuffel/mads": true,
+      "day/knuffel/emma": true,
+      "day/tas-jas/mads": true,
+      "day/tas-jas/emma": true,
+      "day/schoenen-aan/emma": true,
+      "day/schoenen-aan/mads": true,
+      "night/bad/mads": true,
+      "day/naar-school/emma": true,
+      "day/naar-school/mads": true,
+      "night/bad/emma": true,
+      "day/test/emma": true,
+      "day/test/mads": true,
+      "night/voorlezen/mads": true,
+      "night/even-spelen/emma": true
+    },
+    "2026-09-02": {
+      "day/wakker-worden/mads": true,
+      "day/wakker-worden/emma": true,
+      "day/tanden-poetsen/mads": true,
+      "day/sokken-aan/mads": true,
+      "day/aankleden/mads": true,
+      "day/ontbijt/mads": true,
+      "day/tanden-poetsen/emma": true,
+      "day/sokken-aan/emma": true,
+      "day/spelen/emma": true,
+      "day/aankleden/emma": true,
+      "day/ontbijt/emma": true,
+      "day/bouw-doen/emma": true,
+      "day/schoenen-aan/emma": true,
+      "day/schoenen-aan/mads": true,
+      "day/knuffel/emma": true,
+      "day/knuffel/mads": true,
+      "day/voetbaltas/mads": true,
+      "day/tas-jas/emma": true,
+      "day/tas-jas/mads": true,
+      "day/naar-school/emma": true,
+      "day/naar-school/mads": true,
+      "day/haren-kammen/emma": true,
+      "day/haren-kammen/mads": true,
+      "day/spelen/mads": true,
+      "night/avondeten/emma": true,
+      "night/even-spelen/emma": true,
+      "night/uitkleden/emma": true,
+      "night/bad/emma": true,
+      "night/afdrogen/emma": true,
+      "night/pyjama-aan/emma": true,
+      "night/plassen/emma": true,
+      "night/even-spelen/mads": true,
+      "night/avondeten/mads": true,
+      "night/afdrogen/mads": true,
+      "night/bad/mads": true,
+      "night/uitkleden/mads": true,
+      "night/plassen/mads": true,
+      "night/pyjama-aan/mads": true,
+      "night/tanden-poetsen/mads": true,
+      "night/knuffel/emma": true,
+      "night/voorlezen/emma": true,
+      "night/licht-uit/emma": true,
+      "night/tanden-poetsen/emma": true,
+      "night/knuffel/mads": true,
+      "night/voorlezen/mads": true,
+      "night/licht-uit/mads": true
+    },
+    "2026-09-01": {
+      "day/ontbijt/mads": true,
+      "day/spelen/mads": true,
+      "day/tanden-poetsen/mads": true,
+      "day/knuffel/mads": true,
+      "day/tanden-poetsen/emma": true,
+      "day/aankleden/emma": true,
+      "day/haren-kammen/emma": true,
+      "day/spelen/emma": true,
+      "day/sokken-aan/mads": true,
+      "day/sokken-aan/emma": true,
+      "day/haren-kammen/mads": true,
+      "day/naar-school/emma": true,
+      "day/naar-school/mads": true,
+      "day/schoenen-aan/emma": true,
+      "day/schoenen-aan/mads": true,
+      "day/tas-jas/emma": true,
+      "day/tas-jas/mads": true,
+      "day/knuffel/emma": true,
+      "day/ontbijt/emma": true,
+      "day/wakker-worden/mads": true,
+      "day/wakker-worden/emma": true,
+      "day/aankleden/mads": true,
+      "night/avondeten/emma": true,
+      "night/even-spelen/emma": true,
+      "night/avondeten/mads": true,
+      "night/even-spelen/mads": true,
+      "night/bad/emma": true,
+      "night/pyjama-aan/emma": true,
+      "night/tanden-poetsen/emma": true,
+      "night/plassen/emma": true,
+      "night/plassen/mads": true,
+      "night/tanden-poetsen/mads": true,
+      "night/pyjama-aan/mads": true,
+      "night/knuffel/mads": true,
+      "night/knuffel/emma": true,
+      "night/voorlezen/emma": true,
+      "night/licht-uit/emma": true,
+      "night/licht-uit/mads": true,
+      "night/voorlezen/mads": true,
+      "night/uitkleden/emma": true,
+      "night/uitkleden/mads": true,
+      "night/afdrogen/emma": true,
+      "night/bad/mads": true,
+      "night/afdrogen/mads": true
+    },
+    "2026-08-31": {
+      "day/tanden-poetsen/emma": true,
+      "day/haren-kammen/emma": true,
+      "day/aankleden/emma": true,
+      "day/spelen/emma": true,
+      "day/ontbijt/emma": true,
+      "day/ontbijt/mads": true,
+      "day/haren-kammen/mads": true,
+      "day/schoenen-aan/emma": true,
+      "day/schoenen-aan/mads": true,
+      "day/tas-jas/emma": true,
+      "day/tas-jas/mads": true,
+      "day/knuffel/emma": true,
+      "day/naar-school/emma": true,
+      "day/naar-school/mads": true,
+      "day/spelen/mads": true,
+      "day/knuffel/mads": true,
+      "day/tanden-poetsen/mads": true,
+      "day/wakker-worden/emma": true,
+      "day/wakker-worden/mads": true,
+      "day/aankleden/mads": true,
+      "night/avondeten/mads": true,
+      "night/avondeten/emma": true,
+      "night/even-spelen/emma": true,
+      "night/even-spelen/mads": true,
+      "night/bad/mads": true,
+      "night/pyjama-aan/emma": true,
+      "night/bad/emma": true,
+      "night/pyjama-aan/mads": true,
+      "night/tanden-poetsen/mads": true,
+      "night/plassen/mads": true,
+      "night/plassen/emma": true,
+      "night/tanden-poetsen/emma": true,
+      "night/knuffel/emma": true,
+      "night/voorlezen/emma": true,
+      "night/licht-uit/emma": true,
+      "night/voorlezen/mads": true,
+      "night/knuffel/mads": true,
+      "night/licht-uit/mads": true
+    },
+    "2026-08-30": {
+      "night/avondeten/emma": true,
+      "night/even-spelen/emma": true,
+      "night/avondeten/mads": true,
+      "night/even-spelen/mads": true,
+      "night/pyjama-aan/emma": true,
+      "night/pyjama-aan/mads": true,
+      "night/tanden-poetsen/mads": true,
+      "night/tanden-poetsen/emma": true,
+      "night/plassen/mads": true,
+      "night/bad/emma": true,
+      "night/bad/mads": true,
+      "night/knuffel/emma": true,
+      "night/voorlezen/emma": true,
+      "night/knuffel/mads": true,
+      "night/voorlezen/mads": true,
+      "night/licht-uit/mads": true,
+      "night/licht-uit/emma": true,
+      "night/plassen/emma": true,
+      "day/wakker-worden/emma": true,
+      "day/aankleden/mads": true,
+      "day/tanden-poetsen/emma": true,
+      "day/wakker-worden/mads": true,
+      "day/tanden-poetsen/mads": true,
+      "day/aankleden/emma": true,
+      "day/ontbijt/emma": true,
+      "day/ontbijt/mads": true,
+      "day/spelen/mads": true,
+      "day/spelen/emma": true,
+      "night/avondeten/pd77448": true,
+      "night/even-spelen/pd77448": true,
+      "night/bad/pd77448": true,
+      "night/pyjama-aan/pd77448": true,
+      "night/tanden-poetsen/pd77448": true,
+      "night/plassen/pd77448": true,
+      "night/knuffel/pd77448": true,
+      "night/voorlezen/pd77448": true,
+      "night/licht-uit/pd77448": true
+    },
+    "2026-08-29": {
+      "day/wakker-worden/emma": true,
+      "day/wakker-worden/mads": true,
+      "day/haren-kammen/emma": true,
+      "day/ontbijt/emma": true,
+      "day/spelen/emma": true,
+      "day/aankleden/mads": true,
+      "day/ontbijt/mads": true,
+      "day/spelen/mads": true,
+      "day/tanden-poetsen/emma": true,
+      "night/avondeten/mads": true,
+      "night/bad/mads": true,
+      "night/pyjama-aan/mads": true,
+      "night/avondeten/emma": true,
+      "night/even-spelen/emma": true,
+      "night/bad/emma": true,
+      "night/tanden-poetsen/emma": true,
+      "night/plassen/mads": true,
+      "night/plassen/emma": true,
+      "night/voorlezen/emma": true,
+      "night/voorlezen/mads": true,
+      "night/licht-uit/mads": true,
+      "night/licht-uit/emma": true,
+      "night/tanden-poetsen/mads": true,
+      "night/knuffel/mads": true,
+      "night/knuffel/emma": true,
+      "day/tanden-poetsen/mads": true,
+      "day/aankleden/emma": true,
+      "day/haren-kammen/mads": true,
+      "night/even-spelen/mads": true,
+      "night/pyjama-aan/emma": true
+    }
+  }
+}

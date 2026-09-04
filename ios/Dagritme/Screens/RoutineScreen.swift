@@ -25,6 +25,9 @@ struct RoutineScreen: View {
     /// De schuif tussen ochtend en avond; de schakelaar zet hem in gang.
     @State private var panes = Slide<Routine>(.day)
     @State private var live = false
+    @State private var typed = ""
+    @State private var opening = ""
+    @State private var assistantOpen = false
     @Environment(\.metrics) private var m
     @Environment(\.palette) private var palette
 
@@ -139,13 +142,35 @@ struct RoutineScreen: View {
 
         ZStack {
             Screen(
-                title: household.routine == .night ? String(localized: "Avond") : String(localized: "Ochtend"),
-                subtitle: dateText(household.now),
-                center: AnyView(Segment(routine: household.routine, onSelect: select,
-                                        topPad: 16)),
-                aside: m.wide ? AnyView(bars(here)) : nil
+                title: fresh ? String(localized: "Hallo!")
+                    : (household.routine == .night ? String(localized: "Avond")
+                                                   : String(localized: "Ochtend")),
+                subtitle: fresh ? String(localized: "laten we je huis opzetten")
+                                : dateText(household.now),
+                center: fresh ? nil : AnyView(Segment(routine: household.routine,
+                                                      onSelect: select, topPad: 16)),
+                aside: m.wide && !fresh ? AnyView(bars(here)) : nil,
+                quiet: fresh
             ) {
-                pages(here, today)
+                if fresh {
+                    Start(typed: $typed) {
+                        opening = typed.trimmingCharacters(in: .whitespacesAndNewlines)
+                        assistantOpen = true
+                    }
+                } else {
+                    pages(here, today)
+                }
+            }
+
+            if assistantOpen {
+                AssistantSheet(
+                    content: household.content ?? Content(title: "", people: [], day: [],
+                                                          night: [], week: [], events: []),
+                    opening: opening,
+                    onCancel: { assistantOpen = false; household.sheetOpen = false },
+                    onSave: { await household.save($0) }
+                )
+                .environment(\.palette, Palette(dark: false))
             }
 
             if focus.open, let content = household.content {
@@ -158,7 +183,19 @@ struct RoutineScreen: View {
         // Zolang een stap groot staat blijft de menubalk weg, net als bij
         // een blad.
         .onChange(of: focus.open) { _, open in household.sheetOpen = open }
+        .onChange(of: assistantOpen) { _, open in household.sheetOpen = open }
         .onDisappear { household.sheetOpen = false }
+    }
+
+    /// Een huis waar nog niets in staat. Dan is er geen ritme om te tonen,
+    /// maar wel iets te vertellen: wie er in huis zijn.
+    private var fresh: Bool {
+        guard household.opened else { return false }
+        guard let content = household.content else { return true }
+        return content.people.isEmpty
+            && stepCount(content.day) + stepCount(content.night) == 0
+            && content.week.isEmpty
+            && content.events.isEmpty
     }
 
     private func toggleChild(_ id: String) {
@@ -298,6 +335,46 @@ private struct ResetButton: View {
         .accessibilityIdentifier("routine.reset")
         .frame(maxWidth: .infinity)
         .padding(.top, 22)
+    }
+}
+
+/// Het begin van een leeg huis: één vak waarin je vertelt wie er in huis
+/// zijn. Wat je daar schrijft gaat naar de uitlezer, en die maakt er kinderen,
+/// een ritme en een week van — als voorstellen met een vinkje, dus je ziet
+/// alles voordat het er staat.
+private struct Start: View {
+    @Binding var typed: String
+    let onRead: () -> Void
+
+    @Environment(\.metrics) private var m
+    @Environment(\.palette) private var palette
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("Vertel wie er in huis zijn en wat er op een dag gebeurt. Ik maak er de kinderen, een ochtend- en avondritme en de week bij.")
+                .textStyle(TextStyle(font: Fonts.nunito(m.wide ? 17 : 15)))
+                .foregroundStyle(palette.subtle)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.horizontal, m.indent)
+                .padding(.top, 6)
+                .padding(.bottom, 18)
+
+            Paper(radius: 26) {
+                PasteBox(value: $typed, hint: String(localized: """
+                    Wij zijn met z'n vijven. Emma is van 3 juli 2020, groep 3B op de \
+                    Vondelschool. Mads is van 12 april 2022. Filip is van 4 augustus 2026.
+
+                    Di, wo en vr gaan ze naar de bso, en Mads voetbalt op woensdagmiddag.
+                    """))
+                    .frame(minHeight: m.wide ? 260 : 200)
+            }
+
+            CardButton(String(localized: "Maak er een ritme van"), glyph: "✨",
+                       id: "start.read", onTap: onRead)
+                .padding(.top, 16)
+        }
+        .frame(maxWidth: 640, alignment: .leading)
+        .entrance(1)
     }
 }
 

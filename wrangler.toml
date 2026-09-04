@@ -24,6 +24,9 @@ tag = "v2"
 renamed_classes = [{ from = "Huis", to = "House" }]
 
 [vars]
+# Hoeveel moeite de uitlezer doet. Een gezin opzetten is meer werk dan een
+# schoolmail lezen, en op "low" laat hij de helft van de velden leeg.
+EFFORT = "low"
 # Which house. One name, here on the server, so the app never needs to know it.
 HOUSEHOLD = "huis-9f3k2a"
 # Which app may sign in. The bundle id is the audience of Apple's id token; the

@@ -9,6 +9,9 @@ struct Screen<Inner: View>: View {
     /// balkje, dat daar tegelijk de zeef is.
     var aside: AnyView? = nil
     var narrow: Bool = false
+    /// De bladzijde zorgt zelf voor wat er staat als er niets is; dan hoeft er
+    /// geen molentje of foutregel overheen.
+    var quiet: Bool = false
     @ViewBuilder var content: () -> Inner
 
     @Environment(Household.self) private var household
@@ -28,14 +31,14 @@ struct Screen<Inner: View>: View {
             VStack(alignment: .leading, spacing: 0) {
                 header
 
-                if household.content == nil && household.error.isEmpty {
+                if household.content == nil && household.error.isEmpty && !quiet {
                     ProgressView()
                         .tint(ORANGE)
                         .padding(.top, 40)
                         .frame(maxWidth: .infinity)
                         .entrance(1)
                 }
-                if !household.error.isEmpty {
+                if !household.error.isEmpty && !quiet {
                     Text("De inhoud laden lukte niet (\(household.error)).")
                         .textStyle(TextStyle(font: Fonts.nunitoHeavy(14)))
                         .foregroundStyle(RED)
@@ -148,8 +151,8 @@ struct RootScreen: View {
                     .environment(\.entranceOn, launching)
             }
             .ignoresSafeArea()
-            .task(id: household.content == nil) {
-                guard household.content != nil else { return }
+            .task(id: household.opened) {
+                guard household.opened else { return }
                 try? await Task.sleep(for: .seconds(2))
                 launching = false
             }

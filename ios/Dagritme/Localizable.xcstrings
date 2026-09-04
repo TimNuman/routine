@@ -32,13 +32,35 @@
     "„%@”" : {
 
     },
+    "%@ wordt %lld" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ wordt %2$lld"
+          }
+        }
+      }
+    },
     "%lld" : {
+
+    },
+    "%lld dagen" : {
 
     },
     "%lld dingen op een datum" : {
 
     },
+    "%lld jaar" : {
+
+    },
+    "%lld maanden" : {
+
+    },
     "%lld stappen" : {
+
+    },
+    "%lld weken" : {
 
     },
     "%lld weken terug" : {
@@ -543,6 +565,9 @@
         }
       }
     },
+    "Elke week" : {
+
+    },
     "Er is geen huis om in te bewaren." : {
 
     },
@@ -762,6 +787,9 @@
     "Haal eerst de stappen uit '%@'." : {
 
     },
+    "Hallo!" : {
+
+    },
     "Het dagritme van jullie huis, op elke telefoon tegelijk." : {
 
     },
@@ -877,6 +905,9 @@
       }
     },
     "Ik heb een code" : {
+
+    },
+    "In het ritme" : {
 
     },
     "In welk ritme" : {
@@ -1043,6 +1074,9 @@
         }
       }
     },
+    "laten we je huis opzetten" : {
+
+    },
     "Lees uit" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1061,6 +1095,9 @@
 
     },
     "Maak een code en stuur die naar de ander. Die tikt hem in bij Ouders en verzorgers op zijn eigen telefoon." : {
+
+    },
+    "Maak er een ritme van" : {
 
     },
     "Mensen" : {
@@ -1220,6 +1257,9 @@
         }
       }
     },
+    "Nog niet ingevuld" : {
+
+    },
     "nu zonder account" : {
 
     },
@@ -1334,9 +1374,6 @@
     "papa, mama, oma…" : {
 
     },
-    "Plak een mail of appje, of typ het gewoon:\n\niedere dinsdag om 18:00 tennis Emma" : {
-
-    },
     "Plak een mail of appje, of typ het gewoon:\\n\\niedere dinsdag om 18:00 tennis Emma" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1347,6 +1384,9 @@
           }
         }
       }
+    },
+    "Plak een mail of appje, typ het gewoon —\n\niedere dinsdag om 18:00 tennis Emma\n\n— of vraag om iets:\n\nmaak een voedings- en slaapschema voor Filip" : {
+
     },
     "Plak eerst een bericht." : {
       "extractionState" : "manual",
@@ -1529,6 +1569,12 @@
         }
       }
     },
+    "Verjaardag" : {
+
+    },
+    "Vertel wie er in huis zijn en wat er op een dag gebeurt. Ik maak er de kinderen, een ochtend- en avondritme en de week bij." : {
+
+    },
     "Verwijderen" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1628,17 +1674,6 @@
         }
       }
     },
-    "Week" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Week"
-          }
-        }
-      }
-    },
     "Waar hoort dit bij?" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1690,6 +1725,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Wat we verder weten"
+          }
+        }
+      }
+    },
+    "Week" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Week"
           }
         }
       }
@@ -1750,6 +1796,12 @@
       }
     },
     "Wie doet mee" : {
+
+    },
+    "Wij zijn met z'n vijven. Emma is van 3 juli 2020, groep 3B op de Vondelschool. Mads is van 12 april 2022. Filip is van 4 augustus 2026.\n\nDi, wo en vr gaan ze naar de bso, en Mads voetbalt op woensdagmiddag." : {
+
+    },
+    "Wissen" : {
 
     },
     "Zet er %lld in de app" : {

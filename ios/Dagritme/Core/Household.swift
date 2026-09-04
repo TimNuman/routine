@@ -20,6 +20,10 @@ struct Tick: Equatable {
 @Observable
 final class Household {
     var content: Content?
+    /// Heeft het huis zich al gemeld? Zonder dit is een leeg huis niet te
+    /// onderscheiden van een huis dat nog aan het laden is — en een nieuw huis
+    /// is leeg.
+    var opened = false
     var error = ""
     var checks: Checks = [:]
     var routine: Routine = .day
@@ -52,6 +56,7 @@ final class Household {
         stream?.stop()
         stream = nil
         content = nil
+        opened = false
         checks = [:]
         error = ""
         guard endpoint != nil else { return }
@@ -68,6 +73,7 @@ final class Household {
             let (c, v) = try await (fresh, stored)
             content = c
             checks = v
+            opened = true
             error = ""
             if !chosen {
                 routine = calendar.component(.hour, from: Date()) >= EVENING_FROM ? .night : .day
@@ -161,6 +167,7 @@ final class Household {
             // met een start, en die hoeft het scherm niet opnieuw op te bouwen.
             case let .start(_, fresh, stored):
                 self.error = ""
+                self.opened = true
                 if !fresh.isNull {
                     let content = normalize(fresh)
                     if content != self.content { self.content = content }

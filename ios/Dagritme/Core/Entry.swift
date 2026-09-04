@@ -12,6 +12,8 @@ struct Entry {
     var who: [String] = []
     var routine: Routine = .day
     var group: String = ""
+    /// De klok van een groep die nog gemaakt moet worden ("6:00 – 6:30").
+    var groupTime: String = ""
     var evening: Bool = false
 }
 
@@ -113,11 +115,15 @@ func placeEntry(_ source: Draft, _ e: Entry, _ id: String, _ origin: Origin?) {
 
     if e.task {
         var groups = source[e.routine]
-        var target = groups.first { trimmed($0.name) == trimmed(e.group) } ?? groups.last
+        // Een naam die er nog niet is wordt een nieuw onderdeel; zonder naam
+        // valt de stap in het laatste onderdeel dat er is.
+        let wanted = trimmed(e.group)
+        var target = groups.first { trimmed($0.name) == wanted }
+        if target == nil && wanted.isEmpty { target = groups.last }
         if target == nil {
             let fresh = DraftGroup(name: trimmed(e.group).isEmpty
                                        ? String(localized: "Erbij") : trimmed(e.group),
-                                   time: "", steps: [])
+                                   time: trimmed(e.groupTime), steps: [])
             groups.append(fresh)
             target = fresh
         }
