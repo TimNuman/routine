@@ -210,12 +210,16 @@ eigen telefoon en tikt de code in; daarna is dat huis het huis dat zijn app
 laat zien (`homes` staat op volgorde van meest recent lid geworden).
 
 ```
-GET    /api/v2/homes/:home/members            { members: [{ id, name, email, role, nickname, emoji, color }] }
-PUT    /api/v2/homes/:home/members/me         { nickname, emoji, color } — hoe de kinderen je noemen
+GET    /api/v2/homes/:home/members            { members: [{ id, name, email, role, nickname, emoji, color, birthday }] }
+PUT    /api/v2/homes/:home/members/me         { nickname, emoji, color, birthday } — hoe de kinderen je noemen
 DELETE /api/v2/homes/:home/members/:user      alleen de owner; niet zichzelf
 POST   /api/v2/homes/:home/invites            → { code, expiresAt }
 POST   /api/v2/invites/:code/accept           → { home }, of 404/410 met reden
 ```
+
+`birthday` is `jjjj-mm-dd` of niets; wat er geen datum is wordt niets. De app
+rekent daar zelf de verjaardagen mee uit, er staat dus geen afspraak in de
+inhoud die iemand elk jaar moet bijwerken.
 
 De code gaat ook als link: `https://<worker>/join/ABCD-EFGH`. Die pagina
 (`join.ts`) laat de code zien en heeft een knop *Open in Routines* die

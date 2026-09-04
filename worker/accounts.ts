@@ -24,12 +24,14 @@ export interface Member {
   nickname: string | null;
   emoji: string | null;
   color: string | null;
+  birthday: string | null;
 }
 
 export interface Profile {
   nickname: string | null;
   emoji: string | null;
   color: string | null;
+  birthday: string | null;
 }
 
 export interface Invite {
@@ -119,7 +121,7 @@ export class Accounts {
   async members(homeId: string): Promise<Member[]> {
     const { results } = await this.db
       .prepare(
-        `SELECT u.id, u.name, u.email, m.role, m.nickname, m.emoji, m.color FROM users u
+        `SELECT u.id, u.name, u.email, m.role, m.nickname, m.emoji, m.color, m.birthday FROM users u
          JOIN memberships m ON m.user_id = u.id
          WHERE m.home_id = ? ORDER BY m.created_at`,
       )
@@ -130,8 +132,10 @@ export class Accounts {
 
   async updateMember(homeId: string, userId: string, profile: Profile): Promise<boolean> {
     const { meta } = await this.db
-      .prepare('UPDATE memberships SET nickname = ?, emoji = ?, color = ? WHERE home_id = ? AND user_id = ?')
-      .bind(profile.nickname, profile.emoji, profile.color, homeId, userId)
+      .prepare(
+        'UPDATE memberships SET nickname = ?, emoji = ?, color = ?, birthday = ? WHERE home_id = ? AND user_id = ?',
+      )
+      .bind(profile.nickname, profile.emoji, profile.color, profile.birthday, homeId, userId)
       .run();
     return meta.changes > 0;
   }

@@ -240,14 +240,17 @@ func normalize(_ raw: Json) -> Content {
     return out
 }
 
-func itemsOn(_ content: Content, _ d: Date) -> [AgendaItem] {
+/// `also` zijn de mensen die niet in de inhoud staan maar wel in het huis: de
+/// ouders en verzorgers. Ze doen niet mee in het ritme, maar hun verjaardag
+/// hoort er net zo goed bij.
+func itemsOn(_ content: Content, _ d: Date, also extra: [Person] = []) -> [AgendaItem] {
     let day = DAYS[weekdayIndex(d)]
     let date = dateString(d)
     let special = content.events.filter { $0.date == date }.map { AgendaItem(oneOff: $0) }
     let weekly = content.week
         .filter { $0.days.isEmpty || $0.days.contains(day) }
         .map { AgendaItem(week: $0) }
-    return birthdaysOn(content.people, d) + special + weekly
+    return birthdaysOn(content.people + extra, d) + special + weekly
 }
 
 /// De verjaardagen van het huis. Ze staan nergens als afspraak opgeschreven:
@@ -286,9 +289,12 @@ func ageText(_ birthday: String, on day: Date = Date()) -> String {
     return String(localized: "\(max(0, days)) dagen")
 }
 
-func routineBlocks(_ content: Content, _ routine: Routine, _ now: Date) -> [Block] {
+func routineBlocks(_ content: Content, _ routine: Routine, _ now: Date,
+                   also extra: [Person] = []) -> [Block] {
     let clock = minuteOfDay(now)
-    let daytime = { (d: Date) in itemsOn(content, d).filter { !isEvening($0, EVENING_FROM) } }
+    let daytime = { (d: Date) in
+        itemsOn(content, d, also: extra).filter { !isEvening($0, EVENING_FROM) }
+    }
 
     if routine != .night {
         return [Block(heading: String(localized: "Vandaag"),
@@ -297,7 +303,8 @@ func routineBlocks(_ content: Content, _ routine: Routine, _ now: Date) -> [Bloc
     let tomorrow = calendar.date(byAdding: .day, value: 1, to: now) ?? now
     return [
         Block(heading: String(localized: "Vanavond"),
-              items: byTime(itemsOn(content, now).filter { isEvening($0, EVENING_FROM) },
+              items: byTime(itemsOn(content, now, also: extra)
+                                .filter { isEvening($0, EVENING_FROM) },
                             past: clock)),
         Block(heading: String(localized: "Morgen"),
               items: byTime(daytime(tomorrow), past: nil), later: true),

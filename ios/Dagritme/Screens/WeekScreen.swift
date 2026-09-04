@@ -2,6 +2,7 @@ import SwiftUI
 
 struct WeekScreen: View {
     @Environment(Household.self) private var household
+    @Environment(Session.self) private var session
     @Environment(\.palette) private var palette
     @Environment(\.metrics) private var m
 
@@ -46,7 +47,7 @@ struct WeekScreen: View {
 
     private var blocks: [Block] {
         guard let content = household.content else { return [] }
-        let items = itemsOn(content, selected)
+        let items = itemsOn(content, selected, also: session.members.map(\.asPerson))
         let today = dateString(selected) == dateString(household.now)
         return [
             Block(heading: String(localized: "Overdag"),

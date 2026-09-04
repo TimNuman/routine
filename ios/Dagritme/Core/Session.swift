@@ -24,6 +24,9 @@ struct Member: Identifiable, Equatable {
     var nickname: String?
     var emoji: String?
     var color: String?
+    /// De geboortedag, als `jjjj-mm-dd`. Net als bij een kind: staat hij er,
+    /// dan is deze persoon elk jaar op die dag vanzelf jarig in de agenda.
+    var birthday: String?
 
     var label: String { nickname ?? name ?? email ?? String(localized: "zonder naam") }
     var face: String { emoji ?? "🙂" }
@@ -31,7 +34,8 @@ struct Member: Identifiable, Equatable {
 
     /// Dezelfde vorm als een kind, voor de gestapelde gezichtjes op een rij.
     var asPerson: Person {
-        Person(id: id, name: label, emoji: face, color: color ?? COLORS[0], traits: [:])
+        Person(id: id, name: label, emoji: face, color: color ?? COLORS[0], traits: [:],
+               birthday: birthday ?? "")
     }
 }
 
@@ -256,10 +260,12 @@ final class Session {
     }
 
     /// Je eigen gezicht en naam in dit huis. Geeft de hele lijst terug.
-    func updateMember(nickname: String, emoji: String, color: String) async throws -> [Member] {
+    func updateMember(nickname: String, emoji: String, color: String,
+                      birthday: String) async throws -> [Member] {
         guard let home else { return [] }
         let out = try await request("PUT", "homes/\(home.id)/members/me",
-                                    ["nickname": nickname, "emoji": emoji, "color": color])
+                                    ["nickname": nickname, "emoji": emoji, "color": color,
+                                     "birthday": birthday])
         members = membersFrom(out)
         return members
     }
@@ -278,7 +284,8 @@ final class Session {
                    role: $0["role"].text,
                    nickname: $0["nickname"].text.isEmpty ? nil : $0["nickname"].text,
                    emoji: $0["emoji"].text.isEmpty ? nil : $0["emoji"].text,
-                   color: $0["color"].text.isEmpty ? nil : $0["color"].text)
+                   color: $0["color"].text.isEmpty ? nil : $0["color"].text,
+                   birthday: isDate($0["birthday"].text) ? $0["birthday"].text : nil)
         }
     }
 

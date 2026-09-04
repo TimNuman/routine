@@ -21,6 +21,7 @@ private struct Plan {
 
 struct RoutineScreen: View {
     @Environment(Household.self) private var household
+    @Environment(Session.self) private var session
     /// De schuif tussen ochtend en avond; de schakelaar zet hem in gang.
     @State private var panes = Slide<Routine>(.day)
     @State private var live = false
@@ -50,7 +51,8 @@ struct RoutineScreen: View {
         var out = Plan()
         guard let content else { return out }
 
-        out.blocks = routineBlocks(content, r, household.now)
+        out.blocks = routineBlocks(content, r, household.now,
+                                   also: session.members.map(\.asPerson))
             .map { block in
                 var block = block
                 block.items = block.items.filter(belongs)

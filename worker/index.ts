@@ -21,7 +21,7 @@ import {
   refreshExpiry,
   verifyIdToken,
 } from './auth';
-import { dateOr } from './dates';
+import { dateOr, isDate } from './dates';
 import type { House } from './house';
 import { joinPage, siteAssociation } from './join';
 import { isRoutine } from './types';
@@ -220,6 +220,7 @@ function cleanProfile(raw: Record<string, unknown>): Profile {
     nickname: text(raw.nickname, MAX_NAME) || null,
     emoji: emoji || null,
     color: COLOR.test(color) ? color.toUpperCase() : null,
+    birthday: isDate(raw.birthday) ? raw.birthday : null,
   };
 }
 

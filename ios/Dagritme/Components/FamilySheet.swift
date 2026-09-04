@@ -104,10 +104,12 @@ struct FamilySheet: View {
             }
 
             if let editing {
-                MemberSheet(member: editing, onCancel: { self.editing = nil }) { nickname, emoji, color in
+                MemberSheet(member: editing,
+                            onCancel: { self.editing = nil }) { nickname, emoji, color, birthday in
                     Task {
                         do {
-                            members = try await session.updateMember(nickname: nickname, emoji: emoji, color: color)
+                            members = try await session.updateMember(
+                                nickname: nickname, emoji: emoji, color: color, birthday: birthday)
                             alert = ""
                         } catch {
                             alert = error.localizedDescription
@@ -220,26 +222,78 @@ struct MemberFace: View {
 /// als het blad voor een kind.
 struct MemberSheet: View {
     let onCancel: () -> Void
-    let onSave: (String, String, String) -> Void
+    let onSave: (String, String, String, String) -> Void
 
     @State private var nickname: String
     @State private var emoji: String
     @State private var color: String
+    @State private var birthday: String
     @State private var picker = false
 
+    @Environment(\.palette) private var palette
+
     init(member: Member, onCancel: @escaping () -> Void,
-         onSave: @escaping (String, String, String) -> Void) {
+         onSave: @escaping (String, String, String, String) -> Void) {
         self.onCancel = onCancel
         self.onSave = onSave
         _nickname = State(initialValue: member.nickname ?? "")
         _emoji = State(initialValue: member.face)
         _color = State(initialValue: member.color ?? COLORS[0])
+        _birthday = State(initialValue: member.birthday ?? "")
+    }
+
+    /// Dezelfde invulregel als bij een kind: de compacte DatePicker ligt er
+    /// onzichtbaar onder voor de tik en de kalender, met een eigen knop
+    /// eroverheen.
+    @ViewBuilder
+    private var born: some View {
+        HStack(spacing: 10) {
+            DatePicker("Verjaardag", selection: bornBinding, in: ...Date(),
+                       displayedComponents: [.date])
+                .datePickerStyle(.compact)
+                .labelsHidden()
+                .opacity(0.02)
+                .overlay {
+                    Chip(label: bornLabel, on: !birthday.isEmpty) {}
+                        .allowsHitTesting(false)
+                }
+                .accessibilityIdentifier("member.birthday")
+                .accessibilityLabel(Spoken.date)
+
+            if !birthday.isEmpty {
+                Text(ageText(birthday))
+                    .textStyle(Fonts.listNote)
+                    .foregroundStyle(palette.muted)
+                Spacer(minLength: 0)
+                TextButton(String(localized: "Wissen"), id: "member.birthday.clear") {
+                    birthday = ""
+                }
+            } else {
+                Spacer(minLength: 0)
+            }
+        }
+        .padding(.leading, 4)
+    }
+
+    private var bornLabel: String {
+        guard let day = asDate(birthday) else { return String(localized: "Nog niet ingevuld") }
+        return day.formatted(.dateTime.day().month(.abbreviated).year()
+            .locale(.autoupdatingCurrent))
+    }
+
+    private var bornBinding: Binding<Date> {
+        Binding(
+            get: { asDate(birthday) ?? Date() },
+            set: { birthday = dateString($0) }
+        )
     }
 
     var body: some View {
         ZStack {
             Sheet(title: String(localized: "Jij"), button: String(localized: "Bewaar"), onCancel: onCancel,
-                  onButton: { onSave(nickname.trimmingCharacters(in: .whitespaces), emoji, color) }) {
+                  onButton: {
+                      onSave(nickname.trimmingCharacters(in: .whitespaces), emoji, color, birthday)
+                  }) {
                 FormHead(String(localized: "Hoe noemen de kinderen je?"), first: true)
                 HStack(spacing: 10) {
                     EmojiButton(value: emoji, size: 52) { picker = true }
@@ -262,6 +316,9 @@ struct MemberSheet: View {
                         .accessibilityLabel(Spoken.color)
                     }
                 }
+
+                FormHead(String(localized: "Verjaardag"))
+                born
             }
 
             if picker {

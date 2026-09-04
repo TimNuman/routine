@@ -106,7 +106,9 @@ in het weekritme — daar verschijnt de naam als gekleurd label.
 
 Bij een kind hoort ook een **verjaardag**, en die hoeft nergens anders heen: wie
 een geboortedag in zijn profiel heeft is elk jaar op die dag vanzelf jarig in de
-agenda — *Emma wordt 7*, met een taart erbij. Er staat dus geen afspraak die
+agenda — *Emma wordt 7*, met een taart erbij. Bij de ouders en verzorgers staat
+hetzelfde veld (*Instellingen → Ouders en verzorgers →* je eigen regel), dus de
+kinderen zien ook wanneer papa jarig is. Er staat dus geen afspraak die
 iemand elk jaar moet bijwerken; de app rekent het uit. En de uitlezer weet
 daardoor hoe oud iedereen is.
 

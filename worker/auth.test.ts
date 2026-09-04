@@ -371,20 +371,33 @@ describe('invites', () => {
 
     const me = await call(`/api/v2/homes/${home.id}/members/me`, {
       method: 'PUT',
-      body: JSON.stringify({ nickname: ' papa ', emoji: '🧔', color: '#7c6bd6', extra: 'x' }),
+      body: JSON.stringify({
+        nickname: ' papa ',
+        emoji: '🧔',
+        color: '#7c6bd6',
+        birthday: '1988-06-21',
+        extra: 'x',
+      }),
       headers: { Authorization: 'Bearer ' + guest.accessToken },
     });
     expect(me.status).toBe(200);
     const { members } = (await me.json()) as { members: Record<string, unknown>[] };
-    expect(members[1]).toMatchObject({ id: guest.user.id, nickname: 'papa', emoji: '🧔', color: '#7C6BD6' });
+    expect(members[1]).toMatchObject({
+      id: guest.user.id,
+      nickname: 'papa',
+      emoji: '🧔',
+      color: '#7C6BD6',
+      birthday: '1988-06-21',
+    });
 
     const badColor = await call(`/api/v2/homes/${home.id}/members/me`, {
       method: 'PUT',
-      body: JSON.stringify({ nickname: 'papa', color: 'blue' }),
+      body: JSON.stringify({ nickname: 'papa', color: 'blue', birthday: 'ooit' }),
       headers: { Authorization: 'Bearer ' + guest.accessToken },
     });
     const cleaned = (await badColor.json()) as { members: Record<string, unknown>[] };
     expect(cleaned.members[1]?.color).toBeNull();
+    expect(cleaned.members[1]?.birthday).toBeNull();
 
     const notMine = await call(`/api/v2/homes/${home.id}/members/${owner.user.id}`, {
       method: 'PUT',
