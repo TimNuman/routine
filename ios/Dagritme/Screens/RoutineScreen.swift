@@ -140,9 +140,8 @@ struct RoutineScreen: View {
                 title: household.routine == .night ? String(localized: "Avond") : String(localized: "Ochtend"),
                 subtitle: dateText(household.now),
                 center: AnyView(Segment(routine: household.routine, onSelect: select,
-                                        topPad: m.wide ? 0 : 16)),
-                aside: m.wide ? AnyView(bars(here)) : nil,
-                band: m.wide ? m.band : nil
+                                        topPad: 16)),
+                aside: m.wide ? AnyView(bars(here)) : nil
             ) {
                 pages(here, today)
             }

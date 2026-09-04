@@ -193,10 +193,10 @@ gaat het over op de indeling voor een iPad in liggende stand.
 Een kaartje is vierkant, met de squircle van de kaart die er groot uit komt: de
 breedte volgt uit het raster en de hoogte is dezelfde, dus één maat regelt alles.
 Er passen er twee naast elkaar op een telefoon, vier op een staande iPad en vijf
-op een liggende. Op die liggende iPad staat de kop stil in het bovenste kwart van
-het scherm — de dag links, de schakelaar in het midden, de kinderen rechts — en
-schuiven de kaarten eronderdoor. Wat er vandaag verder nog is staat daar niet in
-een lijst maar in dezelfde kaartjes, onder het ritme.
+op een liggende. Op die liggende iPad staat de kop op één regel — de dag met de
+schakelaar eronder links, de kinderen met hun balkje rechts — en scrolt hij
+gewoon mee: het is een bladzijde, geen balk. Wat er vandaag verder nog is staat
+daar niet in een lijst maar in dezelfde kaartjes, onder het ritme.
 
 ## Talen
 

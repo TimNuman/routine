@@ -2,9 +2,6 @@ import SwiftUI
 
 struct Metrics {
     let width: CGFloat
-    /// De hoogte van het scherm, niet van de bladzijde: hij bepaalt op de
-    /// iPad hoeveel de kop bovenaan mag innemen.
-    var height: CGFloat = 844
 
     private var tight: Bool { width <= 360 }
     private var roomy: Bool { width >= 700 }
@@ -19,11 +16,6 @@ struct Metrics {
     // daarboven nog bij komt, zodat het laatste kaartje niet in de waas valt.
     var bottomPad: CGFloat { 40 }
     var maxWidth: CGFloat { 1280 }
-
-    /// De kop van het dagritme op een breed scherm: een kwart van de hoogte,
-    /// met de titel, de schakelaar en de kinderen naast elkaar. Hij scrolt
-    /// niet mee — de kaarten schuiven eronderdoor.
-    var band: CGFloat { max(150, height * 0.25) }
 
     /// Hoeveel er van links naar rechts naast elkaar past. Op de telefoon
     /// twee, zodat een kaart groot genoeg is om met een kinderduim te raken.
