@@ -111,7 +111,13 @@ func cleanSuggestion(_ raw: Json, _ people: [Person]) -> Suggestion? {
     entry.who = raw["who"].array.map { $0.text }.filter { !$0.isEmpty }
     entry.routine = raw["routine"].text == "night" ? .night : .day
     entry.group = raw["group"].text
-    entry.groupTime = raw["groupTime"].text
+    // Bij een stap is de tijd niet van de stap maar van het onderdeel waar hij
+    // in valt: "Boven, 6:30 – 7:00". Zo komt hij ook in de app te staan.
+    if entry.task {
+        entry.groupTime = timeText(time: entry.time, until: entry.until)
+        entry.time = ""
+        entry.until = ""
+    }
 
     if entry.text.isEmpty { return nil }
     guard entry.weekly || !entry.date.isEmpty else { return nil }

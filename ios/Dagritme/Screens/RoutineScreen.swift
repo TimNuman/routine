@@ -28,6 +28,11 @@ struct RoutineScreen: View {
     @State private var typed = ""
     @State private var opening = ""
     @State private var assistantOpen = false
+    @State private var kids: [ChildData] = []
+    @State private var saving = false
+    /// "Dat doe ik later" op het tweede scherm: dan is het huis nog leeg maar
+    /// staat het gewone ritme er weer, met wat er is.
+    @State private var skipped = false
     @Environment(\.metrics) private var m
     @Environment(\.palette) private var palette
 
@@ -145,17 +150,28 @@ struct RoutineScreen: View {
                 title: fresh ? String(localized: "Hallo!")
                     : (household.routine == .night ? String(localized: "Avond")
                                                    : String(localized: "Ochtend")),
-                subtitle: fresh ? String(localized: "laten we je huis opzetten")
-                                : dateText(household.now),
+                subtitle: fresh
+                    ? (household.content?.people.isEmpty ?? true
+                        ? String(localized: "laten we je huis opzetten")
+                        : String(localized: "nog één ding: de week"))
+                    : dateText(household.now),
                 center: fresh ? nil : AnyView(Segment(routine: household.routine,
                                                       onSelect: select, topPad: 16)),
                 aside: m.wide && !fresh ? AnyView(bars(here)) : nil,
                 quiet: fresh
             ) {
                 if fresh {
-                    Start(typed: $typed) {
-                        opening = typed.trimmingCharacters(in: .whitespacesAndNewlines)
-                        assistantOpen = true
+                    if household.content?.people.isEmpty ?? true {
+                        StartWho(kids: $kids, busy: saving) {
+                            Task { await savePeople() }
+                        }
+                    } else {
+                        StartWeek(people: household.content?.people ?? [], typed: $typed,
+                                  onRead: {
+                                      opening = typed.trimmingCharacters(in: .whitespacesAndNewlines)
+                                      assistantOpen = true
+                                  },
+                                  onSkip: { skipped = true })
                     }
                 } else {
                     pages(here, today)
@@ -182,6 +198,12 @@ struct RoutineScreen: View {
         }
         // Zolang een stap groot staat blijft de menubalk weg, net als bij
         // een blad.
+        .onAppear {
+            if kids.isEmpty {
+                kids = [ChildData(id: newId(), name: "", emoji: "🦁", color: COLORS[0],
+                                  traits: [:])]
+            }
+        }
         .onChange(of: focus.open) { _, open in household.sheetOpen = open }
         .onChange(of: assistantOpen) { _, open in household.sheetOpen = open }
         .onDisappear { household.sheetOpen = false }
@@ -190,12 +212,38 @@ struct RoutineScreen: View {
     /// Een huis waar nog niets in staat. Dan is er geen ritme om te tonen,
     /// maar wel iets te vertellen: wie er in huis zijn.
     private var fresh: Bool {
-        guard household.opened else { return false }
+        guard household.opened, !skipped else { return false }
         guard let content = household.content else { return true }
-        return content.people.isEmpty
-            && stepCount(content.day) + stepCount(content.night) == 0
+        // Kinderen alleen zijn nog geen huis: zolang er niets te doen valt
+        // staat het opzetten er, en gaat het verder waar het gebleven was.
+        return stepCount(content.day) + stepCount(content.night) == 0
             && content.week.isEmpty
             && content.events.isEmpty
+    }
+
+    /// De kinderen uit het eerste scherm het huis in. Namen die leeg bleven
+    /// tellen niet mee; wie geen kleur koos krijgt de volgende uit de rij.
+    private func savePeople() async {
+        let content = household.content
+            ?? Content(title: "", people: [], day: [], night: [], week: [], events: [])
+        let working = asDraft(content)
+        for kid in kids {
+            let name = kid.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty else { continue }
+            working.people.append(DraftPerson(
+                id: kid.id,
+                name: name,
+                emoji: kid.emoji.isEmpty ? "🙂" : kid.emoji,
+                color: kid.color.isEmpty
+                    ? COLORS[working.people.count % COLORS.count] : kid.color,
+                traits: kid.traits,
+                birthday: kid.birthday
+            ))
+        }
+        guard !working.people.isEmpty else { return }
+        saving = true
+        _ = await household.save(working)
+        saving = false
     }
 
     private func toggleChild(_ id: String) {
@@ -338,43 +386,195 @@ private struct ResetButton: View {
     }
 }
 
-/// Het begin van een leeg huis: één vak waarin je vertelt wie er in huis
-/// zijn. Wat je daar schrijft gaat naar de uitlezer, en die maakt er kinderen,
-/// een ritme en een week van — als voorstellen met een vinkje, dus je ziet
-/// alles voordat het er staat.
-private struct Start: View {
+/// Het begin van een leeg huis, in twee stappen.
+///
+/// Eerst wie er wonen: een vakje per kind, met een naam, een gezicht en een
+/// geboortedag. Dat is sneller ingevuld dan uitgeschreven, en het scheelt de
+/// uitlezer het lastigste stuk werk.
+///
+/// Daarna hoe de week eruitziet. Dan staan de kinderen er al, dus hoeft er
+/// niemand meer bedacht te worden en kan alles wat er verteld wordt meteen bij
+/// de goede naam gezet worden.
+private struct StartWho: View {
+    @Binding var kids: [ChildData]
+    var busy: Bool
+    let onNext: () -> Void
+
+    @Environment(\.metrics) private var m
+    @Environment(\.palette) private var palette
+
+    private static let faces = ["🦁", "🐱", "🦔", "🐸", "🐰", "🦊", "🐼", "🐨"]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Line("Wie wonen er in huis? De namen en gezichtjes zien de kinderen straks op hun kaartjes.")
+
+            FormHead(String(localized: "Hoeveel kinderen"), first: true)
+            Chips {
+                ForEach(1...6, id: \.self) { count in
+                    Chip(label: "\(count)", on: kids.count == count,
+                         id: "start.count.\(count)") { setCount(count) }
+                }
+            }
+
+            FormHead(String(localized: "Wie zijn het"))
+            Paper(radius: 26) {
+                VStack(spacing: 0) {
+                    ForEach(Array(kids.enumerated()), id: \.element.id) { (i, _) in
+                        if i > 0 { HairLine() }
+                        Kid(kid: $kids[i], row: i)
+                    }
+                }
+            }
+
+            CardButton(String(localized: "Verder"), glyph: busy ? "⏳" : "→",
+                       id: "start.people", onTap: onNext)
+                .padding(.top, 16)
+                .opacity(busy || !anyName ? 0.5 : 1)
+                .disabled(busy || !anyName)
+        }
+        .frame(maxWidth: 640, alignment: .leading)
+        .entrance(1)
+    }
+
+    private var anyName: Bool {
+        kids.contains { !$0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    }
+
+    private func setCount(_ count: Int) {
+        while kids.count < count {
+            kids.append(ChildData(id: newId(), name: "",
+                                  emoji: Self.faces[kids.count % Self.faces.count],
+                                  color: COLORS[kids.count % COLORS.count], traits: [:]))
+        }
+        if kids.count > count { kids.removeSubrange(count...) }
+    }
+}
+
+/// Eén regel in dat vakje: gezicht, naam, geboortedag.
+private struct Kid: View {
+    @Binding var kid: ChildData
+    let row: Int
+
+    @Environment(\.palette) private var palette
+
+    private static let faces = ["🦁", "🐱", "🦔", "🐸", "🐰", "🦊", "🐼", "🐨",
+                                "🐧", "🐢", "🐥", "🦉"]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                // Tikken geeft het volgende dier: een blad met alle emoji is
+                // hier te veel gedoe voor iets dat later toch nog te kiezen is.
+                EmojiButton(value: kid.emoji, size: 46) { nextFace() }
+                    .accessibilityIdentifier("start.face.\(row)")
+                    .accessibilityLabel(Spoken.icon)
+                Field(value: $kid.name, placeholder: String(localized: "Naam"),
+                      id: "start.name.\(row)")
+            }
+            HStack(spacing: 10) {
+                DatePicker("Verjaardag", selection: bornBinding, in: ...Date(),
+                           displayedComponents: [.date])
+                    .datePickerStyle(.compact)
+                    .labelsHidden()
+                    .opacity(0.02)
+                    .overlay {
+                        Chip(label: bornLabel, on: !kid.birthday.isEmpty) {}
+                            .allowsHitTesting(false)
+                    }
+                    .accessibilityIdentifier("start.born.\(row)")
+                    .accessibilityLabel(Spoken.date)
+                if !kid.birthday.isEmpty {
+                    Text(ageText(kid.birthday))
+                        .textStyle(Fonts.listNote)
+                        .foregroundStyle(palette.muted)
+                }
+                Spacer(minLength: 0)
+            }
+        }
+        .padding(.vertical, 12)
+        .padding(.horizontal, 12)
+    }
+
+    private func nextFace() {
+        let i = Self.faces.firstIndex(of: kid.emoji) ?? -1
+        kid.emoji = Self.faces[(i + 1) % Self.faces.count]
+    }
+
+    private var bornLabel: String {
+        guard let day = asDate(kid.birthday) else {
+            return String(localized: "Verjaardag erbij")
+        }
+        return day.formatted(.dateTime.day().month(.abbreviated).year()
+            .locale(.autoupdatingCurrent))
+    }
+
+    private var bornBinding: Binding<Date> {
+        Binding(get: { asDate(kid.birthday) ?? Date() },
+                set: { kid.birthday = dateString($0) })
+    }
+}
+
+/// Stap twee: de week, in gewone woorden.
+private struct StartWeek: View {
+    let people: [Person]
     @Binding var typed: String
     let onRead: () -> Void
+    let onSkip: () -> Void
 
     @Environment(\.metrics) private var m
     @Environment(\.palette) private var palette
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Vertel wie er in huis zijn en wat er op een dag gebeurt. Ik maak er de kinderen, een ochtend- en avondritme en de week bij.")
-                .textStyle(TextStyle(font: Fonts.nunito(m.wide ? 17 : 15)))
-                .foregroundStyle(palette.subtle)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, m.indent)
-                .padding(.top, 6)
-                .padding(.bottom, 18)
+            Line("Vertel hoe een week eruitziet: school, bso, sport, clubjes. Ik maak er het ritme en de weekregels bij, en je ziet alles eerst als voorstel.")
 
             Paper(radius: 26) {
-                PasteBox(value: $typed, hint: String(localized: """
-                    Wij zijn met z'n vijven. Emma is van 3 juli 2020, groep 3B op de \
-                    Vondelschool. Mads is van 12 april 2022. Filip is van 4 augustus 2026.
-
-                    Di, wo en vr gaan ze naar de bso, en Mads voetbalt op woensdagmiddag.
-                    """))
-                    .frame(minHeight: m.wide ? 260 : 200)
+                PasteBox(value: $typed, hint: hint)
+                    .frame(minHeight: m.wide ? 240 : 190)
             }
 
             CardButton(String(localized: "Maak er een ritme van"), glyph: "✨",
                        id: "start.read", onTap: onRead)
                 .padding(.top, 16)
+
+            TextButton(String(localized: "Dat doe ik later"), id: "start.skip", onTap: onSkip)
+                .padding(.top, 14)
+                .padding(.leading, 4)
         }
         .frame(maxWidth: 640, alignment: .leading)
         .entrance(1)
+    }
+
+    private var hint: String {
+        let names = people.prefix(2).map { $0.name }.filter { !$0.isEmpty }
+        let first = names.first ?? String(localized: "Emma")
+        let second = names.count > 1 ? names[1] : String(localized: "Mads")
+        return String(localized: """
+            \(first) zit in groep 3B op de Vondelschool. Di, wo en vr gaan ze naar de bso.
+
+            \(second) voetbalt op woensdagmiddag, en zwemles is zaterdagochtend om 9 uur.
+            """)
+    }
+}
+
+/// De regel tekst boven een stap van het begin.
+private struct Line: View {
+    let text: String
+
+    @Environment(\.metrics) private var m
+    @Environment(\.palette) private var palette
+
+    init(_ text: String) { self.text = text }
+
+    var body: some View {
+        Text(text)
+            .textStyle(TextStyle(font: Fonts.nunito(m.wide ? 17 : 15)))
+            .foregroundStyle(palette.subtle)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.horizontal, m.indent)
+            .padding(.top, 6)
+            .padding(.bottom, 4)
     }
 }
 

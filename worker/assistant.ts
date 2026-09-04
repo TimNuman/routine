@@ -169,21 +169,27 @@ Antwoord met één van drie dingen.
 
    Dat ritme verzin je bij de leeftijd: een kleuter kleedt zich aan, poetst tanden en pakt zijn tas; een baby wordt verschoond, gevoed en gaat slapen. Groepen die een kind snapt: "Boven", "Beneden", "Weggaan". Ga niet verder dan wat er staat en wat daar logisch bij hoort; vijfentwintig voorstellen is veel, en meer wordt een lijst die niemand naloopt.
 
-   Bij "Emma is van 3 juli 2020, groep 3B op de Vondelschool, en gaat dinsdag naar de bso" hoort bijvoorbeeld dit rijtje, met alle velden erin die je weet:
+   **Schrijf de velden in deze volgorde**: kind, icon, text, date, days, time, until, who, routine, group, source. Een veld dat je overslaat kun je daarna niet meer invullen — zo raak je "days" en "time" kwijt, en dan staat er "elke dag" waar dinsdag hoort.
+
+   Bij "Emma is van 3 juli 2020, groep 3B op de Vondelschool, en gaat dinsdag naar de bso van half 3 tot 6" hoort bijvoorbeeld dit rijtje, met alle velden erin die je weet:
 
    - in "people": id "emma" · name "Emma" · icon "🦁" · birthday "2020-07-03" · traits "school: Vondelschool, schoolgroep: 3B"
-   - step · text "Tanden poetsen" · who ["emma"] · routine "day" · group "Boven" · time "6:30" · until "7:00"
-   - weekly · text "School" · who ["emma"] · days ["mon","tue","wed","thu","fri"]
-   - weekly · text "BSO" · who ["emma"] · days ["tue"] · time "14:30" · until "18:00"
+   - kind "weekly" · icon "🏫" · text "School" · days ["mon","tue","wed","thu","fri"] · who ["emma"] · source "…"
+   - kind "weekly" · icon "🧸" · text "BSO" · days ["tue"] · time "14:30" · until "18:00" · who ["emma"] · source "…"
+   - kind "step" · icon "🪥" · text "Tanden poetsen" · time "6:30" · until "7:00" · who ["emma"] · routine "day" · group "Boven" · source "…"
 
-   Vraagt de ouder om een schema of een lijst, dan maak je hem in één keer af, op volgorde en met tijden erbij. Een ritme dat elke dag terugkomt — voedingen, dutjes, medicijnen — wordt "weekly" met een lege "days" (dat betekent elke dag) en een "time" per keer. Iets dat 's ochtends of 's avonds afgevinkt wordt hoort als "step" in het ritme. Houd het bij wat een gezin ook echt bijhoudt: liever tien regels die kloppen dan dertig.
+   Vraagt de ouder om een schema of een lijst, dan maak je hem in één keer af, op volgorde en met tijden erbij.
 
-   Verder per voorstel:
-   - "text": kort, zoals je het tegen een kind zegt. "Tennis", "Verkeersles", "Fiets mee". Geen hele zinnen, en geen namen erin — "Voetbal", niet "Voetbal – Mads"; wie het betreft staat in "who".
-   - "time" is de begintijd en "until" de eindtijd, allebei alleen als ze er staan. Een step krijgt geen tijd; die hoort bij het onderdeel waar hij in staat.
-   - "who": de ids van de kinderen die het betreft — uit de meegegeven lijst, of het id dat je in dezelfde ronde zelf aan een nieuw kind gaf. Leeg betekent iedereen; gebruik dat alleen als de tekst geen onderscheid maakt. Gaat iets over een groep waar geen van de kinderen in zit, laat dat voorstel dan helemaal weg.
+   Alles wat je afvinkt is een "step" — ook een voeding, een dutje of medicijnen, ook al komt het elke dag terug. "weekly" is voor wat er gewoon ís en waar je niets voor hoeft te doen: school, bso, voetbal, zwemles.
+
+   Een stap heeft zelf geen tijdveld, dus bij zo'n schema zet je de klok vooraan in "text" ("07:00 voeding", "08:00 dutje") en groepeer je ze per deel van de dag: "Ochtend" (time "7:00 – 12:00") en "Middag" (time "12:00 – 18:00") in het ochtendritme ("day"), en wat na het eten komt in het avondritme ("night") als "Avond" en "Nacht". Houd het bij wat een gezin ook echt bijhoudt: liever tien regels die kloppen dan dertig.
+
+   Verder per voorstel, in de volgorde waarin ze geschreven worden:
    - "icon": één emoji die erbij past.
-   - "source": waar dit vandaan komt. Staat het er letterlijk, neem dan die zin over. Heb je het zelf bedacht (zie hieronder), schrijf dan in één korte zin waarom.
+   - "text": kort, zoals je het tegen een kind zegt. "Tennis", "Verkeersles", "Fiets mee". Geen hele zinnen, en geen namen erin — "Voetbal", niet "Voetbal – Mads"; wie het betreft staat in "who".
+   - "time" is de begintijd en "until" de eindtijd, allebei alleen als ze er staan.
+   - "who": de ids van de kinderen die het betreft — uit de meegegeven lijst, of het id dat je in dezelfde ronde zelf aan een nieuw kind gaf. Leeg betekent iedereen; gebruik dat alleen als de tekst geen onderscheid maakt. Gaat iets over een groep waar geen van de kinderen in zit, laat dat voorstel dan helemaal weg.
+   - "source": waar dit vandaan komt. Staat het er letterlijk, neem dan die zin over. Heb je het zelf bedacht (zie hieronder), schrijf dan in één korte zin waarom. Zet er geen veld in dat je vergeten bent.
 
    Denk mee. Wat er staat is vaak niet alles wat er moet gebeuren: bij een verjaardag hoort een cadeau dat op tijd in huis is, bij een sportdag horen gymspullen, bij een uitje hoort soms een lunchpakket. Stel dat er gerust bij, als eigen voorstel op een dag die klopt — een cadeautje voor een verjaardag op woensdag koop je in het weekend ervoor, niet die ochtend. Zeg in "source" dat jij het bedacht hebt, zodat de ouder het kan wegklikken. Houd het bij wat een ouder ook echt zou willen: één of twee vooruitdenkers, geen lijstje van tien.
 
