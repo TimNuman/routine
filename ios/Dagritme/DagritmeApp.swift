@@ -10,6 +10,7 @@ struct DagritmeApp: App {
         let session = Session()
         _session = State(initialValue: session)
         _household = State(initialValue: Household(session: session))
+        PhoneLink.shared.start(session)
     }
 
     var body: some Scene {
@@ -38,11 +39,16 @@ struct DagritmeApp: App {
             .environment(session)
             .environment(household)
             .preferredColorScheme(household.evening ? .dark : .light)
-            .onChange(of: session.scope) { household.start() }
+            .onChange(of: session.scope) {
+                household.start()
+                PhoneLink.shared.push()
+            }
         }
         .onChange(of: phase) { _, fresh in
             switch fresh {
-            case .active: household.wake()
+            case .active:
+                household.wake()
+                PhoneLink.shared.push()
             case .background: household.sleep()
             default: break
             }

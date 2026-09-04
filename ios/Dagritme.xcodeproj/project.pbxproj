@@ -6,6 +6,10 @@
 	objectVersion = 70;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D1A00000000000000000BB01 /* DagritmeWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = D1A0000000000000000000A5 /* DagritmeWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		D1A00000000000000000AA02 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -14,6 +18,13 @@
 			remoteGlobalIDString = D1A0000000000000000000E1;
 			remoteInfo = Dagritme;
 		};
+		D1A00000000000000000AA04 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D1A0000000000000000000E0 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D1A0000000000000000000E3;
+			remoteInfo = DagritmeWatch;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -21,11 +32,15 @@
 		D1A0000000000000000000A2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D1A0000000000000000000A3 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		D1A0000000000000000000A4 /* Driver.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Driver.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		D1A0000000000000000000A5 /* DagritmeWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DagritmeWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D1A0000000000000000000A6 /* WatchInfo.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = WatchInfo.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		D1A0000000000000000000B1 /* Dagritme */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Dagritme; sourceTree = "<group>"; };
 		D1A0000000000000000000B2 /* Driver */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Driver; sourceTree = "<group>"; };
+		D1A0000000000000000000B3 /* Shared */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Shared; sourceTree = "<group>"; };
+		D1A0000000000000000000B4 /* Watch */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Watch; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -43,15 +58,39 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D1A0000000000000000000C9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D1A0000000000000000000C7 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				D1A00000000000000000BB01 /* DagritmeWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXGroup section */
 		D1A0000000000000000000D1 = {
 			isa = PBXGroup;
 			children = (
 				D1A0000000000000000000B1 /* Dagritme */,
+				D1A0000000000000000000B3 /* Shared */,
+				D1A0000000000000000000B4 /* Watch */,
 				D1A0000000000000000000B2 /* Driver */,
 				D1A0000000000000000000A2 /* Info.plist */,
+				D1A0000000000000000000A6 /* WatchInfo.plist */,
 				D1A0000000000000000000A3 /* README.md */,
 				D1A0000000000000000000D2 /* Products */,
 			);
@@ -61,6 +100,7 @@
 			isa = PBXGroup;
 			children = (
 				D1A0000000000000000000A1 /* Dagritme.app */,
+				D1A0000000000000000000A5 /* DagritmeWatch.app */,
 				D1A0000000000000000000A4 /* Driver.xctest */,
 			);
 			name = Products;
@@ -76,13 +116,16 @@
 				D1A0000000000000000000C2 /* Sources */,
 				D1A0000000000000000000C1 /* Frameworks */,
 				D1A0000000000000000000C3 /* Resources */,
+				D1A0000000000000000000C7 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				D1A00000000000000000AA03 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				D1A0000000000000000000B1 /* Dagritme */,
+				D1A0000000000000000000B3 /* Shared */,
 			);
 			name = Dagritme;
 			packageProductDependencies = (
@@ -114,6 +157,29 @@
 			productReference = D1A0000000000000000000A4 /* Driver.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		D1A0000000000000000000E3 /* DagritmeWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D1A0000000000000000000F3 /* Build configuration list for PBXNativeTarget "DagritmeWatch" */;
+			buildPhases = (
+				D1A0000000000000000000C8 /* Sources */,
+				D1A0000000000000000000C9 /* Frameworks */,
+				D1A0000000000000000000CA /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				D1A0000000000000000000B3 /* Shared */,
+				D1A0000000000000000000B4 /* Watch */,
+			);
+			name = DagritmeWatch;
+			packageProductDependencies = (
+			);
+			productName = DagritmeWatch;
+			productReference = D1A0000000000000000000A5 /* DagritmeWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -130,6 +196,9 @@
 					D1A0000000000000000000E2 = {
 						CreatedOnToolsVersion = 16.0;
 						TestTargetID = D1A0000000000000000000E1;
+					};
+					D1A0000000000000000000E3 = {
+						CreatedOnToolsVersion = 16.0;
 					};
 				};
 			};
@@ -151,6 +220,7 @@
 			projectRoot = "";
 			targets = (
 				D1A0000000000000000000E1 /* Dagritme */,
+				D1A0000000000000000000E3 /* DagritmeWatch */,
 				D1A0000000000000000000E2 /* Driver */,
 			);
 		};
@@ -165,6 +235,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		D1A0000000000000000000C6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D1A0000000000000000000CA /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -188,6 +265,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D1A0000000000000000000C8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -195,6 +279,11 @@
 			isa = PBXTargetDependency;
 			target = D1A0000000000000000000E1 /* Dagritme */;
 			targetProxy = D1A00000000000000000AA02 /* PBXContainerItemProxy */;
+		};
+		D1A00000000000000000AA03 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D1A0000000000000000000E3 /* DagritmeWatch */;
+			targetProxy = D1A00000000000000000AA04 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -334,6 +423,62 @@
 			};
 			name = Release;
 		};
+		D1A00000000000000000FF07 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = B78S7QYAZC;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = WatchInfo.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.dagritme.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+		D1A00000000000000000FF08 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = B78S7QYAZC;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = WatchInfo.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = app.dagritme.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -351,6 +496,15 @@
 			buildConfigurations = (
 				D1A00000000000000000FF03 /* Debug */,
 				D1A00000000000000000FF04 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D1A0000000000000000000F3 /* Build configuration list for PBXNativeTarget "DagritmeWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D1A00000000000000000FF07 /* Debug */,
+				D1A00000000000000000FF08 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

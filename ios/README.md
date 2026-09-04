@@ -1,18 +1,19 @@
 # De iOS-versie
 
-De app, in Swift en SwiftUI. Niets is nagebouwd op een eigen server: hij praat
-met `/api/v2/storage` en `/api/v2/read` op de Worker uit deze repo, dus wat je
-op de ene telefoon afvinkt staat een seconde later ook op de andere.
+De app, in Swift en SwiftUI, met een klein horloge ernaast. Niets is nagebouwd
+op een eigen server: allebei praten ze met `/api/v2/storage` en `/api/v2/read`
+op de Worker uit deze repo, dus wat je op de ene telefoon afvinkt staat een
+seconde later ook op de andere — en op je pols.
 
 ## Draaien
 
 Je hebt een Mac met **Xcode 26** nodig, en een toestel of simulator op
-**iOS 26**: het glas van de app is Apples Liquid Glass, en dat bestaat daar
-niet onder — zie *Het glas*. Het project gebruikt verder de gesynchroniseerde
-mappen die Xcode 16 introduceerde, zodat er niets in het projectbestand hoeft
-bij te werken als er een bestand bij komt.
+**iOS 26** (het horloge: **watchOS 26**): het glas van de app is Apples Liquid
+Glass, en dat bestaat daar niet onder — zie *Het glas*. Het project gebruikt
+verder de gesynchroniseerde mappen die Xcode 16 introduceerde, zodat er niets
+in het projectbestand hoeft bij te werken als er een bestand bij komt.
 
-1. Zet in [`Dagritme/Config.swift`](Dagritme/Config.swift) het adres
+1. Zet in [`Shared/Config.swift`](Shared/Config.swift) het adres
    van je eigen Worker:
 
    ```swift
@@ -22,8 +23,13 @@ bij te werken als er een bestand bij komt.
    Liever niet in de code? Vul dan `ROUTINE_URL` in [`Info.plist`](Info.plist);
    die wint als hij gevuld is.
 2. Open `ios/Dagritme.xcodeproj`, kies bij *Signing & Capabilities* je eigen team
-   (het bundel-id is `app.dagritme`) en druk
-   op ⌘R.
+   (het bundel-id is `app.dagritme`, dat van het horloge
+   `app.dagritme.watchkitapp`) en druk op ⌘R.
+
+Het horloge zit in de app: het doel **DagritmeWatch** wordt meegebouwd en in
+`Dagritme.app` gezet, dus installeren gaat vanzelf mee. Los draaien kan met
+het schema *DagritmeWatch* op een gekoppelde horlogesimulator — zie
+*Op het horloge*.
 
 Tegen `wrangler dev` op de laptop draaien kan ook: zet dan
 `http://<het-ip-van-je-laptop>:8787` als adres. `localhost` werkt niet op een
@@ -77,17 +83,28 @@ De Driver start de app met `SESSION=legacy`, dus zonder inlogscherm; zet
 ## Hoe het in elkaar zit
 
 ```
-Dagritme/
+Shared/                wat de telefoon en het horloge allebei gebruiken
   Config.swift         waar de Worker staat
+  Json.swift  Types.swift  Content.swift   de inhoud, gladgestreken
+  Store.swift          lezen, schrijven en de stroom
+  Handover.swift       wat de telefoon aan het horloge doorgeeft
+  Palette.swift  Fonts.swift  Motion.swift  Glass.swift  Flow.swift
+  Fonts/               Baloo 2 en Nunito, bijgeknipt tot Latijn
+Dagritme/              de telefoon
   Localizable.xcstrings  de teksten; nl nu, de/da/en straks
-  Core/                de logica: inhoud, opslag, de assistent
-  Style/               kleuren, letters, maten, timing, het glas
+  Core/                de logica: sessie, concept, de assistent
+  Style/               maten, aanraking, iconen
   Components/          de losse stukken van de schermen
   Screens/             ritme, week, instellingen
-  Fonts/               Baloo 2 en Nunito, bijgeknipt tot Latijn
+Watch/                 het horloge — zie onderaan
 maestro/               de stromen die de app aansturen — zie onderaan
 Driver/                afdrukken en opnames — zie onderaan
 ```
+
+`Shared/` staat in allebei de doelen, en dat bepaalt wat er in mag: Foundation
+en SwiftUI, en niets van UIKit. Alles wat de telefoon eigen is — de
+sleutelhanger, het inloggen, de menubalk, de bewerkschermen — blijft in
+`Dagritme/`.
 
 `Core/` kent geen SwiftUI: dat is dezelfde bewerking als in de react
 native-versie, alleen dan in Swift. Wat eruit komt is `Content` — de gladgestreken
@@ -100,12 +117,12 @@ vorm waar de schermen mee werken.
 | opslag | `URLSession` naar `/api/v2/storage`, met `URLSessionWebSocketTask` voor de stroom |
 | bewerken | `List` met `.swipeActions` en `.onMove`; de rest van de app is eigen glas |
 | bladeren | de menubalk van iOS zelf (`Components/Tabs.swift`), met de bladzijden die van opzij in beeld schuiven; binnen het ritme schuift de schakelaar ochtend en avond langs (`Components/Slide.swift`); op de dagen van de weekstrook bladert een veeg door de weken, en op een stap die groot staat door de stappen (`Components/TaskFocus.swift`) |
-| animatie | gewone SwiftUI-animaties, timing in `Style/Motion.swift` |
+| animatie | gewone SwiftUI-animaties, timing in `Shared/Motion.swift` |
 
 ### Twee dingen die anders moesten
 
 **Los zand wordt eerst een `Json`.** Javascript kan zomaar in een object kijken;
-Swift niet. `Core/Json.swift` is die tussenstap: een waarde die opneemt wat er
+Swift niet. `Shared/Json.swift` is die tussenstap: een waarde die opneemt wat er
 uit het huis komt — een lijst die eigenlijk een woordenboek is, een getal dat als
 tekst is bewaard — zodat `Content.swift` daarna precies dezelfde regels kan
 toepassen.
@@ -156,7 +173,7 @@ balk; `Metrics.bottomPad` is alleen nog wat er daarboven bij komt.
 
 ## Het glas
 
-`Style/Glass.swift` is het glas, en het is een dun laagje om Apples eigen
+`Shared/Glass.swift` is het glas, en het is een dun laagje om Apples eigen
 **Liquid Glass** heen: een vorm, `.glassEffect(in:)`, en een schaduw eronder
 als het ergens boven zweeft. Meer is het niet, en dat is het punt.
 
@@ -183,6 +200,67 @@ geen gedeelde waarde per onderdeel voor nodig zoals in Reanimated.
 De maten groeien mee met het scherm (`Style/Metrics.swift`), met dezelfde drie
 grenzen als op web: krapper onder 360, een maatje groter vanaf 700, en vanaf 1000
 komt het weekritme als kolom ernaast — dat is een iPad in liggende stand.
+
+## Op het horloge
+
+Naast de app staat een horloge-app: **DagritmeWatch**, in `Watch/`. Hij is met
+opzet klein — kijken en afvinken, verder niets. Bewerken, de week en het
+uitlezen blijven op de telefoon.
+
+Er is één beweging: **vegen**, naar links of naar rechts. De klok bepaalt of
+het dag of avond is, net als op de telefoon vanaf `EVENING_FROM` (17 uur), en
+er is hier geen schakelaar om dat te overrulen. Wat er ook verschuift is de
+volgorde van de bladzijden:
+
+| | overdag | 's avonds |
+|---|---|---|
+| eerst | wat er vandaag is | hoever iedereen is |
+| dan | hoever iedereen is | de stappen, één per bladzijde |
+| daarna | de stappen, één per bladzijde | wat er vanavond en morgen is |
+
+'s Ochtends wil je weten wat de dag brengt, dus dat staat vooraan; 's avonds
+gaat het over morgen, en dan staat het achteraan. Op de eerste bladzijde staat
+de dag met de datum eronder. Een stap is één bladzijde, met hetzelfde kaartje
+als op de telefoon: het plaatje, de naam, en daaronder een rond gezichtje per
+kind dat meedoet. Tik het aan en het vinkje staat binnen een seconde ook op de
+telefoon — en andersom, want het horloge houdt dezelfde WebSocket open zolang
+hij openstaat.
+
+### Hoe het horloge weet waar het huis staat
+
+Het horloge praat zelf met de Worker; de telefoon is geen doorgeefluik. Wat het
+daarvoor nodig heeft is één klein bericht, `Shared/Handover.swift`: het adres
+van de opslag en de kopjes die erbij horen. Dat gaat over WatchConnectivity,
+twee kanten op:
+
+- De telefoon (`Dagritme/Core/PhoneLink.swift`) zet het klaar als een
+  *application context* — bij het openen en zodra je een ander huis krijgt.
+  Het toestel bewaart dat en levert het af zodra het horloge er is, dus het
+  hoeft niet tegelijk aan te staan.
+- Het horloge (`Watch/Core/Link.swift`) vraagt er zelf om als het er nog niet
+  is, of als de sleutel van dat uur bijna om is. Zo'n vraag wekt de app op de
+  telefoon, ook als die in de zak zit.
+
+**De refresh-token gaat nooit mee.** Die is maar één keer te gebruiken, dus
+twee toestellen die hem allebei inwisselen zetten elkaar buiten. Het horloge
+krijgt de sleutel van dít uur; loopt hij op een 401, dan vraagt hij een verse
+aan de telefoon — dezelfde haak (`Endpoint.refresh`) die op de telefoon de
+refresh-token inwisselt.
+
+Zolang er nog niets binnenkwam zegt het horloge dat de app op de telefoon even
+open moet. Daarna staat het er ook na een herstart, want de context blijft
+bewaard. Dat betekent wel dat de sleutel van dat uur onversleuteld in de
+container van de horloge-app ligt; op de telefoon zit hij in de sleutelhanger.
+Voor een sleutel die een uur meegaat is dat de afweging waard, voor de
+refresh-token niet.
+
+### Draaien
+
+Het doel wordt meegebouwd met de app en komt in `Dagritme.app` terecht, dus op
+een echt toestel installeert het horloge vanzelf mee. In de simulator kies je
+het schema **DagritmeWatch** en een horlogesimulator die aan de
+iPhone-simulator gekoppeld is; start de app op de telefoon één keer, dan komt
+het adres over.
 
 ## Talen
 
@@ -221,7 +299,8 @@ bestaande sleutels.
 
 ## Lettertypes
 
-`Fonts/` bevat bijgeknipte lettertypes (alleen de tekens die de app gebruikt).
+`Shared/Fonts/` bevat bijgeknipte lettertypes (alleen de tekens die de app
+gebruikt); het horloge draagt dezelfde.
 Ze staan in `UIAppFonts` in `Info.plist`;
 in de code gaan ze op hun PostScript-naam (`Baloo2-ExtraBold`, niet de
 bestandsnaam).
@@ -336,6 +415,14 @@ filmstrip van die je in één keer kunt bekijken.
 - **Op een echt toestel geprobeerd.** In de simulator wel, met `Driver/` erbij, maar
   een simulator kent geen trilling en geen trage verbinding. Reken erop dat het
   eerste kwartier op een iPhone nog een paar dingen rechtzet.
+- **Het horloge, op een pols.** De code staat er en de overdracht is klein
+  genoeg om over te zien, maar geen enkele regel ervan heeft ooit op een
+  Apple Watch gedraaid — ook niet in de simulator. Reken op stroeve randen:
+  de maten van de kaartjes, en hoe snel het adres binnenkomt als de app voor
+  het eerst opengaat.
+- **Complicaties en meldingen op het horloge.** Er is nu alleen de app zelf;
+  op de wijzerplaat staat niets, en het horloge tikt je niet aan als er een
+  stap blijft liggen.
 - **Aanmelden.** Wie het adres kent, kan meelezen en meeschrijven; `SLEUTEL` is
   een drempel, geen slot. Voor een app in een store is dat te weinig — zie
   *Wie mag erbij* in [`worker/README.md`](../worker/README.md).

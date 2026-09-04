@@ -174,6 +174,20 @@ final class Session {
         }
     }
 
+    /// Wat het horloge nodig heeft om zelf bij het huis te kunnen: waar het
+    /// staat en met welk kopje het erbij mag. Is de sleutel van dit uur bijna
+    /// om, dan eerst een verse halen — het horloge kan dat zelf niet, want de
+    /// refresh-token blijft hier en is maar één keer te gebruiken.
+    func handover() async -> Handover? {
+        if state == .signedIn,
+           Date().timeIntervalSince(issued) > Self.accessLifetime - 10 * 60 {
+            _ = await refresh()
+        }
+        guard let endpoint else { return nil }
+        return Handover(store: endpoint.store.absoluteString, headers: endpoint.headers,
+                        at: Date())
+    }
+
     // MARK: - Inloggen
 
     func continueWithoutAccount() {

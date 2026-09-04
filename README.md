@@ -3,8 +3,8 @@
 Een visueel dagritme voor kinderen: een ochtend- en een avondroutine met
 afvinkbare stappen, één per kind, gedeeld tussen alle telefoons in huis.
 
-Een iOS-app in Swift, met een achterkant op Cloudflare. Zie *Hoe het in elkaar
-zit* onderaan.
+Een iOS-app in Swift, met een horloge-app erbij en een achterkant op
+Cloudflare. Zie *Hoe het in elkaar zit* onderaan.
 
 ## Hoe het werkt
 
@@ -157,6 +157,23 @@ wat iedereen kan openen. Hoe je hem neerzet, wat hij kost en welk protocol hij
 spreekt staat in [`worker/README.md`](worker/README.md).
 
 
+## Op het horloge
+
+Op de Apple Watch staat hetzelfde ritme, uitgekleed tot kijken en afvinken.
+Vegen is het enige wat er is: naar links voor de volgende bladzijde, naar
+rechts voor de vorige. De klok bepaalt of het dag of avond is; een schakelaar
+zit er niet.
+
+Overdag begint het bij de dag en de datum, met wat er die ochtend op de agenda
+staat. Dan hoever ieder kind is, en dan de stappen — één per bladzijde,
+hetzelfde kaartje als op de telefoon, met de gezichtjes eronder om af te
+vinken. 's Avonds staat het andersom: eerst hoever iedereen is en de stappen,
+en helemaal achteraan wat er vanavond en morgen speelt.
+
+Een vinkje op je pols staat binnen een seconde op de telefoon, en andersom.
+Bewerken doe je er niet: daarvoor pak je de telefoon. Zie
+[`ios/README.md`](ios/README.md) voor hoe het horloge weet waar het huis staat.
+
 ## Opslag
 
 Alles staat achter `/api/v2/storage` op de Worker. Daar zit één *huis*, een
@@ -178,7 +195,7 @@ app); hoe allebei werken staat in de README van de Worker.
 ## Hoe het in elkaar zit
 
 ```
-ios/        de app, in Swift — zie ios/README.md
+ios/        de app en het horloge, in Swift — zie ios/README.md
 worker/     de achterkant: /api/*, in TypeScript — zie worker/README.md
 backup.mjs  een reservekopie van het huis maken of terugzetten
 wrangler.toml
