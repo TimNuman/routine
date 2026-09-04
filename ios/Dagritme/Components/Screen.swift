@@ -73,6 +73,10 @@ struct Screen<Inner: View>: View {
             .frame(maxWidth: .infinity)
         }
         .refreshable { await household.reload() }
+        // Onderaan doet iOS zelf een waas over wat er onder de menubalk door
+        // schuift. Het glas van die balk kan dat zelf aan — het buigt wat
+        // eronder ligt al — dus blijven de kaarten daar gewoon kaarten.
+        .scrollEdgeEffectHidden(true, for: .bottom)
     }
 
     /// Boven zakt de hemel weg, zodat wat wegscrolt niet hard tegen de klok
