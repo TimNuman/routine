@@ -251,7 +251,15 @@ private struct PasteBox: View {
     var body: some View {
         ZStack(alignment: .topLeading) {
             if value.isEmpty {
-                Text("Plak een mail of appje, of typ het gewoon:\n\niedere dinsdag om 18:00 tennis Emma")
+                Text("""
+                    Plak een mail of appje, typ het gewoon —
+
+                    iedere dinsdag om 18:00 tennis Emma
+
+                    — of vraag om iets:
+
+                    maak een voedings- en slaapschema voor Filip
+                    """)
                     .textStyle(TextStyle(font: Fonts.nunito(14)))
                     .foregroundStyle(SOFT_INK.opacity(0.7))
                     .padding(.horizontal, 16)

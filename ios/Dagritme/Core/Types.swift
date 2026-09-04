@@ -11,6 +11,10 @@ struct Person: Identifiable, Hashable {
     var emoji: String
     var color: String
     var traits: [String: String]
+    /// De geboortedag, als `jjjj-mm-dd`. Leeg als hij niet ingevuld is. De
+    /// verjaardag komt hiermee vanzelf in de agenda, en de uitlezer weet
+    /// hoe oud iemand is — zie `Core/Content.swift`.
+    var birthday: String = ""
 }
 
 struct Step: Hashable {

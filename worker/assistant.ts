@@ -17,6 +17,8 @@ export interface Child {
   id: string;
   name: string;
   traits: Record<string, string>;
+  /** `yyyy-mm-dd`, or empty when nobody filled it in. */
+  birthday: string;
 }
 
 export interface Payload {
@@ -84,15 +86,20 @@ const SCHEMA = {
   },
 } as const;
 
-const SYSTEM = `Je vult een gezinsapp met een dagritme per kind. Je krijgt tekst van een ouder: een doorgestuurde mail van school of de club, een appje, of gewoon een zin die die ouder zelf typt ("iedere dinsdag om 18:00 tennis Emma"). Behandel allebei hetzelfde — het gaat erom wat er in de app moet komen.
+const SYSTEM = `Je vult een gezinsapp met een dagritme per kind. Je krijgt tekst van een ouder. Dat kan van alles zijn, en het gaat er alleen om wat er in de app moet komen:
 
-Je krijgt verder de datum van vandaag en de kinderen die in de app staan met wat er van ze bekend is (schoolgroep, team, en wat er verder aan kenmerken bij ze staat).
+- iets om uit te lezen: een doorgestuurde mail van school of de club, een appje, een zin die de ouder zelf typt ("iedere dinsdag om 18:00 tennis Emma");
+- of een opdracht: "maak een voedings- en slaapschema voor Filip", "verzin een klusjeslijst voor Emma", "wat moet er mee op schoolkamp". Dan staat er niets uit te lezen en bedenk je het zelf, met wat je van dat kind weet.
+
+Je krijgt verder de datum van vandaag en de kinderen die in de app staan met wat er van ze bekend is: hun geboortedag en leeftijd als die ingevuld is, en verder schoolgroep, team en wat er nog meer aan kenmerken bij ze staat.
+
+Die leeftijd doet ertoe zodra je zelf iets bedenkt. Een baby van een maand drinkt om de drie uur en slaapt daar vier of vijf keer per dag tussendoor; een kind van vier eet drie keer op een dag en slaapt 's nachts. Reken het uit voor de leeftijd die er staat in plaats van iets algemeens neer te zetten, en noem geen leeftijd die er niet bij staat.
 
 De taal waarin je terugschrijft staat in het bericht hieronder — dat is wat de ouder en de kinderen in de app te zien krijgen. Alleen de veldnamen en de vaste waarden zijn Engels.
 
 Antwoord met één van drie dingen.
 
-1. "question" — alleen als de tekst onderscheid maakt dat je met de bekende kenmerken niet kunt maken. Bijvoorbeeld: er staat per schoolgroep (1-2A tot en met 1-2D) een andere dag, en van geen van de kinderen is de schoolgroep bekend. Stel dan precies één vraag in "question", met de mogelijke waarden als "options", en een korte "key" waaronder het antwoord bij het kind bewaard wordt: schoolgroep, team, bsogroep. Kun je het ook zonder, vraag dan niets — een voorstel voor iedereen is beter dan een vraag. Bij ronde 2 of hoger stel je geen vraag meer, maar doe je het met wat je hebt.
+1. "question" — alleen als de tekst onderscheid maakt dat je met de bekende kenmerken niet kunt maken. Bij een opdracht vraag je niets: je doet een voorstel, en de ouder stelt het bij. Bijvoorbeeld: er staat per schoolgroep (1-2A tot en met 1-2D) een andere dag, en van geen van de kinderen is de schoolgroep bekend. Stel dan precies één vraag in "question", met de mogelijke waarden als "options", en een korte "key" waaronder het antwoord bij het kind bewaard wordt: schoolgroep, team, bsogroep. Kun je het ook zonder, vraag dan niets — een voorstel voor iedereen is beter dan een vraag. Bij ronde 2 of hoger stel je geen vraag meer, maar doe je het met wat je hebt.
 
 2. "suggestions" — wat er in de app moet komen. Er zijn drie soorten ("kind"), en de keuze daartussen is het belangrijkste dat je doet:
 
@@ -101,6 +108,8 @@ Antwoord met één van drie dingen.
    - "step": iets dat een kind die ene dag zelf moet dóén, en dat je afvinkt — meestal iets meenemen of klaarzetten. Zet "date", plus "routine" ("day" voor de ochtend, "night" voor de avond) en "group": de naam van het onderdeel waar het hoort, meestal "Weggaan".
 
    Komt iets elke week terug, kies dan weekly, ook als de tekst één datum noemt als voorbeeld. Gaat het over één keer, kies occasion of step.
+
+   Vraagt de ouder om een schema of een lijst, dan maak je hem in één keer af, op volgorde en met tijden erbij. Een ritme dat elke dag terugkomt — voedingen, dutjes, medicijnen — wordt "weekly" met een lege "days" (dat betekent elke dag) en een "time" per keer. Iets dat 's ochtends of 's avonds afgevinkt wordt hoort als "step" in het ritme. Houd het bij wat een gezin ook echt bijhoudt: liever tien regels die kloppen dan dertig.
 
    Verder per voorstel:
    - "text": kort, zoals je het tegen een kind zegt. "Tennis", "Verkeersles", "Fiets mee". Geen hele zinnen.
@@ -111,7 +120,7 @@ Antwoord met één van drie dingen.
 
    Denk mee. Wat er staat is vaak niet alles wat er moet gebeuren: bij een verjaardag hoort een cadeau dat op tijd in huis is, bij een sportdag horen gymspullen, bij een uitje hoort soms een lunchpakket. Stel dat er gerust bij, als eigen voorstel op een dag die klopt — een cadeautje voor een verjaardag op woensdag koop je in het weekend ervoor, niet die ochtend. Zeg in "source" dat jij het bedacht hebt, zodat de ouder het kan wegklikken. Houd het bij wat een ouder ook echt zou willen: één of twee vooruitdenkers, geen lijstje van tien.
 
-   Eén regel per ding per dag; geen dubbele voorstellen.
+   Eén regel per ding per dag; geen dubbele voorstellen. De verjaardagen van de mensen in de app staan er trouwens al vanzelf in — die hoef je niet voor te stellen.
 
 3. "nothing" — er valt niets uit te halen dat in de app hoort.
 
@@ -148,7 +157,23 @@ function cleanChild(raw: unknown): Child {
     id: String(c.id ?? '').slice(0, 40),
     name: String(c.name ?? '').slice(0, 40),
     traits,
+    birthday: isDate(c.birthday) ? (c.birthday as string) : '',
   };
+}
+
+/** How old someone is on the day of the request, in words the prompt can use. */
+export function ageText(birthday: string, today: string): string {
+  const born = new Date(birthday + 'T12:00:00Z');
+  const now = new Date(today + 'T12:00:00Z');
+  if (Number.isNaN(born.getTime()) || Number.isNaN(now.getTime()) || born > now) return '';
+  const days = Math.floor((now.getTime() - born.getTime()) / 86_400_000);
+  let months =
+    (now.getUTCFullYear() - born.getUTCFullYear()) * 12 + (now.getUTCMonth() - born.getUTCMonth());
+  if (now.getUTCDate() < born.getUTCDate()) months -= 1;
+  if (months >= 24) return `${Math.floor(months / 12)} jaar`;
+  if (months >= 1) return `${months} ${months === 1 ? 'maand' : 'maanden'}`;
+  if (days >= 7) return `${Math.floor(days / 7)} ${days < 14 ? 'week' : 'weken'}`;
+  return `${days} ${days === 1 ? 'dag' : 'dagen'}`;
 }
 
 function languageName(tag: string): string {
@@ -159,11 +184,13 @@ function languageName(tag: string): string {
   }
 }
 
-function childLine(child: Child): string {
-  const traits = Object.entries(child.traits)
-    .map(([key, value]) => `${key}: ${value}`)
-    .join(', ');
-  return `- id ${child.id}, ${child.name || 'naamloos'} — ${traits || 'nog niets bekend'}`;
+function childLine(child: Child, today: string): string {
+  const age = child.birthday ? ageText(child.birthday, today) : '';
+  const known = [
+    child.birthday ? `geboren ${child.birthday}${age ? ` (${age} oud)` : ''}` : '',
+    ...Object.entries(child.traits).map(([key, value]) => `${key}: ${value}`),
+  ].filter(Boolean);
+  return `- id ${child.id}, ${child.name || 'naamloos'} — ${known.join(', ') || 'nog niets bekend'}`;
 }
 
 export function promptText(payload: Payload): string {
@@ -182,7 +209,7 @@ export function promptText(payload: Payload): string {
     `Vandaag is ${payload.today}${dayName}. Dit is ronde ${payload.round}.`,
     '',
     'De kinderen in de app:',
-    payload.children.map(childLine).join('\n'),
+    payload.children.map((child) => childLine(child, payload.today)).join('\n'),
     '',
     'Het bericht:',
     '"""',

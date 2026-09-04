@@ -1,6 +1,6 @@
 import { createExecutionContext, env, waitOnExecutionContext } from 'cloudflare:test';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanPayload, promptText } from './assistant';
+import { ageText, cleanPayload, promptText } from './assistant';
 import app from './index';
 
 async function read(body: unknown, extra: Partial<Env> = {}) {
@@ -50,7 +50,8 @@ describe('cleaning the payload', () => {
       round: '2.7',
       language: 'en-GB',
       children: [
-        { id: 'emma', name: 'Emma', traits: { group: '1-2B', extra: 42 } },
+        { id: 'emma', name: 'Emma', traits: { group: '1-2B', extra: 42 }, birthday: '2019-03-04' },
+        { id: 'filip', name: 'Filip', birthday: 'somewhen' },
         { name: 'no id' },
         'garbage',
       ],
@@ -60,7 +61,10 @@ describe('cleaning the payload', () => {
       today: '2026-09-02',
       round: 2,
       language: 'en-GB',
-      children: [{ id: 'emma', name: 'Emma', traits: { group: '1-2B', extra: '42' } }],
+      children: [
+        { id: 'emma', name: 'Emma', traits: { group: '1-2B', extra: '42' }, birthday: '2019-03-04' },
+        { id: 'filip', name: 'Filip', traits: {}, birthday: '' },
+      ],
     });
   });
 
@@ -97,6 +101,38 @@ describe('the prompt', () => {
     );
     expect(text).toContain('- id emma, Emma — group: 1-2B');
     expect(text).toContain('- id mads, naamloos — nog niets bekend');
+  });
+
+  it('tells how old a child is today', () => {
+    const text = promptText(
+      cleanPayload({
+        text: 'maak een voedings- en slaapschema voor Filip',
+        today: '2026-09-04',
+        children: [
+          { id: 'filip', name: 'Filip', birthday: '2026-08-04' },
+          { id: 'emma', name: 'Emma', traits: { group: '3B' }, birthday: '2019-03-04' },
+        ],
+      }),
+    );
+    expect(text).toContain('- id filip, Filip — geboren 2026-08-04 (1 maand oud)');
+    expect(text).toContain('- id emma, Emma — geboren 2019-03-04 (7 jaar oud), group: 3B');
+  });
+});
+
+describe('how old someone is', () => {
+  it('counts in days, weeks, months and years', () => {
+    expect(ageText('2026-09-03', '2026-09-04')).toBe('1 dag');
+    expect(ageText('2026-08-21', '2026-09-04')).toBe('2 weken');
+    expect(ageText('2026-08-04', '2026-09-04')).toBe('1 maand');
+    expect(ageText('2026-01-04', '2026-09-04')).toBe('8 maanden');
+    expect(ageText('2024-09-05', '2026-09-04')).toBe('23 maanden');
+    expect(ageText('2024-09-04', '2026-09-04')).toBe('2 jaar');
+    expect(ageText('2019-03-04', '2026-09-04')).toBe('7 jaar');
+  });
+
+  it('says nothing about a day that has not come yet or is not a day', () => {
+    expect(ageText('2027-01-01', '2026-09-04')).toBe('');
+    expect(ageText('ooit', '2026-09-04')).toBe('');
   });
 });
 

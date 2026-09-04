@@ -210,7 +210,8 @@ func normalize(_ raw: Json) -> Content {
             name: p["name"].text(String(localized: "Naamloos")),
             emoji: p["emoji"].text("🙂"),
             color: p["color"].text(COLORS[i % COLORS.count]),
-            traits: traitsFrom(p["traits"])
+            traits: traitsFrom(p["traits"]),
+            birthday: isDateString(p["birthday"].text) ? p["birthday"].text : ""
         )
     }
     var out = Content(
@@ -246,7 +247,43 @@ func itemsOn(_ content: Content, _ d: Date) -> [AgendaItem] {
     let weekly = content.week
         .filter { $0.days.isEmpty || $0.days.contains(day) }
         .map { AgendaItem(week: $0) }
-    return special + weekly
+    return birthdaysOn(content.people, d) + special + weekly
+}
+
+/// De verjaardagen van het huis. Ze staan nergens als afspraak opgeschreven:
+/// wie een geboortedag in zijn profiel heeft is elk jaar op die dag jarig, en
+/// dat rekent de app hier zelf uit. Zo klopt het altijd, en hoeft niemand het
+/// elk jaar opnieuw in te voeren.
+func birthdaysOn(_ people: [Person], _ d: Date) -> [AgendaItem] {
+    let now = calendar.dateComponents([.year, .month, .day], from: d)
+    return people.compactMap { person in
+        guard let born = asDate(person.birthday) else { return nil }
+        let then = calendar.dateComponents([.year, .month, .day], from: born)
+        guard then.month == now.month, then.day == now.day,
+              let years = (now.year ?? 0) - (then.year ?? 0) as Int?, years >= 1
+        else { return nil }
+        return AgendaItem(week: WeekItem(
+            icon: "🎂",
+            text: String(localized: "\(person.name) wordt \(years)"),
+            time: "", until: "", days: [], who: [person.id], evening: false
+        ))
+    }
+}
+
+/// Hoe oud iemand vandaag is, in gewone woorden: een baby telt in weken en
+/// maanden, daarna in jaren.
+func ageText(_ birthday: String, on day: Date = Date()) -> String {
+    guard let born = asDate(birthday) else { return "" }
+    let parts = calendar.dateComponents([.year, .month, .day], from: born, to: day)
+    let years = parts.year ?? 0
+    let months = parts.month ?? 0
+    let days = parts.day ?? 0
+    if years >= 2 { return String(localized: "\(years) jaar") }
+    let allMonths = years * 12 + months
+    if allMonths >= 1 { return String(localized: "\(allMonths) maanden") }
+    let weeks = days / 7
+    if weeks >= 1 { return String(localized: "\(weeks) weken") }
+    return String(localized: "\(max(0, days)) dagen")
 }
 
 func routineBlocks(_ content: Content, _ routine: Routine, _ now: Date) -> [Block] {

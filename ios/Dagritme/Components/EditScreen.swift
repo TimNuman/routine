@@ -60,7 +60,8 @@ struct EditScreen: View {
     private var people: [Person] {
         draft.people.map {
             Person(id: $0.id, name: $0.name, emoji: $0.emoji.isEmpty ? "🙂" : $0.emoji,
-                   color: $0.color.isEmpty ? COLORS[0] : $0.color, traits: $0.traits)
+                   color: $0.color.isEmpty ? COLORS[0] : $0.color, traits: $0.traits,
+                   birthday: $0.birthday)
         }
     }
 
@@ -127,13 +128,15 @@ struct EditScreen: View {
             existing.emoji = fresh.emoji.isEmpty ? "🙂" : fresh.emoji
             existing.color = fresh.color
             existing.traits = fresh.traits
+            existing.birthday = fresh.birthday
         } else if !fresh.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             draft.people.append(DraftPerson(
                 id: fresh.id,
                 name: fresh.name,
                 emoji: fresh.emoji.isEmpty ? "🙂" : fresh.emoji,
                 color: fresh.color.isEmpty ? COLORS[draft.people.count % COLORS.count] : fresh.color,
-                traits: fresh.traits
+                traits: fresh.traits,
+                birthday: fresh.birthday
             ))
         }
         childSheet = nil
@@ -211,7 +214,8 @@ struct EditScreen: View {
             child: ChildData(id: person.id, name: person.name,
                              emoji: person.emoji.isEmpty ? "🙂" : person.emoji,
                              color: person.color,
-                             traits: person.traits)
+                             traits: person.traits,
+                             birthday: person.birthday)
         )
     }
 

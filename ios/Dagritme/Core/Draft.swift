@@ -6,13 +6,16 @@ final class DraftPerson: Identifiable {
     var emoji: String
     var color: String
     var traits: [String: String]
+    var birthday: String
 
-    init(id: String, name: String, emoji: String, color: String, traits: [String: String]) {
+    init(id: String, name: String, emoji: String, color: String,
+         traits: [String: String], birthday: String = "") {
         self.id = id
         self.name = name
         self.emoji = emoji
         self.color = color
         self.traits = traits
+        self.birthday = birthday
     }
 }
 
@@ -150,7 +153,7 @@ func asDraft(_ content: Content) -> Draft {
         title: content.title,
         people: content.people.map {
             DraftPerson(id: $0.id, name: $0.name, emoji: $0.emoji, color: $0.color,
-                        traits: $0.traits)
+                        traits: $0.traits, birthday: $0.birthday)
         },
         day: content.day.map(draftGroup),
         night: content.night.map(draftGroup),
@@ -257,6 +260,7 @@ func cleaned(_ c: Draft) -> [String: Any] {
                 "emoji": p.emoji.isEmpty ? "🙂" : p.emoji,
                 "color": p.color.isEmpty ? COLORS[i % COLORS.count] : p.color,
                 "traits": p.traits,
+                "birthday": isDate(p.birthday) ? p.birthday : "",
             ]
         },
         "day": cleanGroups(c.day),

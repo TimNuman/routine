@@ -104,6 +104,12 @@ onder **Wie doet mee** wie het betreft; alleen die kinderen krijgen dan een
 rondje bij die stap, en hun teller telt hem mee. Hetzelfde geldt voor een regel
 in het weekritme — daar verschijnt de naam als gekleurd label.
 
+Bij een kind hoort ook een **verjaardag**, en die hoeft nergens anders heen: wie
+een geboortedag in zijn profiel heeft is elk jaar op die dag vanzelf jarig in de
+agenda — *Emma wordt 7*, met een taart erbij. Er staat dus geen afspraak die
+iemand elk jaar moet bijwerken; de app rekent het uit. En de uitlezer weet
+daardoor hoe oud iedereen is.
+
 **Gereed** schrijft alles naar het huis, en de andere telefoons zien het
 meteen. Lukt dat niet, dan blijft het scherm open staan met de reden — er wordt
 nooit stilletjes iets half opgeslagen.
@@ -116,6 +122,13 @@ repo dat dat nog overschrijft.
 School, voetbal, judo en de bso sturen mail. In plaats van die over te tikken
 plak je hem op **Deze week** onder *Typ of plak iets*. Zelf typen mag net zo
 goed: *iedere dinsdag om 18:00 tennis Emma* werkt precies zo.
+
+Je kunt er ook gewoon om vragen. *Maak een voedings- en slaapschema voor Filip*
+is geen tekst om uit te lezen maar een opdracht, en dan bedenkt hij het zelf —
+met wat er van dat kind bekend is. Staat Filips geboortedag in zijn profiel, dan
+weet hij dat Filip een maand oud is en komt er een schema uit dat daarbij hoort:
+om de drie uur een voeding, een dutje ertussen. Voor een kind van vier zou er
+iets heel anders uitkomen.
 
 Wat eruit komt is een lijstje voorstellen, elk met de zin eronder waar het
 vandaan komt. Er zijn drie soorten, en de keuze daartussen wordt voor je gemaakt:
@@ -146,8 +159,9 @@ kenmerk bij het kind staan, dus de volgende mail van dezelfde school komt er
 zonder vragen doorheen. Hij vraagt hooguit twee keer; daarna doet hij het met
 wat hij heeft.
 
-Wat de deur uit gaat is de tekst die je plakt, plus de voornamen en kenmerken van
-de kinderen — die zijn nodig om te weten bij wie iets hoort. Verder niets: de app
+Wat de deur uit gaat is de tekst die je plakt, plus de voornamen, geboortedagen
+en kenmerken van de kinderen — die zijn nodig om te weten bij wie iets hoort en
+wat er bij die leeftijd past. Verder niets: de app
 kent zelf ook geen achternamen, adressen of mailadressen. Wat terugkomt zijn ids
 die de app al had.
 

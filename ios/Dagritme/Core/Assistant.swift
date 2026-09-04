@@ -12,7 +12,8 @@ struct Payload {
             "today": today,
             "round": round,
             "children": children.map {
-                ["id": $0.id, "name": $0.name, "traits": $0.traits] as [String: Any]
+                ["id": $0.id, "name": $0.name, "traits": $0.traits,
+                 "birthday": $0.birthday] as [String: Any]
             },
         ]
     }
