@@ -348,6 +348,8 @@ private struct Card: View {
                 .accessibilityAddTraits(.isButton)
                 .accessibilityIdentifier("card.open.\(key)")
 
+                // Zo breed dat de rij precies bij het juiste kind afbreekt:
+                // drie naast elkaar, met z'n vieren twee bij twee.
                 Flow(gap: 2, rowGap: 2, centered: true) {
                     ForEach(taking) { person in
                         Ring(
@@ -360,6 +362,7 @@ private struct Card: View {
                         )
                     }
                 }
+                .frame(width: CGFloat(childrenPerRow(taking.count)) * (m.ringSize + 2) - 2)
             }
             .padding(.horizontal, m.cardX)
             .padding(.vertical, m.cardY)

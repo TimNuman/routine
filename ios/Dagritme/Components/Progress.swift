@@ -17,14 +17,10 @@ struct ProgressBars: View {
 
     @Environment(\.metrics) private var m
 
-    /// Hoeveel kinderen er naast elkaar staan. Naast het ritme past er een
-    /// rij van drie; met z'n vieren wordt het een blokje van twee bij twee,
-    /// want vier op een rij worden strookjes. Op de telefoon blijven het er
-    /// twee naast elkaar.
+    /// Op de telefoon staan er twee naast elkaar; op een breed scherm volgen
+    /// ze dezelfde verdeling als de gezichtjes op een kaartje.
     private var perRow: Int {
-        let count = max(1, people.count)
-        guard m.wide else { return min(2, count) }
-        return count == 4 ? 2 : min(3, count)
+        m.wide ? childrenPerRow(people.count) : min(2, max(1, people.count))
     }
 
     var body: some View {

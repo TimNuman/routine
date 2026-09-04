@@ -16,6 +16,15 @@ enum SafeArea {
     }
 }
 
+/// Hoeveel kinderen er naast elkaar staan, of het nu de gezichtjes op een
+/// kaartje zijn of de balkjes in de kop: tot drie op een rij, met z'n vieren
+/// twee bij twee — vier op een rij worden strookjes — en met z'n vijven drie
+/// en twee.
+func childrenPerRow(_ count: Int) -> Int {
+    let count = max(1, count)
+    return count == 4 ? 2 : min(3, count)
+}
+
 struct Flow: Layout {
     var gap: CGFloat = 6
     var rowGap: CGFloat = 6

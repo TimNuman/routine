@@ -83,9 +83,10 @@ private struct Spots {
 /// `Flow` maakt, maar uitgerekend in plaats van gelegd, zodat er tussen twee
 /// van die uitkomsten in gerekend kan worden.
 private func spots(_ count: Int, width: CGFloat, item: CGFloat,
-                   itemHeight: CGFloat, gap: CGFloat, rowGap: CGFloat) -> Spots {
+                   itemHeight: CGFloat, gap: CGFloat, rowGap: CGFloat,
+                   perRow fixed: Int? = nil) -> Spots {
     guard count > 0 else { return Spots(places: [], height: 0) }
-    let perRow = max(1, Int((width + gap) / (item + gap)))
+    let perRow = fixed ?? max(1, Int((width + gap) / (item + gap)))
     let rows = (count + perRow - 1) / perRow
     let height = CGFloat(rows) * itemHeight + CGFloat(rows - 1) * rowGap
     var places: [CGPoint] = []
@@ -384,7 +385,7 @@ private struct MorphCard: View, Animatable {
     private var faces: some View {
         let small = spots(taking.count, width: nest.size.width - m.cardX * 2,
                           item: m.ringSize, itemHeight: m.ringSize,
-                          gap: 2, rowGap: 2)
+                          gap: 2, rowGap: 2, perRow: childrenPerRow(taking.count))
         let big = spots(taking.count, width: full - 52,
                         item: m.focusRing, itemHeight: m.focusRing + 6 + 15,
                         gap: 12, rowGap: 10)
