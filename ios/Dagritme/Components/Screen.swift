@@ -88,15 +88,25 @@ struct Screen<Inner: View>: View {
     /// Dezelfde zachte rand, maar dan in doorzichtigheid: de kleur onder de
     /// kop is een andere dan die bovenaan het scherm, dus lost hier de inhoud
     /// zelf op in plaats van dat er een kleur overheen ligt.
-    private var hem: LinearGradient {
-        LinearGradient(
-            stops: [
-                .init(color: .clear, location: 0),
-                .init(color: .black.opacity(0.35), location: 0.012),
-                .init(color: .black, location: 0.045),
-            ],
-            startPoint: .top, endPoint: .bottom
-        )
+    ///
+    /// Onderaan loopt hij de rand van het scherm over. De rol steekt daar
+    /// onder de menubalk door — dat hoort zo, je ziet de kaarten door het
+    /// glas — en een masker dat op de veilige rand stopt zou ze daar
+    /// afknippen.
+    private var hem: some View {
+        VStack(spacing: 0) {
+            LinearGradient(
+                stops: [
+                    .init(color: .clear, location: 0),
+                    .init(color: .black.opacity(0.35), location: 0.3),
+                    .init(color: .black, location: 1),
+                ],
+                startPoint: .top, endPoint: .bottom
+            )
+            .frame(height: 28)
+            Color.black
+        }
+        .ignoresSafeArea(.container, edges: .bottom)
     }
 
     private var names: some View {
